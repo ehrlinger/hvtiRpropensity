@@ -1,5 +1,19 @@
 # Changelog
 
+## hvtiRpropensity 0.1.4
+
+- Fixes an empty changelog on the pkgdown site. `NEWS.md` opened with a
+  bare `# hvtiRpropensity` title line, so level one was the title level
+  and every version heading sat at level two. pkgdown reads the top
+  heading level in the file as the version level, found no versions
+  there, and warned “no version headings found” on every build. That
+  title line is removed and the four version headings are promoted to
+  level one, matching the rest of the family. A level-one heading that
+  names no version, such as the `(unreleased)` one above, is skipped by
+  pkgdown rather than counted, so it does not reintroduce the problem.
+  [`utils::news()`](https://rdrr.io/r/utils/news.html) was unaffected
+  throughout and still reports the same four versions.
+
 ## hvtiRpropensity 0.1.3
 
 - Removed the explicit `Maintainer:` field from `DESCRIPTION` and moved

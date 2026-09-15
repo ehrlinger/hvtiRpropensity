@@ -10,13 +10,13 @@ Source:
 [`DESCRIPTION`](https://github.com/ehrlinger/hvtiRpropensity/blob/main/DESCRIPTION)
 
 Ehrlinger J (2026). *hvtiRpropensity: Propensity Score Methods for HVTI
-CORR Research at the Cleveland Clinic*. R package version 0.1.3,
+CORR Research at the Cleveland Clinic*. R package version 0.1.4,
 <https://github.com/ehrlinger/hvtiRpropensity>.
 
     @Manual{,
       title = {hvtiRpropensity: Propensity Score Methods for HVTI CORR Research at the Cleveland Clinic},
       author = {John Ehrlinger},
       year = {2026},
-      note = {R package version 0.1.3},
+      note = {R package version 0.1.4},
       url = {https://github.com/ehrlinger/hvtiRpropensity},
     }
