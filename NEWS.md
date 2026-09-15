@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.4
 
 * Fixes an empty changelog on the pkgdown site. `NEWS.md` opened with a bare
   `# hvtiRpropensity` title line, so level one was the title level and every
