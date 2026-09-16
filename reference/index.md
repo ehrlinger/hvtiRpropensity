@@ -64,6 +64,8 @@ type and optionally weighted.
 
 - [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
   : Standardized differences between two groups
+- [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  : Permutation reference for standardized differences
 
 ## Sensitivity Analysis
 
