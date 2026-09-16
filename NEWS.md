@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.5
 
 * **`ps_mw_var()` estimates a matching-weight treatment effect with a
   bootstrap variance**, ported from the CCF `%mw_var` SAS macro (Rajeswaran
