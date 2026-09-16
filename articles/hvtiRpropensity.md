@@ -516,8 +516,8 @@ summary(w_ate)
 #> 
 #> Smd weighted:
 #>                  variable     smd
-#> id                     id  3.5396
-#> age                   age -0.0168
+#> id                     id  3.5436
+#> age                   age -0.0169
 #> female             female -0.0151
 #> ef                     ef  0.0474
 #> diabetes         diabetes  0.0023

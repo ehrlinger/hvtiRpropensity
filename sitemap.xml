@@ -12,8 +12,6 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-assign_bs_strata.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-assign_ps_strata.html</loc></url>
-<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-calc_smd.html</loc></url>
-<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-calc_smd_weighted.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_binary.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_cols.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_df.html</loc></url>
@@ -21,7 +19,6 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-effective_n.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-mi_average.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-smd_table.html</loc></url>
-<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-smd_table_weighted.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/hvtiRpropensity-package.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/index.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.html</loc></url>

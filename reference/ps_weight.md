@@ -126,12 +126,12 @@ summary(obj)
 #> 
 #> Smd weighted:
 #>                  variable     smd
-#> id                     id  3.5007
-#> age                   age  0.1146
-#> female             female -0.0956
-#> ef                     ef -0.0299
-#> diabetes         diabetes -0.0281
-#> hypertension hypertension -0.0987
+#> id                     id  3.4514
+#> age                   age  0.1130
+#> female             female -0.0943
+#> ef                     ef -0.0295
+#> diabetes         diabetes -0.0278
+#> hypertension hypertension -0.0973
 #> match               match      NA
 #> 
 #> Group counts:
@@ -162,12 +162,12 @@ summary(obj_att)
 #> 
 #> Smd weighted:
 #>                  variable     smd
-#> id                     id  3.4042
-#> age                   age  0.0736
-#> female             female -0.0987
-#> ef                     ef  0.0306
-#> diabetes         diabetes -0.1246
-#> hypertension hypertension -0.2262
+#> id                     id  4.7721
+#> age                   age  0.1031
+#> female             female -0.1383
+#> ef                     ef  0.0429
+#> diabetes         diabetes -0.1745
+#> hypertension hypertension -0.3172
 #> match               match      NA
 #> 
 #> Group counts:
