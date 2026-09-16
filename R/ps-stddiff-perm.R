@@ -105,18 +105,9 @@ ps_stddiff_perm <- function(data,
   }
   .check_cols(data, treatment_col)
 
-  if (!is.null(seed)) {
-    # Seed before anything that may draw, reweight on the observed data
-    # included, and restore the caller's stream on exit.
-    rng <- ".Random.seed"
-    had_seed <- exists(rng, envir = globalenv(), inherits = FALSE)
-    old_seed <- if (had_seed) get(rng, envir = globalenv(), inherits = FALSE)
-    on.exit(
-      if (had_seed) assign(rng, old_seed, envir = globalenv()) else rm(list = rng, envir = globalenv()),
-      add = TRUE
-    )
-    set.seed(seed)
-  }
+  # Seed before anything that may draw, reweight on the observed data
+  # included, and restore the caller's stream on exit.
+  if (!is.null(seed)) withr::local_seed(seed)
 
   run <- function(d, quiet = FALSE) {
     if (!is.null(weight_col)) {
@@ -164,11 +155,14 @@ ps_stddiff_perm <- function(data,
 }
 
 
-#' PROC UNIVARIATE percentiles 2.5, 16, 50, 84, 97.5 (PCTLDEF=5, R type 2)
+#' SAS percentiles 2.5, 16, 50, 84, 97.5, missing values dropped
+#'
+#' `type = 2` is PCTLDEF=5, the PROC UNIVARIATE default stddiffci relies on.
+#' `type = 4` is PCTLDEF=1, which %mw_var sets on PROC STDIZE.
 #' @keywords internal
 #' @noRd
-.perm_percentiles <- function(x) {
+.perm_percentiles <- function(x, type = 2) {
   x <- x[!is.na(x)]
   if (length(x) == 0L) return(rep(NA_real_, 5L))
-  stats::quantile(x, c(0.025, 0.16, 0.5, 0.84, 0.975), type = 2, names = FALSE)
+  stats::quantile(x, c(0.025, 0.16, 0.5, 0.84, 0.975), type = type, names = FALSE)
 }
