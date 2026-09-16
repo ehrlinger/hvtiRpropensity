@@ -1,5 +1,22 @@
 # hvtiRpropensity (unreleased)
 
+* **`ps_mw_var()` estimates a matching-weight treatment effect with a
+  bootstrap variance**, ported from the CCF `%mw_var` SAS macro (Rajeswaran
+  2014, after Li and Greene 2013). For each outcome it reports the
+  `PROC MEANS` weighted mean, SD and sum of weights by group, the difference,
+  and from `n_rep` replicates resampled within each group the bootstrap SD,
+  `PCTLDEF=1` percentiles (`quantile(type = 4)`), z and p. As in the macro the
+  weights are held fixed across replicates, so the SD ignores the
+  uncertainty in estimating them; the documentation says so. The macro's
+  output labelled the sum of weights `N`, reported here as `sumwgt_0` and
+  `sumwgt_1`.
+
+* **`withr` moves from Suggests to Imports.** `ps_stddiff_perm()` and
+  `ps_mw_var()` take a `seed` and restore the caller's random number stream
+  afterwards, through `withr::local_seed()`. Restoring the stream by hand
+  means writing `.Random.seed` in the global environment, which `R CMD check`
+  reports as a NOTE.
+
 * **`ps_stddiff_perm()` gives each standardized difference a permutation
   reference**, ported from the CCF `%stddiffci` SAS macro (Artis 2020). It
   reports the observed `ps_stddiff()` value beside the 2.5, 16, 50, 84 and
