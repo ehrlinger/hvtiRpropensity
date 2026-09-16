@@ -172,6 +172,14 @@ inverse-probability-of-treatment weighting.
 - [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
   : Inverse-Probability-of-Treatment Weighting (IPTW)
 
+## Balance Diagnostics
+
+Standardized differences between treated and control groups, by variable
+type and optionally weighted.
+
+- [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+  : Standardized differences between two groups
+
 ## Sensitivity Analysis
 
 Functions for assessing robustness of propensity score analyses to
