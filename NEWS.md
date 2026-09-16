@@ -1,5 +1,17 @@
 # hvtiRpropensity (unreleased)
 
+* **`ps_stddiff_perm()` gives each standardized difference a permutation
+  reference**, ported from the CCF `%stddiffci` SAS macro (Artis 2020). It
+  reports the observed `ps_stddiff()` value beside the 2.5, 16, 50, 84 and
+  97.5 percentiles of the same statistic over `n_perm` shuffles of the group
+  labels, using SAS `PCTLDEF=5` (`quantile(type = 2)`), the macro's
+  `PROC UNIVARIATE` default. The percentiles describe what label shuffling
+  alone produces, not a confidence interval. Weights that depend on the group
+  are recomputed for every permutation by a `reweight` function, which is
+  required with `weight_col`; the macro instead expected those permuted
+  weights to exist as columns already. A `seed` makes the result
+  reproducible and leaves the caller's random number stream as it was.
+
 * **`ps_stddiff()` computes standardized differences for every variable
   type**, ported from the CCF `%stddiff` SAS macro (Artis 2019): Gaussian,
   non-Gaussian or ordinal by pooled ranks, binary, and categorical by Yang and
