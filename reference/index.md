@@ -67,6 +67,13 @@ type and optionally weighted.
 - [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
   : Permutation reference for standardized differences
 
+## Treatment Effects
+
+Weighted treatment-effect estimates with bootstrap variance.
+
+- [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  : Bootstrap variance of a matching-weight treatment effect
+
 ## Sensitivity Analysis
 
 Functions for assessing robustness of propensity score analyses to
