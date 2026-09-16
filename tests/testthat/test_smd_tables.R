@@ -43,3 +43,17 @@ test_that("a match with no pairs still reports an all-NA smd_after", {
   expect_true(all(is.na(obj$tables$smd_after$smd)))
   expect_identical(obj$tables$smd_after$variable, obj$tables$smd_before$variable)
 })
+
+test_that("a non-numeric covariate stops even when a match finds no pairs", {
+  dta <- sample_ps_data(n = 100, seed = 42)
+  dta$site <- rep(c("a", "b"), length.out = nrow(dta))
+  expect_error(ps_match(dta, covariates = c("age", "site"), caliper = 1e-12), "numeric")
+})
+
+test_that("ps_weight() stops clearly when a score of 0 or 1 gives an infinite weight", {
+  dta <- sample_ps_data(n = 60, seed = 2)
+  dta$prob_t[which(dta$tavr == 1)[1]] <- 0
+  expect_error(ps_weight(dta), "trim")
+  # Winsorising clips the infinite weight, so trim is the documented way through.
+  expect_s3_class(ps_weight(dta, trim = 0.05), "ps_weight")
+})

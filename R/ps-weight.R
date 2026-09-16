@@ -121,6 +121,14 @@ ps_weight <- function(data,
     q_hi <- stats::quantile(w, 1 - trim,   na.rm = TRUE)
     w    <- pmin(pmax(w, q_lo), q_hi)
   }
+  if (any(is.infinite(w))) {
+    rlang::abort(
+      sprintf(paste0("%d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
+                     "that divides by it. Set `trim` to winsorise them, or remove those patients."),
+              sum(is.infinite(w)), score_col),
+      call = NULL
+    )
+  }
 
   # ---- Build output data frame -------------------------------------------
   out              <- data

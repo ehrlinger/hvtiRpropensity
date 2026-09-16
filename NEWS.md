@@ -22,6 +22,12 @@
   columns and 4-place rounding. A covariate named in `covariates` must now be
   numeric; a character column used to yield `NA` with a warning and now stops.
 
+* **`ps_weight()` stops with a clear error when a propensity score of exactly
+  0 or 1 gives an infinite weight**, naming the count and pointing to `trim`.
+  It used to fail later with "missing value where TRUE/FALSE needed" from
+  inside the SMD calculation. With `trim` set, the infinite weight is
+  winsorised as before and the call succeeds.
+
 # hvtiRpropensity 0.1.4
 
 * Fixes an empty changelog on the pkgdown site. `NEWS.md` opened with a bare
