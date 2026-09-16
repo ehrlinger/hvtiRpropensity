@@ -39,7 +39,7 @@
 #' * `binary` and `categorical` are routed by the number of levels observed,
 #'   as the macro routes its `BINARY=` and `CATG=` lists: one level gives 0,
 #'   two use the binary formula on the proportion at the last level in sort
-#'   order (`1` for a 0/1 variable), and more than two use the Mahalanobis
+#'   order (`1` for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
 #'   form of Yang and Dalton (2012). For that form the last level in sort
 #'   order is the one dropped, and `S` has diagonal
 #'   `(t_i (1 - t_i) + c_i (1 - c_i)) / 2` and off-diagonal
@@ -52,7 +52,8 @@
 #' `WEIGHT` statement. Weights must be positive.
 #'
 #' **Missing values.** Rows with a missing group are dropped. Otherwise a
-#' missing value is dropped for that variable only.
+#' missing value is dropped for that variable only, and a variable with no
+#' non-missing values gets `NA`.
 #'
 #' **Units.** The result is a proportion of a standard deviation, not a
 #' percent. The SAS output labels the column "(%)" but does not multiply by
@@ -63,9 +64,10 @@
 #'   both groups present. Default `"tavr"`.
 #' @param gaussian,nong_ord,binary,categorical Character vectors of column
 #'   names, by type. See Details. At least one variable is required, and a
-#'   variable may appear under one type only.
+#'   variable may appear under one type only. A `binary` column must be
+#'   coded 0/1 or logical; a `categorical` column may have any coding.
 #' @param weight_col Optional name of a column of positive weights, for
-#'   example matching weights from [ps_weight()].
+#'   example matching weights from [ps_weight()]. Weights must be finite.
 #'
 #' @return An object of class `c("ps_stddiff", "ps_data")` with:
 #' \describe{
@@ -115,6 +117,12 @@ ps_stddiff <- function(data,
       rlang::abort(sprintf("Column `%s` must be numeric to be summarised by mean or rank.", v), call = NULL)
     }
   }
+  for (v in vars$binary) {
+    x <- data[[v]]
+    if (!(is.logical(x) || (is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1))))) {
+      rlang::abort(sprintf("Column `%s` is named as binary and must be coded 0/1 or logical.", v), call = NULL)
+    }
+  }
 
   keep <- !is.na(data[[treatment_col]])
   base <- data[keep, , drop = FALSE]
@@ -124,8 +132,8 @@ ps_stddiff <- function(data,
     rlang::abort(sprintf("Column `%s` must contain both groups, 0 and 1.", treatment_col), call = NULL)
   }
   w <- if (is.null(weight_col)) rep(1, nrow(base)) else base[[weight_col]]
-  if (!is.null(weight_col) && (!is.numeric(w) || anyNA(w) || any(w <= 0))) {
-    rlang::abort(sprintf("Column `%s` must hold positive, non-missing weights.", weight_col), call = NULL)
+  if (!is.null(weight_col) && (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0))) {
+    rlang::abort(sprintf("Column `%s` must hold positive, finite, non-missing weights.", weight_col), call = NULL)
   }
 
   one <- function(v) {
@@ -137,7 +145,9 @@ ps_stddiff <- function(data,
       est <- .stddiff_mean(x[ok], grp[ok], w[ok])
     } else {
       lv <- sort(unique(x[ok]))
-      if (length(lv) == 1L) {
+      if (length(lv) == 0L) {
+        est <- NA_real_
+      } else if (length(lv) == 1L) {
         type <- "onelevel"
         est  <- 0
       } else {
@@ -216,6 +226,9 @@ ps_stddiff <- function(data,
   # and group 0 all "c": t sums to 1 and c is all zero. No finite difference
   # is defined then, so return NA and let the caller name the variable, rather
   # than let solve() stop the whole table. Decided 2026-09-16.
-  if (anyNA(s_mat) || qr(s_mat)$rank < length(d)) return(NA_real_)
-  sqrt(sum(d * solve(s_mat, d)))
+  # The tolerance is the SAS inversion's, PROC ORTHOREG singular = 1E-16, so
+  # an ill-conditioned but full-rank S is inverted as it is there rather than
+  # reported singular at qr()'s default of 1e-7.
+  if (anyNA(s_mat) || qr(s_mat, tol = 1e-16)$rank < length(d)) return(NA_real_)
+  tryCatch(sqrt(sum(d * solve(s_mat, d, tol = 1e-16))), error = function(e) NA_real_)
 }

@@ -22,10 +22,11 @@ both groups present. Default \code{"tavr"}.}
 
 \item{gaussian, nong_ord, binary, categorical}{Character vectors of column
 names, by type. See Details. At least one variable is required, and a
-variable may appear under one type only.}
+variable may appear under one type only. A \code{binary} column must be
+coded 0/1 or logical; a \code{categorical} column may have any coding.}
 
 \item{weight_col}{Optional name of a column of positive weights, for
-example matching weights from \code{\link[=ps_weight]{ps_weight()}}.}
+example matching weights from \code{\link[=ps_weight]{ps_weight()}}. Weights must be finite.}
 }
 \value{
 An object of class \code{c("ps_stddiff", "ps_data")} with:
@@ -60,7 +61,7 @@ their means and variances use \code{weight_col}.
 \item \code{binary} and \code{categorical} are routed by the number of levels observed,
 as the macro routes its \verb{BINARY=} and \verb{CATG=} lists: one level gives 0,
 two use the binary formula on the proportion at the last level in sort
-order (\code{1} for a 0/1 variable), and more than two use the Mahalanobis
+order (\code{1} for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
 form of Yang and Dalton (2012). For that form the last level in sort
 order is the one dropped, and \code{S} has diagonal
 \code{(t_i (1 - t_i) + c_i (1 - c_i)) / 2} and off-diagonal
@@ -74,7 +75,8 @@ difference is \code{NA} with a warning naming the variable.
 \code{WEIGHT} statement. Weights must be positive.
 
 \strong{Missing values.} Rows with a missing group are dropped. Otherwise a
-missing value is dropped for that variable only.
+missing value is dropped for that variable only, and a variable with no
+non-missing values gets \code{NA}.
 
 \strong{Units.} The result is a proportion of a standard deviation, not a
 percent. The SAS output labels the column "(\%)" but does not multiply by
