@@ -79,6 +79,7 @@ reference:
     variable type and optionally weighted.
   contents:
   - ps_stddiff
+  - ps_stddiff_perm
 
 - title: "Sensitivity Analysis"
   desc: >
