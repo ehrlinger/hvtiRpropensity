@@ -73,6 +73,13 @@ reference:
   - ps_match
   - ps_weight
 
+- title: "Balance Diagnostics"
+  desc: >
+    Standardized differences between treated and control groups, by
+    variable type and optionally weighted.
+  contents:
+  - ps_stddiff
+
 - title: "Sensitivity Analysis"
   desc: >
     Functions for assessing robustness of propensity score analyses to
