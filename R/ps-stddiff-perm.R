@@ -91,7 +91,8 @@ ps_stddiff_perm <- function(data,
                             n_perm        = 1000L,
                             seed          = NULL) {
   .check_df(data)
-  if (!is.numeric(n_perm) || length(n_perm) != 1L || is.na(n_perm) || n_perm < 1 || n_perm != round(n_perm)) {
+  if (!is.numeric(n_perm) || length(n_perm) != 1L || !is.finite(n_perm) ||
+      n_perm < 1 || n_perm > .Machine$integer.max || n_perm != round(n_perm)) {
     rlang::abort("`n_perm` must be a positive whole number.", call = NULL)
   }
   n_perm <- as.integer(n_perm)
@@ -104,21 +105,9 @@ ps_stddiff_perm <- function(data,
   }
   .check_cols(data, treatment_col)
 
-  run <- function(d) {
-    if (!is.null(weight_col)) {
-      w <- reweight(d)
-      if (!is.numeric(w) || length(w) != nrow(d)) {
-        rlang::abort("`reweight` must return one weight per row of the data it is given.", call = NULL)
-      }
-      d[[weight_col]] <- w
-    }
-    ps_stddiff(d, treatment_col = treatment_col, gaussian = gaussian, nong_ord = nong_ord,
-               binary = binary, categorical = categorical, weight_col = weight_col)$tables$stddiff
-  }
-  obs <- run(data)
-
   if (!is.null(seed)) {
-    # Restore the caller's stream on exit, rather than leave it reset.
+    # Seed before anything that may draw, reweight on the observed data
+    # included, and restore the caller's stream on exit.
     rng <- ".Random.seed"
     had_seed <- exists(rng, envir = globalenv(), inherits = FALSE)
     old_seed <- if (had_seed) get(rng, envir = globalenv(), inherits = FALSE)
@@ -129,13 +118,32 @@ ps_stddiff_perm <- function(data,
     set.seed(seed)
   }
 
+  run <- function(d, quiet = FALSE) {
+    if (!is.null(weight_col)) {
+      w <- reweight(d)
+      if (!is.numeric(w) || length(w) != nrow(d)) {
+        rlang::abort("`reweight` must return one weight per row of the data it is given.", call = NULL)
+      }
+      d[[weight_col]] <- w
+    }
+    withCallingHandlers(
+      ps_stddiff(d, treatment_col = treatment_col, gaussian = gaussian, nong_ord = nong_ord,
+                 binary = binary, categorical = categorical, weight_col = weight_col)$tables$stddiff,
+      # A permutation can leave a categorical variable with no shared levels.
+      # Its NA is dropped from the percentiles, so that one warning would only
+      # repeat; every other warning, reweight's included, still surfaces.
+      warning = function(w) {
+        if (quiet && grepl("share too few levels", conditionMessage(w), fixed = TRUE)) invokeRestart("muffleWarning")
+      }
+    )
+  }
+  obs <- run(data)
+
   idx  <- which(!is.na(data[[treatment_col]]))
   sims <- vapply(seq_len(n_perm), function(i) {
     d <- data
     d[[treatment_col]][idx] <- data[[treatment_col]][idx][sample.int(length(idx))]
-    # A permutation can leave a categorical variable with no shared levels;
-    # its NA is dropped from the percentiles, so the warning would only repeat.
-    suppressWarnings(run(d))$stddiff
+    run(d, quiet = TRUE)$stddiff
   }, numeric(nrow(obs)))
   sims <- matrix(sims, nrow = nrow(obs))
 

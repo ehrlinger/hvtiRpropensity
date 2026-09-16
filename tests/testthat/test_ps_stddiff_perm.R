@@ -118,3 +118,28 @@ test_that("n_perm must be a positive whole number", {
   expect_error(ps_stddiff_perm(dta, gaussian = "age", n_perm = 0), "n_perm")
   expect_error(ps_stddiff_perm(dta, gaussian = "age", n_perm = 2.5), "n_perm")
 })
+
+test_that("n_perm rejects Inf rather than failing later", {
+  expect_error(ps_stddiff_perm(dta, gaussian = "age", n_perm = Inf), "n_perm")
+})
+
+test_that("a seed also covers randomness inside reweight, including for the observed row", {
+  rw <- function(p) runif(nrow(p), 1, 2)
+  a <- ps_stddiff_perm(dta, gaussian = "age", weight_col = "w", reweight = rw, n_perm = 5, seed = 8)
+  b <- ps_stddiff_perm(dta, gaussian = "age", weight_col = "w", reweight = rw, n_perm = 5, seed = 8)
+  expect_identical(a$tables$stddiff_perm, b$tables$stddiff_perm)
+})
+
+test_that("warnings from reweight on a permuted data set are not hidden", {
+  # Warn only after the first (observed) call, so the warning must come from a permutation.
+  calls <- 0L
+  expect_warning(
+    ps_stddiff_perm(dta, gaussian = "age", weight_col = "w", n_perm = 3, seed = 1,
+                    reweight = function(p) {
+                      calls <<- calls + 1L
+                      if (calls > 1L) warning("model did not converge")
+                      rep(1, nrow(p))
+                    }),
+    "did not converge"
+  )
+})
