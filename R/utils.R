@@ -124,68 +124,39 @@
 
 
 # ---------------------------------------------------------------------------
-# Standardised mean difference (SMD)
-# ---------------------------------------------------------------------------
-
-#' Compute standardised mean difference between two numeric vectors
-#'
-#' Uses the sample-size-weighted pooled standard deviation:
-#' `sp = sqrt(((n0-1)*s0^2 + (n1-1)*s1^2) / (n0+n1-2))`.
-#' This is correct for unequal group sizes (e.g. pre-match diagnostics).
-#' The equal-weight formula `sqrt((s0^2 + s1^2) / 2)` is only unbiased when
-#' n0 == n1.
-#'
-#' Returns `NA_real_` if either group has fewer than 2 observations or the
-#' pooled SD is zero (constant covariate).
-#'
-#' @param x         Numeric vector of covariate values.
-#' @param treatment Binary vector (0/1 or logical) of treatment indicators.
-#' @return A single numeric SMD value.
-#' @keywords internal
-.calc_smd <- function(x, treatment) {
-  x0 <- x[treatment == 0 & !is.na(x)]
-  x1 <- x[treatment == 1 & !is.na(x)]
-
-  n0 <- length(x0)
-  n1 <- length(x1)
-  if (n0 < 2L || n1 < 2L) return(NA_real_)
-
-  m0 <- mean(x0)
-  s0 <- stats::sd(x0)
-  m1 <- mean(x1)
-  s1 <- stats::sd(x1)
-
-  # Sample-size-weighted pooled SD (Austin 2009 / Cohen 1988)
-  sp <- sqrt(((n0 - 1L) * s0^2 + (n1 - 1L) * s1^2) / (n0 + n1 - 2L))
-  if (sp == 0) return(NA_real_)
-
-  (m1 - m0) / sp
-}
-
-
-# ---------------------------------------------------------------------------
 # SMD table for a data frame
 # ---------------------------------------------------------------------------
 
-#' Build a tidy SMD table across all numeric covariates
+#' Build a tidy SMD table across covariates, through ps_stddiff()
+#'
+#' Every covariate is treated as Gaussian, so the denominator is
+#' `sqrt((var1 + var0) / 2)`, and with `weight_col` the variances are the
+#' `PROC MEANS` weighted ones, divided by `n - 1`. This is the one formula the
+#' package uses; see [ps_stddiff()]. A subset with a group absent, such as the
+#' matched rows of a match that found no pairs, gets `NA` for every covariate
+#' rather than an error.
 #'
 #' @param data       A data frame.
 #' @param treatment  Name of the binary treatment column.
 #' @param covariates Character vector of covariate column names.  If `NULL`,
 #'   all numeric columns other than `treatment` are used.
-#' @return A data frame with columns `variable` and `smd`.
+#' @param weight_col Optional name of a weight column.
+#' @return A data frame with columns `variable` and `smd`, rounded to 4 places.
 #' @keywords internal
-.smd_table <- function(data, treatment, covariates = NULL) {
+.smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL) {
   if (is.null(covariates)) {
     covariates <- setdiff(
       names(data)[vapply(data, is.numeric, logical(1))],
-      treatment
+      c(treatment, weight_col)
     )
   }
-
-  smds <- vapply(covariates, function(cn) {
-    .calc_smd(data[[cn]], data[[treatment]])
-  }, numeric(1))
+  grp <- data[[treatment]]
+  smds <- if (length(covariates) == 0L || !all(c(0, 1) %in% grp)) {
+    rep(NA_real_, length(covariates))
+  } else {
+    ps_stddiff(data, treatment_col = treatment, gaussian = covariates, weight_col = weight_col)$tables$stddiff$stddiff
+  }
+  names(smds) <- covariates
 
   data.frame(
     variable = covariates,

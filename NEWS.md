@@ -5,13 +5,28 @@
   non-Gaussian or ordinal by pooled ranks, binary, and categorical by Yang and
   Dalton's Mahalanobis form, each optionally weighted. It returns a
   `ps_stddiff` object whose `$tables$stddiff` holds one row per variable. The
-  denominator averages the two group variances as the macro does, so it can
-  differ from the SMD tables `ps_match()`, `ps_logistic()` and `ps_weight()`
-  report today when group sizes are unequal; moving those onto
-  `ps_stddiff()` is a separate change. A categorical variable whose groups
-  share no levels gets `NA` with a warning. Design:
-  hvtiRtemplates `dev/specs/2026-09-16-standardized-difference-design.md`;
-  tracked in #34.
+  denominator averages the two group variances as the macro does. A
+  categorical variable whose groups share no levels gets `NA` with a warning.
+  Design: hvtiRtemplates
+  `dev/specs/2026-09-16-standardized-difference-design.md`; tracked in #34.
+
+* **The SMD tables from `ps_match()`, `ps_logistic()` and `ps_weight()` now
+  come from `ps_stddiff()`, and their numbers change.** Every covariate is
+  treated as Gaussian, as before, but the denominator is now the macro's
+  `sqrt((var1 + var0) / 2)`. The unweighted tables (`smd_before`, `smd_after`,
+  `smd`, `smd_unweighted`) used to pool the SD by sample size, which differs
+  whenever the groups are unequal, so **`smd_before` is the table most likely
+  to move**; with equal groups it does not. The weighted table
+  (`smd_weighted`) used to divide its variances by `sum(w)` and now divides by
+  `n - 1`, as `PROC MEANS` does. The tables keep their `variable` and `smd`
+  columns and 4-place rounding. A covariate named in `covariates` must now be
+  numeric; a character column used to yield `NA` with a warning and now stops.
+
+* **`ps_weight()` stops with a clear error when a propensity score of exactly
+  0 or 1 gives an infinite weight**, naming the count and pointing to `trim`.
+  It used to fail later with "missing value where TRUE/FALSE needed" from
+  inside the SMD calculation. With `trim` set, the infinite weight is
+  winsorised as before and the call succeeds.
 
 # hvtiRpropensity 0.1.4
 

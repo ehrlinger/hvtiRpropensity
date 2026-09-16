@@ -121,6 +121,14 @@ ps_weight <- function(data,
     q_hi <- stats::quantile(w, 1 - trim,   na.rm = TRUE)
     w    <- pmin(pmax(w, q_lo), q_hi)
   }
+  if (any(is.infinite(w))) {
+    rlang::abort(
+      sprintf(paste0("%d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
+                     "that divides by it. Set `trim` to winsorise them, or remove those patients."),
+              sum(is.infinite(w)), score_col),
+      call = NULL
+    )
+  }
 
   # ---- Build output data frame -------------------------------------------
   out              <- data
@@ -137,8 +145,7 @@ ps_weight <- function(data,
   smd_unweighted <- .smd_table(data, treatment_col, covariates)
 
   # Weighted SMD uses the weight column via a weighted mean / variance
-  smd_weighted <- .smd_table_weighted(out, treatment_col, weight_col,
-                                      covariates)
+  smd_weighted <- .smd_table(out, treatment_col, covariates, weight_col = weight_col)
 
   group_counts <- data.frame(
     group = c("control", "treated"),
@@ -186,44 +193,4 @@ ps_weight <- function(data,
 .effective_n <- function(w) {
   if (length(w) == 0L) return(NA_real_)
   round(sum(w)^2 / sum(w^2), 1)
-}
-
-#' Weighted SMD table
-#' @keywords internal
-.smd_table_weighted <- function(data, treatment_col, weight_col, covariates) {
-  smds <- vapply(covariates, function(cn) {
-    .calc_smd_weighted(
-      x         = data[[cn]],
-      treatment = as.integer(data[[treatment_col]]),
-      weight    = data[[weight_col]]
-    )
-  }, numeric(1))
-
-  data.frame(
-    variable = covariates,
-    smd      = round(smds, 4L),
-    stringsAsFactors = FALSE
-  )
-}
-
-#' Weighted standardised mean difference
-#' @keywords internal
-.calc_smd_weighted <- function(x, treatment, weight) {
-  x0 <- x[treatment == 0L & !is.na(x)]
-  x1 <- x[treatment == 1L & !is.na(x)]
-  w0 <- weight[treatment == 0L & !is.na(x)]
-  w1 <- weight[treatment == 1L & !is.na(x)]
-
-  if (length(x0) < 2L || length(x1) < 2L) return(NA_real_)
-
-  wm0 <- stats::weighted.mean(x0, w0)
-  wm1 <- stats::weighted.mean(x1, w1)
-
-  # Weighted variance
-  wv0 <- sum(w0 * (x0 - wm0)^2) / sum(w0)
-  wv1 <- sum(w1 * (x1 - wm1)^2) / sum(w1)
-  sp  <- sqrt((wv0 + wv1) / 2)
-
-  if (sp == 0) return(NA_real_)
-  (wm1 - wm0) / sp
 }

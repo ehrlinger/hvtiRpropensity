@@ -2,9 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{.smd_table}
 \alias{.smd_table}
-\title{Build a tidy SMD table across all numeric covariates}
+\title{Build a tidy SMD table across covariates, through ps_stddiff()}
 \usage{
-.smd_table(data, treatment, covariates = NULL)
+.smd_table(data, treatment, covariates = NULL, weight_col = NULL)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -13,11 +13,18 @@
 
 \item{covariates}{Character vector of covariate column names.  If \code{NULL},
 all numeric columns other than \code{treatment} are used.}
+
+\item{weight_col}{Optional name of a weight column.}
 }
 \value{
-A data frame with columns \code{variable} and \code{smd}.
+A data frame with columns \code{variable} and \code{smd}, rounded to 4 places.
 }
 \description{
-Build a tidy SMD table across all numeric covariates
+Every covariate is treated as Gaussian, so the denominator is
+\code{sqrt((var1 + var0) / 2)}, and with \code{weight_col} the variances are the
+\verb{PROC MEANS} weighted ones, divided by \code{n - 1}. This is the one formula the
+package uses; see \code{\link[=ps_stddiff]{ps_stddiff()}}. A subset with a group absent, such as the
+matched rows of a match that found no pairs, gets \code{NA} for every covariate
+rather than an error.
 }
 \keyword{internal}
