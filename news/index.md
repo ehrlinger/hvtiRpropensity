@@ -1,5 +1,82 @@
 # Changelog
 
+## hvtiRpropensity 0.1.5
+
+- **[`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  estimates a matching-weight treatment effect with a bootstrap
+  variance**, ported from the CCF `%mw_var` SAS macro (Rajeswaran 2014,
+  after Li and Greene 2013). For each outcome it reports the
+  `PROC MEANS` weighted mean, SD and sum of weights by group, the
+  difference, and from `n_rep` replicates resampled within each group
+  the bootstrap SD, `PCTLDEF=1` percentiles (`quantile(type = 4)`), z
+  and p. As in the macro the weights are held fixed across replicates,
+  so the SD ignores the uncertainty in estimating them; the
+  documentation says so. The macro’s output labelled the sum of weights
+  `N`, reported here as `sumwgt_0` and `sumwgt_1`.
+
+- **`withr` moves from Suggests to Imports.**
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  take a `seed` and restore the caller’s random number stream
+  afterwards, through
+  [`withr::local_seed()`](https://withr.r-lib.org/reference/with_seed.html).
+  Restoring the stream by hand means writing `.Random.seed` in the
+  global environment, which `R CMD check` reports as a NOTE.
+
+- **[`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  gives each standardized difference a permutation reference**, ported
+  from the CCF `%stddiffci` SAS macro (Artis 2020). It reports the
+  observed
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+  value beside the 2.5, 16, 50, 84 and 97.5 percentiles of the same
+  statistic over `n_perm` shuffles of the group labels, using SAS
+  `PCTLDEF=5` (`quantile(type = 2)`), the macro’s `PROC UNIVARIATE`
+  default. The percentiles describe what label shuffling alone produces,
+  not a confidence interval. Weights that depend on the group are
+  recomputed for every permutation by a `reweight` function, which is
+  required with `weight_col`; the macro instead expected those permuted
+  weights to exist as columns already. A `seed` makes the result
+  reproducible and leaves the caller’s random number stream as it was.
+
+- **[`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+  computes standardized differences for every variable type**, ported
+  from the CCF `%stddiff` SAS macro (Artis 2019): Gaussian, non-Gaussian
+  or ordinal by pooled ranks, binary, and categorical by Yang and
+  Dalton’s Mahalanobis form, each optionally weighted. It returns a
+  `ps_stddiff` object whose `$tables$stddiff` holds one row per
+  variable. The denominator averages the two group variances as the
+  macro does. A categorical variable whose groups share no levels gets
+  `NA` with a warning. Design: hvtiRtemplates
+  `dev/specs/2026-09-16-standardized-difference-design.md`; tracked in
+  [\#34](https://github.com/ehrlinger/hvtiRpropensity/issues/34).
+
+- **The SMD tables from
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+  and
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+  now come from
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md),
+  and their numbers change.** Every covariate is treated as Gaussian, as
+  before, but the denominator is now the macro’s
+  `sqrt((var1 + var0) / 2)`. The unweighted tables (`smd_before`,
+  `smd_after`, `smd`, `smd_unweighted`) used to pool the SD by sample
+  size, which differs whenever the groups are unequal, so **`smd_before`
+  is the table most likely to move**; with equal groups it does not. The
+  weighted table (`smd_weighted`) used to divide its variances by
+  `sum(w)` and now divides by `n - 1`, as `PROC MEANS` does. The tables
+  keep their `variable` and `smd` columns and 4-place rounding. A
+  covariate named in `covariates` must now be numeric; a character
+  column used to yield `NA` with a warning and now stops.
+
+- **[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+  stops with a clear error when a propensity score of exactly 0 or 1
+  gives an infinite weight**, naming the count and pointing to `trim`.
+  It used to fail later with “missing value where TRUE/FALSE needed”
+  from inside the SMD calculation. With `trim` set, the infinite weight
+  is winsorised as before and the call succeeds.
+
 ## hvtiRpropensity 0.1.4
 
 - Fixes an empty changelog on the pkgdown site. `NEWS.md` opened with a
