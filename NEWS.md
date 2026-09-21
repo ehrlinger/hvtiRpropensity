@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.7
 
 * `ps_ordinal()` now creates its documented rank-based quintile and decile
   columns from the averaged probability of the highest ordered treatment
