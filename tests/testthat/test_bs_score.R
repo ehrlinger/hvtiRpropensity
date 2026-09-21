@@ -17,7 +17,8 @@ test_that("bs_continuous() returns correct class and slots", {
   expect_s3_class(obj, "bs_continuous")
   expect_s3_class(obj, "ps_data")
   expect_true(is_ps_data(obj))
-  expect_named(obj, c("data", "meta", "tables"))
+  expect_named(obj, c("data", "meta", "tables", "models"))
+  expect_length(obj$models, 1L)
 })
 
 test_that("bs_continuous() appends score, quintile, decile, cluster", {
@@ -96,6 +97,7 @@ test_that("bs_continuous() works with stacked MI data", {
   expect_equal(obj$meta$method,        "balancing-linear-MI")
   expect_equal(nrow(obj$data),         nrow(base))
   expect_false("_IMPUTATION_" %in% names(obj$data))
+  expect_length(obj$models, 3L)
 })
 
 # ---------------------------------------------------------------------------
@@ -123,6 +125,15 @@ test_that("bs_count() with dist='poisson' returns correct class", {
   expect_s3_class(obj, "bs_count")
   expect_s3_class(obj, "ps_data")
   expect_true(is_ps_data(obj))
+  expect_length(obj$models, 1L)
+  expect_named(
+    obj$tables$estimates,
+    c("term", "estimate", "std.error", "statistic", "df", "p.value",
+      "conf.low", "conf.high", "odds_ratio", "pooled")
+  )
+  expect_named(obj$tables,
+               c("strata_counts", "estimates", "covariance",
+                 "by_imputation", "fit_status"))
 })
 
 test_that("bs_count() appends score, quintile, decile, cluster", {
@@ -175,6 +186,11 @@ test_that("bs_count() with dist='negbin' returns correct method string", {
   expect_s3_class(obj, "bs_count")
   expect_equal(obj$meta$dist,   "negbin")
   expect_equal(obj$meta$method, "balancing-negbin")
+  expect_length(obj$meta$theta, 1L)
+  expect_false(any(grepl("theta", obj$tables$estimates$term,
+                         ignore.case = TRUE)))
+  expect_false(any(grepl("theta", rownames(obj$tables$covariance),
+                         ignore.case = TRUE)))
 })
 
 # ---------------------------------------------------------------------------
@@ -193,6 +209,34 @@ test_that("bs_count() works with stacked MI data", {
   expect_equal(obj$meta$method,        "balancing-poisson-MI")
   expect_equal(nrow(obj$data),         80L)
   expect_false("_IMPUTATION_" %in% names(obj$data))
+  expect_length(obj$models, 3L)
+  expect_true(all(obj$tables$estimates$pooled))
+  expect_identical(unique(obj$tables$by_imputation$imputation),
+                   c("1", "2", "3"))
+})
+
+test_that("bs_count() matches direct Poisson inference and link scores", {
+  dta <- sample_ps_data_count(n = 100, seed = 62)
+  obj <- bs_count(rbc_tot ~ age + female, dta, dist = "poisson")
+  direct <- stats::glm(
+    rbc_tot ~ age + female,
+    dta,
+    family = stats::poisson(link = "log"),
+    na.action = stats::na.exclude
+  )
+
+  expect_equal(obj$tables$estimates$estimate,
+               unname(stats::coef(direct)), tolerance = 1e-10)
+  expect_equal(obj$tables$covariance, stats::vcov(direct), tolerance = 1e-10)
+  expect_equal(obj$data$bs,
+               unname(stats::predict(direct, newdata = dta, type = "link")),
+               tolerance = 1e-10)
+})
+
+test_that("bs_count() rejects an unknown distribution", {
+  dta <- sample_ps_data_count(n = 50, seed = 63)
+  expect_error(bs_count(rbc_tot ~ age, dta, dist = "auto"),
+               "arg.*negbin.*poisson")
 })
 
 # ---------------------------------------------------------------------------

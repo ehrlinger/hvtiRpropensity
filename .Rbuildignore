@@ -10,3 +10,5 @@
 ^LICENSE\.md$
 ^AGENTS\.md$
 ^\.lintr$
+^\.superpowers$
+^\.git$

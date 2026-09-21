@@ -13,7 +13,9 @@ ps_logistic(
   score_col = "prob_t",
   logit_col = "logit_t",
   weight_col = "mt_wt",
-  covariates = NULL
+  covariates = NULL,
+  treatment_levels = NULL,
+  treated_level = NULL
 )
 }
 \arguments{
@@ -47,6 +49,12 @@ Default \code{"mt_wt"}.}
 balance diagnostics.  If \code{NULL} (default), all numeric columns other
 than \code{treatment_col}, \code{score_col}, \code{logit_col}, \code{weight_col},
 \code{id_col}, \code{"quintile"}, and \code{"decile"} are used.}
+
+\item{treatment_levels}{Complete binary treatment levels. \code{NULL} preserves
+the historical 0/1 or logical interface.}
+
+\item{treated_level}{Level whose probability is the propensity score. When
+\code{treatment_levels} is supplied and this is \code{NULL}, its last value is used.}
 }
 \value{
 An object of class \code{c("ps_logistic", "ps_data")} with:

@@ -12,7 +12,8 @@ ps_ordinal(
   id_col = "id",
   imputation_col = NULL,
   score_col_prefix = "prob",
-  covariates = NULL
+  covariates = NULL,
+  treatment_levels = NULL
 )
 }
 \arguments{
@@ -35,6 +36,9 @@ are named \verb{<prefix>_<level>} for each level of the treatment.
 Default \code{"prob"}.}
 
 \item{covariates}{Covariate columns for diagnostics.}
+
+\item{treatment_levels}{Complete ordered treatment levels. \code{NULL} preserves
+the levels inferred by the historical interface.}
 }
 \value{
 An object of class \code{c("ps_ordinal", "ps_data")} with:

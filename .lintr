@@ -14,3 +14,29 @@ linters: linters_with_defaults(
     indentation_linter = NULL,
     commented_code_linter = NULL
   )
+# `object_usage_linter` reads package files in lexical order. These lines call
+# internal helpers or the expanded `new_ps_data()` signature defined in later
+# files, so it resolves them against the previously installed package and
+# reports false missing-function or unused-argument findings. Keep the
+# exclusions line-specific so object-usage checks remain active everywhere
+# else and move loudly if the corresponding call moves.
+exclusions: list(
+    "R/bs-score.R" = list(
+      object_usage_linter = c(157L, 192L, 389L, 399L, 430L)
+    ),
+    "R/lm-fit.R" = list(
+      object_usage_linter = c(202L, 211L, 261L)
+    ),
+    "R/lm-validate.R" = list(
+      object_usage_linter = c(65L, 170L)
+    ),
+    "R/model-inference.R" = list(
+      object_usage_linter = 238L
+    ),
+    "R/ps-score.R" = list(
+      object_usage_linter = c(217L, 264L, 422L, 450L, 616L, 646L)
+    ),
+    "tests/testthat/test_lm_validate.R" = list(
+      object_usage_linter = 13L
+    )
+  )

@@ -61,12 +61,55 @@ print(w)
 summary(w)
 ```
 
+## Logistic model bundles
+
+`fit_logistic()` fits binary, proportional-odds ordinal, and generalized-logit
+nominal outcome models. Clinically meaningful levels are always explicit;
+factor storage order never decides the event, order, or reference category.
+
+```r
+binary_model <- fit_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data = dta,
+  family = "binary",
+  outcome_levels = c(0, 1),
+  event_level = 1
+)
+```
+
+Every model-producing result has four slots:
+
+- `$data`: patient-level data with predictions or scores;
+- `$meta`: formula, declared levels, model family, row accounting, package
+  versions, and `bundle_version = 1L`;
+- `$tables`: `estimates`, `covariance`, `by_imputation`, and `fit_status`, plus
+  workflow-specific diagnostics;
+- `$models`: every fitted model, including every imputation-specific fit.
+
+The `estimates` table has columns `term`, `estimate`, `std.error`, `statistic`,
+`df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio`, and `pooled`.
+`by_imputation` has `imputation`, `term`, `estimate`, and `std.error`;
+`fit_status` has `imputation`, `converged`, `n_input`, `n_analyzed`, and
+`n_excluded`.
+
+For stacked imputations, patient predictions are averaged across fits while
+coefficients and covariance use Rubin's rules. Missing patients, changed
+categorical predictor levels, aliased terms, non-convergence, and unusable
+covariance matrices stop the analysis instead of producing a partial pool.
+
+`validate_logistic()` applies a saved version-1 binary bundle to a declared
+validation cohort without refitting. It reports calibration, observed versus
+expected events, AUC, and Brier score. Ordinal and nominal validation are not
+part of this first interface.
+
 ## Functions
 
 **Score estimation**
 
 | Function | Description |
 |---|---|
+| `fit_logistic()` | Binary, ordinal, or nominal outcome-model bundle, with optional MI |
+| `validate_logistic()` | No-refit validation of a saved binary model bundle |
 | `ps_logistic()` | Binary propensity score via logistic regression (with optional MI) |
 | `ps_ordinal()` | Ordered treatment propensity via cumulative logit (MASS::polr) |
 | `ps_nominal()` | Nominal treatment propensity via generalised logit (nnet::multinom) |

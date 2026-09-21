@@ -17,7 +17,10 @@ test_that("ps_logistic() returns correct class and slots", {
   expect_s3_class(obj, "ps_logistic")
   expect_s3_class(obj, "ps_data")
   expect_true(is_ps_data(obj))
-  expect_named(obj, c("data", "meta", "tables"))
+  expect_named(obj, c("data", "meta", "tables", "models"))
+  expect_length(obj$models, 1L)
+  expect_true(all(c("estimates", "covariance", "by_imputation", "fit_status") %in%
+                    names(obj$tables)))
 })
 
 test_that("ps_logistic() appends score, logit, weight, quintile, decile", {
@@ -103,8 +106,43 @@ test_that("ps_logistic() works with stacked MI data", {
   expect_equal(obj$meta$n_imputations, 3L)
   expect_equal(obj$meta$method,        "logistic-MI")
   expect_equal(nrow(obj$data),         nrow(base))
+  expect_length(obj$models, 3L)
+  expect_true(all(obj$tables$estimates$pooled))
   # Imputation column should be gone from output
   expect_false("_IMPUTATION_" %in% names(obj$data))
+
+  general <- fit_logistic(
+    tavr ~ age + female + ef,
+    stacked,
+    id_col = "id",
+    imputation_col = "_IMPUTATION_",
+    outcome_levels = c(0, 1),
+    event_level = 1,
+    prediction_prefix = ".comparison"
+  )
+  expect_equal(obj$tables$estimates, general$tables$estimates)
+  expect_equal(obj$tables$covariance, general$tables$covariance)
+})
+
+test_that("ps_logistic() honors explicit labelled treatment levels", {
+  dta <- sample_ps_data(n = 80, seed = 12)
+  dta$treatment <- factor(
+    ifelse(dta$tavr == 1L, "treated", "control"),
+    levels = c("treated", "control")
+  )
+  obj <- ps_logistic(
+    treatment ~ age + ef,
+    dta,
+    treatment_levels = c("control", "treated"),
+    treated_level = "treated"
+  )
+
+  expect_identical(obj$meta$treatment_levels, c("control", "treated"))
+  expect_identical(obj$meta$treated_level, "treated")
+  expect_equal(obj$data$prob_t,
+               unname(stats::predict(obj$models[[1L]], newdata = dta,
+                                     type = "response")))
+  expect_equal(obj$tables$group_counts$n, c(80L, 80L))
 })
 
 # ---------------------------------------------------------------------------
@@ -131,7 +169,10 @@ test_that("ps_ordinal() returns correct class and slots", {
   )
   expect_s3_class(obj, "ps_ordinal")
   expect_s3_class(obj, "ps_data")
-  expect_named(obj, c("data", "meta", "tables"))
+  expect_named(obj, c("data", "meta", "tables", "models"))
+  expect_length(obj$models, 1L)
+  expect_true(all(c("estimates", "covariance", "by_imputation", "fit_status") %in%
+                    names(obj$tables)))
 })
 
 test_that("ps_ordinal() appends one prob column per level", {
@@ -157,6 +198,20 @@ test_that("ps_ordinal() meta levels match factor levels", {
   expect_equal(obj$meta$treatment_col, "nyha_grp")
 })
 
+test_that("ps_ordinal() honors explicit levels over raw factor order", {
+  skip_if_not_installed("MASS")
+  dta <- sample_ps_data_ordinal(n = 80, seed = 24)
+  dta$nyha_grp <- ordered(dta$nyha_grp, levels = c("III", "II", "I"))
+  obj <- ps_ordinal(
+    nyha_grp ~ age + ef,
+    dta,
+    treatment_levels = c("I", "II", "III")
+  )
+
+  expect_identical(obj$meta$levels, c("I", "II", "III"))
+  expect_identical(levels(obj$data$nyha_grp), c("I", "II", "III"))
+})
+
 test_that("print.ps_ordinal() runs without error", {
   skip_if_not_installed("MASS")
   dta <- sample_ps_data_ordinal(n = 80, seed = 23)
@@ -179,7 +234,10 @@ test_that("ps_nominal() returns correct class and slots", {
   )
   expect_s3_class(obj, "ps_nominal")
   expect_s3_class(obj, "ps_data")
-  expect_named(obj, c("data", "meta", "tables"))
+  expect_named(obj, c("data", "meta", "tables", "models"))
+  expect_length(obj$models, 1L)
+  expect_true(all(c("estimates", "covariance", "by_imputation", "fit_status") %in%
+                    names(obj$tables)))
 })
 
 test_that("ps_nominal() appends one prob column per level", {
@@ -198,6 +256,23 @@ test_that("ps_nominal() ref_level is the first level by default", {
   dta <- sample_ps_data_nominal(n = 60, seed = 32)
   obj <- ps_nominal(rtyp ~ age + ef, data = dta, trace = FALSE)
   expect_equal(obj$meta$ref_level, "COS")
+})
+
+test_that("ps_nominal() honors explicit levels and reference", {
+  skip_if_not_installed("nnet")
+  dta <- sample_ps_data_nominal(n = 60, seed = 34)
+  dta$rtyp <- factor(dta$rtyp, levels = rev(levels(dta$rtyp)))
+  obj <- ps_nominal(
+    rtyp ~ age + ef,
+    dta,
+    treatment_levels = c("COS", "PER", "DEV", "CE"),
+    ref_level = "COS",
+    trace = FALSE
+  )
+
+  expect_identical(obj$meta$levels, c("COS", "PER", "DEV", "CE"))
+  expect_identical(obj$meta$ref_level, "COS")
+  expect_identical(levels(obj$data$rtyp), c("COS", "PER", "DEV", "CE"))
 })
 
 test_that("print.ps_nominal() runs without error", {

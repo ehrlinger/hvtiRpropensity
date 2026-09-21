@@ -147,22 +147,25 @@ bs_continuous <- function(formula,
   }
   n_strata <- as.integer(n_strata)
 
-  # ---- Fit function -------------------------------------------------------
-  fit_fn  <- function(df) stats::lm(formula, data = df)
-  pred_fn <- function(fit, df) as.numeric(stats::fitted(fit))
-
-  # ---- Single or MI -------------------------------------------------------
-  if (is.null(imputation_col)) {
-    fit       <- fit_fn(data)
-    preds     <- pred_fn(fit, data)
-    base_data <- data
-    n_imp     <- 1L
-  } else {
-    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
-    preds     <- mi$preds
-    base_data <- mi$base_data
-    n_imp     <- mi$n_imp
+  # ---- Fit model(s) -------------------------------------------------------
+  fit_fn <- function(df) {
+    stats::lm(formula, data = df, na.action = stats::na.exclude)
   }
+  pred_fn <- function(fit, df) {
+    stats::predict(fit, newdata = df)
+  }
+  fitted <- .fit_imputations(
+    data = data,
+    response_col = outcome_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    fit_fn = fit_fn,
+    predict_fn = pred_fn,
+    predictor_cols = all.vars(stats::delete.response(stats::terms(formula))),
+    require_stable_response = FALSE
+  )
+  preds <- fitted$predictions
+  base_data <- fitted$data
 
   # ---- Append balancing score and strata ----------------------------------
   base_data[[score_col]] <- preds
@@ -198,12 +201,13 @@ bs_continuous <- function(formula,
       strata_col     = strata_col,
       method         = if (is.null(imputation_col)) "balancing-linear"
                        else "balancing-linear-MI",
-      n_imputations  = n_imp,
+      n_imputations  = length(fitted$imputations),
       n_total        = nrow(base_data)
     ),
     tables   = list(
       strata_counts = strata_counts
     ),
+    models = fitted$models,
     subclass = "bs_continuous"
   )
 }
@@ -366,25 +370,39 @@ bs_count <- function(formula,
 
   # ---- Fit function -------------------------------------------------------
   fit_fn <- if (dist == "negbin") {
-    function(df) MASS::glm.nb(formula, data = df)
+    function(df) {
+      MASS::glm.nb(formula, data = df, na.action = stats::na.exclude)
+    }
   } else {
     function(df) {
-      stats::glm(formula, data = df, family = stats::poisson(link = "log"))
+      stats::glm(
+        formula,
+        data = df,
+        family = stats::poisson(link = "log"),
+        na.action = stats::na.exclude
+      )
     }
   }
-  pred_fn <- function(fit, df) as.numeric(stats::predict(fit, type = "link"))
-
-  # ---- Single or MI -------------------------------------------------------
-  if (is.null(imputation_col)) {
-    fit       <- fit_fn(data)
-    xbeta     <- pred_fn(fit, data)
-    base_data <- data
-    n_imp     <- 1L
+  pred_fn <- function(fit, df) {
+    stats::predict(fit, newdata = df, type = "link")
+  }
+  fitted <- .fit_imputations(
+    data = data,
+    response_col = outcome_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    fit_fn = fit_fn,
+    predict_fn = pred_fn,
+    predictor_cols = all.vars(stats::delete.response(stats::terms(formula))),
+    require_stable_response = FALSE
+  )
+  inference <- .model_inference(fitted$models, "count")
+  xbeta <- fitted$predictions
+  base_data <- fitted$data
+  theta <- if (identical(dist, "negbin")) {
+    vapply(fitted$models, `[[`, numeric(1L), "theta")
   } else {
-    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
-    xbeta     <- mi$preds
-    base_data <- mi$base_data
-    n_imp     <- mi$n_imp
+    NULL
   }
 
   # ---- Append balancing score and strata ----------------------------------
@@ -418,17 +436,23 @@ bs_count <- function(formula,
       imputation_col = imputation_col,
       score_col      = score_col,
       dist           = dist,
+      theta          = theta,
       n_strata       = n_strata,
       strata_col     = strata_col,
       method         = if (is.null(imputation_col))
                          paste0("balancing-", dist)
                        else paste0("balancing-", dist, "-MI"),
-      n_imputations  = n_imp,
+      n_imputations  = length(fitted$imputations),
       n_total        = nrow(base_data)
     ),
     tables   = list(
-      strata_counts = strata_counts
+      strata_counts = strata_counts,
+      estimates = inference$estimates,
+      covariance = inference$covariance,
+      by_imputation = inference$by_imputation,
+      fit_status = fitted$status
     ),
+    models = fitted$models,
     subclass = "bs_count"
   )
 }

@@ -14,7 +14,8 @@ ps_nominal(
   ref_level = NULL,
   score_col_prefix = "prob",
   trace = FALSE,
-  covariates = NULL
+  covariates = NULL,
+  treatment_levels = NULL
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ by default).  Default \code{"prob"}.}
 \code{\link[nnet:multinom]{nnet::multinom()}} iteration messages.}
 
 \item{covariates}{Covariate columns for diagnostics.}
+
+\item{treatment_levels}{Complete nominal treatment levels. \code{NULL} preserves
+the levels inferred by the historical interface.}
 }
 \value{
 An object of class \code{c("ps_nominal", "ps_data")} with:

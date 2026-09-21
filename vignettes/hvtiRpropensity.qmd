@@ -45,9 +45,11 @@ The package covers the full workflow from raw covariates to sensitivity analysis
 4. **Assess sensitivity to unmeasured confounding** — `sa_rosenbaum()`,
    `sa_evalue()`, `sa_overlap()`, `sa_trim_sweep()`
 
-All score and balance objects share a common `ps_data` S3 base class whose
-`$data` slot carries the original dataset with appended columns, `$meta` holds
-run parameters, and `$tables` carries SMD and group-count diagnostics.
+All score, balance, fit, and validation objects share a common `ps_data` S3
+base class with four slots: `$data` carries patient-level outputs, `$meta`
+records the declared contract and row accounting, `$tables` carries inference
+and diagnostics, and `$models` retains every fitted model used to create the
+result.
 
 ---
 
@@ -84,6 +86,80 @@ hist(
   col    = "steelblue",
   border = "white"
 )
+```
+
+---
+
+## Outcome-model bundles
+
+`fit_logistic()` fits binary, proportional-odds ordinal, and generalized-logit
+nominal outcome models. The complete outcome levels and the event or reference
+level are required. This makes the scientific contrast independent of factor
+storage order.
+
+```{r}
+#| label: fit-logistic-complete
+outcome_model <- fit_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data = dta,
+  family = "binary",
+  outcome_levels = c(0, 1),
+  event_level = 1
+)
+outcome_model$tables$estimates
+outcome_model$tables$fit_status
+```
+
+Every bundle records `bundle_version = 1L`, the formula, required predictors,
+declared outcome levels, package versions, analysis counts, all model objects,
+and four common inference tables:
+
+| table | schema |
+|---|---|
+| `estimates` | `term`, `estimate`, `std.error`, `statistic`, `df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio`, `pooled` |
+| `covariance` | named coefficient covariance matrix |
+| `by_imputation` | `imputation`, `term`, `estimate`, `std.error` |
+| `fit_status` | `imputation`, `converged`, `n_input`, `n_analyzed`, `n_excluded` |
+
+For stacked long-form imputations, the same model is fit independently within
+each imputation. Predictions are averaged patient by patient, matching the
+legacy `PROC SUMMARY mean=` workflow, while coefficient inference and
+covariance use Rubin's rules. These answer different questions and are stored
+separately. A missing patient, changed outcome or categorical predictor level,
+aliased term, failed fit, or unusable covariance stops pooling.
+
+```{r}
+#| label: fit-logistic-mi
+dta_mi <- do.call(rbind, lapply(1:3, function(imputation) {
+  partition <- dta
+  partition$age <- partition$age + (imputation - 2) / 10
+  partition$imputation <- imputation
+  partition
+}))
+
+outcome_model_mi <- fit_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data = dta_mi,
+  family = "binary",
+  id_col = "id",
+  imputation_col = "imputation",
+  outcome_levels = c(0, 1),
+  event_level = 1
+)
+outcome_model_mi$tables$estimates
+outcome_model_mi$tables$fit_status
+```
+
+`validate_logistic()` scores a validation cohort from a saved binary bundle
+without refitting and without modifying the source object. It returns
+equal-frequency calibration groups and a performance row containing observed
+and expected event counts, O:E ratio, AUC, and Brier score. The first interface
+is intentionally binary only.
+
+```{r}
+#| label: validate-logistic
+validation <- validate_logistic(outcome_model, dta, groups = 10L)
+validation$tables$performance
 ```
 
 ---

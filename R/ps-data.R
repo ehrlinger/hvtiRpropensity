@@ -20,9 +20,11 @@
 ##                            computed statistics.
 ##   $tables    <list>        Diagnostic tables: SMD before/after, group
 ##                            counts, effective N.  May be empty list.
+##   $models    <list>        Fitted model objects. May be empty for methods
+##                            that do not fit a model.
 ##
-## Individual subclasses may add further named elements beyond these three,
-## but $data, $meta, and $tables are always present.
+## Individual subclasses may add further named elements beyond these four,
+## but $data, $meta, $tables, and $models are always present.
 ##
 ###############################################################################
 
@@ -34,7 +36,8 @@
 #' Construct a validated ps_data object
 #'
 #' Internal entry point used by every `ps_*()` function to create its return
-#' value.  Enforces the three-slot contract (`$data`, `$meta`, `$tables`) and
+#' value.  Enforces the four-slot contract (`$data`, `$meta`, `$tables`,
+#' `$models`) and
 #' attaches the two-level S3 class vector.
 #'
 #' @param data     A data frame — the original data with propensity scores or
@@ -43,19 +46,21 @@
 #'   parameters, computed statistics, etc.).
 #' @param tables   A named list of diagnostic objects (SMD tables, group
 #'   counts, effective N, etc.).  May be `list()`.
+#' @param models   A named list of fitted model objects. May be `list()`.
 #' @param subclass A single string naming the specific subclass
 #'   (e.g. `"ps_match"`).
 #'
 #' @return A named list of class `c(subclass, "ps_data")`.
 #' @keywords internal
-new_ps_data <- function(data, meta, tables = list(), subclass) {
+new_ps_data <- function(data, meta, tables = list(), models = list(), subclass) {
   stopifnot(is.data.frame(data))
   stopifnot(is.list(meta))
   stopifnot(is.list(tables))
+  stopifnot(is.list(models))
   stopifnot(is.character(subclass), length(subclass) == 1L, nzchar(subclass))
 
   structure(
-    list(data = data, meta = meta, tables = tables),
+    list(data = data, meta = meta, tables = tables, models = models),
     class = c(subclass, "ps_data")
   )
 }

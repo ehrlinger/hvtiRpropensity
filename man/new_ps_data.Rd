@@ -4,7 +4,7 @@
 \alias{new_ps_data}
 \title{Construct a validated ps_data object}
 \usage{
-new_ps_data(data, meta, tables = list(), subclass)
+new_ps_data(data, meta, tables = list(), models = list(), subclass)
 }
 \arguments{
 \item{data}{A data frame — the original data with propensity scores or
@@ -16,6 +16,8 @@ parameters, computed statistics, etc.).}
 \item{tables}{A named list of diagnostic objects (SMD tables, group
 counts, effective N, etc.).  May be \code{list()}.}
 
+\item{models}{A named list of fitted model objects. May be \code{list()}.}
+
 \item{subclass}{A single string naming the specific subclass
 (e.g. \code{"ps_match"}).}
 }
@@ -24,7 +26,8 @@ A named list of class \code{c(subclass, "ps_data")}.
 }
 \description{
 Internal entry point used by every \verb{ps_*()} function to create its return
-value.  Enforces the three-slot contract (\verb{$data}, \verb{$meta}, \verb{$tables}) and
+value.  Enforces the four-slot contract (\verb{$data}, \verb{$meta}, \verb{$tables},
+\verb{$models}) and
 attaches the two-level S3 class vector.
 }
 \keyword{internal}
