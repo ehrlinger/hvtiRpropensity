@@ -165,6 +165,15 @@ test_that("bs_count() meta fields are correct for Poisson", {
   expect_equal(obj$meta$n_total,       nrow(dta))
 })
 
+test_that("bs_count() records saved bundle identity", {
+  dta <- sample_ps_data_count(n = 100, seed = 43)
+  obj <- bs_count(rbc_tot ~ age + female, data = dta, dist = "poisson")
+
+  expect_identical(obj$meta$bundle_version, 1L)
+  expect_identical(obj$meta$model_family, "count")
+  expect_named(obj$meta$package_versions, c("R", "hvtiRpropensity", "stats"))
+})
+
 test_that("bs_count() strata_counts sums to n", {
   dta <- sample_ps_data_count(n = 100, seed = 44)
   obj <- bs_count(rbc_tot ~ age + female, data = dta, dist = "poisson")

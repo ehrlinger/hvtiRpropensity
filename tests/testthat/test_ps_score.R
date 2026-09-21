@@ -196,6 +196,22 @@ test_that("ps_ordinal() appends one prob column per level", {
     expect_true(all(obj$data[[sc]] >= 0 & obj$data[[sc]] <= 1))
 })
 
+test_that("ps_ordinal() assigns rank strata from the highest-level probability", {
+  skip_if_not_installed("MASS")
+  dta <- sample_ps_data_ordinal(n = 12, seed = 21)
+  obj <- ps_ordinal(nyha_grp ~ age + female + ef, data = dta)
+  ordered_rows <- order(obj$data$prob_III, seq_len(nrow(obj$data)))
+
+  expect_equal(
+    obj$data$quintile[ordered_rows],
+    rep(1:5, times = c(7, 7, 7, 7, 8))
+  )
+  expect_equal(
+    obj$data$decile[ordered_rows],
+    rep(1:10, times = c(3, 4, 3, 4, 4, 3, 4, 3, 4, 4))
+  )
+})
+
 test_that("ps_ordinal() meta levels match factor levels", {
   skip_if_not_installed("MASS")
   dta <- sample_ps_data_ordinal(n = 80, seed = 22)
@@ -231,6 +247,35 @@ test_that("ps_ordinal() preserves its two-level interface", {
   expect_identical(obj$meta$levels, c("low", "high"))
   expect_equal(rowSums(obj$data[c("prob_low", "prob_high")]), rep(1, nrow(dta)))
   expect_true(all(c("threshold:low|high", "age", "ef") %in% obj$tables$estimates$term))
+})
+
+test_that("ps_ordinal() assigns strata after averaging stacked imputations", {
+  skip_if_not_installed("MASS")
+  base <- sample_ps_data_ordinal(n = 12, seed = 26)
+  stacked <- do.call(rbind, lapply(1:2, function(imputation) {
+    partition <- base
+    partition$age <- partition$age + ((partition$id %% 5) - 2) * imputation / 10
+    partition$imputation <- imputation
+    partition
+  }))
+  obj <- ps_ordinal(
+    nyha_grp ~ age + ef,
+    stacked,
+    imputation_col = "imputation"
+  )
+  ordered_rows <- order(obj$data$prob_III, seq_len(nrow(obj$data)))
+
+  expect_equal(nrow(obj$data), nrow(base))
+  expect_false("imputation" %in% names(obj$data))
+  expect_identical(obj$meta$n_imputations, 2L)
+  expect_equal(
+    obj$data$quintile[ordered_rows],
+    rep(1:5, times = c(7, 7, 7, 7, 8))
+  )
+  expect_equal(
+    obj$data$decile[ordered_rows],
+    rep(1:10, times = c(3, 4, 3, 4, 4, 3, 4, 3, 4, 4))
+  )
 })
 
 test_that("print.ps_ordinal() runs without error", {
@@ -324,6 +369,18 @@ test_that("propensity functions refuse to overwrite output columns", {
   nominal <- sample_ps_data_nominal(n = 80, seed = 38)
   nominal$prob_COS <- 999
   expect_error(ps_nominal(rtyp ~ age + ef, nominal), "already exist.*prob_COS")
+})
+
+test_that("ps_ordinal() refuses to overwrite rank-strata columns", {
+  skip_if_not_installed("MASS")
+  for (column in c("quintile", "decile")) {
+    ordinal <- sample_ps_data_ordinal(n = 20, seed = 39)
+    ordinal[[column]] <- 999
+    expect_error(
+      ps_ordinal(nyha_grp ~ age + ef, ordinal),
+      paste0("already exist.*", column)
+    )
+  }
 })
 
 test_that("print.ps_nominal() runs without error", {

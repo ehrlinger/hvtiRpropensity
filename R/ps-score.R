@@ -440,7 +440,7 @@ ps_ordinal <- function(formula,
   treatment_levels <- as.character(treatment_levels)
 
   score_cols <- paste0(score_col_prefix, "_", treatment_levels)
-  .check_output_columns(data, score_cols)
+  .check_output_columns(data, c(score_cols, "quintile", "decile"))
 
   private_prefix <- .temporary_prediction_prefix(data)
   model <- fit_logistic(
@@ -462,6 +462,11 @@ ps_ordinal <- function(formula,
     base_data[[score_cols[[i]]]] <- base_data[[private_col]]
     base_data[[private_col]] <- NULL
   }
+
+  # ---- Quintile / decile strata -------------------------------------------
+  strata <- .assign_ps_strata(base_data[[utils::tail(score_cols, 1L)]])
+  base_data[["quintile"]] <- strata$quintile
+  base_data[["decile"]]   <- strata$decile
 
   # ---- Group counts -------------------------------------------------------
   trt_vals     <- base_data[[treatment_col]]

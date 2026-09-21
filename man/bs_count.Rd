@@ -59,7 +59,8 @@ An object of class \code{c("bs_count", "ps_data")} with:
 \code{stra_1}...\code{stra_k} appended.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{outcome_col}, \code{id_col},
 \code{imputation_col}, \code{score_col}, \code{dist}, \code{n_strata}, \code{strata_col},
-\code{method}, \code{n_imputations}, \code{n_total}.}
+\code{bundle_version}, \code{model_family}, \code{package_versions}, \code{method},
+\code{n_imputations}, \code{n_total}.}
 \item{\verb{$tables}}{Named list: \code{strata_counts}.}
 }
 }
