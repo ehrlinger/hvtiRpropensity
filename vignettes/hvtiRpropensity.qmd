@@ -182,9 +182,11 @@ appends several columns that mirror the original SAS template output:
 
 ```{r}
 #| label: ps-logistic
+dta_ps <- sample_ps_data(n = 500, seed = 42)
+dta_ps$prob_t <- NULL
 obj_ps <- ps_logistic(
   tavr ~ age + female + ef + diabetes + hypertension,
-  data = sample_ps_data(n = 500, seed = 42)
+  data = dta_ps
 )
 print(obj_ps)
 ```
@@ -215,6 +217,7 @@ with `PROC SUMMARY mean=`.  Pass a stacked long-format MI data frame and set
 ```{r}
 #| label: ps-logistic-mi
 dta_base <- sample_ps_data(n = 300, seed = 10)
+dta_base$prob_t <- NULL
 
 # Simulate two imputed datasets stacked with an imputation index column
 dta_mi <- rbind(cbind(dta_base, imp = 1L),

@@ -101,7 +101,7 @@ fit_logistic <- function(formula, data,
                  call. = FALSE)
   }
   declared_levels <- as.character(outcome_levels)
-  minimum_levels <- if (identical(family, "binary")) 2L else 3L
+  minimum_levels <- 2L
   valid_length <- if (identical(family, "binary")) {
     length(declared_levels) == 2L
   } else {
@@ -112,7 +112,7 @@ fit_logistic <- function(formula, data,
     requirement <- if (identical(family, "binary")) {
       "exactly two"
     } else {
-      "at least three"
+      "at least two"
     }
     rlang::abort(
       sprintf("%s `outcome_levels` must contain %s unique non-missing values.",
@@ -146,6 +146,7 @@ fit_logistic <- function(formula, data,
       setdiff(declared_levels, declared_reference)
     )
   }
+  two_level <- length(model_levels) == 2L
   prediction_names <- if (identical(family, "binary")) {
     prediction_prefix
   } else {
@@ -166,13 +167,13 @@ fit_logistic <- function(formula, data,
 
   fit_fn <- function(partition) {
     model_data <- partition
-    ordered_outcome <- identical(family, "ordinal")
+    ordered_outcome <- identical(family, "ordinal") && !two_level
     model_data[[outcome_col]] <- factor(
       as.character(model_data[[outcome_col]]),
       levels = model_levels,
       ordered = ordered_outcome
     )
-    switch(
+    model <- switch(
       family,
       binary = stats::glm(
         formula,
@@ -180,12 +181,21 @@ fit_logistic <- function(formula, data,
         family = stats::binomial(),
         na.action = stats::na.exclude
       ),
-      ordinal = MASS::polr(
-        formula,
-        data = model_data,
-        Hess = TRUE,
-        na.action = stats::na.exclude
-      ),
+      ordinal = if (two_level) {
+        stats::glm(
+          formula,
+          data = model_data,
+          family = stats::binomial(),
+          na.action = stats::na.exclude
+        )
+      } else {
+        MASS::polr(
+          formula,
+          data = model_data,
+          Hess = TRUE,
+          na.action = stats::na.exclude
+        )
+      },
       nominal = nnet::multinom(
         formula,
         data = model_data,
@@ -194,10 +204,24 @@ fit_logistic <- function(formula, data,
         na.action = stats::na.exclude
       )
     )
+    if (identical(family, "ordinal") && two_level) {
+      attr(model, "hvti_outcome_levels") <- model_levels
+    }
+    model
   }
   predict_fn <- function(fit, partition) {
-    prediction_type <- if (identical(family, "binary")) "response" else "probs"
-    stats::predict(fit, newdata = partition, type = prediction_type)
+    prediction_type <- if (identical(family, "binary") ||
+                             (identical(family, "ordinal") && two_level)) {
+      "response"
+    } else {
+      "probs"
+    }
+    predictions <- stats::predict(fit, newdata = partition, type = prediction_type)
+    if (!identical(family, "binary") && two_level && is.null(dim(predictions))) {
+      predictions <- cbind(1 - predictions, predictions)
+      colnames(predictions) <- model_levels
+    }
+    predictions
   }
   fitted <- .fit_imputations(
     data = data,
@@ -223,7 +247,12 @@ fit_logistic <- function(formula, data,
     )
   }
   status <- fitted$status
-  model_engine <- switch(family, binary = "stats", ordinal = "MASS", nominal = "nnet")
+  model_engine <- switch(
+    family,
+    binary = "stats",
+    ordinal = if (two_level) "stats" else "MASS",
+    nominal = "nnet"
+  )
 
   meta <- list(
     bundle_version = 1L,

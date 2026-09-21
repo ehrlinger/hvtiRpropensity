@@ -187,6 +187,20 @@
     estimate <- stats::coef(fit)
     covariance <- stats::vcov(fit)
     terms <- names(estimate)
+  } else if (identical(family, "ordinal") && inherits(fit, "glm")) {
+    raw_estimate <- stats::coef(fit)
+    raw_covariance <- stats::vcov(fit)
+    predictor_terms <- setdiff(names(raw_estimate), "(Intercept)")
+    threshold_term <- paste0(
+      "threshold:",
+      paste(attr(fit, "hvti_outcome_levels"), collapse = "|")
+    )
+    order <- c(match(predictor_terms, names(raw_estimate)), match("(Intercept)", names(raw_estimate)))
+    signs <- c(rep.int(1, length(predictor_terms)), -1)
+    estimate <- raw_estimate[order] * signs
+    terms <- c(predictor_terms, threshold_term)
+    names(estimate) <- terms
+    covariance <- raw_covariance[order, order, drop = FALSE] * outer(signs, signs)
   } else if (identical(family, "ordinal")) {
     estimate <- c(stats::coef(fit), fit$zeta)
     terms <- c(names(stats::coef(fit)), paste0("threshold:", names(fit$zeta)))

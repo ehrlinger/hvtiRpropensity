@@ -89,6 +89,7 @@ matched) estimand weight and is used as input to \code{\link[=ps_match]{ps_match
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)
+dta$prob_t <- NULL
 
 # --- Single complete dataset (mirrors tp.lm.logistic_propensity_score.nomi.sas)
 # Equivalent to: PROC LOGISTIC data=built descending; model tavr = ...;

@@ -53,6 +53,7 @@ and \code{\link[hvtiPlotR:hv_balance]{hvtiPlotR::hv_balance()}}.
 
 # Step 1: estimate propensity score
 dta   <- sample_ps_data(n = 500, seed = 42)
+dta$prob_t <- NULL
 score <- ps_logistic(
   tavr ~ age + female + ef + diabetes + hypertension,
   data = dta

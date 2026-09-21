@@ -151,6 +151,12 @@
     data[data[[imputation_col]] == imp, , drop = FALSE]
   })
   for (i in seq_along(partitions)) {
+    if (anyNA(partitions[[i]][[id_col]])) {
+      rlang::abort(
+        sprintf("Imputation %s contains a missing patient key.", imputations[[i]]),
+        call. = FALSE
+      )
+    }
     duplicated_ids <- duplicated(partitions[[i]][[id_col]])
     if (any(duplicated_ids)) {
       rlang::abort(

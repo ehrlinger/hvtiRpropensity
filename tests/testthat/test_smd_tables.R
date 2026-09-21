@@ -20,6 +20,7 @@ test_that("ps_match() smd_before uses the SAS denominator when groups are unequa
 
 test_that("ps_logistic() smd matches ps_stddiff() with every covariate gaussian", {
   dta <- sample_ps_data(n = 150, seed = 3)
+  dta$prob_t <- NULL
   # sample_ps_data() splits the arms evenly, where the two denominators agree;
   # dropping treated patients makes them differ.
   dta <- dta[!(dta$tavr == 1 & seq_len(nrow(dta)) %% 3 != 0), ]

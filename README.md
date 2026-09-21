@@ -45,6 +45,7 @@ library(hvtiRpropensity)
 
 # Reproducible synthetic dataset
 dta <- sample_ps_data(n = 500, seed = 42)
+dta$prob_t <- NULL  # Preserve the generator's true score only when it is an input.
 
 # --- Propensity score estimation ---
 obj <- ps_logistic(tavr ~ age + female + ef + diabetes + hypertension, data = dta)

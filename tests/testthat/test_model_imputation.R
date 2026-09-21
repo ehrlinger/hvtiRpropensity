@@ -69,6 +69,15 @@ test_that("stacked fitting refuses duplicate patient keys", {
   )
 })
 
+test_that("stacked fitting refuses missing patient keys", {
+  d <- stacked_probe()
+  d$id[d$id == 3L] <- NA_integer_
+  expect_error(
+    .fit_imputations(d, "response", "id", "imp", probe_fit, probe_predict),
+    "Imputation 1.*missing patient key"
+  )
+})
+
 test_that("stacked fitting requires at least two imputations", {
   d <- stacked_probe()
   d <- d[d$imp == 1L, ]

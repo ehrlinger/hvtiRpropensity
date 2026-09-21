@@ -64,6 +64,21 @@
   prefix
 }
 
+.check_output_columns <- function(data, columns) {
+  if (anyNA(columns) || any(!nzchar(columns)) || anyDuplicated(columns)) {
+    rlang::abort("Output column names must be unique non-empty strings.", call. = FALSE)
+  }
+  existing <- intersect(columns, names(data))
+  if (length(existing)) {
+    rlang::abort(
+      sprintf("Output column(s) already exist in `data`: %s.",
+              paste(existing, collapse = ", ")),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
 
 # ---------------------------------------------------------------------------
 # ps_logistic
@@ -131,6 +146,7 @@
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 42)
+#' dta$prob_t <- NULL
 #'
 #' # --- Single complete dataset (mirrors tp.lm.logistic_propensity_score.nomi.sas)
 #' # Equivalent to: PROC LOGISTIC data=built descending; model tavr = ...;
@@ -212,6 +228,11 @@ ps_logistic <- function(formula,
   treatment_levels <- as.character(treatment_levels)
   if (is.null(treated_level)) treated_level <- utils::tail(treatment_levels, 1L)
   treated_level <- as.character(treated_level)
+
+  .check_output_columns(
+    data,
+    c(score_col, logit_col, weight_col, "quintile", "decile")
+  )
 
   private_prefix <- .temporary_prediction_prefix(data)
   model <- fit_logistic(
@@ -418,6 +439,9 @@ ps_ordinal <- function(formula,
   }
   treatment_levels <- as.character(treatment_levels)
 
+  score_cols <- paste0(score_col_prefix, "_", treatment_levels)
+  .check_output_columns(data, score_cols)
+
   private_prefix <- .temporary_prediction_prefix(data)
   model <- fit_logistic(
     formula = formula,
@@ -433,7 +457,6 @@ ps_ordinal <- function(formula,
   lvls <- treatment_levels
 
   # ---- Append probability columns -----------------------------------------
-  score_cols <- paste0(score_col_prefix, "_", lvls)
   for (i in seq_along(lvls)) {
     private_col <- paste0(private_prefix, "_", lvls[[i]])
     base_data[[score_cols[[i]]]] <- base_data[[private_col]]
@@ -612,6 +635,9 @@ ps_nominal <- function(formula,
   ref_level <- as.character(ref_level)
   model_levels <- c(ref_level, setdiff(treatment_levels, ref_level))
 
+  score_cols <- paste0(score_col_prefix, "_", model_levels)
+  .check_output_columns(data, score_cols)
+
   private_prefix <- .temporary_prediction_prefix(data)
   model <- fit_logistic(
     formula = formula,
@@ -629,7 +655,6 @@ ps_nominal <- function(formula,
   lvls <- model_levels
 
   # ---- Append probability columns -----------------------------------------
-  score_cols <- paste0(score_col_prefix, "_", lvls)
   for (i in seq_along(lvls)) {
     private_col <- paste0(private_prefix, "_", lvls[[i]])
     base_data[[score_cols[[i]]]] <- base_data[[private_col]]

@@ -65,6 +65,13 @@ reference:
   - bs_continuous
   - bs_count
 
+- title: "Outcome Models"
+  desc: >
+    Logistic outcome-model bundles and validation without refitting.
+  contents:
+  - fit_logistic
+  - validate_logistic
+
 - title: "Propensity Score Methods"
   desc: >
     Functions for balancing treated and control groups via matching or
