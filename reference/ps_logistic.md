@@ -16,7 +16,9 @@ ps_logistic(
   score_col = "prob_t",
   logit_col = "logit_t",
   weight_col = "mt_wt",
-  covariates = NULL
+  covariates = NULL,
+  treatment_levels = NULL,
+  treated_level = NULL
 )
 ```
 
@@ -69,6 +71,17 @@ ps_logistic(
   `treatment_col`, `score_col`, `logit_col`, `weight_col`, `id_col`,
   `"quintile"`, and `"decile"` are used.
 
+- treatment_levels:
+
+  Complete binary treatment levels. `NULL` preserves the historical 0/1
+  or logical interface.
+
+- treated_level:
+
+  Level whose probability is the propensity score. When
+  `treatment_levels` is supplied and this is `NULL`, its last value is
+  used.
+
 ## Value
 
 An object of class `c("ps_logistic", "ps_data")` with:
@@ -118,6 +131,7 @@ or
 
 ``` r
 dta <- sample_ps_data(n = 200, seed = 42)
+dta$prob_t <- NULL
 
 # --- Single complete dataset (mirrors tp.lm.logistic_propensity_score.nomi.sas)
 # Equivalent to: PROC LOGISTIC data=built descending; model tavr = ...;
@@ -132,7 +146,7 @@ print(obj)
 #>   PS column   : prob_t
 #>   Weight col  : mt_wt
 #>   Method      : logistic
-#>   Tables      : smd, group_counts 
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status 
 summary(obj)
 #> Summary of <ps_logistic>
 #> 
@@ -149,6 +163,51 @@ summary(obj)
 #>     group   n
 #> 1 control 200
 #> 2 treated 200
+#> 
+#> Estimates:
+#>           term    estimate  std.error  statistic  df      p.value    conf.low
+#> 1  (Intercept)  4.24504327 1.30086827  3.2632384 Inf 1.101468e-03  1.69538831
+#> 2          age -0.10638803 0.01575522 -6.7525593 Inf 1.452597e-11 -0.13726769
+#> 3       female  0.75688483 0.23165843  3.2672449 Inf 1.085997e-03  0.30284264
+#> 4           ef  0.06194245 0.01223150  5.0641747 Inf 4.101735e-07  0.03796915
+#> 5     diabetes -0.06529637 0.25459818 -0.2564683 Inf 7.975892e-01 -0.56429962
+#> 6 hypertension -0.01084919 0.23719636 -0.0457393 Inf 9.635180e-01 -0.47574552
+#>     conf.high odds_ratio pooled
+#> 1  6.79469822 69.7587783  FALSE
+#> 2 -0.07550838  0.8990757  FALSE
+#> 3  1.21092701  2.1316255  FALSE
+#> 4  0.08591575  1.0639011  FALSE
+#> 5  0.43370689  0.9367898  FALSE
+#> 6  0.45404713  0.9892094  FALSE
+#> 
+#> Covariance:
+#>               (Intercept)           age        female            ef
+#> (Intercept)   1.692258249 -1.724556e-02  7.125339e-03 -6.768683e-03
+#> age          -0.017245556  2.482268e-04 -3.290512e-04 -1.950182e-05
+#> female        0.007125339 -3.290512e-04  5.366563e-02 -8.526194e-05
+#> ef           -0.006768683 -1.950182e-05 -8.526194e-05  1.496096e-04
+#> diabetes     -0.012736931 -1.199707e-04 -1.767623e-03  1.059612e-04
+#> hypertension -0.039021927 -6.723910e-06 -1.699813e-03  1.024544e-04
+#>                   diabetes  hypertension
+#> (Intercept)  -0.0127369307 -3.902193e-02
+#> age          -0.0001199707 -6.723910e-06
+#> female       -0.0017676234 -1.699813e-03
+#> ef            0.0001059612  1.024544e-04
+#> diabetes      0.0648202310 -2.589114e-03
+#> hypertension -0.0025891136  5.626211e-02
+#> 
+#> By imputation:
+#>              imputation         term    estimate  std.error
+#> (Intercept)           1  (Intercept)  4.24504327 1.30086827
+#> age                   1          age -0.10638803 0.01575522
+#> female                1       female  0.75688483 0.23165843
+#> ef                    1           ef  0.06194245 0.01223150
+#> diabetes              1     diabetes -0.06529637 0.25459818
+#> hypertension          1 hypertension -0.01084919 0.23719636
+#> 
+#> Fit status:
+#>   imputation converged n_input n_analyzed n_excluded
+#> 1          1      TRUE     400        400          0
 #> 
 
 # The function appends:
@@ -197,7 +256,7 @@ print(obj_mi)
 #>   PS column   : prob_t
 #>   Weight col  : mt_wt
 #>   Method      : logistic-MI (2 imputations)
-#>   Tables      : smd, group_counts 
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status 
 # Per-patient PS is the average across the two imputed-dataset predictions,
 # matching the PROC SUMMARY mean= step in the SAS template.
 head(obj_mi$data[, c("id", "tavr", "prob_t")])

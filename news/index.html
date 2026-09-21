@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,13 @@
       <small>Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.6" id="hvtirpropensity-016">hvtiRpropensity 0.1.6<a class="anchor" aria-label="anchor" href="#hvtirpropensity-016"></a></h2>
+<ul><li>Adds <code><a href="../reference/fit_logistic.html">fit_logistic()</a></code> for binary, proportional-odds ordinal, and nominal generalized-logit model bundles, including explicit outcome-level contracts, retained per-imputation fits, averaged patient predictions, and Rubin-pooled coefficients and covariance.</li>
+<li>Adds <code><a href="../reference/validate_logistic.html">validate_logistic()</a></code> for calibration, observed-versus-expected events, AUC, and Brier validation of a saved version-1 binary bundle without refitting or modifying it.</li>
+<li>Existing binary, ordinal, and nominal propensity functions and count balancing scores retain their scored columns and diagnostics while gaining fitted models, inference, covariance, and fit-status tables. Negative-binomial bundles also retain theta for every imputation.</li>
+<li>Stacked-imputation workflows now require the same patient keys in every imputation. They error on missing patients instead of silently averaging a patient’s score over fewer imputations.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.5" id="hvtirpropensity-015">hvtiRpropensity 0.1.5<a class="anchor" aria-label="anchor" href="#hvtirpropensity-015"></a></h2>
 <ul><li><p><strong><code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> estimates a matching-weight treatment effect with a bootstrap variance</strong>, ported from the CCF <code>%mw_var</code> SAS macro (Rajeswaran 2014, after Li and Greene 2013). For each outcome it reports the <code>PROC MEANS</code> weighted mean, SD and sum of weights by group, the difference, and from <code>n_rep</code> replicates resampled within each group the bootstrap SD, <code>PCTLDEF=1</code> percentiles (<code>quantile(type = 4)</code>), z and p. As in the macro the weights are held fixed across replicates, so the SD ignores the uncertainty in estimating them; the documentation says so. The macro’s output labelled the sum of weights <code>N</code>, reported here as <code>sumwgt_0</code> and <code>sumwgt_1</code>.</p></li>

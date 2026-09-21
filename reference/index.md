@@ -47,6 +47,15 @@ outcomes, with optional multiple-imputation averaging.
   : Estimate a balancing score via negative-binomial or Poisson
   regression
 
+## Outcome Models
+
+Logistic outcome-model bundles and validation without refitting.
+
+- [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
+  : Fit a general logistic model bundle
+- [`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)
+  : Validate a saved binary logistic model
+
 ## Propensity Score Methods
 
 Functions for balancing treated and control groups via matching or

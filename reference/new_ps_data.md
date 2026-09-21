@@ -1,13 +1,13 @@
 # Construct a validated ps_data object
 
 Internal entry point used by every `ps_*()` function to create its
-return value. Enforces the three-slot contract (`$data`, `$meta`,
-`$tables`) and attaches the two-level S3 class vector.
+return value. Enforces the four-slot contract (`$data`, `$meta`,
+`$tables`, `$models`) and attaches the two-level S3 class vector.
 
 ## Usage
 
 ``` r
-new_ps_data(data, meta, tables = list(), subclass)
+new_ps_data(data, meta, tables = list(), models = list(), subclass)
 ```
 
 ## Arguments
@@ -26,6 +26,11 @@ new_ps_data(data, meta, tables = list(), subclass)
 
   A named list of diagnostic objects (SMD tables, group counts,
   effective N, etc.). May be
+  [`list()`](https://rdrr.io/r/base/list.html).
+
+- models:
+
+  A named list of fitted model objects. May be
   [`list()`](https://rdrr.io/r/base/list.html).
 
 - subclass:

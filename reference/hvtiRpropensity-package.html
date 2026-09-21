@@ -75,7 +75,7 @@ and hvtiPlotR::hv_balance()."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,6 +148,7 @@ and <code>hvtiPlotR::hv_balance()</code>.</p>
 <span></span>
 <span><span class="co"># Step 1: estimate propensity score</span></span>
 <span><span class="va">dta</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">dta</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span><span class="va">score</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_logistic.html">ps_logistic</a></span><span class="op">(</span></span>
 <span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dta</span></span>

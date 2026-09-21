@@ -30,10 +30,11 @@ analysis:
     [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
     [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
 
-All score and balance objects share a common `ps_data` S3 base class
-whose `$data` slot carries the original dataset with appended columns,
-`$meta` holds run parameters, and `$tables` carries SMD and group-count
-diagnostics.
+All score, balance, fit, and validation objects share a common `ps_data`
+S3 base class with four slots: `$data` carries patient-level outputs,
+`$meta` records the declared contract and row accounting, `$tables`
+carries inference and diagnostics, and `$models` retains every fitted
+model used to create the result.
 
 ------------------------------------------------------------------------
 
@@ -90,9 +91,122 @@ hist(
 
 ------------------------------------------------------------------------
 
-## 3 Propensity score estimation
+## 3 Outcome-model bundles
 
-### 3.1 Binary treatment — `ps_logistic()`
+[`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
+fits binary, proportional-odds ordinal, and generalized-logit nominal
+outcome models. The complete outcome levels and the event or reference
+level are required. This makes the scientific contrast independent of
+factor storage order.
+
+``` r
+
+outcome_model <- fit_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data = dta,
+  family = "binary",
+  outcome_levels = c(0, 1),
+  event_level = 1
+)
+outcome_model$tables$estimates
+#>           term    estimate   std.error statistic  df      p.value    conf.low
+#> 1  (Intercept)  4.33969066 0.794459051  5.462447 Inf 4.696151e-08  2.78257953
+#> 2          age -0.09351411 0.009427068 -9.919745 Inf 3.416280e-23 -0.11199082
+#> 3       female  0.23341073 0.141967346  1.644116 Inf 1.001523e-01 -0.04484016
+#> 4           ef  0.04999120 0.006963766  7.178759 Inf 7.034695e-13  0.03634247
+#> 5     diabetes -0.32463972 0.158007358 -2.054586 Inf 3.991900e-02 -0.63432845
+#> 6 hypertension -0.16776550 0.143950649 -1.165438 Inf 2.438419e-01 -0.44990358
+#>     conf.high odds_ratio pooled
+#> 1  5.89680179 76.6838145  FALSE
+#> 2 -0.07503740  0.9107252  FALSE
+#> 3  0.51166161  1.2629001  FALSE
+#> 4  0.06363993  1.0512618  FALSE
+#> 5 -0.01495099  0.7227877  FALSE
+#> 6  0.11437259  0.8455521  FALSE
+outcome_model$tables$fit_status
+#>   imputation converged n_input n_analyzed n_excluded
+#> 1          1      TRUE    1000       1000          0
+```
+
+Every bundle records `bundle_version = 1L`, the formula, required
+predictors, declared outcome levels, package versions, analysis counts,
+all model objects, and four common inference tables:
+
+| table | schema |
+|----|----|
+| `estimates` | `term`, `estimate`, `std.error`, `statistic`, `df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio`, `pooled` |
+| `covariance` | named coefficient covariance matrix |
+| `by_imputation` | `imputation`, `term`, `estimate`, `std.error` |
+| `fit_status` | `imputation`, `converged`, `n_input`, `n_analyzed`, `n_excluded` |
+
+For stacked long-form imputations, the same model is fit independently
+within each imputation. Predictions are averaged patient by patient,
+matching the legacy `PROC SUMMARY mean=` workflow, while coefficient
+inference and covariance use Rubin’s rules. These answer different
+questions and are stored separately. A missing patient, changed outcome
+or categorical predictor level, aliased term, failed fit, or unusable
+covariance stops pooling.
+
+``` r
+
+dta_mi <- do.call(rbind, lapply(1:3, function(imputation) {
+  partition <- dta
+  partition$age <- partition$age + (imputation - 2) / 10
+  partition$imputation <- imputation
+  partition
+}))
+
+outcome_model_mi <- fit_logistic(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data = dta_mi,
+  family = "binary",
+  id_col = "id",
+  imputation_col = "imputation",
+  outcome_levels = c(0, 1),
+  event_level = 1
+)
+outcome_model_mi$tables$estimates
+#>           term    estimate   std.error statistic           df      p.value
+#> 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08
+#> 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23
+#> 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01
+#> 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13
+#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02
+#> 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01
+#>      conf.low   conf.high odds_ratio pooled
+#> 1  2.78243495  5.89694637 76.6838145   TRUE
+#> 2 -0.11199082 -0.07503740  0.9107252   TRUE
+#> 3 -0.04484016  0.51166161  1.2629001   TRUE
+#> 4  0.03634247  0.06363993  1.0512618   TRUE
+#> 5 -0.63432845 -0.01495099  0.7227877   TRUE
+#> 6 -0.44990358  0.11437259  0.8455521   TRUE
+outcome_model_mi$tables$fit_status
+#>   imputation converged n_input n_analyzed n_excluded
+#> 1          1      TRUE    1000       1000          0
+#> 2          2      TRUE    1000       1000          0
+#> 3          3      TRUE    1000       1000          0
+```
+
+[`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)
+scores a validation cohort from a saved binary bundle without refitting
+and without modifying the source object. It returns equal-frequency
+calibration groups and a performance row containing observed and
+expected event counts, O:E ratio, AUC, and Brier score. The first
+interface is intentionally binary only.
+
+``` r
+
+validation <- validate_logistic(outcome_model, dta, groups = 10L)
+validation$tables$performance
+#>      n observed expected oe_ratio     auc     brier
+#> 1 1000      500      500        1 0.74406 0.2044163
+```
+
+------------------------------------------------------------------------
+
+## 4 Propensity score estimation
+
+### 4.1 Binary treatment — `ps_logistic()`
 
 In practice a propensity score is estimated from covariates before
 matching or weighting.
@@ -110,9 +224,11 @@ that mirror the original SAS template output:
 
 ``` r
 
+dta_ps <- sample_ps_data(n = 500, seed = 42)
+dta_ps$prob_t <- NULL
 obj_ps <- ps_logistic(
   tavr ~ age + female + ef + diabetes + hypertension,
-  data = sample_ps_data(n = 500, seed = 42)
+  data = dta_ps
 )
 print(obj_ps)
 #> <ps_logistic>
@@ -121,7 +237,7 @@ print(obj_ps)
 #>   PS column   : prob_t
 #>   Weight col  : mt_wt
 #>   Method      : logistic
-#>   Tables      : smd, group_counts
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status
 ```
 
 The scored dataset can be passed directly to
@@ -156,7 +272,7 @@ print(m_from_ps)
 #>   Tables      : smd_before, smd_after, group_counts_before, group_counts_after
 ```
 
-### 3.2 Multiply-imputed data
+### 4.2 Multiply-imputed data
 
 The SAS template fits the model separately on each imputed dataset
 (`PROC LOGISTIC ... BY _IMPUTATION_`) and averages predicted
@@ -166,6 +282,7 @@ data frame and set `imputation_col` to replicate this.
 ``` r
 
 dta_base <- sample_ps_data(n = 300, seed = 10)
+dta_base$prob_t <- NULL
 
 # Simulate two imputed datasets stacked with an imputation index column
 dta_mi <- rbind(cbind(dta_base, imp = 1L),
@@ -184,7 +301,7 @@ print(obj_mi)
 #>   PS column   : prob_t
 #>   Weight col  : mt_wt
 #>   Method      : logistic-MI (2 imputations)
-#>   Tables      : smd, group_counts
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status
 
 # Per-patient PS is averaged across imputations, matching PROC SUMMARY mean=
 summary(obj_mi$data$prob_t)
@@ -192,7 +309,7 @@ summary(obj_mi$data$prob_t)
 #> 0.02227 0.30987 0.48499 0.50000 0.68398 0.94193
 ```
 
-### 3.3 Ordinal treatment — `ps_ordinal()`
+### 4.3 Ordinal treatment — `ps_ordinal()`
 
 For ordered treatment variables (e.g. NYHA functional class I / II /
 III–IV),
@@ -220,7 +337,7 @@ print(obj_ord)
 #>   Treatment   : nyha_grp (3 levels: I < II < III)
 #>   Score cols  : prob_I, prob_II, prob_III
 #>   Method      : ordinal-logistic
-#>   Tables      : group_counts
+#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status
 
 # One marginal probability column per level
 head(obj_ord$data[, c("id", "nyha_grp",
@@ -238,7 +355,7 @@ table(obj_ord$data$quintile)
 #> < table of extent 0 >
 ```
 
-### 3.4 Nominal treatment — `ps_nominal()`
+### 4.4 Nominal treatment — `ps_nominal()`
 
 For unordered multi-level treatments (e.g. repair type: CE / COS / PER /
 DEV),
@@ -263,7 +380,7 @@ print(obj_nom)
 #>   Reference   : COS
 #>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE
 #>   Method      : nominal-logistic
-#>   Tables      : group_counts
+#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status
 
 # One probability column per repair type (analogous to p_cos, p_per, etc.)
 head(obj_nom$data[, c("id", "rtyp", obj_nom$meta$score_cols)])
@@ -278,7 +395,7 @@ head(obj_nom$data[, c("id", "rtyp", obj_nom$meta$score_cols)])
 
 ------------------------------------------------------------------------
 
-## 4 Balancing scores for continuous and count exposures
+## 5 Balancing scores for continuous and count exposures
 
 When the “treatment” is a continuous or count variable (e.g. units of
 RBC transfused, nadir haematocrit), a propensity score is undefined. The
@@ -287,7 +404,7 @@ predictor from a saturated model. Patients with similar balancing scores
 have similar expected exposure values, enabling within-stratum
 comparisons analogous to PS stratification.
 
-### 4.1 Continuous exposure — `bs_continuous()`
+### 5.1 Continuous exposure — `bs_continuous()`
 
 Mirrors `tp.rm.continuous.balncing_score.sas` (PROC REG balancing score
 on nadir HCT). The fitted value from
@@ -327,7 +444,7 @@ table(obj_bs$data$cluster)
 #> 80 80 80 80 80 80 80 80 80 80
 ```
 
-### 4.2 Count exposure — `bs_count()`
+### 5.2 Count exposure — `bs_count()`
 
 Mirrors `tp.pm.count.balncing_score.sas` (PROC GENMOD dist=nb link=log).
 The **linear predictor on the log scale** (`xbeta`) is used as the
@@ -352,7 +469,7 @@ print(obj_cnt)
 #>   Distribution: negbin
 #>   Strata      : 10 clusters (cluster)
 #>   Method      : balancing-negbin
-#>   Tables      : strata_counts
+#>   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status
 
 head(obj_cnt$data[, c("id", "rbc_tot", "bs", "cluster",
                        "stra_1", "stra_2")])
@@ -367,9 +484,9 @@ head(obj_cnt$data[, c("id", "rbc_tot", "bs", "cluster",
 
 ------------------------------------------------------------------------
 
-## 5 Propensity score matching
+## 6 Propensity score matching
 
-### 5.1 Build the matched object
+### 6.1 Build the matched object
 
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 performs greedy 1:1 nearest-neighbour matching without replacement.
@@ -386,7 +503,7 @@ print(m)
 #>   Tables      : smd_before, smd_after, group_counts_before, group_counts_after
 ```
 
-### 5.2 Diagnostics
+### 6.2 Diagnostics
 
 [`summary()`](https://rdrr.io/r/base/summary.html) prints the available
 diagnostic tables.
@@ -443,7 +560,7 @@ m$tables$smd_after
 #> hypertension hypertension -0.0615
 ```
 
-### 5.3 Extract the matched dataset
+### 6.3 Extract the matched dataset
 
 `$data` is the *full* dataset with a `match` column set to `1` for
 matched pairs. Filter to `match == 1` to obtain the matched subset.
@@ -459,7 +576,7 @@ table(matched$tavr)
 #> 400 400
 ```
 
-### 5.4 Caliper matching
+### 6.4 Caliper matching
 
 A caliper restricts matches to pairs whose propensity scores differ by
 no more than the supplied threshold, reducing the number of matched
@@ -479,9 +596,9 @@ print(m_cal)
 
 ------------------------------------------------------------------------
 
-## 6 Inverse-probability-of-treatment weighting
+## 7 Inverse-probability-of-treatment weighting
 
-### 6.1 ATE weights (default)
+### 7.1 ATE weights (default)
 
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
 computes IPTW weights and appends them to `$data`. The default estimand
@@ -552,7 +669,7 @@ summary(w_ate$data$iptw)
 #>  0.5090  0.6687  0.8189  0.9951  1.1024  5.9547
 ```
 
-### 6.2 ATT and ATC weights
+### 7.2 ATT and ATC weights
 
 For the **average treatment effect on the treated** (ATT), treated
 patients receive weight `1` and controls receive `ps / (1 - ps)`.
@@ -576,7 +693,7 @@ summary(w_atc$data$iptw)
 #> 0.009041 0.313837 0.500000 0.493136 0.500000 3.367004
 ```
 
-### 6.3 Weight trimming (winsorisation)
+### 7.3 Weight trimming (winsorisation)
 
 Extreme weights can destabilise estimates. Supplying `trim` winsorises
 weights to the (`trim`, `1 - trim`) quantile range.
@@ -591,7 +708,7 @@ summary(w_trim$data$iptw)
 
 ------------------------------------------------------------------------
 
-## 7 Sensitivity analysis
+## 8 Sensitivity analysis
 
 Every observational study rests on the assumption of no unmeasured
 confounding. The four `sa_*` functions quantify how strong an unmeasured
@@ -604,7 +721,7 @@ m    <- ps_match(dta, seed = 42)
 w    <- ps_weight(dta, estimand = "ATE")
 ```
 
-### 7.1 Overlap and positivity — `sa_overlap()`
+### 8.1 Overlap and positivity — `sa_overlap()`
 
 Before any analysis, check that the PS distributions overlap
 sufficiently.
@@ -628,7 +745,7 @@ ov$positivity_flags
 #> 2 treated           1          2           0.2          0.4
 ```
 
-### 7.2 Weight-trimming sensitivity sweep — `sa_trim_sweep()`
+### 8.2 Weight-trimming sensitivity sweep — `sa_trim_sweep()`
 
 Extreme IPTW weights inflate variance and can dominate estimates.
 [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
@@ -656,7 +773,7 @@ sweep[sweep$trim %in% c(0, 0.05), c("trim", "ess_control",
 #> 6 0.05       434.6       428.6     1.9526
 ```
 
-### 7.3 E-values — `sa_evalue()`
+### 8.3 E-values — `sa_evalue()`
 
 The E-value (VanderWeele & Ding 2017) is the minimum risk-ratio that an
 unmeasured confounder would need with *both* the treatment and the
@@ -682,7 +799,7 @@ ev_rd$evalue_estimate
 #> [1] 2.437644
 ```
 
-### 7.4 Rosenbaum sensitivity bounds — `sa_rosenbaum()`
+### 8.4 Rosenbaum sensitivity bounds — `sa_rosenbaum()`
 
 For matched analyses,
 [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
@@ -714,13 +831,13 @@ head(res$bounds)
 
 ------------------------------------------------------------------------
 
-## 8 Downstream use with hvtiPlotR
+## 9 Downstream use with hvtiPlotR
 
 The `$data` and `$tables` slots are designed for direct consumption by
 `hvtiPlotR::hv_mirror_hist()` (weighted mode) and
 `hvtiPlotR::hv_balance()`.
 
-### 8.1 Mirror histogram (matched)
+### 9.1 Mirror histogram (matched)
 
 ``` r
 
@@ -739,7 +856,7 @@ plot(mh) +
   hv_theme("manuscript")
 ```
 
-### 8.2 Mirror histogram (weighted)
+### 9.2 Mirror histogram (weighted)
 
 ``` r
 
@@ -758,7 +875,7 @@ plot(mh_wt) +
 
 ------------------------------------------------------------------------
 
-## 9 Session info
+## 10 Session info
 
 ``` r
 
@@ -784,11 +901,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] hvtiRpropensity_0.1.5
+#> [1] hvtiRpropensity_0.1.6
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] MASS_7.3-65     compiler_4.6.1  fastmap_1.2.0   cli_3.6.6      
 #>  [5] tools_4.6.1     htmltools_0.5.9 otel_0.2.0      nnet_7.3-20    
 #>  [9] yaml_2.3.12     rmarkdown_2.32  knitr_1.52      jsonlite_2.0.0 
-#> [13] xfun_0.60       digest_0.6.39   rlang_1.3.0     evaluate_1.0.5
+#> [13] xfun_0.61       digest_0.6.39   rlang_1.3.0     evaluate_1.0.5
 ```

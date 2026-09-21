@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,6 +85,7 @@
 <span></span>
 <span><span class="co"># Reproducible synthetic dataset</span></span>
 <span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">dta</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>  <span class="co"># Preserve the generator's true score only when it is an input.</span></span>
 <span></span>
 <span><span class="co"># --- Propensity score estimation ---</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_logistic.html">ps_logistic</a></span><span class="op">(</span><span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>, data <span class="op">=</span> <span class="va">dta</span><span class="op">)</span></span>
@@ -101,6 +102,33 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="logistic-model-bundles">Logistic model bundles<a class="anchor" aria-label="anchor" href="#logistic-model-bundles"></a>
+</h2>
+<p><code><a href="reference/fit_logistic.html">fit_logistic()</a></code> fits binary, proportional-odds ordinal, and generalized-logit nominal outcome models. Clinically meaningful levels are always explicit; factor storage order never decides the event, order, or reference category.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">binary_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_logistic.html">fit_logistic</a></span><span class="op">(</span></span>
+<span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">dta</span>,</span>
+<span>  family <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  outcome_levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  event_level <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Every model-producing result has four slots:</p>
+<ul>
+<li>
+<code>$data</code>: patient-level data with predictions or scores;</li>
+<li>
+<code>$meta</code>: formula, declared levels, model family, row accounting, package versions, and <code>bundle_version = 1L</code>;</li>
+<li>
+<code>$tables</code>: <code>estimates</code>, <code>covariance</code>, <code>by_imputation</code>, and <code>fit_status</code>, plus workflow-specific diagnostics;</li>
+<li>
+<code>$models</code>: every fitted model, including every imputation-specific fit.</li>
+</ul>
+<p>The <code>estimates</code> table has columns <code>term</code>, <code>estimate</code>, <code>std.error</code>, <code>statistic</code>, <code>df</code>, <code>p.value</code>, <code>conf.low</code>, <code>conf.high</code>, <code>odds_ratio</code>, and <code>pooled</code>. <code>by_imputation</code> has <code>imputation</code>, <code>term</code>, <code>estimate</code>, and <code>std.error</code>; <code>fit_status</code> has <code>imputation</code>, <code>converged</code>, <code>n_input</code>, <code>n_analyzed</code>, and <code>n_excluded</code>.</p>
+<p>For stacked imputations, patient predictions are averaged across fits while coefficients and covariance use Rubin’s rules. Missing patients, changed categorical predictor levels, aliased terms, non-convergence, and unusable covariance matrices stop the analysis instead of producing a partial pool.</p>
+<p><code><a href="reference/validate_logistic.html">validate_logistic()</a></code> applies a saved version-1 binary bundle to a declared validation cohort without refitting. It reports calibration, observed versus expected events, AUC, and Brier score. Ordinal and nominal validation are not part of this first interface.</p>
+</div>
+<div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
 </h2>
 <p><strong>Score estimation</strong></p>
@@ -114,6 +142,14 @@
 <th>Description</th>
 </tr></thead>
 <tbody>
+<tr>
+<td><code><a href="reference/fit_logistic.html">fit_logistic()</a></code></td>
+<td>Binary, ordinal, or nominal outcome-model bundle, with optional MI</td>
+</tr>
+<tr>
+<td><code><a href="reference/validate_logistic.html">validate_logistic()</a></code></td>
+<td>No-refit validation of a saved binary model bundle</td>
+</tr>
 <tr>
 <td><code><a href="reference/ps_logistic.html">ps_logistic()</a></code></td>
 <td>Binary propensity score via logistic regression (with optional MI)</td>

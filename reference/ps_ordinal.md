@@ -16,7 +16,8 @@ ps_ordinal(
   id_col = "id",
   imputation_col = NULL,
   score_col_prefix = "prob",
-  covariates = NULL
+  covariates = NULL,
+  treatment_levels = NULL
 )
 ```
 
@@ -54,6 +55,11 @@ ps_ordinal(
 - covariates:
 
   Covariate columns for diagnostics.
+
+- treatment_levels:
+
+  Complete ordered treatment levels. `NULL` preserves the levels
+  inferred by the historical interface.
 
 ## Value
 
@@ -108,7 +114,7 @@ print(obj)
 #>   Treatment   : nyha_grp (3 levels: I < II < III)
 #>   Score cols  : prob_I, prob_II, prob_III
 #>   Method      : ordinal-logistic
-#>   Tables      : group_counts 
+#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status 
 
 # Each level gets its own probability column (marginal, not cumulative).
 # The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.

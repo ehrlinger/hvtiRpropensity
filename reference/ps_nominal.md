@@ -18,7 +18,8 @@ ps_nominal(
   ref_level = NULL,
   score_col_prefix = "prob",
   trace = FALSE,
-  covariates = NULL
+  covariates = NULL,
+  treatment_levels = NULL
 )
 ```
 
@@ -66,6 +67,11 @@ ps_nominal(
 - covariates:
 
   Covariate columns for diagnostics.
+
+- treatment_levels:
+
+  Complete nominal treatment levels. `NULL` preserves the levels
+  inferred by the historical interface.
 
 ## Value
 
@@ -123,7 +129,7 @@ print(obj)
 #>   Reference   : COS
 #>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE
 #>   Method      : nominal-logistic
-#>   Tables      : group_counts 
+#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status 
 
 # One probability column per treatment level (analogous to p_cos, p_per,
 # p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).

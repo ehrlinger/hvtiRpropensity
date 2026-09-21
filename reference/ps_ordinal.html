@@ -13,7 +13,7 @@ PROC LOGISTIC behaviour for ordinal responses in SAS."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,8 @@ treatment level to the dataset.  The model is equivalent to the default
 <span>  id_col <span class="op">=</span> <span class="st">"id"</span>,</span>
 <span>  imputation_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  score_col_prefix <span class="op">=</span> <span class="st">"prob"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  treatment_levels <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,6 +104,11 @@ Default <code>"prob"</code>.</p></dd>
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
 <dd><p>Covariate columns for diagnostics.</p></dd>
+
+
+<dt id="arg-treatment-levels">treatment_levels<a class="anchor" aria-label="anchor" href="#arg-treatment-levels"></a></dt>
+<dd><p>Complete ordered treatment levels. <code>NULL</code> preserves
+the levels inferred by the historical interface.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -157,7 +163,7 @@ base R).  Install with <code>install.packages("MASS")</code> if missing.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Treatment   : nyha_grp (3 levels: I &lt; II &lt; III)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Score cols  : prob_I, prob_II, prob_III</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : ordinal-logistic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : group_counts </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Each level gets its own probability column (marginal, not cumulative).</span></span></span>
 <span class="r-in"><span><span class="co"># The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.</span></span></span>

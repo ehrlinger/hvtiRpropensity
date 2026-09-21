@@ -11,7 +11,7 @@ Supports multiply-imputed data in a stacked "long" format.'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,9 @@ Supports multiply-imputed data in a stacked "long" format.</p>
 <span>  score_col <span class="op">=</span> <span class="st">"prob_t"</span>,</span>
 <span>  logit_col <span class="op">=</span> <span class="st">"logit_t"</span>,</span>
 <span>  weight_col <span class="op">=</span> <span class="st">"mt_wt"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  treatment_levels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,6 +120,16 @@ balance diagnostics.  If <code>NULL</code> (default), all numeric columns other
 than <code>treatment_col</code>, <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code>,
 <code>id_col</code>, <code>"quintile"</code>, and <code>"decile"</code> are used.</p></dd>
 
+
+<dt id="arg-treatment-levels">treatment_levels<a class="anchor" aria-label="anchor" href="#arg-treatment-levels"></a></dt>
+<dd><p>Complete binary treatment levels. <code>NULL</code> preserves
+the historical 0/1 or logical interface.</p></dd>
+
+
+<dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
+<dd><p>Level whose probability is the propensity score. When
+<code>treatment_levels</code> is supplied and this is <code>NULL</code>, its last value is used.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -159,6 +171,7 @@ matched) estimand weight and is used as input to <code><a href="ps_match.html">p
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dta</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># --- Single complete dataset (mirrors tp.lm.logistic_propensity_score.nomi.sas)</span></span></span>
 <span class="r-in"><span><span class="co"># Equivalent to: PROC LOGISTIC data=built descending; model tavr = ...;</span></span></span>
@@ -173,7 +186,7 @@ matched) estimand weight and is used as input to <code><a href="ps_match.html">p
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PS column   : prob_t</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Weight col  : mt_wt</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : logistic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : smd, group_counts </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Summary of &lt;ps_logistic&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -190,6 +203,51 @@ matched) estimand weight and is used as input to <code><a href="ps_match.html">p
 <span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Estimates:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           term    estimate  std.error  statistic  df      p.value    conf.low</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  (Intercept)  4.24504327 1.30086827  3.2632384 Inf 1.101468e-03  1.69538831</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          age -0.10638803 0.01575522 -6.7525593 Inf 1.452597e-11 -0.13726769</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3       female  0.75688483 0.23165843  3.2672449 Inf 1.085997e-03  0.30284264</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           ef  0.06194245 0.01223150  5.0641747 Inf 4.101735e-07  0.03796915</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     diabetes -0.06529637 0.25459818 -0.2564683 Inf 7.975892e-01 -0.56429962</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 hypertension -0.01084919 0.23719636 -0.0457393 Inf 9.635180e-01 -0.47574552</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     conf.high odds_ratio pooled</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  6.79469822 69.7587783  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -0.07550838  0.8990757  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  1.21092701  2.1316255  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.08591575  1.0639011  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.43370689  0.9367898  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.45404713  0.9892094  FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Covariance:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               (Intercept)           age        female            ef</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept)   1.692258249 -1.724556e-02  7.125339e-03 -6.768683e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age          -0.017245556  2.482268e-04 -3.290512e-04 -1.950182e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female        0.007125339 -3.290512e-04  5.366563e-02 -8.526194e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef           -0.006768683 -1.950182e-05 -8.526194e-05  1.496096e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes     -0.012736931 -1.199707e-04 -1.767623e-03  1.059612e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension -0.039021927 -6.723910e-06 -1.699813e-03  1.024544e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   diabetes  hypertension</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept)  -0.0127369307 -3.902193e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age          -0.0001199707 -6.723910e-06</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female       -0.0017676234 -1.699813e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef            0.0001059612  1.024544e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes      0.0648202310 -2.589114e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension -0.0025891136  5.626211e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> By imputation:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              imputation         term    estimate  std.error</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> (Intercept)           1  (Intercept)  4.24504327 1.30086827</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age                   1          age -0.10638803 0.01575522</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> female                1       female  0.75688483 0.23165843</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ef                    1           ef  0.06194245 0.01223150</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> diabetes              1     diabetes -0.06529637 0.25459818</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hypertension          1 hypertension -0.01084919 0.23719636</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit status:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   imputation converged n_input n_analyzed n_excluded</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          1      TRUE     400        400          0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The function appends:</span></span></span>
@@ -238,7 +296,7 @@ matched) estimand weight and is used as input to <code><a href="ps_match.html">p
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PS column   : prob_t</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Weight col  : mt_wt</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : logistic-MI (2 imputations)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : smd, group_counts </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status </span>
 <span class="r-in"><span><span class="co"># Per-patient PS is the average across the two imputed-dataset predictions,</span></span></span>
 <span class="r-in"><span><span class="co"># matching the PROC SUMMARY mean= step in the SAS template.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_mi</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"tavr"</span>, <span class="st">"prob_t"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>

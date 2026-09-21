@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@
       <h1>Introduction to hvtiRpropensity</h1>
 
       <p class="author">John Ehrlinger</p>
-      <p class="date">2026-09-17</p>
+      <p class="date">2026-09-21</p>
 
       <small class="dont-index">Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/vignettes/hvtiRpropensity.qmd" class="external-link"><code>vignettes/hvtiRpropensity.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
@@ -92,7 +92,7 @@
 <strong>Assess sensitivity to unmeasured confounding</strong> — <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="../reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="../reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>
 </li>
 </ol>
-<p>All score and balance objects share a common <code>ps_data</code> S3 base class whose <code>$data</code> slot carries the original dataset with appended columns, <code>$meta</code> holds run parameters, and <code>$tables</code> carries SMD and group-count diagnostics.</p>
+<p>All score, balance, fit, and validation objects share a common <code>ps_data</code> S3 base class with four slots: <code>$data</code> carries patient-level outputs, <code>$meta</code> records the declared contract and row accounting, <code>$tables</code> carries inference and diagnostics, and <code>$models</code> retains every fitted model used to create the result.</p>
 <hr></section><section class="level2" data-number="2"><h2 data-number="2" id="sample-data">
 <span class="header-section-number">2</span> Sample data<a class="anchor" aria-label="anchor" href="#sample-data"></a>
 </h2>
@@ -137,11 +137,126 @@
 </div>
 </div>
 </div>
-<hr></section><section class="level2" data-number="3"><h2 data-number="3" id="propensity-score-estimation">
-<span class="header-section-number">3</span> Propensity score estimation<a class="anchor" aria-label="anchor" href="#propensity-score-estimation"></a>
+<hr></section><section class="level2" data-number="3"><h2 data-number="3" id="outcome-model-bundles">
+<span class="header-section-number">3</span> Outcome-model bundles<a class="anchor" aria-label="anchor" href="#outcome-model-bundles"></a>
 </h2>
-<section class="level3" data-number="3.1"><h3 data-number="3.1" id="binary-treatment-ps_logistic">
-<span class="header-section-number">3.1</span> Binary treatment — <code>ps_logistic()</code>
+<p><code><a href="../reference/fit_logistic.html">fit_logistic()</a></code> fits binary, proportional-odds ordinal, and generalized-logit nominal outcome models. The complete outcome levels and the event or reference level are required. This makes the scientific contrast independent of factor storage order.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">outcome_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_logistic.html">fit_logistic</a></span><span class="op">(</span></span>
+<span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">dta</span>,</span>
+<span>  family <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  outcome_levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  event_level <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">outcome_model</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">estimates</span></span>
+<span><span class="co">#&gt;           term    estimate   std.error statistic  df      p.value    conf.low</span></span>
+<span><span class="co">#&gt; 1  (Intercept)  4.33969066 0.794459051  5.462447 Inf 4.696151e-08  2.78257953</span></span>
+<span><span class="co">#&gt; 2          age -0.09351411 0.009427068 -9.919745 Inf 3.416280e-23 -0.11199082</span></span>
+<span><span class="co">#&gt; 3       female  0.23341073 0.141967346  1.644116 Inf 1.001523e-01 -0.04484016</span></span>
+<span><span class="co">#&gt; 4           ef  0.04999120 0.006963766  7.178759 Inf 7.034695e-13  0.03634247</span></span>
+<span><span class="co">#&gt; 5     diabetes -0.32463972 0.158007358 -2.054586 Inf 3.991900e-02 -0.63432845</span></span>
+<span><span class="co">#&gt; 6 hypertension -0.16776550 0.143950649 -1.165438 Inf 2.438419e-01 -0.44990358</span></span>
+<span><span class="co">#&gt;     conf.high odds_ratio pooled</span></span>
+<span><span class="co">#&gt; 1  5.89680179 76.6838145  FALSE</span></span>
+<span><span class="co">#&gt; 2 -0.07503740  0.9107252  FALSE</span></span>
+<span><span class="co">#&gt; 3  0.51166161  1.2629001  FALSE</span></span>
+<span><span class="co">#&gt; 4  0.06363993  1.0512618  FALSE</span></span>
+<span><span class="co">#&gt; 5 -0.01495099  0.7227877  FALSE</span></span>
+<span><span class="co">#&gt; 6  0.11437259  0.8455521  FALSE</span></span>
+<span><span class="va">outcome_model</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">fit_status</span></span>
+<span><span class="co">#&gt;   imputation converged n_input n_analyzed n_excluded</span></span>
+<span><span class="co">#&gt; 1          1      TRUE    1000       1000          0</span></span></code></pre></div>
+</div>
+<p>Every bundle records <code>bundle_version = 1L</code>, the formula, required predictors, declared outcome levels, package versions, analysis counts, all model objects, and four common inference tables:</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>table</th>
+<th>schema</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>estimates</code></td>
+<td>
+<code>term</code>, <code>estimate</code>, <code>std.error</code>, <code>statistic</code>, <code>df</code>, <code>p.value</code>, <code>conf.low</code>, <code>conf.high</code>, <code>odds_ratio</code>, <code>pooled</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>covariance</code></td>
+<td>named coefficient covariance matrix</td>
+</tr>
+<tr class="odd">
+<td><code>by_imputation</code></td>
+<td>
+<code>imputation</code>, <code>term</code>, <code>estimate</code>, <code>std.error</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>fit_status</code></td>
+<td>
+<code>imputation</code>, <code>converged</code>, <code>n_input</code>, <code>n_analyzed</code>, <code>n_excluded</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For stacked long-form imputations, the same model is fit independently within each imputation. Predictions are averaged patient by patient, matching the legacy <code>PROC SUMMARY mean=</code> workflow, while coefficient inference and covariance use Rubin’s rules. These answer different questions and are stored separately. A missing patient, changed outcome or categorical predictor level, aliased term, failed fit, or unusable covariance stops pooling.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dta_mi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">imputation</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">partition</span> <span class="op">&lt;-</span> <span class="va">dta</span></span>
+<span>  <span class="va">partition</span><span class="op">$</span><span class="va">age</span> <span class="op">&lt;-</span> <span class="va">partition</span><span class="op">$</span><span class="va">age</span> <span class="op">+</span> <span class="op">(</span><span class="va">imputation</span> <span class="op">-</span> <span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="fl">10</span></span>
+<span>  <span class="va">partition</span><span class="op">$</span><span class="va">imputation</span> <span class="op">&lt;-</span> <span class="va">imputation</span></span>
+<span>  <span class="va">partition</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">outcome_model_mi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_logistic.html">fit_logistic</a></span><span class="op">(</span></span>
+<span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">dta_mi</span>,</span>
+<span>  family <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  id_col <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  imputation_col <span class="op">=</span> <span class="st">"imputation"</span>,</span>
+<span>  outcome_levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  event_level <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">outcome_model_mi</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">estimates</span></span>
+<span><span class="co">#&gt;           term    estimate   std.error statistic           df      p.value</span></span>
+<span><span class="co">#&gt; 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08</span></span>
+<span><span class="co">#&gt; 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23</span></span>
+<span><span class="co">#&gt; 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01</span></span>
+<span><span class="co">#&gt; 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13</span></span>
+<span><span class="co">#&gt; 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02</span></span>
+<span><span class="co">#&gt; 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01</span></span>
+<span><span class="co">#&gt;      conf.low   conf.high odds_ratio pooled</span></span>
+<span><span class="co">#&gt; 1  2.78243495  5.89694637 76.6838145   TRUE</span></span>
+<span><span class="co">#&gt; 2 -0.11199082 -0.07503740  0.9107252   TRUE</span></span>
+<span><span class="co">#&gt; 3 -0.04484016  0.51166161  1.2629001   TRUE</span></span>
+<span><span class="co">#&gt; 4  0.03634247  0.06363993  1.0512618   TRUE</span></span>
+<span><span class="co">#&gt; 5 -0.63432845 -0.01495099  0.7227877   TRUE</span></span>
+<span><span class="co">#&gt; 6 -0.44990358  0.11437259  0.8455521   TRUE</span></span>
+<span><span class="va">outcome_model_mi</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">fit_status</span></span>
+<span><span class="co">#&gt;   imputation converged n_input n_analyzed n_excluded</span></span>
+<span><span class="co">#&gt; 1          1      TRUE    1000       1000          0</span></span>
+<span><span class="co">#&gt; 2          2      TRUE    1000       1000          0</span></span>
+<span><span class="co">#&gt; 3          3      TRUE    1000       1000          0</span></span></code></pre></div>
+</div>
+<p><code><a href="../reference/validate_logistic.html">validate_logistic()</a></code> scores a validation cohort from a saved binary bundle without refitting and without modifying the source object. It returns equal-frequency calibration groups and a performance row containing observed and expected event counts, O:E ratio, AUC, and Brier score. The first interface is intentionally binary only.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_logistic.html">validate_logistic</a></span><span class="op">(</span><span class="va">outcome_model</span>, <span class="va">dta</span>, groups <span class="op">=</span> <span class="fl">10L</span><span class="op">)</span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">performance</span></span>
+<span><span class="co">#&gt;      n observed expected oe_ratio     auc     brier</span></span>
+<span><span class="co">#&gt; 1 1000      500      500        1 0.74406 0.2044163</span></span></code></pre></div>
+</div>
+<hr></section><section class="level2" data-number="4"><h2 data-number="4" id="propensity-score-estimation">
+<span class="header-section-number">4</span> Propensity score estimation<a class="anchor" aria-label="anchor" href="#propensity-score-estimation"></a>
+</h2>
+<section class="level3" data-number="4.1"><h3 data-number="4.1" id="binary-treatment-ps_logistic">
+<span class="header-section-number">4.1</span> Binary treatment — <code>ps_logistic()</code>
 <a class="anchor" aria-label="anchor" href="#binary-treatment-ps_logistic"></a>
 </h3>
 <p>In practice a propensity score is estimated from covariates before matching or weighting. <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code> fits <code>stats::glm(..., family = binomial())</code> and appends several columns that mirror the original SAS template output:</p>
@@ -189,10 +304,12 @@
 </tbody>
 </table>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">obj_ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_logistic.html">ps_logistic</a></span><span class="op">(</span></span>
+<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dta_ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">dta_ps</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span><span class="va">obj_ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_logistic.html">ps_logistic</a></span><span class="op">(</span></span>
 <span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
-<span>  data <span class="op">=</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span>  data <span class="op">=</span> <span class="va">dta_ps</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_logistic&gt;</span></span>
@@ -201,11 +318,11 @@
 <span><span class="co">#&gt;   PS column   : prob_t</span></span>
 <span><span class="co">#&gt;   Weight col  : mt_wt</span></span>
 <span><span class="co">#&gt;   Method      : logistic</span></span>
-<span><span class="co">#&gt;   Tables      : smd, group_counts</span></span></code></pre></div>
+<span><span class="co">#&gt;   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status</span></span></code></pre></div>
 </div>
 <p>The scored dataset can be passed directly to <code><a href="../reference/ps_match.html">ps_match()</a></code> or <code><a href="../reference/ps_weight.html">ps_weight()</a></code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"tavr"</span>, <span class="st">"prob_t"</span>, <span class="st">"logit_t"</span>, <span class="st">"mt_wt"</span>,</span>
 <span>                      <span class="st">"quintile"</span>, <span class="st">"decile"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   id tavr    prob_t    logit_t     mt_wt quintile decile</span></span>
@@ -217,7 +334,7 @@
 <span><span class="co">#&gt; 6  6    0 0.4674866 -0.1302375 0.8778869        3      5</span></span></code></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m_from_ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>                      score_col <span class="op">=</span> <span class="va">obj_ps</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">score_col</span>,</span>
 <span>                      seed      <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
@@ -229,13 +346,14 @@
 <span><span class="co">#&gt;   Method      : nearest-neighbour 1:1</span></span>
 <span><span class="co">#&gt;   Tables      : smd_before, smd_after, group_counts_before, group_counts_after</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="3.2"><h3 data-number="3.2" id="multiply-imputed-data">
-<span class="header-section-number">3.2</span> Multiply-imputed data<a class="anchor" aria-label="anchor" href="#multiply-imputed-data"></a>
+</section><section class="level3" data-number="4.2"><h3 data-number="4.2" id="multiply-imputed-data">
+<span class="header-section-number">4.2</span> Multiply-imputed data<a class="anchor" aria-label="anchor" href="#multiply-imputed-data"></a>
 </h3>
 <p>The SAS template fits the model separately on each imputed dataset (<code>PROC LOGISTIC ... BY _IMPUTATION_</code>) and averages predicted probabilities with <code>PROC SUMMARY mean=</code>. Pass a stacked long-format MI data frame and set <code>imputation_col</code> to replicate this.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">dta_base</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span></span>
 <span><span class="co"># Simulate two imputed datasets stacked with an imputation index column</span></span>
 <span><span class="va">dta_mi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">dta_base</span>, imp <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span>,</span>
@@ -254,21 +372,21 @@
 <span><span class="co">#&gt;   PS column   : prob_t</span></span>
 <span><span class="co">#&gt;   Weight col  : mt_wt</span></span>
 <span><span class="co">#&gt;   Method      : logistic-MI (2 imputations)</span></span>
-<span><span class="co">#&gt;   Tables      : smd, group_counts</span></span>
+<span><span class="co">#&gt;   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status</span></span>
 <span></span>
 <span><span class="co"># Per-patient PS is averaged across imputations, matching PROC SUMMARY mean=</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">obj_mi</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">prob_t</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
 <span><span class="co">#&gt; 0.02227 0.30987 0.48499 0.50000 0.68398 0.94193</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="3.3"><h3 data-number="3.3" id="ordinal-treatment-ps_ordinal">
-<span class="header-section-number">3.3</span> Ordinal treatment — <code>ps_ordinal()</code>
+</section><section class="level3" data-number="4.3"><h3 data-number="4.3" id="ordinal-treatment-ps_ordinal">
+<span class="header-section-number">4.3</span> Ordinal treatment — <code>ps_ordinal()</code>
 <a class="anchor" aria-label="anchor" href="#ordinal-treatment-ps_ordinal"></a>
 </h3>
 <p>For ordered treatment variables (e.g. NYHA functional class I / II / III–IV), <code><a href="../reference/ps_ordinal.html">ps_ordinal()</a></code> fits a proportional-odds cumulative logit model via <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>, equivalent to the default <code>PROC LOGISTIC</code> behaviour for ordinal responses in SAS.</p>
 <p>The SAS template decomposes cumulative probabilities into marginal probabilities: <code>p1 = col1; p2 = col2 - col1; p3 = 1 - col2</code>. <code><a href="../reference/ps_ordinal.html">ps_ordinal()</a></code> performs this decomposition internally, appending one <code>prob_&lt;level&gt;</code> column per level.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta_ord</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data_ordinal.html">sample_ps_data_ordinal</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">400</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">obj_ord</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_ordinal.html">ps_ordinal</a></span><span class="op">(</span></span>
 <span>  <span class="va">nyha_grp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span>
@@ -280,7 +398,7 @@
 <span><span class="co">#&gt;   Treatment   : nyha_grp (3 levels: I &lt; II &lt; III)</span></span>
 <span><span class="co">#&gt;   Score cols  : prob_I, prob_II, prob_III</span></span>
 <span><span class="co">#&gt;   Method      : ordinal-logistic</span></span>
-<span><span class="co">#&gt;   Tables      : group_counts</span></span>
+<span><span class="co">#&gt;   Tables      : group_counts, estimates, covariance, by_imputation, fit_status</span></span>
 <span></span>
 <span><span class="co"># One marginal probability column per level</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_ord</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"nyha_grp"</span>,</span>
@@ -297,13 +415,13 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">obj_ord</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">quintile</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt; table of extent 0 &gt;</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="3.4"><h3 data-number="3.4" id="nominal-treatment-ps_nominal">
-<span class="header-section-number">3.4</span> Nominal treatment — <code>ps_nominal()</code>
+</section><section class="level3" data-number="4.4"><h3 data-number="4.4" id="nominal-treatment-ps_nominal">
+<span class="header-section-number">4.4</span> Nominal treatment — <code>ps_nominal()</code>
 <a class="anchor" aria-label="anchor" href="#nominal-treatment-ps_nominal"></a>
 </h3>
 <p>For unordered multi-level treatments (e.g. repair type: CE / COS / PER / DEV), <code><a href="../reference/ps_nominal.html">ps_nominal()</a></code> fits a generalised logit model via <code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom()</a></code>, equivalent to SAS <code>PROC LOGISTIC ... / link=glogit</code>. The first factor level is the reference category (<code>REF=first</code> in SAS); use <code>ref_level</code> to override.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta_nom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data_nominal.html">sample_ps_data_nominal</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">400</span>, seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">obj_nom</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_nominal.html">ps_nominal</a></span><span class="op">(</span></span>
 <span>  <span class="va">rtyp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span>
@@ -316,7 +434,7 @@
 <span><span class="co">#&gt;   Reference   : COS</span></span>
 <span><span class="co">#&gt;   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE</span></span>
 <span><span class="co">#&gt;   Method      : nominal-logistic</span></span>
-<span><span class="co">#&gt;   Tables      : group_counts</span></span>
+<span><span class="co">#&gt;   Tables      : group_counts, estimates, covariance, by_imputation, fit_status</span></span>
 <span></span>
 <span><span class="co"># One probability column per repair type (analogous to p_cos, p_per, etc.)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_nom</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"rtyp"</span>, <span class="va">obj_nom</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">score_cols</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
@@ -328,17 +446,17 @@
 <span><span class="co">#&gt; 5  5  COS 0.59403690 0.3002493 0.0874368 0.01827697</span></span>
 <span><span class="co">#&gt; 6  6  COS 0.46113007 0.3270729 0.1594435 0.05235349</span></span></code></pre></div>
 </div>
-<hr></section></section><section class="level2" data-number="4"><h2 data-number="4" id="balancing-scores-for-continuous-and-count-exposures">
-<span class="header-section-number">4</span> Balancing scores for continuous and count exposures<a class="anchor" aria-label="anchor" href="#balancing-scores-for-continuous-and-count-exposures"></a>
+<hr></section></section><section class="level2" data-number="5"><h2 data-number="5" id="balancing-scores-for-continuous-and-count-exposures">
+<span class="header-section-number">5</span> Balancing scores for continuous and count exposures<a class="anchor" aria-label="anchor" href="#balancing-scores-for-continuous-and-count-exposures"></a>
 </h2>
 <p>When the “treatment” is a continuous or count variable (e.g. units of RBC transfused, nadir haematocrit), a propensity score is undefined. The SAS templates instead estimate a <strong>balancing score</strong>: the linear predictor from a saturated model. Patients with similar balancing scores have similar expected exposure values, enabling within-stratum comparisons analogous to PS stratification.</p>
-<section class="level3" data-number="4.1"><h3 data-number="4.1" id="continuous-exposure-bs_continuous">
-<span class="header-section-number">4.1</span> Continuous exposure — <code>bs_continuous()</code>
+<section class="level3" data-number="5.1"><h3 data-number="5.1" id="continuous-exposure-bs_continuous">
+<span class="header-section-number">5.1</span> Continuous exposure — <code>bs_continuous()</code>
 <a class="anchor" aria-label="anchor" href="#continuous-exposure-bs_continuous"></a>
 </h3>
 <p>Mirrors <code>tp.rm.continuous.balncing_score.sas</code> (PROC REG balancing score on nadir HCT). The fitted value from <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code> is used as the score.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">400</span>, seed <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">obj_bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bs_continuous.html">bs_continuous</a></span><span class="op">(</span></span>
 <span>  <span class="va">ef</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
@@ -370,13 +488,13 @@
 <span><span class="co">#&gt;  1  2  3  4  5  6  7  8  9 10 </span></span>
 <span><span class="co">#&gt; 80 80 80 80 80 80 80 80 80 80</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="4.2"><h3 data-number="4.2" id="count-exposure-bs_count">
-<span class="header-section-number">4.2</span> Count exposure — <code>bs_count()</code>
+</section><section class="level3" data-number="5.2"><h3 data-number="5.2" id="count-exposure-bs_count">
+<span class="header-section-number">5.2</span> Count exposure — <code>bs_count()</code>
 <a class="anchor" aria-label="anchor" href="#count-exposure-bs_count"></a>
 </h3>
 <p>Mirrors <code>tp.pm.count.balncing_score.sas</code> (PROC GENMOD dist=nb link=log). The <strong>linear predictor on the log scale</strong> (<code>xbeta</code>) is used as the balancing score, not the fitted count — the log scale is continuous and unbounded, making it more suitable for rank-based stratification.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta_cnt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data_count.html">sample_ps_data_count</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">400</span>, seed <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Negative binomial to account for overdispersion (SAS dist=nb)</span></span>
@@ -393,7 +511,7 @@
 <span><span class="co">#&gt;   Distribution: negbin</span></span>
 <span><span class="co">#&gt;   Strata      : 10 clusters (cluster)</span></span>
 <span><span class="co">#&gt;   Method      : balancing-negbin</span></span>
-<span><span class="co">#&gt;   Tables      : strata_counts</span></span>
+<span><span class="co">#&gt;   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_cnt</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"rbc_tot"</span>, <span class="st">"bs"</span>, <span class="st">"cluster"</span>,</span>
 <span>                       <span class="st">"stra_1"</span>, <span class="st">"stra_2"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
@@ -405,15 +523,15 @@
 <span><span class="co">#&gt; 5  5       5 0.4749000       4      0      0</span></span>
 <span><span class="co">#&gt; 6  6       4 0.9215424      10      0      0</span></span></code></pre></div>
 </div>
-<hr></section></section><section class="level2" data-number="5"><h2 data-number="5" id="propensity-score-matching">
-<span class="header-section-number">5</span> Propensity score matching<a class="anchor" aria-label="anchor" href="#propensity-score-matching"></a>
+<hr></section></section><section class="level2" data-number="6"><h2 data-number="6" id="propensity-score-matching">
+<span class="header-section-number">6</span> Propensity score matching<a class="anchor" aria-label="anchor" href="#propensity-score-matching"></a>
 </h2>
-<section class="level3" data-number="5.1"><h3 data-number="5.1" id="build-the-matched-object">
-<span class="header-section-number">5.1</span> Build the matched object<a class="anchor" aria-label="anchor" href="#build-the-matched-object"></a>
+<section class="level3" data-number="6.1"><h3 data-number="6.1" id="build-the-matched-object">
+<span class="header-section-number">6.1</span> Build the matched object<a class="anchor" aria-label="anchor" href="#build-the-matched-object"></a>
 </h3>
 <p><code><a href="../reference/ps_match.html">ps_match()</a></code> performs greedy 1:1 nearest-neighbour matching without replacement.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_match&gt;</span></span>
@@ -423,12 +541,12 @@
 <span><span class="co">#&gt;   Method      : nearest-neighbour 1:1</span></span>
 <span><span class="co">#&gt;   Tables      : smd_before, smd_after, group_counts_before, group_counts_after</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="5.2"><h3 data-number="5.2" id="diagnostics">
-<span class="header-section-number">5.2</span> Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
+</section><section class="level3" data-number="6.2"><h3 data-number="6.2" id="diagnostics">
+<span class="header-section-number">6.2</span> Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
 </h3>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints the available diagnostic tables.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Summary of &lt;ps_match&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -460,7 +578,7 @@
 </div>
 <p>The <code>$tables</code> slot is a named list you can access directly:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">smd_before</span></span>
 <span><span class="co">#&gt;                  variable     smd</span></span>
 <span><span class="co">#&gt; age                   age -0.7191</span></span>
@@ -476,12 +594,12 @@
 <span><span class="co">#&gt; diabetes         diabetes -0.1054</span></span>
 <span><span class="co">#&gt; hypertension hypertension -0.0615</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="5.3"><h3 data-number="5.3" id="extract-the-matched-dataset">
-<span class="header-section-number">5.3</span> Extract the matched dataset<a class="anchor" aria-label="anchor" href="#extract-the-matched-dataset"></a>
+</section><section class="level3" data-number="6.3"><h3 data-number="6.3" id="extract-the-matched-dataset">
+<span class="header-section-number">6.3</span> Extract the matched dataset<a class="anchor" aria-label="anchor" href="#extract-the-matched-dataset"></a>
 </h3>
 <p><code>$data</code> is the <em>full</em> dataset with a <code>match</code> column set to <code>1</code> for matched pairs. Filter to <code>match == 1</code> to obtain the matched subset.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">$</span><span class="va">data</span><span class="op">[</span><span class="va">m</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">match</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">matched</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 800</span></span>
@@ -490,12 +608,12 @@
 <span><span class="co">#&gt;   0   1 </span></span>
 <span><span class="co">#&gt; 400 400</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="5.4"><h3 data-number="5.4" id="caliper-matching">
-<span class="header-section-number">5.4</span> Caliper matching<a class="anchor" aria-label="anchor" href="#caliper-matching"></a>
+</section><section class="level3" data-number="6.4"><h3 data-number="6.4" id="caliper-matching">
+<span class="header-section-number">6.4</span> Caliper matching<a class="anchor" aria-label="anchor" href="#caliper-matching"></a>
 </h3>
 <p>A caliper restricts matches to pairs whose propensity scores differ by no more than the supplied threshold, reducing the number of matched pairs in exchange for tighter balance.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m_cal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, caliper <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m_cal</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_match&gt;</span></span>
@@ -505,15 +623,15 @@
 <span><span class="co">#&gt;   Method      : nearest-neighbour 1:1</span></span>
 <span><span class="co">#&gt;   Tables      : smd_before, smd_after, group_counts_before, group_counts_after</span></span></code></pre></div>
 </div>
-<hr></section></section><section class="level2" data-number="6"><h2 data-number="6" id="inverse-probability-of-treatment-weighting">
-<span class="header-section-number">6</span> Inverse-probability-of-treatment weighting<a class="anchor" aria-label="anchor" href="#inverse-probability-of-treatment-weighting"></a>
+<hr></section></section><section class="level2" data-number="7"><h2 data-number="7" id="inverse-probability-of-treatment-weighting">
+<span class="header-section-number">7</span> Inverse-probability-of-treatment weighting<a class="anchor" aria-label="anchor" href="#inverse-probability-of-treatment-weighting"></a>
 </h2>
-<section class="level3" data-number="6.1"><h3 data-number="6.1" id="ate-weights-default">
-<span class="header-section-number">6.1</span> ATE weights (default)<a class="anchor" aria-label="anchor" href="#ate-weights-default"></a>
+<section class="level3" data-number="7.1"><h3 data-number="7.1" id="ate-weights-default">
+<span class="header-section-number">7.1</span> ATE weights (default)<a class="anchor" aria-label="anchor" href="#ate-weights-default"></a>
 </h3>
 <p><code><a href="../reference/ps_weight.html">ps_weight()</a></code> computes IPTW weights and appends them to <code>$data</code>. The default estimand is the <strong>average treatment effect</strong> (ATE).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">w_ate</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_weight&gt;</span></span>
@@ -524,7 +642,7 @@
 <span><span class="co">#&gt;   Tables      : smd_unweighted, smd_weighted, group_counts, effective_n</span></span></code></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_ate</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Summary of &lt;ps_weight&gt;</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -560,7 +678,7 @@
 </div>
 <p>The <code>iptw</code> column holds the stabilised weights.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">w_ate</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"tavr"</span>, <span class="st">"prob_t"</span>, <span class="st">"iptw"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   id tavr    prob_t      iptw</span></span>
 <span><span class="co">#&gt; 1  1    0 0.7308849 1.8579411</span></span>
@@ -573,12 +691,12 @@
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
 <span><span class="co">#&gt;  0.5090  0.6687  0.8189  0.9951  1.1024  5.9547</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="6.2"><h3 data-number="6.2" id="att-and-atc-weights">
-<span class="header-section-number">6.2</span> ATT and ATC weights<a class="anchor" aria-label="anchor" href="#att-and-atc-weights"></a>
+</section><section class="level3" data-number="7.2"><h3 data-number="7.2" id="att-and-atc-weights">
+<span class="header-section-number">7.2</span> ATT and ATC weights<a class="anchor" aria-label="anchor" href="#att-and-atc-weights"></a>
 </h3>
 <p>For the <strong>average treatment effect on the treated</strong> (ATT), treated patients receive weight <code>1</code> and controls receive <code>ps / (1 - ps)</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w_att</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_att</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
@@ -586,40 +704,40 @@
 </div>
 <p>For the <strong>average treatment effect on the controls</strong> (ATC), the roles are reversed.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w_atc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATC"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_atc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. </span></span>
 <span><span class="co">#&gt; 0.009041 0.313837 0.500000 0.493136 0.500000 3.367004</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="6.3"><h3 data-number="6.3" id="weight-trimming-winsorisation">
-<span class="header-section-number">6.3</span> Weight trimming (winsorisation)<a class="anchor" aria-label="anchor" href="#weight-trimming-winsorisation"></a>
+</section><section class="level3" data-number="7.3"><h3 data-number="7.3" id="weight-trimming-winsorisation">
+<span class="header-section-number">7.3</span> Weight trimming (winsorisation)<a class="anchor" aria-label="anchor" href="#weight-trimming-winsorisation"></a>
 </h3>
 <p>Extreme weights can destabilise estimates. Supplying <code>trim</code> winsorises weights to the (<code>trim</code>, <code>1 - trim</code>) quantile range.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w_trim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>, trim <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_trim</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
 <span><span class="co">#&gt;  0.5691  0.6687  0.8189  0.9613  1.1024  2.0304</span></span></code></pre></div>
 </div>
-<hr></section></section><section class="level2" data-number="7"><h2 data-number="7" id="sensitivity-analysis">
-<span class="header-section-number">7</span> Sensitivity analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
+<hr></section></section><section class="level2" data-number="8"><h2 data-number="8" id="sensitivity-analysis">
+<span class="header-section-number">8</span> Sensitivity analysis<a class="anchor" aria-label="anchor" href="#sensitivity-analysis"></a>
 </h2>
 <p>Every observational study rests on the assumption of no unmeasured confounding. The four <code>sa_*</code> functions quantify how strong an unmeasured confounder would need to be to change the study’s conclusions.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">m</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">w</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<section class="level3" data-number="7.1"><h3 data-number="7.1" id="overlap-and-positivity-sa_overlap">
-<span class="header-section-number">7.1</span> Overlap and positivity — <code>sa_overlap()</code>
+<section class="level3" data-number="8.1"><h3 data-number="8.1" id="overlap-and-positivity-sa_overlap">
+<span class="header-section-number">8.1</span> Overlap and positivity — <code>sa_overlap()</code>
 <a class="anchor" aria-label="anchor" href="#overlap-and-positivity-sa_overlap"></a>
 </h3>
 <p>Before any analysis, check that the PS distributions overlap sufficiently. <code><a href="../reference/sa_overlap.html">sa_overlap()</a></code> reports the common support region, the fraction of each group outside it, and near-positivity-violation flags.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ov</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_overlap.html">sa_overlap</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="va">ov</span><span class="op">$</span><span class="va">overlap_region</span></span>
 <span><span class="co">#&gt;  lower  upper </span></span>
@@ -633,13 +751,13 @@
 <span><span class="co">#&gt; 1 control           3          0           0.6          0.0</span></span>
 <span><span class="co">#&gt; 2 treated           1          2           0.2          0.4</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="7.2"><h3 data-number="7.2" id="weight-trimming-sensitivity-sweep-sa_trim_sweep">
-<span class="header-section-number">7.2</span> Weight-trimming sensitivity sweep — <code>sa_trim_sweep()</code>
+</section><section class="level3" data-number="8.2"><h3 data-number="8.2" id="weight-trimming-sensitivity-sweep-sa_trim_sweep">
+<span class="header-section-number">8.2</span> Weight-trimming sensitivity sweep — <code>sa_trim_sweep()</code>
 <a class="anchor" aria-label="anchor" href="#weight-trimming-sensitivity-sweep-sa_trim_sweep"></a>
 </h3>
 <p>Extreme IPTW weights inflate variance and can dominate estimates. <code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code> sweeps a range of winsorisation thresholds and reports how ESS and the weight distribution change. Use this to choose a trimming level that controls extreme weights without unacceptable loss of sample size.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sweep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_trim_sweep.html">sa_trim_sweep</a></span><span class="op">(</span><span class="va">w</span>, trim_seq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.10</span>, by <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   trim ess_control ess_treated max_weight sd_weight pct_trimmed</span></span>
@@ -657,13 +775,13 @@
 <span><span class="co">#&gt; 1 0.00       398.7       341.9    10.3568</span></span>
 <span><span class="co">#&gt; 6 0.05       434.6       428.6     1.9526</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="7.3"><h3 data-number="7.3" id="e-values-sa_evalue">
-<span class="header-section-number">7.3</span> E-values — <code>sa_evalue()</code>
+</section><section class="level3" data-number="8.3"><h3 data-number="8.3" id="e-values-sa_evalue">
+<span class="header-section-number">8.3</span> E-values — <code>sa_evalue()</code>
 <a class="anchor" aria-label="anchor" href="#e-values-sa_evalue"></a>
 </h3>
 <p>The E-value (VanderWeele &amp; Ding 2017) is the minimum risk-ratio that an unmeasured confounder would need with <em>both</em> the treatment and the outcome to fully explain away the observed association. A large E-value indicates a more robust finding.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Suppose a matched analysis yields RR = 1.8 (95% CI 1.3 to 2.5)</span></span>
 <span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_evalue.html">sa_evalue</a></span><span class="op">(</span><span class="fl">1.8</span>, ci_lo <span class="op">=</span> <span class="fl">1.3</span>, ci_hi <span class="op">=</span> <span class="fl">2.5</span>, type <span class="op">=</span> <span class="st">"RR"</span><span class="op">)</span></span>
 <span><span class="va">ev</span><span class="op">$</span><span class="va">evalue_estimate</span>   <span class="co"># confounder must be this strong to explain the RR</span></span>
@@ -672,20 +790,20 @@
 <span><span class="co">#&gt; [1] 1.9245</span></span></code></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Risk difference of 0.08 with baseline outcome probability 0.15</span></span>
 <span><span class="va">ev_rd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_evalue.html">sa_evalue</a></span><span class="op">(</span><span class="fl">0.08</span>, ci_lo <span class="op">=</span> <span class="fl">0.02</span>, ci_hi <span class="op">=</span> <span class="fl">0.14</span>,</span>
 <span>                   type <span class="op">=</span> <span class="st">"RD"</span>, p0 <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span></span>
 <span><span class="va">ev_rd</span><span class="op">$</span><span class="va">evalue_estimate</span></span>
 <span><span class="co">#&gt; [1] 2.437644</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="7.4"><h3 data-number="7.4" id="rosenbaum-sensitivity-bounds-sa_rosenbaum">
-<span class="header-section-number">7.4</span> Rosenbaum sensitivity bounds — <code>sa_rosenbaum()</code>
+</section><section class="level3" data-number="8.4"><h3 data-number="8.4" id="rosenbaum-sensitivity-bounds-sa_rosenbaum">
+<span class="header-section-number">8.4</span> Rosenbaum sensitivity bounds — <code>sa_rosenbaum()</code>
 <a class="anchor" aria-label="anchor" href="#rosenbaum-sensitivity-bounds-sa_rosenbaum"></a>
 </h3>
 <p>For matched analyses, <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code> computes worst- and best-case p-value bounds for the Wilcoxon signed-rank test under a hidden-bias parameter Γ (Rosenbaum 2002). Γ = 1 means no hidden bias; the <strong>sensitivity value</strong> is the largest Γ at which the analysis remains significant.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_rosenbaum.html">sa_rosenbaum</a></span><span class="op">(</span><span class="va">m</span>, outcome_col <span class="op">=</span> <span class="st">"ef"</span>, gamma_max <span class="op">=</span> <span class="fl">3</span>, gamma_inc <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Summary: how sensitive is the result?</span></span>
@@ -704,15 +822,15 @@
 <span><span class="co">#&gt; 5  2.00 2.903425e-02 0.000000e+00         TRUE</span></span>
 <span><span class="co">#&gt; 6  2.25 1.950801e-01 0.000000e+00        FALSE</span></span></code></pre></div>
 </div>
-<hr></section></section><section class="level2" data-number="8"><h2 data-number="8" id="downstream-use-with-hvtiplotr">
-<span class="header-section-number">8</span> Downstream use with hvtiPlotR<a class="anchor" aria-label="anchor" href="#downstream-use-with-hvtiplotr"></a>
+<hr></section></section><section class="level2" data-number="9"><h2 data-number="9" id="downstream-use-with-hvtiplotr">
+<span class="header-section-number">9</span> Downstream use with hvtiPlotR<a class="anchor" aria-label="anchor" href="#downstream-use-with-hvtiplotr"></a>
 </h2>
 <p>The <code>$data</code> and <code>$tables</code> slots are designed for direct consumption by <code>hvtiPlotR::hv_mirror_hist()</code> (weighted mode) and <code>hvtiPlotR::hv_balance()</code>.</p>
-<section class="level3" data-number="8.1"><h3 data-number="8.1" id="mirror-histogram-matched">
-<span class="header-section-number">8.1</span> Mirror histogram (matched)<a class="anchor" aria-label="anchor" href="#mirror-histogram-matched"></a>
+<section class="level3" data-number="9.1"><h3 data-number="9.1" id="mirror-histogram-matched">
+<span class="header-section-number">9.1</span> Mirror histogram (matched)<a class="anchor" aria-label="anchor" href="#mirror-histogram-matched"></a>
 </h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">hvtiPlotR</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">mh</span> <span class="op">&lt;-</span> <span class="fu">hv_mirror_hist</span><span class="op">(</span></span>
@@ -727,11 +845,11 @@
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Propensity Score"</span>, y <span class="op">=</span> <span class="st">"Number of Patients"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">hv_theme</span><span class="op">(</span><span class="st">"manuscript"</span><span class="op">)</span></span></code></pre></div>
 </div>
-</section><section class="level3" data-number="8.2"><h3 data-number="8.2" id="mirror-histogram-weighted">
-<span class="header-section-number">8.2</span> Mirror histogram (weighted)<a class="anchor" aria-label="anchor" href="#mirror-histogram-weighted"></a>
+</section><section class="level3" data-number="9.2"><h3 data-number="9.2" id="mirror-histogram-weighted">
+<span class="header-section-number">9.2</span> Mirror histogram (weighted)<a class="anchor" aria-label="anchor" href="#mirror-histogram-weighted"></a>
 </h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mh_wt</span> <span class="op">&lt;-</span> <span class="fu">hv_mirror_hist</span><span class="op">(</span></span>
 <span>  data          <span class="op">=</span> <span class="va">w_ate</span><span class="op">$</span><span class="va">data</span>,</span>
 <span>  x             <span class="op">=</span> <span class="va">prob_t</span>,</span>
@@ -744,11 +862,11 @@
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Propensity Score"</span>, y <span class="op">=</span> <span class="st">"Weighted Count"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">hv_theme</span><span class="op">(</span><span class="st">"manuscript"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<hr></section></section><section class="level2" data-number="9"><h2 data-number="9" id="session-info">
-<span class="header-section-number">9</span> Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
+<hr></section></section><section class="level2" data-number="10"><h2 data-number="10" id="session-info">
+<span class="header-section-number">10</span> Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -771,13 +889,13 @@
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] hvtiRpropensity_0.1.5</span></span>
+<span><span class="co">#&gt; [1] hvtiRpropensity_0.1.6</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] MASS_7.3-65     compiler_4.6.1  fastmap_1.2.0   cli_3.6.6      </span></span>
 <span><span class="co">#&gt;  [5] tools_4.6.1     htmltools_0.5.9 otel_0.2.0      nnet_7.3-20    </span></span>
 <span><span class="co">#&gt;  [9] yaml_2.3.12     rmarkdown_2.32  knitr_1.52      jsonlite_2.0.0 </span></span>
-<span><span class="co">#&gt; [13] xfun_0.60       digest_0.6.39   rlang_1.3.0     evaluate_1.0.5</span></span></code></pre></div>
+<span><span class="co">#&gt; [13] xfun_0.61       digest_0.6.39   rlang_1.3.0     evaluate_1.0.5</span></span></code></pre></div>
 </div>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {

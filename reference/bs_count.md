@@ -147,7 +147,7 @@ print(obj)
 #>   Distribution: poisson
 #>   Strata      : 10 clusters (cluster)
 #>   Method      : balancing-poisson
-#>   Tables      : strata_counts 
+#>   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status 
 table(obj$data$cluster)    # 10 equal-ish strata by default
 #> 
 #>  1  2  3  4  5  6  7  8  9 10 
@@ -179,6 +179,6 @@ if (requireNamespace("MASS", quietly = TRUE)) {
 #>   Distribution: negbin
 #>   Strata      : 10 clusters (cluster)
 #>   Method      : balancing-negbin
-#>   Tables      : strata_counts 
+#>   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status 
 # }
 ```
