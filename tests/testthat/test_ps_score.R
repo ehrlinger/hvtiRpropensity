@@ -212,6 +212,20 @@ test_that("ps_ordinal() assigns rank strata from the highest-level probability",
   )
 })
 
+test_that("ps_ordinal() leaves unscored patients out of rank strata", {
+  skip_if_not_installed("MASS")
+  dta <- sample_ps_data_ordinal(n = 40, seed = 21)
+  dta$age[1:2] <- NA_real_
+  obj <- ps_ordinal(nyha_grp ~ age + female + ef, data = dta)
+  missing <- is.na(obj$data$prob_III)
+
+  expect_true(any(missing))
+  expect_true(all(is.na(obj$data$quintile[missing])))
+  expect_true(all(is.na(obj$data$decile[missing])))
+  expect_setequal(obj$data$quintile[!missing], 1:5)
+  expect_setequal(obj$data$decile[!missing], 1:10)
+})
+
 test_that("ps_ordinal() meta levels match factor levels", {
   skip_if_not_installed("MASS")
   dta <- sample_ps_data_ordinal(n = 80, seed = 22)

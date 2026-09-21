@@ -40,12 +40,15 @@
 #'   quintile = int(_n_ / (nobs/5)) + 1;  if quintile > 5 then quintile = 5;
 #' @keywords internal
 .assign_ps_strata <- function(score) {
-  n   <- length(score)
-  rnk <- rank(score, ties.method = "first")
-  list(
-    quintile = pmin(ceiling(rnk * 5L  / n), 5L),
-    decile   = pmin(ceiling(rnk * 10L / n), 10L)
-  )
+  scored <- !is.na(score)
+  n <- sum(scored)
+  quintile <- decile <- rep(NA_integer_, length(score))
+  if (n) {
+    rnk <- rank(score[scored], ties.method = "first")
+    quintile[scored] <- pmin(ceiling(rnk * 5L / n), 5L)
+    decile[scored] <- pmin(ceiling(rnk * 10L / n), 10L)
+  }
+  list(quintile = quintile, decile = decile)
 }
 
 
