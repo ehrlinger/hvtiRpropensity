@@ -1,3 +1,13 @@
+# hvtiRpropensity (unreleased)
+
+* `ps_ordinal()` now creates its documented rank-based quintile and decile
+  columns from the averaged probability of the highest ordered treatment
+  level, including for stacked imputations. Existing columns with either name
+  are rejected instead of overwritten.
+* `bs_count()` bundles now record their bundle version, count-model family and
+  R/package versions, matching the saved-model metadata contract introduced in
+  0.1.6.
+
 # hvtiRpropensity 0.1.6
 
 * Adds `fit_logistic()` for binary, proportional-odds ordinal, and nominal

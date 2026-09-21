@@ -284,7 +284,8 @@ print.bs_continuous <- function(x, ...) {
 #'     `stra_1`...`stra_k` appended.}
 #'   \item{`$meta`}{Named list: `formula`, `outcome_col`, `id_col`,
 #'     `imputation_col`, `score_col`, `dist`, `n_strata`, `strata_col`,
-#'     `method`, `n_imputations`, `n_total`.}
+#'     `bundle_version`, `model_family`, `package_versions`, `method`,
+#'     `n_imputations`, `n_total`.}
 #'   \item{`$tables`}{Named list: `strata_counts`.}
 #' }
 #'
@@ -342,6 +343,7 @@ bs_count <- function(formula,
                      covariates           = NULL) {
 
   dist <- match.arg(dist)
+  model_engine <- if (identical(dist, "negbin")) "MASS" else "stats"
 
   if (dist == "negbin" && !requireNamespace("MASS", quietly = TRUE)) {
     rlang::abort(
@@ -439,6 +441,13 @@ bs_count <- function(formula,
       theta          = theta,
       n_strata       = n_strata,
       strata_col     = strata_col,
+      bundle_version = 1L,
+      model_family   = "count",
+      package_versions = stats::setNames(c(
+        R = as.character(getRversion()),
+        hvtiRpropensity = as.character(utils::packageVersion("hvtiRpropensity")),
+        model = as.character(utils::packageVersion(model_engine))
+      ), c("R", "hvtiRpropensity", model_engine)),
       method         = if (is.null(imputation_col))
                          paste0("balancing-", dist)
                        else paste0("balancing-", dist, "-MI"),
