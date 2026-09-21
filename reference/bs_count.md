@@ -97,8 +97,9 @@ An object of class `c("bs_count", "ps_data")` with:
 - `$meta`:
 
   Named list: `formula`, `outcome_col`, `id_col`, `imputation_col`,
-  `score_col`, `dist`, `n_strata`, `strata_col`, `method`,
-  `n_imputations`, `n_total`.
+  `score_col`, `dist`, `n_strata`, `strata_col`, `bundle_version`,
+  `model_family`, `package_versions`, `method`, `n_imputations`,
+  `n_total`.
 
 - `$tables`:
 

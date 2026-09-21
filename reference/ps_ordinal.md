@@ -130,6 +130,8 @@ head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
 
 # Quintile and decile columns are appended, ordered by p(highest level).
 table(obj$data$quintile)
-#> < table of extent 0 >
+#> 
+#>   1   2   3   4   5 
+#> 180 180 180 180 180 
 # }
 ```

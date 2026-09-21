@@ -352,7 +352,9 @@ head(obj_ord$data[, c("id", "nyha_grp",
 
 # Quintile distribution (ordered by P(highest level) as in SAS)
 table(obj_ord$data$quintile)
-#> < table of extent 0 >
+#> 
+#>   1   2   3   4   5 
+#> 240 240 240 240 240
 ```
 
 ### 4.4 Nominal treatment — `ps_nominal()`
