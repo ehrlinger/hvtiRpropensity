@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,13 @@
       <small>Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.7" id="hvtirpropensity-017">hvtiRpropensity 0.1.7<a class="anchor" aria-label="anchor" href="#hvtirpropensity-017"></a></h2>
+<ul><li>
+<code><a href="../reference/ps_ordinal.html">ps_ordinal()</a></code> now creates its documented rank-based quintile and decile columns from the averaged probability of the highest ordered treatment level, including for stacked imputations. Existing columns with either name are rejected instead of overwritten.</li>
+<li>
+<code><a href="../reference/bs_count.html">bs_count()</a></code> bundles now record their bundle version, count-model family and R/package versions, matching the saved-model metadata contract introduced in 0.1.6.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.6" id="hvtirpropensity-016">hvtiRpropensity 0.1.6<a class="anchor" aria-label="anchor" href="#hvtirpropensity-016"></a></h2>
 <ul><li>Adds <code><a href="../reference/fit_logistic.html">fit_logistic()</a></code> for binary, proportional-odds ordinal, and nominal generalized-logit model bundles, including explicit outcome-level contracts, retained per-imputation fits, averaged patient predictions, and Rubin-pooled coefficients and covariance.</li>

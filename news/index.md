@@ -1,5 +1,17 @@
 # Changelog
 
+## hvtiRpropensity 0.1.7
+
+- [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
+  now creates its documented rank-based quintile and decile columns from
+  the averaged probability of the highest ordered treatment level,
+  including for stacked imputations. Existing columns with either name
+  are rejected instead of overwritten.
+- [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md)
+  bundles now record their bundle version, count-model family and
+  R/package versions, matching the saved-model metadata contract
+  introduced in 0.1.6.
+
 ## hvtiRpropensity 0.1.6
 
 - Adds
