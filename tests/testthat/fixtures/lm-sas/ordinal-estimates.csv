@@ -1,0 +1,5 @@
+Variable,ClassVal0,DF,Estimate,StdErr,WaldChiSq,ProbChiSq,_ESTTYPE_
+Intercept,low,1,-0.4640,0.3787,1.5015,0.2204,MLE
+Intercept,mid,1,0.7536,0.3843,3.8454,0.0499,MLE
+x1_imp,,1,0.0351,0.1504,0.0544,0.8155,MLE
+x2,,1,0.1492,0.3113,0.2297,0.6317,MLE

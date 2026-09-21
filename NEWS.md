@@ -1,3 +1,20 @@
+# hvtiRpropensity 0.1.6
+
+* Adds `fit_logistic()` for binary, proportional-odds ordinal, and nominal
+  generalized-logit model bundles, including explicit outcome-level contracts,
+  retained per-imputation fits, averaged patient predictions, and Rubin-pooled
+  coefficients and covariance.
+* Adds `validate_logistic()` for calibration, observed-versus-expected events,
+  AUC, and Brier validation of a saved version-1 binary bundle without
+  refitting or modifying it.
+* Existing binary, ordinal, and nominal propensity functions and count
+  balancing scores retain their scored columns and diagnostics while gaining
+  fitted models, inference, covariance, and fit-status tables. Negative-binomial
+  bundles also retain theta for every imputation.
+* Stacked-imputation workflows now require the same patient keys in every
+  imputation. They error on missing patients instead of silently averaging a
+  patient's score over fewer imputations.
+
 # hvtiRpropensity 0.1.5
 
 * **`ps_mw_var()` estimates a matching-weight treatment effect with a

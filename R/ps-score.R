@@ -50,85 +50,33 @@
 
 
 # ---------------------------------------------------------------------------
-# Internal: MI loop helper
+# Internal: collision-free model prediction name
 # ---------------------------------------------------------------------------
 
-#' Run a fitting function over each imputation and return averaged predictions
+#' Choose a private prediction prefix absent from a data frame
 #'
-#' @param data           Stacked MI data frame.
-#' @param imputation_col Column name holding the imputation index.
-#' @param id_col         Column name holding the patient ID.
-#' @param fit_fn         Function (sub_df) -> fit object.
-#' @param pred_fn        Function (fit, sub_df) -> numeric vector / matrix of
-#'   predicted values.  Must return results in the same row order as sub_df.
-#' @return A list with `preds` (averaged predictions, same type as pred_fn
-#'   output for one dataset), `base_data` (first imputation, imputation col
-#'   removed), and `n_imp`.
+#' @param data A data frame.
+#' @return A single column-name prefix.
 #' @keywords internal
-.mi_average <- function(data, imputation_col, id_col, fit_fn, pred_fn) {
-  imputations <- sort(unique(data[[imputation_col]]))
-  if (length(imputations) < 2L) {
+.temporary_prediction_prefix <- function(data) {
+  prefix <- ".hvti_prediction"
+  while (any(startsWith(names(data), prefix))) prefix <- paste0(prefix, "_")
+  prefix
+}
+
+.check_output_columns <- function(data, columns) {
+  if (anyNA(columns) || any(!nzchar(columns)) || anyDuplicated(columns)) {
+    rlang::abort("Output column names must be unique non-empty strings.", call. = FALSE)
+  }
+  existing <- intersect(columns, names(data))
+  if (length(existing)) {
     rlang::abort(
-      sprintf(
-        "Column `%s` must contain at least 2 distinct imputation indices.",
-        imputation_col
-      ),
+      sprintf("Output column(s) already exist in `data`: %s.",
+              paste(existing, collapse = ", ")),
       call. = FALSE
     )
   }
-
-  id_ref    <- NULL
-  pred_list <- vector("list", length(imputations))
-
-  for (j in seq_along(imputations)) {
-    imp <- imputations[j]
-    sub <- data[data[[imputation_col]] == imp, , drop = FALSE]
-    fit <- fit_fn(sub)
-    p   <- pred_fn(fit, sub)
-
-    if (j == 1L) {
-      id_ref         <- sub[[id_col]]
-      pred_list[[j]] <- p
-    } else {
-      ord <- match(id_ref, sub[[id_col]])
-      # Warn if any patient IDs from imputation 1 are absent in this imputation.
-      # If ord contains NA, p[NA] = NA; rowMeans(na.rm=TRUE) will use the
-      # remaining imputations only, silently performing available-case averaging.
-      n_missing <- sum(is.na(ord))
-      if (n_missing > 0L) {
-        rlang::warn(
-          sprintf(
-            paste0(
-              "Imputation %s is missing %d patient ID(s) present in imputation %s. ",
-              "Propensity scores for those patients will be averaged over fewer imputations."
-            ),
-            imp, n_missing, imputations[1L]
-          )
-        )
-      }
-      pred_list[[j]] <- if (is.matrix(p)) p[ord, , drop = FALSE] else p[ord]
-    }
-  }
-
-  # Average: vector case
-  if (is.numeric(pred_list[[1L]]) && !is.matrix(pred_list[[1L]])) {
-    pred_mat <- do.call(cbind, pred_list)
-    preds    <- rowMeans(pred_mat, na.rm = TRUE)
-  } else {
-    # Matrix case (ordinal / nominal — k columns)
-    pred_arr <- simplify2array(pred_list)   # n x k x m
-    preds    <- apply(pred_arr, c(1L, 2L), mean, na.rm = TRUE)
-    colnames(preds) <- colnames(pred_list[[1L]])
-  }
-
-  # Base data = first imputed dataset, imputation column dropped
-  base_data <- data[data[[imputation_col]] == imputations[1L], , drop = FALSE]
-  ord_base  <- match(id_ref, base_data[[id_col]])
-  base_data <- base_data[ord_base, , drop = FALSE]
-  base_data[[imputation_col]] <- NULL
-  rownames(base_data) <- NULL
-
-  list(preds = preds, base_data = base_data, n_imp = length(imputations))
+  invisible(NULL)
 }
 
 
@@ -178,6 +126,10 @@
 #'   balance diagnostics.  If `NULL` (default), all numeric columns other
 #'   than `treatment_col`, `score_col`, `logit_col`, `weight_col`,
 #'   `id_col`, `"quintile"`, and `"decile"` are used.
+#' @param treatment_levels Complete binary treatment levels. `NULL` preserves
+#'   the historical 0/1 or logical interface.
+#' @param treated_level Level whose probability is the propensity score. When
+#'   `treatment_levels` is supplied and this is `NULL`, its last value is used.
 #'
 #' @return An object of class `c("ps_logistic", "ps_data")` with:
 #' \describe{
@@ -194,6 +146,7 @@
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 42)
+#' dta$prob_t <- NULL
 #'
 #' # --- Single complete dataset (mirrors tp.lm.logistic_propensity_score.nomi.sas)
 #' # Equivalent to: PROC LOGISTIC data=built descending; model tavr = ...;
@@ -250,7 +203,9 @@ ps_logistic <- function(formula,
                         score_col      = "prob_t",
                         logit_col      = "logit_t",
                         weight_col     = "mt_wt",
-                        covariates     = NULL) {
+                        covariates     = NULL,
+                        treatment_levels = NULL,
+                        treated_level = NULL) {
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
@@ -262,30 +217,41 @@ ps_logistic <- function(formula,
     treatment_col <- as.character(formula[[2L]])
   }
   .check_cols(data, treatment_col)
-  if (!is.null(id_col))         .check_cols(data, id_col)
-  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
-  .check_binary(data, treatment_col)
-
-  # ---- Fit model(s) and obtain predicted probabilities --------------------
-  fit_fn  <- function(df) {
-    stats::glm(formula, data = df, family = stats::binomial())
+  if (is.null(treatment_levels)) {
+    .check_binary(data, treatment_col)
+    treatment_levels <- if (is.logical(data[[treatment_col]])) {
+      c(FALSE, TRUE)
+    } else {
+      c(0, 1)
+    }
   }
-  pred_fn <- function(fit, df) as.numeric(stats::predict(fit, type = "response"))
+  treatment_levels <- as.character(treatment_levels)
+  if (is.null(treated_level)) treated_level <- utils::tail(treatment_levels, 1L)
+  treated_level <- as.character(treated_level)
 
-  if (is.null(imputation_col)) {
-    fit       <- fit_fn(data)
-    probs     <- pred_fn(fit, data)
-    base_data <- data
-    n_imp     <- 1L
-  } else {
-    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
-    probs     <- mi$preds
-    base_data <- mi$base_data
-    n_imp     <- mi$n_imp
-  }
+  .check_output_columns(
+    data,
+    c(score_col, logit_col, weight_col, "quintile", "decile")
+  )
+
+  private_prefix <- .temporary_prediction_prefix(data)
+  model <- fit_logistic(
+    formula = formula,
+    data = data,
+    family = "binary",
+    outcome_col = treatment_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    outcome_levels = treatment_levels,
+    event_level = treated_level,
+    prediction_prefix = private_prefix
+  )
+  base_data <- model$data
+  probs <- base_data[[private_prefix]]
+  base_data[[private_prefix]] <- NULL
 
   # ---- Append score columns -----------------------------------------------
-  trt <- as.integer(base_data[[treatment_col]])
+  trt <- as.integer(as.character(base_data[[treatment_col]]) == treated_level)
 
   base_data[[score_col]]  <- probs
   base_data[[logit_col]]  <- log(probs / (1 - probs))
@@ -306,7 +272,9 @@ ps_logistic <- function(formula,
       reserved
     )
   }
-  smd_tbl <- .smd_table(base_data, treatment_col, covariates)
+  diagnostic_data <- base_data
+  diagnostic_data[[treatment_col]] <- trt
+  smd_tbl <- .smd_table(diagnostic_data, treatment_col, covariates)
 
   group_counts <- data.frame(
     group = c("control", "treated"),
@@ -324,15 +292,21 @@ ps_logistic <- function(formula,
       score_col      = score_col,
       logit_col      = logit_col,
       weight_col     = weight_col,
+      treatment_levels = treatment_levels,
+      treated_level = treated_level,
+      bundle_version = model$meta$bundle_version,
+      model_family = model$meta$model_family,
+      package_versions = model$meta$package_versions,
       method         = if (is.null(imputation_col)) "logistic"
                        else "logistic-MI",
-      n_imputations  = n_imp,
+      n_imputations  = model$meta$n_imputations,
       n_total        = nrow(base_data)
     ),
-    tables   = list(
-      smd          = smd_tbl,
-      group_counts = group_counts
+    tables   = c(
+      list(smd = smd_tbl, group_counts = group_counts),
+      model$tables
     ),
+    models = model$models,
     subclass = "ps_logistic"
   )
 }
@@ -391,6 +365,8 @@ print.ps_logistic <- function(x, ...) {
 #'   are named `<prefix>_<level>` for each level of the treatment.
 #'   Default `"prob"`.
 #' @param covariates       Covariate columns for diagnostics.
+#' @param treatment_levels Complete ordered treatment levels. `NULL` preserves
+#'   the levels inferred by the historical interface.
 #'
 #' @return An object of class `c("ps_ordinal", "ps_data")` with:
 #' \describe{
@@ -437,7 +413,8 @@ ps_ordinal <- function(formula,
                        id_col           = "id",
                        imputation_col   = NULL,
                        score_col_prefix = "prob",
-                       covariates       = NULL) {
+                       covariates       = NULL,
+                       treatment_levels = NULL) {
 
   if (!requireNamespace("MASS", quietly = TRUE)) {
     rlang::abort(
@@ -457,59 +434,33 @@ ps_ordinal <- function(formula,
     treatment_col <- as.character(formula[[2L]])
   }
   .check_cols(data, treatment_col)
-  if (!is.null(id_col))         .check_cols(data, id_col)
-  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+  if (is.null(treatment_levels)) {
+    treatment_levels <- levels(factor(data[[treatment_col]]))
+  }
+  treatment_levels <- as.character(treatment_levels)
 
-  # ---- Coerce response to ordered factor ----------------------------------
-  .as_ordered <- function(df, col) {
-    x <- df[[col]]
-    if (!is.ordered(x)) df[[col]] <- factor(x, ordered = TRUE)
-    df
-  }
-  data <- .as_ordered(data, treatment_col)
-  lvls <- levels(data[[treatment_col]])
+  score_cols <- paste0(score_col_prefix, "_", treatment_levels)
+  .check_output_columns(data, score_cols)
 
-  if (length(lvls) < 2L) {
-    rlang::abort(
-      sprintf("Treatment column `%s` must have at least 2 levels.", treatment_col),
-      call. = FALSE
-    )
-  }
-
-  # ---- Fit function -------------------------------------------------------
-  fit_fn <- function(df) {
-    df <- .as_ordered(df, treatment_col)
-    MASS::polr(formula, data = df, Hess = FALSE)
-  }
-  pred_fn <- function(fit, df) {
-    p <- stats::predict(fit, type = "probs")
-    if (is.vector(p)) {
-      # Two-level: polr returns a vector; reshape to matrix
-      p <- cbind(1 - p, p)
-      colnames(p) <- lvls
-    }
-    p
-  }
-
-  # ---- Single or MI -------------------------------------------------------
-  if (is.null(imputation_col)) {
-    fit       <- fit_fn(data)
-    probs_mat <- pred_fn(fit, data)
-    base_data <- data
-    n_imp     <- 1L
-  } else {
-    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
-    probs_mat <- mi$preds
-    base_data <- mi$base_data
-    n_imp     <- mi$n_imp
-    # Re-coerce response in base_data (imputation col already removed)
-    base_data <- .as_ordered(base_data, treatment_col)
-  }
+  private_prefix <- .temporary_prediction_prefix(data)
+  model <- fit_logistic(
+    formula = formula,
+    data = data,
+    family = "ordinal",
+    outcome_col = treatment_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    outcome_levels = treatment_levels,
+    prediction_prefix = private_prefix
+  )
+  base_data <- model$data
+  lvls <- treatment_levels
 
   # ---- Append probability columns -----------------------------------------
-  score_cols <- paste0(score_col_prefix, "_", lvls)
   for (i in seq_along(lvls)) {
-    base_data[[score_cols[i]]] <- as.numeric(probs_mat[, i])
+    private_col <- paste0(private_prefix, "_", lvls[[i]])
+    base_data[[score_cols[[i]]]] <- base_data[[private_col]]
+    base_data[[private_col]] <- NULL
   }
 
   # ---- Group counts -------------------------------------------------------
@@ -529,14 +480,18 @@ ps_ordinal <- function(formula,
       score_cols       = score_cols,
       score_col_prefix = score_col_prefix,
       levels           = lvls,
+      treatment_levels = lvls,
+      bundle_version   = model$meta$bundle_version,
+      model_family     = model$meta$model_family,
+      package_versions = model$meta$package_versions,
+      cumulative_direction = model$meta$cumulative_direction,
       method           = if (is.null(imputation_col)) "ordinal-logistic"
                          else "ordinal-logistic-MI",
-      n_imputations    = n_imp,
+      n_imputations    = model$meta$n_imputations,
       n_total          = nrow(base_data)
     ),
-    tables   = list(
-      group_counts = group_counts
-    ),
+    tables   = c(list(group_counts = group_counts), model$tables),
+    models = model$models,
     subclass = "ps_ordinal"
   )
 }
@@ -598,6 +553,8 @@ print.ps_ordinal <- function(x, ...) {
 #' @param trace            Logical.  If `FALSE` (default), suppresses
 #'   [nnet::multinom()] iteration messages.
 #' @param covariates       Covariate columns for diagnostics.
+#' @param treatment_levels Complete nominal treatment levels. `NULL` preserves
+#'   the levels inferred by the historical interface.
 #'
 #' @return An object of class `c("ps_nominal", "ps_data")` with:
 #' \describe{
@@ -649,7 +606,8 @@ ps_nominal <- function(formula,
                        ref_level        = NULL,
                        score_col_prefix = "prob",
                        trace            = FALSE,
-                       covariates       = NULL) {
+                       covariates       = NULL,
+                       treatment_levels = NULL) {
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
     rlang::abort(
@@ -669,59 +627,38 @@ ps_nominal <- function(formula,
     treatment_col <- as.character(formula[[2L]])
   }
   .check_cols(data, treatment_col)
-  if (!is.null(id_col))         .check_cols(data, id_col)
-  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+  if (is.null(treatment_levels)) {
+    treatment_levels <- levels(factor(data[[treatment_col]]))
+  }
+  treatment_levels <- as.character(treatment_levels)
+  if (is.null(ref_level)) ref_level <- treatment_levels[[1L]]
+  ref_level <- as.character(ref_level)
+  model_levels <- c(ref_level, setdiff(treatment_levels, ref_level))
 
-  # ---- Coerce response to unordered factor --------------------------------
-  .as_nominal <- function(df, col, ref) {
-    x <- df[[col]]
-    if (!is.factor(x) || is.ordered(x)) df[[col]] <- factor(x)
-    if (!is.null(ref))                  df[[col]] <- stats::relevel(df[[col]], ref = ref)
-    df
-  }
-  data <- .as_nominal(data, treatment_col, ref_level)
-  lvls <- levels(data[[treatment_col]])
+  score_cols <- paste0(score_col_prefix, "_", model_levels)
+  .check_output_columns(data, score_cols)
 
-  if (length(lvls) < 2L) {
-    rlang::abort(
-      sprintf("Treatment column `%s` must have at least 2 levels.", treatment_col),
-      call. = FALSE
-    )
-  }
-
-  # ---- Fit function -------------------------------------------------------
-  fit_fn <- function(df) {
-    df <- .as_nominal(df, treatment_col, ref_level)
-    nnet::multinom(formula, data = df, trace = trace)
-  }
-  pred_fn <- function(fit, df) {
-    p <- stats::predict(fit, type = "probs")
-    if (is.vector(p)) {
-      # Two-level case: multinom returns a vector of P(level 2)
-      p <- cbind(1 - p, p)
-    }
-    colnames(p) <- lvls
-    p
-  }
-
-  # ---- Single or MI -------------------------------------------------------
-  if (is.null(imputation_col)) {
-    fit       <- fit_fn(data)
-    probs_mat <- pred_fn(fit, data)
-    base_data <- data
-    n_imp     <- 1L
-  } else {
-    mi        <- .mi_average(data, imputation_col, id_col, fit_fn, pred_fn)
-    probs_mat <- mi$preds
-    base_data <- mi$base_data
-    n_imp     <- mi$n_imp
-    base_data <- .as_nominal(base_data, treatment_col, ref_level)
-  }
+  private_prefix <- .temporary_prediction_prefix(data)
+  model <- fit_logistic(
+    formula = formula,
+    data = data,
+    family = "nominal",
+    outcome_col = treatment_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    outcome_levels = treatment_levels,
+    reference_level = ref_level,
+    prediction_prefix = private_prefix,
+    trace = trace
+  )
+  base_data <- model$data
+  lvls <- model_levels
 
   # ---- Append probability columns -----------------------------------------
-  score_cols <- paste0(score_col_prefix, "_", lvls)
   for (i in seq_along(lvls)) {
-    base_data[[score_cols[i]]] <- as.numeric(probs_mat[, i])
+    private_col <- paste0(private_prefix, "_", lvls[[i]])
+    base_data[[score_cols[[i]]]] <- base_data[[private_col]]
+    base_data[[private_col]] <- NULL
   }
 
   # ---- Group counts -------------------------------------------------------
@@ -742,14 +679,17 @@ ps_nominal <- function(formula,
       score_col_prefix = score_col_prefix,
       levels           = lvls,
       ref_level        = lvls[1L],
+      treatment_levels = treatment_levels,
+      bundle_version   = model$meta$bundle_version,
+      model_family     = model$meta$model_family,
+      package_versions = model$meta$package_versions,
       method           = if (is.null(imputation_col)) "nominal-logistic"
                          else "nominal-logistic-MI",
-      n_imputations    = n_imp,
+      n_imputations    = model$meta$n_imputations,
       n_total          = nrow(base_data)
     ),
-    tables   = list(
-      group_counts = group_counts
-    ),
+    tables   = c(list(group_counts = group_counts), model$tables),
+    models = model$models,
     subclass = "ps_nominal"
   )
 }

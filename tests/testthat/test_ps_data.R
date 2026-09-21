@@ -17,20 +17,31 @@ test_that("new_ps_data() returns correct class vector", {
   expect_identical(class(obj), c("ps_test", "ps_data"))
 })
 
-test_that("new_ps_data() stores data, meta, and tables slots", {
+test_that("new_ps_data() stores the four stable slots", {
   df  <- data.frame(a = 1:3)
   meta <- list(n_total = 3L, method = "unit_test")
   tbl  <- list(counts = data.frame(n = 3L))
+  models <- list(one = stats::lm(a ~ 1, data = df))
 
   obj <- hvtiRpropensity:::new_ps_data(
     data     = df,
     meta     = meta,
     tables   = tbl,
+    models   = models,
     subclass = "ps_test"
   )
+  expect_named(obj, c("data", "meta", "tables", "models"))
   expect_identical(obj$data,   df)
   expect_identical(obj$meta,   meta)
   expect_identical(obj$tables, tbl)
+  expect_identical(obj$models, models)
+})
+
+test_that("new_ps_data() defaults to an empty model list", {
+  obj <- hvtiRpropensity:::new_ps_data(
+    data = data.frame(x = 1), meta = list(), subclass = "ps_test"
+  )
+  expect_identical(obj$models, list())
 })
 
 test_that("new_ps_data() errors on invalid inputs", {
@@ -44,6 +55,12 @@ test_that("new_ps_data() errors on invalid inputs", {
     hvtiRpropensity:::new_ps_data(
       data = data.frame(x = 1), meta = list(), tables = list(),
       subclass = character(0)  # zero-length
+    )
+  )
+  expect_error(
+    hvtiRpropensity:::new_ps_data(
+      data = data.frame(x = 1), meta = list(), models = 1,
+      subclass = "ps_test"
     )
   )
 })
