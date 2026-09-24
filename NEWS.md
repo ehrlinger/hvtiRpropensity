@@ -1,3 +1,15 @@
+# hvtiRpropensity 0.1.8
+
+* New `ps_forest()`: out-of-bag random-forest propensity score with the same
+  `ps_data` contract as `ps_logistic()` (needs the suggested
+  `randomForestSRC`).
+* New `ps_support()`: flags weak-support patients under common-support,
+  score-trimming and user-supplied rules (e.g. isolation-forest tails) and
+  tabulates pairwise agreement (kappa, Jaccard).
+* New `ps_rmst()`: observed-outcome restricted mean survival contrast from
+  weighted Kaplan-Meier curves with a stratified bootstrap interval; its
+  `$tables$estimates` / `$tables$curves` feed `hvtiPlotR` RMST plots.
+
 # hvtiRpropensity 0.1.7
 
 * `ps_ordinal()` now creates its documented rank-based quintile and decile
