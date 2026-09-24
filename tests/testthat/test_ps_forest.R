@@ -100,3 +100,28 @@ test_that("ps_rmst() supports refit and validates input", {
   expect_error(ps_rmst(x, "t", "e", tau = 4, subsets = list(a = TRUE)), "one value per row")
   expect_error(ps_rmst(dta, "t", "e", tau = 4), "ps_data")
 })
+
+test_that("ps_forest() requires treatment_col to match the formula response", {
+  expect_no_error(ps_forest(tavr ~ age + ef, dta, treatment_col = "tavr", ntree = 20, seed = 1))
+  expect_error(ps_forest(tavr ~ age + ef, dta, treatment_col = "female", ntree = 20), "must match")
+})
+
+test_that("degenerate inputs give NA, not errors or NaN", {
+  expect_true(is.na(.weighted_km(numeric(0), numeric(0), numeric(0), 3)$rmst))
+  ag <- .support_agreement(c(NA, NA), c(TRUE, NA))
+  expect_equal(ag$n, 0L)
+  expect_true(is.na(ag$pct_agree) && is.na(ag$kappa) && is.na(ag$jaccard))
+  agr <- ps_support(fo)$tables$agreement
+  expect_false("stringsAsFactors" %in% names(agr))
+  expect_true(all(c("rule_a", "rule_b") %in% names(agr)))
+})
+
+test_that("ps_rmst() reports NA intervals when a subset has only one arm", {
+  x <- ps_logistic(tavr ~ age + ef, surv_dta)
+  only_ctl <- surv_dta$tavr == 0
+  r <- expect_no_warning(ps_rmst(x, "t", "e", tau = 4, weights = "unweighted",
+                                 subsets = list(ctl = only_ctl), n_boot = 5))
+  row <- r$tables$estimates[r$tables$estimates$estimator == "ctl/unweighted", ]
+  expect_true(is.na(row$diff_days) && is.na(row$lo_days) && is.na(row$hi_days))
+  expect_equal(row$n_failed, 5L)
+})

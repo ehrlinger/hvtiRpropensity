@@ -55,6 +55,9 @@ ps_forest <- function(formula,
   }
   .check_df(data)
   if (is.null(treatment_col)) treatment_col <- as.character(formula[[2L]])
+  if (!identical(treatment_col, as.character(formula[[2L]]))) {
+    rlang::abort("`treatment_col` must match the response on the left of `formula`.", call. = FALSE)
+  }
   .check_cols(data, treatment_col)
   .check_binary(data, treatment_col)
   .check_output_columns(data, c(score_col, logit_col, weight_col, "quintile", "decile"))

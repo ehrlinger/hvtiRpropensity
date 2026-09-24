@@ -60,8 +60,8 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   pairs <- utils::combn(names(rules), 2L, simplify = FALSE)
   agreement <- if (length(pairs)) {
     do.call(rbind, lapply(pairs, function(p) {
-      cbind(rule_a = p[1L], rule_b = p[2L], .support_agreement(rules[[p[1L]]], rules[[p[2L]]]),
-            stringsAsFactors = FALSE)
+      cbind(data.frame(rule_a = p[1L], rule_b = p[2L]),
+            .support_agreement(rules[[p[1L]]], rules[[p[2L]]]))
     }))
   } else {
     data.frame()
@@ -84,6 +84,10 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   a <- flag_a[ok]
   b <- flag_b[ok]
   n <- length(a)
+  if (n == 0L) {
+    return(data.frame(n = 0L, n_a = 0L, n_b = 0L, n_both = 0L, n_neither = 0L,
+                      pct_agree = NA_real_, kappa = NA_real_, jaccard = NA_real_))
+  }
   n11 <- sum(a & b)
   n00 <- sum(!a & !b)
   po <- (n11 + n00) / n

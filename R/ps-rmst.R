@@ -132,7 +132,11 @@ ps_rmst <- function(x, time_col, event_col, tau,
         (r$ra$rmst - r$rb$rmst) * time_unit_days
       }, error = function(e) NA_real_)
     }
-    ci <- stats::quantile(draws, c(0.025, 0.975), na.rm = TRUE, names = FALSE)
+    ci <- if (all(is.na(draws))) {
+      c(NA_real_, NA_real_)
+    } else {
+      stats::quantile(draws, c(0.025, 0.975), na.rm = TRUE, names = FALSE)
+    }
     rows[[i]] <- data.frame(
       estimator = label, subset = grid$subset[i], weighting = type, n = length(idx),
       ess_treated = ess(a), ess_control = ess(!a),
@@ -160,6 +164,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
 .weighted_km <- function(time, event, weights, tau) {
   keep <- !is.na(time) & !is.na(event) & !is.na(weights) & weights > 0
   dd <- data.frame(t = time[keep], e = event[keep], w = weights[keep])
+  if (!nrow(dd)) return(list(rmst = NA_real_, curve = data.frame(time = 0, surv = 1)))
   km <- survival::survfit(survival::Surv(t, e) ~ 1, data = dd, weights = dd$w)
   curve <- data.frame(time = c(0, km$time), surv = c(1, km$surv))
   list(rmst = .rmst_step(curve$time, curve$surv, tau), curve = curve)
