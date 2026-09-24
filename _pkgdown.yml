@@ -60,6 +60,7 @@ reference:
     count outcomes, with optional multiple-imputation averaging.
   contents:
   - ps_logistic
+  - ps_forest
   - ps_ordinal
   - ps_nominal
   - bs_continuous
@@ -93,6 +94,7 @@ reference:
     Weighted treatment-effect estimates with bootstrap variance.
   contents:
   - ps_mw_var
+  - ps_rmst
 
 - title: "Sensitivity Analysis"
   desc: >
@@ -103,6 +105,7 @@ reference:
   - sa_evalue
   - sa_overlap
   - sa_trim_sweep
+  - ps_support
 
 - title: "Internal"
   desc: >
