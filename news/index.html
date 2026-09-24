@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,12 @@
       <small>Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.8" id="hvtirpropensity-018">hvtiRpropensity 0.1.8<a class="anchor" aria-label="anchor" href="#hvtirpropensity-018"></a></h2>
+<ul><li>New <code><a href="../reference/ps_forest.html">ps_forest()</a></code>: out-of-bag random-forest propensity score with the same <code>ps_data</code> contract as <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code> (needs the suggested <code>randomForestSRC</code>).</li>
+<li>New <code><a href="../reference/ps_support.html">ps_support()</a></code>: flags weak-support patients under common-support, score-trimming and user-supplied rules (e.g. isolation-forest tails) and tabulates pairwise agreement (kappa, Jaccard).</li>
+<li>New <code><a href="../reference/ps_rmst.html">ps_rmst()</a></code>: observed-outcome restricted mean survival contrast from weighted Kaplan-Meier curves with a stratified bootstrap interval; its <code>$tables$estimates</code> / <code>$tables$curves</code> feed <code>hvtiPlotR</code> RMST plots.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.7" id="hvtirpropensity-017">hvtiRpropensity 0.1.7<a class="anchor" aria-label="anchor" href="#hvtirpropensity-017"></a></h2>
 <ul><li>

@@ -199,6 +199,8 @@ outcomes, with optional multiple-imputation averaging.
 
 - [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
   : Estimate propensity scores via binary logistic regression
+- [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+  : Random-forest propensity score (out-of-bag)
 - [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
   : Estimate propensity scores via ordinal (cumulative logit) logistic
   regression
@@ -246,6 +248,8 @@ Weighted treatment-effect estimates with bootstrap variance.
 
 - [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
   : Bootstrap variance of a matching-weight treatment effect
+- [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+  : Observed-outcome restricted mean survival contrast, weighted
 
 ## Sensitivity Analysis
 
@@ -260,6 +264,8 @@ unmeasured confounding and model assumptions.
   : Propensity Score Overlap and Positivity Diagnostics
 - [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
   : IPTW Weight-Trimming Sensitivity Sweep
+- [`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md)
+  : Compare support (overlap) rules
 
 ## Internal
 

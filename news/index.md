@@ -1,5 +1,24 @@
 # Changelog
 
+## hvtiRpropensity 0.1.8
+
+- New
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md):
+  out-of-bag random-forest propensity score with the same `ps_data`
+  contract as
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+  (needs the suggested `randomForestSRC`).
+- New
+  [`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md):
+  flags weak-support patients under common-support, score-trimming and
+  user-supplied rules (e.g. isolation-forest tails) and tabulates
+  pairwise agreement (kappa, Jaccard).
+- New
+  [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md):
+  observed-outcome restricted mean survival contrast from weighted
+  Kaplan-Meier curves with a stratified bootstrap interval; its
+  `$tables$estimates` / `$tables$curves` feed `hvtiPlotR` RMST plots.
+
 ## hvtiRpropensity 0.1.7
 
 - [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
