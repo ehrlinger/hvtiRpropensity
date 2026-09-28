@@ -1,3 +1,12 @@
+# hvtiRpropensity (unreleased)
+
+* `ps_match()`, `ps_rmst()` and the `sample_ps_data*()` generators restore the
+  caller's random number stream when they return. Each called `set.seed()`
+  and left the stream reseeded, so everything the caller drew afterwards
+  depended on the seed passed here. They now use `withr::local_seed()`, as
+  `ps_stddiff_perm()` and `ps_mw_var()` already did. Results for a given seed
+  are unchanged.
+
 # hvtiRpropensity 0.1.8
 
 * New `ps_forest()`: out-of-bag random-forest propensity score with the same

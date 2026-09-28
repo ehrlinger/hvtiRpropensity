@@ -1,0 +1,42 @@
+###############################################################################
+## test_rng_state.R
+##
+## A function that takes a seed must leave the caller's random number stream
+## as it found it: a set.seed() inside a function silently reseeds everything
+## the caller draws afterwards.
+###############################################################################
+
+expect_rng_untouched <- function(call) {
+  set.seed(2026)
+  before <- .Random.seed
+  force(call)
+  expect_identical(.Random.seed, before)
+}
+
+test_that("the sample-data generators restore the caller's stream", {
+  expect_rng_untouched(sample_ps_data(n = 50, seed = 1))
+  expect_rng_untouched(sample_ps_data_ordinal(n = 50, seed = 1))
+  expect_rng_untouched(sample_ps_data_nominal(n = 50, seed = 1))
+  expect_rng_untouched(sample_ps_data_count(n = 50, seed = 1))
+  expect_rng_untouched(sample_ps_data_count(n = 50, seed = 1, n_imputations = 2))
+})
+
+test_that("a seed still makes the sample data reproducible", {
+  expect_identical(sample_ps_data(n = 50, seed = 3), sample_ps_data(n = 50, seed = 3))
+  expect_identical(sample_ps_data_count(n = 50, seed = 3, n_imputations = 2),
+                   sample_ps_data_count(n = 50, seed = 3, n_imputations = 2))
+})
+
+test_that("ps_match() with a seed restores the caller's stream", {
+  dta <- sample_ps_data(n = 100, seed = 42)
+  expect_rng_untouched(ps_match(dta, seed = 7))
+  expect_identical(ps_match(dta, seed = 7)$data, ps_match(dta, seed = 7)$data)
+})
+
+test_that("ps_rmst() restores the caller's stream", {
+  d <- sample_ps_data(n = 120, seed = 9)[, c("id", "tavr", "age", "ef")]
+  d$t <- rep_len(c(1, 2.5, 4, 5), nrow(d))
+  d$e <- rep_len(c(1L, 0L, 1L), nrow(d))
+  fit <- ps_logistic(tavr ~ age + ef, d)
+  expect_rng_untouched(ps_rmst(fit, "t", "e", tau = 4, weights = "unweighted", n_boot = 5))
+})

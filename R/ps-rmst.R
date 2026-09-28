@@ -102,7 +102,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
     obj$data[[x$meta$score_col]]
   }
 
-  set.seed(seed)
+  withr::local_seed(seed)
   rows <- vector("list", nrow(grid))
   curves <- list()
   for (i in seq_len(nrow(grid))) {
