@@ -88,7 +88,9 @@ Every model-producing result has four slots:
 - `$models`: every fitted model, including every imputation-specific fit.
 
 The `estimates` table has columns `term`, `estimate`, `std.error`, `statistic`,
-`df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio`, and `pooled`.
+`df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio`, and `pooled`. Count models
+(`bs_count()`) name the exponentiated column `rate_ratio`, since a log-link
+coefficient exponentiates to a rate ratio.
 `by_imputation` has `imputation`, `term`, `estimate`, and `std.error`;
 `fit_status` has `imputation`, `converged`, `n_input`, `n_analyzed`, and
 `n_excluded`.
