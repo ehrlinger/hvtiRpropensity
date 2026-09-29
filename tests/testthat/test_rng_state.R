@@ -6,11 +6,13 @@
 ## the caller draws afterwards.
 ###############################################################################
 
+rng_state <- function() get(".Random.seed", envir = globalenv())
+
 expect_rng_untouched <- function(call) {
   set.seed(2026)
-  before <- .Random.seed
+  before <- rng_state()
   force(call)
-  expect_identical(.Random.seed, before)
+  testthat::expect_identical(rng_state(), before)
 }
 
 test_that("the sample-data generators restore the caller's stream", {
