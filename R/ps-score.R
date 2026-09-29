@@ -141,7 +141,9 @@
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
 #'     `imputation_col`, `score_col`, `logit_col`, `weight_col`, `method`,
 #'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `smd`, `group_counts`.}
+#'   \item{`$tables`}{Named list: `smd`, `group_counts`. `group_counts` has one
+#'     row per treatment level, named as declared, with a logical `treated`
+#'     flag and the count `n`.}
 #' }
 #'
 #' @seealso [ps_match()], [ps_weight()], [ps_ordinal()], [ps_nominal()],
@@ -280,8 +282,9 @@ ps_logistic <- function(formula,
   smd_tbl <- .smd_table(diagnostic_data, treatment_col, covariates)
 
   group_counts <- data.frame(
-    group = c("control", "treated"),
-    n     = c(sum(trt == 0L), sum(trt == 1L))
+    group   = c(setdiff(treatment_levels, treated_level), treated_level),
+    treated = c(FALSE, TRUE),
+    n       = c(sum(trt == 0L), sum(trt == 1L))
   )
 
   # ---- Assemble object ----------------------------------------------------

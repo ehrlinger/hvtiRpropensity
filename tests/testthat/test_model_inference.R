@@ -147,3 +147,15 @@ test_that("model inference names a non-converged imputation", {
     "failed to converge.*2"
   )
 })
+
+test_that(".model_inference() labels exponentiated count coefficients rate_ratio", {
+  dta <- data.frame(y = c(0, 1, 2, 4, 3, 1, 0, 5), x = c(1, 2, 3, 4, 5, 6, 7, 8))
+  fit <- stats::glm(y ~ x, family = stats::poisson(link = "log"), data = dta)
+  result <- .model_inference(list("1" = fit), "count")
+  expect_false("odds_ratio" %in% names(result$estimates))
+  expect_equal(result$estimates$rate_ratio, unname(exp(stats::coef(fit))))
+  binary <- .model_inference(list("1" = stats::glm(I(y > 1) ~ x, family = stats::binomial(), data = dta)),
+                             "binary")
+  expect_true("odds_ratio" %in% names(binary$estimates))
+  expect_false("rate_ratio" %in% names(binary$estimates))
+})

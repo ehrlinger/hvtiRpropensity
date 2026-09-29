@@ -6,6 +6,14 @@
   depended on the seed passed here. They now use `withr::local_seed()`, as
   `ps_stddiff_perm()` and `ps_mw_var()` already did. Results for a given seed
   are unchanged.
+* `bs_count()` and other count-family models now name the exponentiated
+  coefficient column `rate_ratio`. It was labelled `odds_ratio`, but the
+  exponent of a log-link Poisson or negative-binomial coefficient is a rate
+  ratio. Binary, ordinal and nominal models keep `odds_ratio` (#46).
+* `ps_logistic()`'s `$tables$group_counts` names each row by the declared
+  treatment level instead of `control`/`treated`, and adds a logical
+  `treated` column, so it reads the same as `ps_ordinal()` and `ps_nominal()`.
+  Without `treatment_levels` the groups are `0`/`1` (or `FALSE`/`TRUE`) (#47).
 
 # hvtiRpropensity 0.1.8
 

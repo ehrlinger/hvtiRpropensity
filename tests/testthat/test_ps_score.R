@@ -67,7 +67,7 @@ test_that("ps_logistic() tables contain smd and group_counts", {
   dta <- unscored_ps_data(n = 100, seed = 5)
   obj <- ps_logistic(tavr ~ age + ef, data = dta)
   expect_named(obj$tables$smd, c("variable", "smd"))
-  expect_named(obj$tables$group_counts, c("group", "n"))
+  expect_named(obj$tables$group_counts, c("group", "treated", "n"))
   expect_equal(sum(obj$tables$group_counts$n), nrow(dta))
 })
 
@@ -421,4 +421,19 @@ test_that("sample_ps_data_nominal() returns expected structure", {
   expect_equal(nrow(dta), 200L)
   expect_true(is.factor(dta$rtyp) && !is.ordered(dta$rtyp))
   expect_equal(levels(dta$rtyp), c("COS", "PER", "DEV", "CE"))
+})
+
+test_that("ps_logistic() group_counts names the declared treatment levels", {
+  dta <- unscored_ps_data(n = 80, seed = 13)
+  dta$procedure <- ifelse(dta$tavr == 1L, "transcatheter", "surgical")
+  obj <- ps_logistic(
+    procedure ~ age + ef,
+    dta,
+    treatment_levels = c("surgical", "transcatheter"),
+    treated_level = "transcatheter"
+  )
+  counts <- obj$tables$group_counts
+  expect_identical(counts$group, c("surgical", "transcatheter"))
+  expect_identical(counts$treated, c(FALSE, TRUE))
+  expect_equal(counts$n, c(sum(dta$tavr == 0L), sum(dta$tavr == 1L)))
 })

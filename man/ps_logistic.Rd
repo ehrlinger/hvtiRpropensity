@@ -64,7 +64,9 @@ An object of class \code{c("ps_logistic", "ps_data")} with:
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
 \code{imputation_col}, \code{score_col}, \code{logit_col}, \code{weight_col}, \code{method},
 \code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}.}
+\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}. \code{group_counts} has one
+row per treatment level, named as declared, with a logical \code{treated}
+flag and the count \code{n}.}
 }
 }
 \description{
