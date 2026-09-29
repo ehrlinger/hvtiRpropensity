@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.9
 
 * `ps_match()`, `ps_rmst()` and the `sample_ps_data*()` generators restore the
   caller's random number stream when they return. Each called `set.seed()`
