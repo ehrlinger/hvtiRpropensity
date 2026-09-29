@@ -92,9 +92,9 @@ dta$t <- pmin(dta$t, 5)
 res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
 res$tables$estimates
 #>        estimator subset  weighting   n ess_treated ess_control rmst_treated
-#> 1 all/unweighted    all unweighted 400    200.0000    200.0000     2.767510
-#> 2        all/ato    all        ato 400    157.8078    155.2728     2.804586
-#>   rmst_control       diff diff_days   lo_days   hi_days n_failed
-#> 1     2.736086 0.03142430 11.477489 -85.65566  76.21498        0
-#> 2     2.786472 0.01811438  6.616141 -86.09188 113.38007        0
+#> 1 all/unweighted    all unweighted 400    200.0000    200.0000     2.730575
+#> 2        all/ato    all        ato 400    157.8078    155.2728     2.727508
+#>   rmst_control        diff diff_days    lo_days  hi_days n_failed
+#> 1     2.701130  0.02944547  10.75474  -63.96384 89.13301        0
+#> 2     2.820534 -0.09302584 -33.97699 -151.78152 69.04643        0
 ```

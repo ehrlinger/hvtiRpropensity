@@ -906,8 +906,9 @@ sessionInfo()
 #> [1] hvtiRpropensity_0.1.8
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] MASS_7.3-65     compiler_4.6.1  fastmap_1.2.0   cli_3.6.6      
-#>  [5] tools_4.6.1     htmltools_0.5.9 otel_0.2.0      nnet_7.3-20    
-#>  [9] yaml_2.3.12     rmarkdown_2.32  knitr_1.52      jsonlite_2.0.0 
-#> [13] xfun_0.61       digest_0.6.39   rlang_1.3.0     evaluate_1.0.5
+#>  [1] digest_0.6.39   fastmap_1.2.0   xfun_0.61       nnet_7.3-20    
+#>  [5] knitr_1.52      htmltools_0.5.9 rmarkdown_2.32  cli_3.6.6      
+#>  [9] withr_3.0.3     compiler_4.6.1  tools_4.6.1     evaluate_1.0.5 
+#> [13] yaml_2.3.12     otel_0.2.0      rlang_1.3.0     jsonlite_2.0.0 
+#> [17] MASS_7.3-65
 ```

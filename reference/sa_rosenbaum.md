@@ -102,11 +102,11 @@ m   <- ps_match(dta)
 res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
 res$bounds
 #>   gamma      p_upper      p_lower reject_upper
-#> 1  1.00 2.764522e-11 2.764522e-11         TRUE
-#> 2  1.25 4.363893e-07 1.110223e-16         TRUE
-#> 3  1.50 1.435190e-04 0.000000e+00         TRUE
-#> 4  1.75 5.254295e-03 0.000000e+00         TRUE
-#> 5  2.00 4.989017e-02 0.000000e+00         TRUE
+#> 1  1.00 6.990297e-12 6.990297e-12         TRUE
+#> 2  1.25 1.513417e-07 0.000000e+00         TRUE
+#> 3  1.50 6.328064e-05 0.000000e+00         TRUE
+#> 4  1.75 2.813541e-03 0.000000e+00         TRUE
+#> 5  2.00 3.141844e-02 0.000000e+00         TRUE
 res$sensitivity_value
 #> [1] 2
 ```
