@@ -138,7 +138,7 @@ ps_match <- function(data,
 
   # Randomise treated order to reduce order-dependence.
   # Use seed if supplied for reproducibility.
-  if (!is.null(seed)) set.seed(seed)
+  if (!is.null(seed)) withr::local_seed(seed)
   order_t <- sample(seq_len(n_t))
 
   for (i in order_t) {

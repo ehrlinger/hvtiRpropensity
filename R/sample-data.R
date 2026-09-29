@@ -55,7 +55,7 @@ sample_ps_data <- function(n = 500L, seed = 42L, separation = 1.0) {
   if (!is.numeric(separation) || length(separation) != 1L || separation <= 0)
     stop("`separation` must be a positive number.", call. = FALSE)
 
-  set.seed(seed)
+  withr::local_seed(seed)
   n <- as.integer(n)
 
   # Control arm (tavr = 0): older, lower EF
@@ -126,7 +126,7 @@ sample_ps_data_ordinal <- function(n = 300L, seed = 42L) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
     stop("`n` must be a positive integer.", call. = FALSE)
 
-  set.seed(seed)
+  withr::local_seed(seed)
   n <- as.integer(n)
 
   # NYHA I: younger, higher EF, fewer comorbidities
@@ -195,7 +195,7 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
     stop("`n` must be a positive integer.", call. = FALSE)
 
-  set.seed(seed)
+  withr::local_seed(seed)
   n <- as.integer(n)
 
   # COS (commissurotomy): younger, lower EF
@@ -282,12 +282,12 @@ sample_ps_data_count <- function(n = 500L, seed = 42L, n_imputations = 1L) {
       n_imputations < 1L)
     stop("`n_imputations` must be a positive integer.", call. = FALSE)
 
-  set.seed(seed)
+  withr::local_seed(seed)
   n             <- as.integer(n)
   n_imputations <- as.integer(n_imputations)
 
   .one_dataset <- function(seed_offset = 0L) {
-    set.seed(seed + seed_offset)
+    withr::local_seed(seed + seed_offset)
     age          <- stats::rnorm(n, mean = 68, sd = 10)
     female       <- stats::rbinom(n, 1, 0.40)
     diabetes     <- stats::rbinom(n, 1, 0.28)
