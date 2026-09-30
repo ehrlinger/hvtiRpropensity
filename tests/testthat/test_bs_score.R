@@ -129,7 +129,7 @@ test_that("bs_count() with dist='poisson' returns correct class", {
   expect_named(
     obj$tables$estimates,
     c("term", "estimate", "std.error", "statistic", "df", "p.value",
-      "conf.low", "conf.high", "odds_ratio", "pooled")
+      "conf.low", "conf.high", "rate_ratio", "pooled")
   )
   expect_named(obj$tables,
                c("strata_counts", "estimates", "covariance",

@@ -287,6 +287,10 @@
     threshold <- startsWith(result$estimates$term, "threshold:")
     result$estimates$odds_ratio[threshold] <- NA_real_
   }
+  if (identical(family, "count")) {
+    # exp() of a log-link coefficient is a rate ratio, not an odds ratio
+    names(result$estimates)[names(result$estimates) == "odds_ratio"] <- "rate_ratio"
+  }
   imputation_labels <- names(models)
   if (is.null(imputation_labels) || any(!nzchar(imputation_labels))) {
     imputation_labels <- seq_along(models)

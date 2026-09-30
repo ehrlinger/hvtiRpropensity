@@ -116,7 +116,7 @@ and four common inference tables:
 
 | table | schema |
 |---|---|
-| `estimates` | `term`, `estimate`, `std.error`, `statistic`, `df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio`, `pooled` |
+| `estimates` | `term`, `estimate`, `std.error`, `statistic`, `df`, `p.value`, `conf.low`, `conf.high`, `odds_ratio` (`rate_ratio` for the log-link count family), `pooled` |
 | `covariance` | named coefficient covariance matrix |
 | `by_imputation` | `imputation`, `term`, `estimate`, `std.error` |
 | `fit_status` | `imputation`, `converged`, `n_input`, `n_analyzed`, `n_excluded` |
