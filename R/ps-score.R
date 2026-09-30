@@ -370,7 +370,14 @@ print.ps_logistic <- function(x, ...) {
 #' @param score_col_prefix Prefix for the per-level output columns.  Columns
 #'   are named `<prefix>_<level>` for each level of the treatment.
 #'   Default `"prob"`.
-#' @param covariates       Covariate columns for diagnostics.
+#' @param covariates       Covariate columns for the balance table. `NULL`
+#'   (default) uses every numeric column other than the treatment, score,
+#'   identifier and strata columns.
+#' @param smd_pairs        Which pairs of treatment levels the balance table
+#'   compares. `"reference"` (default) compares each level with the first
+#'   level; `"adjacent"` compares each level with the one below it; `"all"`
+#'   compares every pair. Give more than one to combine them, for example
+#'   `c("reference", "adjacent")`.
 #' @param treatment_levels Complete ordered treatment levels. `NULL` preserves
 #'   the levels inferred by the historical interface.
 #'
@@ -381,7 +388,8 @@ print.ps_logistic <- function(x, ...) {
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
 #'     `imputation_col`, `score_cols`, `levels`, `method`,
 #'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `group_counts`.}
+#'   \item{`$tables`}{Named list: `smd`, `group_counts`. `smd` has one row per
+#'     covariate and pair of levels: `variable`, `level`, `versus`, `smd`.}
 #' }
 #'
 #' @section Package dependency:
@@ -422,7 +430,8 @@ ps_ordinal <- function(formula,
                        imputation_col   = NULL,
                        score_col_prefix = "prob",
                        covariates       = NULL,
-                       treatment_levels = NULL) {
+                       treatment_levels = NULL,
+                       smd_pairs        = "reference") {
 
   if (!requireNamespace("MASS", quietly = TRUE)) {
     rlang::abort(
@@ -442,6 +451,7 @@ ps_ordinal <- function(formula,
     treatment_col <- as.character(formula[[2L]])
   }
   .check_cols(data, treatment_col)
+  smd_pairs <- match.arg(smd_pairs, c("reference", "adjacent", "all"), several.ok = TRUE)
   if (is.null(treatment_levels)) {
     treatment_levels <- levels(factor(data[[treatment_col]]))
   }
@@ -476,6 +486,12 @@ ps_ordinal <- function(formula,
   base_data[["quintile"]] <- strata$quintile
   base_data[["decile"]]   <- strata$decile
 
+  # ---- SMD diagnostics ----------------------------------------------------
+  smd_tbl <- .smd_table_levels(
+    base_data, treatment_col, lvls, smd_pairs, covariates,
+    reserved = c(score_cols, id_col, imputation_col, "quintile", "decile")
+  )
+
   # ---- Group counts -------------------------------------------------------
   trt_vals     <- base_data[[treatment_col]]
   group_counts <- as.data.frame(table(group = trt_vals),
@@ -493,6 +509,7 @@ ps_ordinal <- function(formula,
       score_cols       = score_cols,
       score_col_prefix = score_col_prefix,
       levels           = lvls,
+      smd_pairs        = smd_pairs,
       treatment_levels = lvls,
       bundle_version   = model$meta$bundle_version,
       model_family     = model$meta$model_family,
@@ -503,7 +520,7 @@ ps_ordinal <- function(formula,
       n_imputations    = model$meta$n_imputations,
       n_total          = nrow(base_data)
     ),
-    tables   = c(list(group_counts = group_counts), model$tables),
+    tables   = c(list(smd = smd_tbl, group_counts = group_counts), model$tables),
     models = model$models,
     subclass = "ps_ordinal"
   )
@@ -565,7 +582,13 @@ print.ps_ordinal <- function(x, ...) {
 #'   by default).  Default `"prob"`.
 #' @param trace            Logical.  If `FALSE` (default), suppresses
 #'   [nnet::multinom()] iteration messages.
-#' @param covariates       Covariate columns for diagnostics.
+#' @param covariates       Covariate columns for the balance table. `NULL`
+#'   (default) uses every numeric column other than the treatment, score,
+#'   identifier and strata columns.
+#' @param smd_pairs        Which pairs of treatment levels the balance table
+#'   compares. `"reference"` (default) compares each level with `ref_level`;
+#'   `"all"` compares every pair. The levels have no order, so there is no
+#'   `"adjacent"` choice.
 #' @param treatment_levels Complete nominal treatment levels. `NULL` preserves
 #'   the levels inferred by the historical interface.
 #'
@@ -576,7 +599,8 @@ print.ps_ordinal <- function(x, ...) {
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
 #'     `imputation_col`, `score_cols`, `levels`, `ref_level`, `method`,
 #'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `group_counts`.}
+#'   \item{`$tables`}{Named list: `smd`, `group_counts`. `smd` has one row per
+#'     covariate and pair of levels: `variable`, `level`, `versus`, `smd`.}
 #' }
 #'
 #' @section Package dependency:
@@ -623,7 +647,8 @@ ps_nominal <- function(formula,
                        score_col_prefix = "prob",
                        trace            = FALSE,
                        covariates       = NULL,
-                       treatment_levels = NULL) {
+                       treatment_levels = NULL,
+                       smd_pairs        = "reference") {
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
     rlang::abort(
@@ -643,6 +668,7 @@ ps_nominal <- function(formula,
     treatment_col <- as.character(formula[[2L]])
   }
   .check_cols(data, treatment_col)
+  smd_pairs <- match.arg(smd_pairs, c("reference", "all"), several.ok = TRUE)
   if (is.null(treatment_levels)) {
     treatment_levels <- levels(factor(data[[treatment_col]]))
   }
@@ -677,6 +703,12 @@ ps_nominal <- function(formula,
     base_data[[private_col]] <- NULL
   }
 
+  # ---- SMD diagnostics ----------------------------------------------------
+  smd_tbl <- .smd_table_levels(
+    base_data, treatment_col, lvls, smd_pairs, covariates,
+    reserved = c(score_cols, id_col, imputation_col, "quintile", "decile")
+  )
+
   # ---- Group counts -------------------------------------------------------
   trt_vals     <- base_data[[treatment_col]]
   group_counts <- as.data.frame(table(group = trt_vals),
@@ -694,6 +726,7 @@ ps_nominal <- function(formula,
       score_cols       = score_cols,
       score_col_prefix = score_col_prefix,
       levels           = lvls,
+      smd_pairs        = smd_pairs,
       ref_level        = lvls[1L],
       treatment_levels = treatment_levels,
       bundle_version   = model$meta$bundle_version,
@@ -704,7 +737,7 @@ ps_nominal <- function(formula,
       n_imputations    = model$meta$n_imputations,
       n_total          = nrow(base_data)
     ),
-    tables   = c(list(group_counts = group_counts), model$tables),
+    tables   = c(list(smd = smd_tbl, group_counts = group_counts), model$tables),
     models = model$models,
     subclass = "ps_nominal"
   )

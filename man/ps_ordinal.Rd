@@ -13,7 +13,8 @@ ps_ordinal(
   imputation_col = NULL,
   score_col_prefix = "prob",
   covariates = NULL,
-  treatment_levels = NULL
+  treatment_levels = NULL,
+  smd_pairs = "reference"
 )
 }
 \arguments{
@@ -35,10 +36,18 @@ an ordered factor if it is not already one.}
 are named \verb{<prefix>_<level>} for each level of the treatment.
 Default \code{"prob"}.}
 
-\item{covariates}{Covariate columns for diagnostics.}
+\item{covariates}{Covariate columns for the balance table. \code{NULL}
+(default) uses every numeric column other than the treatment, score,
+identifier and strata columns.}
 
 \item{treatment_levels}{Complete ordered treatment levels. \code{NULL} preserves
 the levels inferred by the historical interface.}
+
+\item{smd_pairs}{Which pairs of treatment levels the balance table
+compares. \code{"reference"} (default) compares each level with the first
+level; \code{"adjacent"} compares each level with the one below it; \code{"all"}
+compares every pair. Give more than one to combine them, for example
+\code{c("reference", "adjacent")}.}
 }
 \value{
 An object of class \code{c("ps_ordinal", "ps_data")} with:
@@ -48,7 +57,8 @@ treatment level.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
 \code{imputation_col}, \code{score_cols}, \code{levels}, \code{method},
 \code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{group_counts}.}
+\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}. \code{smd} has one row per
+covariate and pair of levels: \code{variable}, \code{level}, \code{versus}, \code{smd}.}
 }
 }
 \description{

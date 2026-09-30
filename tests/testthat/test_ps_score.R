@@ -437,3 +437,59 @@ test_that("ps_logistic() group_counts names the declared treatment levels", {
   expect_identical(counts$treated, c(FALSE, TRUE))
   expect_equal(counts$n, c(sum(dta$tavr == 0L), sum(dta$tavr == 1L)))
 })
+
+# ---------------------------------------------------------------------------
+# Balance tables for multi-level treatments
+# ---------------------------------------------------------------------------
+
+test_that("ps_ordinal() reports each level against the first by default", {
+  skip_if_not_installed("MASS")
+  dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+  obj <- ps_ordinal(nyha_grp ~ age + ef, data = dta, covariates = c("age", "ef"))
+  smd <- obj$tables$smd
+  expect_named(smd, c("variable", "level", "versus", "smd"))
+  expect_identical(unique(smd$versus), "I")
+  expect_identical(unique(smd$level), c("II", "III"))
+  expect_identical(obj$meta$smd_pairs, "reference")
+
+  # Each pair is an ordinary two-group standardized difference on those rows.
+  pair <- dta[dta$nyha_grp %in% c("I", "III"), ]
+  pair$grp <- as.integer(pair$nyha_grp == "III")
+  direct <- ps_stddiff(pair, treatment_col = "grp", gaussian = c("age", "ef"))$tables$stddiff$stddiff
+  expect_equal(smd$smd[smd$level == "III"], round(direct, 4L))
+})
+
+test_that("ps_ordinal() smd_pairs selects and combines comparisons", {
+  skip_if_not_installed("MASS")
+  dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+  pairs_of <- function(smd_pairs) {
+    smd <- ps_ordinal(nyha_grp ~ age + ef, data = dta, covariates = "age", smd_pairs = smd_pairs)$tables$smd
+    paste(smd$level, smd$versus, sep = "-")
+  }
+  expect_identical(pairs_of("adjacent"), c("II-I", "III-II"))
+  expect_identical(pairs_of("all"), c("II-I", "III-I", "III-II"))
+  expect_identical(pairs_of(c("reference", "adjacent")), c("II-I", "III-I", "III-II"))
+  expect_error(pairs_of("nonsense"), "should be one of")
+})
+
+test_that("ps_ordinal() balance table defaults to numeric covariates only", {
+  skip_if_not_installed("MASS")
+  dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+  obj <- ps_ordinal(nyha_grp ~ age + ef, data = dta)
+  expect_false(any(c("id", "nyha_grp", "quintile", "decile", obj$meta$score_cols) %in% obj$tables$smd$variable))
+  expect_true(all(c("age", "ef") %in% obj$tables$smd$variable))
+})
+
+test_that("ps_nominal() reports each level against ref_level", {
+  skip_if_not_installed("nnet")
+  dta <- sample_ps_data_nominal(n = 300, seed = 42)
+  obj <- ps_nominal(rtyp ~ age + ef, data = dta, ref_level = "CE", covariates = "age")
+  smd <- obj$tables$smd
+  expect_named(smd, c("variable", "level", "versus", "smd"))
+  expect_identical(unique(smd$versus), "CE")
+  expect_setequal(smd$level, setdiff(levels(factor(dta$rtyp)), "CE"))
+
+  every <- ps_nominal(rtyp ~ age + ef, data = dta, covariates = "age", smd_pairs = "all")$tables$smd
+  expect_equal(nrow(every), choose(nlevels(factor(dta$rtyp)), 2L))
+  expect_error(ps_nominal(rtyp ~ age + ef, data = dta, smd_pairs = "adjacent"), "should be one of")
+})

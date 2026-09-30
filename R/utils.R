@@ -164,3 +164,66 @@
     stringsAsFactors = FALSE
   )
 }
+
+
+#' Level pairs for a multi-level balance table
+#'
+#' @param levels Treatment levels, reference first.
+#' @param scheme Any of `"reference"`, `"adjacent"`, `"all"`.
+#' @return A data frame of unique pairs with columns `level` and `versus`.
+#' @keywords internal
+.smd_level_pairs <- function(levels, scheme) {
+  k <- length(levels)
+  pairs <- list()
+  if ("reference" %in% scheme && k > 1L) {
+    pairs <- c(pairs, lapply(seq_len(k)[-1L], function(i) c(i, 1L)))
+  }
+  if ("adjacent" %in% scheme && k > 1L) {
+    pairs <- c(pairs, lapply(seq_len(k)[-1L], function(i) c(i, i - 1L)))
+  }
+  if ("all" %in% scheme && k > 1L) {
+    pairs <- c(pairs, utils::combn(k, 2L, function(ij) rev(ij), simplify = FALSE))
+  }
+  pairs <- unique(pairs)
+  index <- do.call(rbind, pairs)
+  index <- index[order(index[, 2L], index[, 1L]), , drop = FALSE]
+  data.frame(level = levels[index[, 1L]], versus = levels[index[, 2L]], stringsAsFactors = FALSE)
+}
+
+
+#' Standardized differences between pairs of treatment levels
+#'
+#' Each pair is compared on the patients in those two levels only, with
+#' `level` as the treated group and `versus` as the comparison group.
+#'
+#' @param data A data frame.
+#' @param treatment Name of the treatment column.
+#' @param levels Treatment levels, reference first.
+#' @param scheme Any of `"reference"`, `"adjacent"`, `"all"`.
+#' @param covariates Covariate columns. `NULL` uses every numeric column other
+#'   than those in `reserved`.
+#' @param reserved Columns never treated as covariates.
+#' @return A data frame with columns `variable`, `level`, `versus`, `smd`.
+#' @keywords internal
+.smd_table_levels <- function(data, treatment, levels, scheme, covariates = NULL, reserved = character()) {
+  if (is.null(covariates)) {
+    covariates <- setdiff(
+      names(data)[vapply(data, is.numeric, logical(1L))],
+      c(treatment, reserved)
+    )
+  }
+  pairs <- .smd_level_pairs(levels, scheme)
+  group <- as.character(data[[treatment]])
+  tables <- lapply(seq_len(nrow(pairs)), function(i) {
+    rows <- !is.na(group) & group %in% c(pairs$level[[i]], pairs$versus[[i]])
+    pair_data <- data[rows, covariates, drop = FALSE]
+    flag <- .temporary_prediction_prefix(pair_data)
+    pair_data[[flag]] <- as.integer(group[rows] == pairs$level[[i]])
+    smd <- .smd_table(pair_data, flag, covariates)
+    data.frame(variable = smd$variable, level = rep(pairs$level[[i]], nrow(smd)),
+               versus = rep(pairs$versus[[i]], nrow(smd)), smd = smd$smd, stringsAsFactors = FALSE)
+  })
+  out <- do.call(rbind, tables)
+  rownames(out) <- NULL
+  out
+}
