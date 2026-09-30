@@ -17,7 +17,8 @@ ps_ordinal(
   imputation_col = NULL,
   score_col_prefix = "prob",
   covariates = NULL,
-  treatment_levels = NULL
+  treatment_levels = NULL,
+  smd_pairs = "reference"
 )
 ```
 
@@ -54,12 +55,22 @@ ps_ordinal(
 
 - covariates:
 
-  Covariate columns for diagnostics.
+  Covariate columns for the balance table. `NULL` (default) uses every
+  numeric column other than the treatment, score, identifier and strata
+  columns.
 
 - treatment_levels:
 
   Complete ordered treatment levels. `NULL` preserves the levels
   inferred by the historical interface.
+
+- smd_pairs:
+
+  Which pairs of treatment levels the balance table compares.
+  `"reference"` (default) compares each level with the first level;
+  `"adjacent"` compares each level with the one below it; `"all"`
+  compares every pair. Give more than one to combine them, for example
+  `c("reference", "adjacent")`.
 
 ## Value
 
@@ -76,7 +87,8 @@ An object of class `c("ps_ordinal", "ps_data")` with:
 
 - `$tables`:
 
-  Named list: `group_counts`.
+  Named list: `smd`, `group_counts`. `smd` has one row per covariate and
+  pair of levels: `variable`, `level`, `versus`, `smd`.
 
 ## Details
 
@@ -124,7 +136,7 @@ if (requireNamespace("MASS", quietly = TRUE)) {
 #>   Treatment   : nyha_grp (3 levels: I < II < III)
 #>   Score cols  : prob_I, prob_II, prob_III
 #>   Method      : ordinal-logistic
-#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status 
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status 
 #> 
 #>   1   2   3   4   5 
 #> 180 180 180 180 180 

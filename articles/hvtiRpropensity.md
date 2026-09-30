@@ -337,7 +337,7 @@ print(obj_ord)
 #>   Treatment   : nyha_grp (3 levels: I < II < III)
 #>   Score cols  : prob_I, prob_II, prob_III
 #>   Method      : ordinal-logistic
-#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status
 
 # One marginal probability column per level
 head(obj_ord$data[, c("id", "nyha_grp",
@@ -382,7 +382,7 @@ print(obj_nom)
 #>   Reference   : COS
 #>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE
 #>   Method      : nominal-logistic
-#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status
 
 # One probability column per repair type (analogous to p_cos, p_per, etc.)
 head(obj_nom$data[, c("id", "rtyp", obj_nom$meta$score_cols)])

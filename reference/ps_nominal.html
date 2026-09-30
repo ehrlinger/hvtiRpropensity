@@ -66,7 +66,8 @@ level is appended to the dataset.</p>
 <span>  score_col_prefix <span class="op">=</span> <span class="st">"prob"</span>,</span>
 <span>  trace <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  treatment_levels <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  treatment_levels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  smd_pairs <span class="op">=</span> <span class="st">"reference"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -113,12 +114,21 @@ by default).  Default <code>"prob"</code>.</p></dd>
 
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
-<dd><p>Covariate columns for diagnostics.</p></dd>
+<dd><p>Covariate columns for the balance table. <code>NULL</code>
+(default) uses every numeric column other than the treatment, score,
+identifier and strata columns.</p></dd>
 
 
 <dt id="arg-treatment-levels">treatment_levels<a class="anchor" aria-label="anchor" href="#arg-treatment-levels"></a></dt>
 <dd><p>Complete nominal treatment levels. <code>NULL</code> preserves
 the levels inferred by the historical interface.</p></dd>
+
+
+<dt id="arg-smd-pairs">smd_pairs<a class="anchor" aria-label="anchor" href="#arg-smd-pairs"></a></dt>
+<dd><p>Which pairs of treatment levels the balance table
+compares. <code>"reference"</code> (default) compares each level with <code>ref_level</code>;
+<code>"all"</code> compares every pair. The levels have no order, so there is no
+<code>"adjacent"</code> choice.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -133,7 +143,8 @@ treatment level appended.</p></dd>
 <code>n_imputations</code>, <code>n_total</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>group_counts</code>.</p></dd>
+<dd><p>Named list: <code>smd</code>, <code>group_counts</code>. <code>smd</code> has one row per
+covariate and pair of levels: <code>variable</code>, <code>level</code>, <code>versus</code>, <code>smd</code>.</p></dd>
 
 
 </dl></div>
@@ -187,7 +198,7 @@ Install with <code>install.packages("nnet")</code> if missing.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Reference   : COS</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : nominal-logistic</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "CE"</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

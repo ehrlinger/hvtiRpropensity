@@ -19,7 +19,8 @@ ps_nominal(
   score_col_prefix = "prob",
   trace = FALSE,
   covariates = NULL,
-  treatment_levels = NULL
+  treatment_levels = NULL,
+  smd_pairs = "reference"
 )
 ```
 
@@ -66,12 +67,21 @@ ps_nominal(
 
 - covariates:
 
-  Covariate columns for diagnostics.
+  Covariate columns for the balance table. `NULL` (default) uses every
+  numeric column other than the treatment, score, identifier and strata
+  columns.
 
 - treatment_levels:
 
   Complete nominal treatment levels. `NULL` preserves the levels
   inferred by the historical interface.
+
+- smd_pairs:
+
+  Which pairs of treatment levels the balance table compares.
+  `"reference"` (default) compares each level with `ref_level`; `"all"`
+  compares every pair. The levels have no order, so there is no
+  `"adjacent"` choice.
 
 ## Value
 
@@ -90,7 +100,8 @@ An object of class `c("ps_nominal", "ps_data")` with:
 
 - `$tables`:
 
-  Named list: `group_counts`.
+  Named list: `smd`, `group_counts`. `smd` has one row per covariate and
+  pair of levels: `variable`, `level`, `versus`, `smd`.
 
 ## Details
 
@@ -143,7 +154,7 @@ if (requireNamespace("nnet", quietly = TRUE)) {
 #>   Reference   : COS
 #>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE
 #>   Method      : nominal-logistic
-#>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status 
+#>   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status 
 #> [1] "CE"
 # }
 ```

@@ -398,7 +398,7 @@
 <span><span class="co">#&gt;   Treatment   : nyha_grp (3 levels: I &lt; II &lt; III)</span></span>
 <span><span class="co">#&gt;   Score cols  : prob_I, prob_II, prob_III</span></span>
 <span><span class="co">#&gt;   Method      : ordinal-logistic</span></span>
-<span><span class="co">#&gt;   Tables      : group_counts, estimates, covariance, by_imputation, fit_status</span></span>
+<span><span class="co">#&gt;   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status</span></span>
 <span></span>
 <span><span class="co"># One marginal probability column per level</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_ord</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"nyha_grp"</span>,</span>
@@ -436,7 +436,7 @@
 <span><span class="co">#&gt;   Reference   : COS</span></span>
 <span><span class="co">#&gt;   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE</span></span>
 <span><span class="co">#&gt;   Method      : nominal-logistic</span></span>
-<span><span class="co">#&gt;   Tables      : group_counts, estimates, covariance, by_imputation, fit_status</span></span>
+<span><span class="co">#&gt;   Tables      : smd, group_counts, estimates, covariance, by_imputation, fit_status</span></span>
 <span></span>
 <span><span class="co"># One probability column per repair type (analogous to p_cos, p_per, etc.)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj_nom</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"rtyp"</span>, <span class="va">obj_nom</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">score_cols</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
