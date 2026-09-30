@@ -164,7 +164,7 @@ test_that("sa_overlap() positivity_flags has correct structure", {
   dta <- sample_ps_data(n = 300, seed = 14)
   res <- sa_overlap(dta)
   pf  <- res$positivity_flags
-  expect_named(pf, c("group", "n_near_zero", "n_near_one",
+  expect_named(pf, c("group", "treated", "n_near_zero", "n_near_one",
                      "pct_near_zero", "pct_near_one"))
   expect_equal(nrow(pf), 2L)
 })
@@ -492,4 +492,14 @@ test_that("sa_trim_sweep() pct_trimmed is 0 for all near-zero trim values", {
   w   <- make_weighted(seed = 81)
   res <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))
   expect_equal(res$pct_trimmed[1L], 0)
+})
+
+test_that("sa_overlap() tables name groups by their treatment value", {
+  dta <- sample_ps_data(n = 300, seed = 15)
+  res <- sa_overlap(dta)
+  for (tbl in res[c("summary", "outside_overlap", "positivity_flags")]) {
+    expect_identical(tbl$group, c("0", "1"))
+    expect_identical(tbl$treated, c(FALSE, TRUE))
+  }
+  expect_equal(res$summary$n, c(sum(dta$tavr == 0), sum(dta$tavr == 1)))
 })

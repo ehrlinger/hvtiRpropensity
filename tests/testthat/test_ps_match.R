@@ -125,3 +125,13 @@ test_that("ps_match() errors on invalid caliper", {
 test_that("ps_match() errors when ratio != 1", {
   expect_error(ps_match(dta, ratio = 2))
 })
+
+test_that("group count tables name groups by their treatment value", {
+  obj <- ps_match(dta)
+  for (tbl in obj$tables[c("group_counts_before", "group_counts_after")]) {
+    expect_named(tbl, c("group", "treated", "n"))
+    expect_identical(tbl$group, c("0", "1"))
+    expect_identical(tbl$treated, c(FALSE, TRUE))
+  }
+  expect_equal(obj$tables$group_counts_before$n, c(sum(dta$tavr == 0), sum(dta$tavr == 1)))
+})

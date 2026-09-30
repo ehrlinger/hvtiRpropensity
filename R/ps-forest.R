@@ -25,7 +25,8 @@
 #' @return A `ps_forest` / `ps_data` object. `$data` is `data` plus
 #'   `score_col`, `logit_col`, `weight_col` (overlap weights), `quintile` and
 #'   `decile`; `$meta` follows [ps_logistic()] with `method = "forest-oob"`;
-#'   `$tables` holds `smd` and `group_counts`; `$models$forest` is the fitted
+#'   `$tables` holds `smd` and `group_counts` (`group`, the value in
+#'   `treatment_col`; a logical `treated`; `n`); `$models$forest` is the fitted
 #'   forest.
 #'
 #' @examples
@@ -105,7 +106,8 @@ ps_forest <- function(formula,
     ),
     tables = list(
       smd = smd_tbl,
-      group_counts = data.frame(group = c("control", "treated"),
+      group_counts = data.frame(group = .binary_group_labels(data[[treatment_col]], treated_level),
+                                treated = c(FALSE, TRUE),
                                 n = c(sum(trt == 0L), sum(trt == 1L)))
     ),
     models = list(forest = fit),

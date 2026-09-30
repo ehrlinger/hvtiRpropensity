@@ -27,13 +27,14 @@ Default \code{0.05}.}
 \value{
 A list with:
 \describe{
-\item{\verb{$summary}}{Data frame: one row per treatment group with \code{group},
-\code{n}, \code{ps_min}, \code{ps_q25}, \code{ps_median}, \code{ps_mean}, \code{ps_q75}, \code{ps_max}.}
+\item{\verb{$summary}}{Data frame: one row per treatment group with \code{group}
+(the value in \code{treatment_col}), a logical \code{treated}, \code{n}, \code{ps_min},
+\code{ps_q25}, \code{ps_median}, \code{ps_mean}, \code{ps_q75}, \code{ps_max}.}
 \item{\verb{$overlap_region}}{Named numeric vector: \code{lower} and \code{upper} bounds
 of the empirical common support region.}
-\item{\verb{$outside_overlap}}{Data frame: \code{group}, \code{n_outside},
+\item{\verb{$outside_overlap}}{Data frame: \code{group}, \code{treated}, \code{n_outside},
 \code{pct_outside} -- patients whose PS is outside the overlap region.}
-\item{\verb{$positivity_flags}}{Data frame: \code{group}, \code{n_near_zero}
+\item{\verb{$positivity_flags}}{Data frame: \code{group}, \code{treated}, \code{n_near_zero}
 (PS < \code{trim_threshold}), \code{n_near_one} (PS > \code{1 - trim_threshold}),
 \code{pct_near_zero}, \code{pct_near_one}.}
 }

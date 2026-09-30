@@ -227,3 +227,18 @@
   rownames(out) <- NULL
   out
 }
+
+
+#' Group labels for a binary treatment column
+#'
+#' @param x A 0/1 or logical treatment vector.
+#' @param treated_level The treated value. `NULL` means `1` or `TRUE`.
+#' @return A character vector of length 2: the reference label, then the
+#'   treated label.
+#' @keywords internal
+.binary_group_labels <- function(x, treated_level = NULL) {
+  labels <- if (is.logical(x)) c("FALSE", "TRUE") else c("0", "1")
+  if (is.null(treated_level)) treated_level <- labels[[2L]]
+  treated_level <- as.character(treated_level)
+  c(setdiff(labels, treated_level), treated_level)
+}

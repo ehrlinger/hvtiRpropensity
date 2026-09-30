@@ -56,7 +56,9 @@ An object of class \code{c("ps_weight", "ps_data")} with:
 \item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{weight_col},
 \code{estimand}, \code{stabilised}, \code{trim}, \code{method}, \code{n_total}.}
 \item{\verb{$tables}}{Named list: \code{smd_unweighted}, \code{smd_weighted},
-\code{group_counts}, \code{effective_n}.}
+\code{group_counts}, \code{effective_n}. Group tables name each
+group by its value in \code{treatment_col} (\code{0}/\code{1} or \code{FALSE}/\code{TRUE}) and
+carry a logical \code{treated} column.}
 }
 }
 \description{

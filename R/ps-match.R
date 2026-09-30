@@ -60,7 +60,9 @@
 #'     `match_col`, `pair_id_col`, `caliper`, `method`, `n_total`,
 #'     `n_matched`, `n_unmatched`.}
 #'   \item{`$tables`}{Named list: `smd_before`, `smd_after`,
-#'     `group_counts_before`, `group_counts_after`.}
+#'     `group_counts_before`, `group_counts_after`. Group tables name each
+#'     group by its value in `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and
+#'     carry a logical `treated` column.}
 #' }
 #'
 #' @seealso [ps_weight()], [sample_ps_data()],
@@ -195,13 +197,16 @@ ps_match <- function(data,
   n_matched_t <- length(pair_t)
   n_matched_c <- length(pair_c)
 
+  group_labels <- .binary_group_labels(data[[treatment_col]])
   group_counts_before <- data.frame(
-    group = c("control", "treated"),
-    n     = c(length(idx_c), length(idx_t))
+    group   = group_labels,
+    treated = c(FALSE, TRUE),
+    n       = c(length(idx_c), length(idx_t))
   )
   group_counts_after <- data.frame(
-    group = c("control", "treated"),
-    n     = c(n_matched_c, n_matched_t)
+    group   = group_labels,
+    treated = c(FALSE, TRUE),
+    n       = c(n_matched_c, n_matched_t)
   )
 
   # ---- Assemble ps_data object -------------------------------------------

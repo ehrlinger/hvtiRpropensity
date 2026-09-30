@@ -53,7 +53,9 @@
 #'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `weight_col`,
 #'     `estimand`, `stabilised`, `trim`, `method`, `n_total`.}
 #'   \item{`$tables`}{Named list: `smd_unweighted`, `smd_weighted`,
-#'     `group_counts`, `effective_n`.}
+#'     `group_counts`, `effective_n`. Group tables name each
+#'     group by its value in `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and
+#'     carry a logical `treated` column.}
 #' }
 #'
 #' @seealso [ps_match()], [sample_ps_data()],
@@ -147,13 +149,16 @@ ps_weight <- function(data,
   # Weighted SMD uses the weight column via a weighted mean / variance
   smd_weighted <- .smd_table(out, treatment_col, covariates, weight_col = weight_col)
 
+  group_labels <- .binary_group_labels(data[[treatment_col]])
   group_counts <- data.frame(
-    group = c("control", "treated"),
-    n     = c(sum(trt == 0L), sum(trt == 1L))
+    group   = group_labels,
+    treated = c(FALSE, TRUE),
+    n       = c(sum(trt == 0L), sum(trt == 1L))
   )
 
   effective_n <- data.frame(
-    group       = c("control", "treated"),
+    group       = group_labels,
+    treated     = c(FALSE, TRUE),
     n_effective = c(
       .effective_n(w[trt == 0L]),
       .effective_n(w[trt == 1L])
