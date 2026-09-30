@@ -36,6 +36,7 @@ test_that("ps_match() with a seed restores the caller's stream", {
 })
 
 test_that("ps_rmst() with a seed restores the caller's stream", {
+  skip_if_not_installed("survival")
   d <- sample_ps_data(n = 120, seed = 9)[, c("id", "tavr", "age", "ef")]
   d$t <- rep_len(c(1, 2.5, 4, 5), nrow(d))
   d$e <- rep_len(c(1L, 0L, 1L), nrow(d))
@@ -44,6 +45,7 @@ test_that("ps_rmst() with a seed restores the caller's stream", {
 })
 
 test_that("ps_rmst() without a seed draws from the caller's stream", {
+  skip_if_not_installed("survival")
   d <- sample_ps_data(n = 120, seed = 9)[, c("id", "tavr", "age", "ef")]
   d$t <- rep_len(c(1, 2.5, 4, 5), nrow(d))
   d$e <- rep_len(c(1L, 0L, 1L), nrow(d))
