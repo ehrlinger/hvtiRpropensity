@@ -97,6 +97,7 @@ if (requireNamespace("nnet", quietly = TRUE)) {
     data      = dta,
     ref_level = "CE"    # matches REF=last in SAS
   )
+  obj_ce$meta$ref_level
 }
 }
 
