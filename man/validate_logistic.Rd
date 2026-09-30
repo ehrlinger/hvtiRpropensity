@@ -31,3 +31,18 @@ Scores a declared validation cohort with every fitted model retained in a
 binary \code{\link[=fit_logistic]{fit_logistic()}} bundle. It does not refit or modify the source
 bundle.
 }
+\examples{
+dta <- sample_ps_data(n = 150, seed = 42)
+odd <- seq_len(nrow(dta)) \%\% 2 == 1
+# Fit on one half, then score the other half without refitting.
+fit <- fit_logistic(
+  tavr ~ age + female + ef,
+  data           = dta[odd, ],
+  family         = "binary",
+  outcome_levels = c(0, 1),
+  event_level    = 1
+)
+val <- validate_logistic(fit, dta[!odd, ])
+val$tables$performance
+val$tables$calibration
+}

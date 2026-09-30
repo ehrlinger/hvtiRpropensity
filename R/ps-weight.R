@@ -30,11 +30,11 @@
 #' @param score_col      Name of the numeric propensity score column (values
 #'   in \[0, 1\]).  Default `"prob_t"`.
 #' @param estimand       Causal estimand.  One of:
-#'   - `"ATE"` (default) — average treatment effect.
+#'   - `"ATE"` (default): average treatment effect.
 #'     Treated weights = `1/ps`; control weights = `1/(1-ps)`.
-#'   - `"ATT"` — average treatment effect on the treated.
+#'   - `"ATT"`: average treatment effect on the treated.
 #'     Treated weights = `1`; control weights = `ps/(1-ps)`.
-#'   - `"ATC"` — average treatment effect on the controls.
+#'   - `"ATC"`: average treatment effect on the controls.
 #'     Treated weights = `(1-ps)/ps`; control weights = `1`.
 #' @param stabilise      Logical.  If `TRUE` (default), weights are
 #'   stabilised by multiplying by the marginal treatment probability.

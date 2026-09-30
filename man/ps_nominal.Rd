@@ -79,23 +79,25 @@ Install with \code{install.packages("nnet")} if missing.
 # The first factor level is used as the reference category, matching
 # SAS REF=first.  Change ref_level to match a different reference.
 \donttest{
-dta <- sample_ps_data_nominal(n = 300, seed = 42)
-obj <- ps_nominal(
-  rtyp ~ age + female + ef + diabetes,
-  data = dta
-)
-print(obj)
+if (requireNamespace("nnet", quietly = TRUE)) {
+  dta <- sample_ps_data_nominal(n = 300, seed = 42)
+  obj <- ps_nominal(
+    rtyp ~ age + female + ef + diabetes,
+    data = dta
+  )
+  print(obj)
 
-# One probability column per treatment level (analogous to p_cos, p_per,
-# p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
-head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
+  # One probability column per treatment level (analogous to p_cos, p_per,
+  # p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
+  head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
 
-# Explicitly set a different reference level
-obj_ce <- ps_nominal(
-  rtyp ~ age + female + ef + diabetes,
-  data      = dta,
-  ref_level = "CE"    # matches REF=last in SAS
-)
+  # Explicitly set a different reference level
+  obj_ce <- ps_nominal(
+    rtyp ~ age + female + ef + diabetes,
+    data      = dta,
+    ref_level = "CE"    # matches REF=last in SAS
+  )
+}
 }
 
 }

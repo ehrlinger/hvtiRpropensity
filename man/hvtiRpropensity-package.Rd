@@ -10,35 +10,35 @@ Provides functions for propensity score and balancing score analysis used
 in cardiac surgery comparative-effectiveness research.  Translates the
 Cleveland Clinic HVTI SAS template library into a consistent R workflow.
 
-\strong{Step 1 — estimate scores} (new in this version):
+\strong{Step 1: estimate scores} (new in this version):
 \itemize{
-\item \code{\link[=ps_logistic]{ps_logistic()}} — binary treatment propensity score (logistic regression;
+\item \code{\link[=ps_logistic]{ps_logistic()}}: binary treatment propensity score (logistic regression;
 supports multiply-imputed data via a stacked data frame).
-\item \code{\link[=ps_ordinal]{ps_ordinal()}} — ordered treatment propensity score (proportional-odds
+\item \code{\link[=ps_ordinal]{ps_ordinal()}}: ordered treatment propensity score (proportional-odds
 model via \code{MASS::polr}; equivalent to SAS \verb{PROC LOGISTIC} default for
 ordinal responses).
-\item \code{\link[=ps_nominal]{ps_nominal()}} — nominal treatment propensity score (multinomial logistic
+\item \code{\link[=ps_nominal]{ps_nominal()}}: nominal treatment propensity score (multinomial logistic
 via \code{nnet::multinom}; equivalent to SAS \verb{PROC LOGISTIC link=glogit}).
-\item \code{\link[=bs_continuous]{bs_continuous()}} — balancing score for a continuous exposure
+\item \code{\link[=bs_continuous]{bs_continuous()}}: balancing score for a continuous exposure
 (linear regression; equivalent to SAS \verb{PROC REG} + \verb{\%grp} macro).
-\item \code{\link[=bs_count]{bs_count()}} — balancing score for a count exposure (negative-binomial
+\item \code{\link[=bs_count]{bs_count()}}: balancing score for a count exposure (negative-binomial
 or Poisson regression; equivalent to SAS \verb{PROC GENMOD dist=nb}).
 }
 
-\strong{Step 2 — balance and use scores}:
+\strong{Step 2: balance and use scores}:
 \itemize{
-\item \code{\link[=ps_match]{ps_match()}} — 1:1 nearest-neighbour matching on a pre-computed score.
+\item \code{\link[=ps_match]{ps_match()}}: 1:1 nearest-neighbour matching on a pre-computed score.
 Returns a \code{pair_id} column in \verb{$data} for use with \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}.
-\item \code{\link[=ps_weight]{ps_weight()}} — IPTW weights (ATE / ATT / ATC) from a pre-computed score.
+\item \code{\link[=ps_weight]{ps_weight()}}: IPTW weights (ATE / ATT / ATC) from a pre-computed score.
 }
 
-\strong{Step 3 — sensitivity analysis} (optional):
+\strong{Step 3: sensitivity analysis} (optional):
 \itemize{
-\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}} — Rosenbaum gamma bounds for matched analyses
-(requires \code{rbounds}).
-\item \code{\link[=sa_evalue]{sa_evalue()}} — E-values (VanderWeele & Ding 2017); no extra dependency.
-\item \code{\link[=sa_overlap]{sa_overlap()}} — Overlap and positivity diagnostics on the PS distribution.
-\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}} — IPTW trim-threshold sensitivity sweep.
+\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}: Rosenbaum gamma bounds for matched analyses; no extra
+dependency.
+\item \code{\link[=sa_evalue]{sa_evalue()}}: E-values (VanderWeele & Ding 2017); no extra dependency.
+\item \code{\link[=sa_overlap]{sa_overlap()}}: Overlap and positivity diagnostics on the PS distribution.
+\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}}: IPTW trim-threshold sensitivity sweep.
 }
 
 All functions return a \code{ps_data} S3 object whose \verb{$data} slot holds the
@@ -71,19 +71,19 @@ w <- ps_weight(score$data, score_col = score$meta$score_col)
 
 \seealso{
 \itemize{
-\item \code{\link[=ps_logistic]{ps_logistic()}} — binary propensity score estimation
-\item \code{\link[=ps_ordinal]{ps_ordinal()}} — ordinal propensity score estimation
-\item \code{\link[=ps_nominal]{ps_nominal()}} — nominal propensity score estimation
-\item \code{\link[=bs_continuous]{bs_continuous()}} — continuous-outcome balancing score
-\item \code{\link[=bs_count]{bs_count()}} — count-outcome balancing score
-\item \code{\link[=ps_match]{ps_match()}} — nearest-neighbour 1:1 matching
-\item \code{\link[=ps_weight]{ps_weight()}} — IPTW weighting (ATE / ATT / ATC)
-\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}} — Rosenbaum sensitivity bounds (matched analyses)
-\item \code{\link[=sa_evalue]{sa_evalue()}} — E-value sensitivity analysis
-\item \code{\link[=sa_overlap]{sa_overlap()}} — overlap and positivity diagnostics
-\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}} — IPTW trim-threshold sensitivity sweep
-\item \code{\link[=sample_ps_data]{sample_ps_data()}} — synthetic dataset for examples / tests
-\item \code{\link[=is_ps_data]{is_ps_data()}} — predicate for \code{ps_data} objects
+\item \code{\link[=ps_logistic]{ps_logistic()}}: binary propensity score estimation
+\item \code{\link[=ps_ordinal]{ps_ordinal()}}: ordinal propensity score estimation
+\item \code{\link[=ps_nominal]{ps_nominal()}}: nominal propensity score estimation
+\item \code{\link[=bs_continuous]{bs_continuous()}}: continuous-outcome balancing score
+\item \code{\link[=bs_count]{bs_count()}}: count-outcome balancing score
+\item \code{\link[=ps_match]{ps_match()}}: nearest-neighbour 1:1 matching
+\item \code{\link[=ps_weight]{ps_weight()}}: IPTW weighting (ATE / ATT / ATC)
+\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}: Rosenbaum sensitivity bounds (matched analyses)
+\item \code{\link[=sa_evalue]{sa_evalue()}}: E-value sensitivity analysis
+\item \code{\link[=sa_overlap]{sa_overlap()}}: overlap and positivity diagnostics
+\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}}: IPTW trim-threshold sensitivity sweep
+\item \code{\link[=sample_ps_data]{sample_ps_data()}}: synthetic dataset for examples / tests
+\item \code{\link[=is_ps_data]{is_ps_data()}}: predicate for \code{ps_data} objects
 }
 }
 \author{

@@ -50,3 +50,15 @@ Fits binary, proportional-odds ordinal, or generalized-logit nominal models
 under an explicit outcome-level contract. Stacked long-form imputations are
 fitted separately and combined with Rubin's rules.
 }
+\examples{
+dta <- sample_ps_data(n = 150, seed = 42)
+fit <- fit_logistic(
+  tavr ~ age + female + ef,
+  data           = dta,
+  family         = "binary",
+  outcome_levels = c(0, 1),
+  event_level    = 1
+)
+fit$tables$estimates[, c("term", "estimate", "odds_ratio")]
+head(fit$data[, c("id", "tavr", "prob")])
+}

@@ -24,7 +24,7 @@
 #'   `2 * n`.  Must be a positive integer.  Default `500`.
 #' @param seed      Random seed for reproducibility.  Default `42L`.
 #' @param separation Numeric scalar controlling how well the covariates
-#'   separate the two groups.  Higher values → less overlap.  Default `1.0`.
+#'   separate the two groups.  Higher values give less overlap.  Default `1.0`.
 #'
 #' @return A data frame with `2 * n` rows and the following columns:
 #'   \describe{
@@ -35,7 +35,7 @@
 #'     \item{`ef`}{Continuous: ejection fraction (%).}
 #'     \item{`diabetes`}{Binary: `1` = diabetic.}
 #'     \item{`hypertension`}{Binary: `1` = hypertensive.}
-#'     \item{`prob_t`}{Estimated propensity score (numeric, 0–1).}
+#'     \item{`prob_t`}{Estimated propensity score (numeric, 0 to 1).}
 #'     \item{`match`}{Match indicator, initialised to `0`.  Populated by
 #'       [ps_match()].}
 #'   }

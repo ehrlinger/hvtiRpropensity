@@ -7,7 +7,7 @@
 new_ps_data(data, meta, tables = list(), models = list(), subclass)
 }
 \arguments{
-\item{data}{A data frame — the original data with propensity scores or
+\item{data}{A data frame: the original data with propensity scores or
 weights appended.}
 
 \item{meta}{A named list of metadata (column names, formula, method

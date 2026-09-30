@@ -33,12 +33,14 @@
 #'   `w_<weighting>` per scheme.
 #'
 #' @examples
-#' dta <- sample_ps_data(n = 200, seed = 5)[, c("id", "tavr", "age", "ef")]
-#' dta$t <- stats::rexp(nrow(dta), 0.2)
-#' dta$e <- as.integer(dta$t < 5)
-#' dta$t <- pmin(dta$t, 5)
-#' res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
-#' res$tables$estimates
+#' if (requireNamespace("survival", quietly = TRUE)) {
+#'   dta <- sample_ps_data(n = 200, seed = 5)[, c("id", "tavr", "age", "ef")]
+#'   dta$t <- stats::rexp(nrow(dta), 0.2)
+#'   dta$e <- as.integer(dta$t < 5)
+#'   dta$t <- pmin(dta$t, 5)
+#'   res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
+#'   res$tables$estimates
+#' }
 #' @export
 ps_rmst <- function(x, time_col, event_col, tau,
                     weights = c("unweighted", "ato"),

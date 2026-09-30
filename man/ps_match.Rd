@@ -72,7 +72,7 @@ pre-computed propensity score column.  Returns a \code{ps_match} object whose
 }
 \details{
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
-before and after matching, and group counts — the same diagnostics
+before and after matching, and group counts, the same diagnostics
 expected by \code{\link[hvtiPlotR:hv_mirror_hist]{hvtiPlotR::hv_mirror_hist()}} and
 \code{\link[hvtiPlotR:hv_balance]{hvtiPlotR::hv_balance()}}.
 }

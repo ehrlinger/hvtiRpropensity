@@ -1,10 +1,13 @@
 # hvtiRpropensity
 
 Propensity-score analysis for the HVTI CORR group: score estimation
-(`ps_logistic()`, `ps_nominal()`, `ps_ordinal()`), application (`ps_match()`,
-`ps_weight()`), balance statistics (`bs_continuous()`, `bs_count()`) and four
-sensitivity methods (`sa_rosenbaum()`, `sa_evalue()`, `sa_overlap()`,
-`sa_trim_sweep()`), plus synthetic data generators. Sixteen exports.
+(`ps_logistic()`, `ps_nominal()`, `ps_ordinal()`, `ps_forest()`), the general model bundle
+behind them (`fit_logistic()`, `validate_logistic()`), application (`ps_match()`,
+`ps_weight()`, `ps_support()`, `ps_rmst()`), balance statistics (`bs_continuous()`,
+`bs_count()`, `ps_stddiff()`, `ps_stddiff_perm()`, `ps_mw_var()`) and four sensitivity
+methods (`sa_rosenbaum()`, `sa_evalue()`, `sa_overlap()`, `sa_trim_sweep()`), plus
+`is_ps_data()` and four synthetic data generators. Twenty-four exports; `NAMESPACE` is the
+authority.
 
 This file is the operational contract and applies in full. It is tool neutral, so Codex and
 any other agent read the same rules. Claude Code affordances live in `CLAUDE.md`, which
@@ -13,11 +16,8 @@ imports this file.
 ## Definition of done
 
 - `devtools::test()` passes. The runner is `tests/test-all.R`.
-- `devtools::check()` is **0 errors, 0 warnings, and no NEW notes.**
-  ⚠️ **This package is not at 0/0/0.** As of 2026-08-20 one NOTE stands: `rnorm` is used in
-  the `sample_ps_data*()` generators without `importFrom("stats", "rnorm")`. It is a real
-  defect, not an artifact, and it is not yours unless you touch those functions — but do not
-  let a second note hide behind it.
+- `devtools::check()` is **0 errors, 0 warnings, 0 notes.** Verified 2026-09-30 at 0.1.9
+  under `R CMD check --as-cran` with the manual built, from a clean `git archive` export.
 - `devtools::document()` has been run and `man/` and `NAMESPACE` are committed with the
   source change.
 
@@ -66,23 +66,24 @@ to lower the bar.
 - **Test files are `test_*.R` with an underscore, and the runner is `tests/test-all.R`.**
   ⚠️ This matches `hvtiPlotR` and differs from `hvtiRutilities`, `hvtiRdatabuild`,
   `hvtiRtables` and `hvtiRbootstrap`, which use `test-*.R` and `tests/testthat.R`.
-- **`sa_rosenbaum()` requires `rbounds`; the other three sensitivity methods do not.** Keep it
-  that way — `sa_evalue()` is deliberately dependency-free, and adding a hard dependency to
-  the cheap methods removes the reason they exist.
+- **None of the four sensitivity methods needs a package outside `Imports`.** `sa_rosenbaum()`
+  computes its bounds in base R and does not use `rbounds`. Keep it that way: adding a hard
+  dependency to the cheap methods removes the reason they exist.
 - **Roxygen markdown is ENABLED** (`Roxygen: list(markdown = TRUE)`).
   ⚠️ `hvtiRutilities` and `hvtiRtemplates` have no such field and need Rd markup instead.
 - **`testthat` edition 3.** `VignetteBuilder` is **quarto**.
 
 ## Gotchas
 
-- **`DESCRIPTION`'s `Date:` is stale** — 2026-04-02 against version 0.1.1. Refresh it on the
-  next version bump rather than carrying it further.
+- **`DESCRIPTION`'s `Date:` moves with `Version:`.** Update both in the same version-bump
+  commit.
 - The package is **0.x**: the API is not frozen, but the `ps_data` structure above is what
   every subclass and both base methods rely on, so changing it is a breaking change in
   practice.
-- The sample-data generators are the only functions using the RNG, and they are the source of
-  the outstanding NOTE. If you touch them, fix the import rather than adding a
-  `utils::globalVariables()` suppression.
+- **Every function that draws random numbers restores the caller's stream**, through
+  `withr::local_seed()`: the sample-data generators, `ps_match()`, `ps_rmst()`,
+  `ps_stddiff_perm()` and `ps_mw_var()`. Qualify RNG calls (`stats::rnorm()`) rather than
+  adding a `utils::globalVariables()` suppression.
 
 ## Git and versioning
 

@@ -74,20 +74,22 @@ base R).  Install with \code{install.packages("MASS")} if missing.
 #   followed by decomposition of cumulative to marginal probabilities
 #   and rank-based quintile / decile assignment.
 \donttest{
-dta <- sample_ps_data_ordinal(n = 300, seed = 42)
-obj <- ps_ordinal(
-  nyha_grp ~ age + female + ef + diabetes,
-  data = dta
-)
-print(obj)
+if (requireNamespace("MASS", quietly = TRUE)) {
+  dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+  obj <- ps_ordinal(
+    nyha_grp ~ age + female + ef + diabetes,
+    data = dta
+  )
+  print(obj)
 
-# Each level gets its own probability column (marginal, not cumulative).
-# The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
-# ps_ordinal() performs this decomposition internally.
-head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
+  # Each level gets its own probability column (marginal, not cumulative).
+  # The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
+  # ps_ordinal() performs this decomposition internally.
+  head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
 
-# Quintile and decile columns are appended, ordered by p(highest level).
-table(obj$data$quintile)
+  # Quintile and decile columns are appended, ordered by p(highest level).
+  table(obj$data$quintile)
+}
 }
 
 }

@@ -22,7 +22,7 @@
 #' `1` for matched pairs and `0` for unmatched patients.
 #'
 #' The `$tables` slot contains standardised mean difference (SMD) tables
-#' before and after matching, and group counts — the same diagnostics
+#' before and after matching, and group counts, the same diagnostics
 #' expected by [hvtiPlotR::hv_mirror_hist()] and
 #' [hvtiPlotR::hv_balance()].
 #'

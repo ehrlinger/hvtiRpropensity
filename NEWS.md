@@ -1,3 +1,14 @@
+# hvtiRpropensity (unreleased)
+
+* `fit_logistic()` and `validate_logistic()` have examples.
+* The examples for `ps_ordinal()`, `ps_nominal()` and `ps_rmst()` run only when
+  the suggested package they need ('MASS', 'nnet', 'survival') is installed.
+* The package help no longer says `sa_rosenbaum()` requires 'rbounds'. It never
+  did: the bounds are computed in base R.
+* `DESCRIPTION` spells out CORR and SMD, quotes 'hvtiPlotR' and cites
+  Rosenbaum and Rubin (1983). Help pages use ASCII punctuation in place of
+  em dashes and arrows (#53).
+
 # hvtiRpropensity 0.1.9
 
 * `ps_match()`, `ps_rmst()` and the `sample_ps_data*()` generators restore the
