@@ -10,7 +10,8 @@ sample_ps_data_nominal(n = 200L, seed = 42L)
 \item{n}{Number of patients per treatment level.  Total rows = \code{4 * n}.
 Default \code{200L}.}
 
-\item{seed}{Random seed.  Default \code{42L}.}
+\item{seed}{Random seed.  Default \code{42L}. The fixed default gives the
+same demo dataset on every call; \code{NULL} gives a fresh one.}
 }
 \value{
 A data frame with \code{4 * n} rows and columns: \code{id}, \code{rtyp}

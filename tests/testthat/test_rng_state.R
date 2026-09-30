@@ -35,10 +35,32 @@ test_that("ps_match() with a seed restores the caller's stream", {
   expect_identical(ps_match(dta, seed = 7)$data, ps_match(dta, seed = 7)$data)
 })
 
-test_that("ps_rmst() restores the caller's stream", {
+test_that("ps_rmst() with a seed restores the caller's stream", {
   d <- sample_ps_data(n = 120, seed = 9)[, c("id", "tavr", "age", "ef")]
   d$t <- rep_len(c(1, 2.5, 4, 5), nrow(d))
   d$e <- rep_len(c(1L, 0L, 1L), nrow(d))
   fit <- ps_logistic(tavr ~ age + ef, d)
-  expect_rng_untouched(ps_rmst(fit, "t", "e", tau = 4, weights = "unweighted", n_boot = 5))
+  expect_rng_untouched(ps_rmst(fit, "t", "e", tau = 4, weights = "unweighted", n_boot = 5, seed = 7))
+})
+
+test_that("ps_rmst() without a seed draws from the caller's stream", {
+  d <- sample_ps_data(n = 120, seed = 9)[, c("id", "tavr", "age", "ef")]
+  d$t <- rep_len(c(1, 2.5, 4, 5), nrow(d))
+  d$e <- rep_len(c(1L, 0L, 1L), nrow(d))
+  fit <- ps_logistic(tavr ~ age + ef, d)
+  run <- function() ps_rmst(fit, "t", "e", tau = 4, weights = "unweighted", n_boot = 20)$tables$estimates
+  set.seed(11)
+  first <- run()
+  second <- run()
+  expect_false(identical(first$lo_days, second$lo_days))
+  set.seed(11)
+  expect_identical(run(), first)
+})
+
+test_that("the sample-data generators accept seed = NULL and draw fresh data", {
+  set.seed(12)
+  expect_false(identical(sample_ps_data(n = 50, seed = NULL), sample_ps_data(n = 50, seed = NULL)))
+  count <- sample_ps_data_count(n = 50, seed = NULL, n_imputations = 2)
+  expect_equal(nrow(count), 100L)
+  expect_false(identical(count$age[1:50], count$age[51:100]))
 })

@@ -18,7 +18,10 @@
 #' @param refit If `FALSE` (default) the score is held fixed in the bootstrap,
 #'   which understates uncertainty. If `TRUE` the score model is refit on each
 #'   draw (supported for `ps_logistic` and `ps_forest` inputs).
-#' @param seed Bootstrap seed.
+#' @param seed Optional integer bootstrap seed. With `NULL` (default) the draws
+#'   come from the caller's random number stream, so the interval varies from
+#'   run to run. With a seed the result is reproducible and the caller's stream
+#'   is restored afterwards.
 #' @param time_unit_days Days per unit of `time_col`, for the `diff_days`
 #'   column. Default `365.2425` (time in years).
 #' @param clip Scores are clipped to `[clip, 1 - clip]` before weighting.
@@ -38,14 +41,15 @@
 #'   dta$t <- stats::rexp(nrow(dta), 0.2)
 #'   dta$e <- as.integer(dta$t < 5)
 #'   dta$t <- pmin(dta$t, 5)
-#'   res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
+#'   res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20,
+#'                   seed = 1024)
 #'   res$tables$estimates
 #' }
 #' @export
 ps_rmst <- function(x, time_col, event_col, tau,
                     weights = c("unweighted", "ato"),
                     subsets = list(),
-                    n_boot = 200L, refit = FALSE, seed = 1024L,
+                    n_boot = 200L, refit = FALSE, seed = NULL,
                     time_unit_days = 365.2425, clip = 1e-3) {
   rlang::check_installed("survival", reason = "to fit Kaplan-Meier curves.")
   if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
@@ -104,7 +108,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
     obj$data[[x$meta$score_col]]
   }
 
-  withr::local_seed(seed)
+  if (!is.null(seed)) withr::local_seed(seed)
   rows <- vector("list", nrow(grid))
   curves <- list()
   for (i in seq_len(nrow(grid))) {

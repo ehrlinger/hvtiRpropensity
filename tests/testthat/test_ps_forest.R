@@ -73,7 +73,8 @@ surv_dta <- local({
 
 test_that("ps_rmst() returns estimates and curves with the documented columns", {
   res <- ps_rmst(ps_logistic(tavr ~ age + ef, surv_dta), "t", "e", tau = 4,
-                 weights = c("unweighted", "ato"), subsets = list(half = surv_dta$age > 60), n_boot = 25)
+                 weights = c("unweighted", "ato"), subsets = list(half = surv_dta$age > 60), n_boot = 25,
+                 seed = 1024)
   expect_s3_class(res, "ps_rmst")
   est <- res$tables$estimates
   expect_setequal(est$estimator, c("all/unweighted", "all/ato", "half/unweighted", "half/ato"))
@@ -85,7 +86,8 @@ test_that("ps_rmst() returns estimates and curves with the documented columns", 
   expect_gt(est$diff_days[est$estimator == "all/unweighted"], 0)
   # deterministic given seed
   again <- ps_rmst(ps_logistic(tavr ~ age + ef, surv_dta), "t", "e", tau = 4,
-                   weights = c("unweighted", "ato"), subsets = list(half = surv_dta$age > 60), n_boot = 25)
+                   weights = c("unweighted", "ato"), subsets = list(half = surv_dta$age > 60), n_boot = 25,
+                   seed = 1024)
   expect_equal(again$tables$estimates, est)
 })
 

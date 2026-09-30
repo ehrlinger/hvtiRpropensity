@@ -9,7 +9,8 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
 \arguments{
 \item{n}{Number of patients.  Default \code{500L}.}
 
-\item{seed}{Random seed.  Default \code{42L}.}
+\item{seed}{Random seed.  Default \code{42L}. The fixed default gives the
+same demo dataset on every call; \code{NULL} gives a fresh one.}
 
 \item{n_imputations}{If \verb{> 1}, returns a stacked multiply-imputed data
 frame with an \verb{_IMPUTATION_} index column containing \code{n_imputations}
