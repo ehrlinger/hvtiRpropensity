@@ -13,12 +13,16 @@ substitute R-generated values. Tracked in issue #34.
   four levels).
 - Missing values in `x_gauss`, `x_ord` and `x_cat`, so the oracle also shows how
   each side drops them.
-- A matching weight, `w`.
+- A propensity score, `p_score`, and the matching weight derived from it, `w`.
 - Two outcomes for `%mw_var`: `y_cont` and `y_bin`.
 - Twenty permuted groups, `fgrp_1` to `fgrp_20`, with weights `w_1` to `w_20`.
   `%stddiffci` reads its permutations from the input rather than drawing them,
   so R scores the same permuted groups and its percentiles can be compared
-  exactly. The weights are held fixed across permutations.
+  exactly. Each `w_k` is the matching weight re-derived from `p_score` for the
+  permuted group `fgrp_k`, as the spec requires: fixed weights would answer a
+  different question. The R test re-derives them the same way, through the
+  `reweight` step `ps_stddiff_perm()` uses, and checks they equal the columns
+  SAS reads.
 
 ## Controlled run
 1. Stage this folder as `/studies/general/_development/stddiff-oracle-20260930/`
@@ -47,6 +51,7 @@ accepting the run, confirm it has no `ERROR:`.
 | `%stddiffci` observed value and 2.5/16/50/84/97.5 percentiles | `ps_stddiff()` on each permuted group, then `.perm_percentiles(type = 2)` | 4 decimals |
 | `%mw_var` difference, group means, SDs and sums of weights | `ps_mw_var()` | 1e-6 |
 | `%mw_var` bootstrap SD and percentiles | `sd()` and `.perm_percentiles(type = 4)` on SAS's own replicates | 1e-6 |
+| `%mw_var` bootstrap SD | `ps_mw_var()` with 2,000 of its own replicates | 4 Monte Carlo standard errors of the SD ratio (about 21%) |
 
 `%mw_var` draws its bootstrap with `PROC SURVEYSELECT`, which R cannot
 reproduce, so the replicates themselves are not compared.
@@ -54,7 +59,13 @@ reproduce, so the replicates themselves are not compared.
 The tests skip, naming the missing files, if the output CSVs are absent.
 
 ## Status
-Run 2026-09-30 under SAS 9.04.01M8P02222023 on Linux. The log ends
+⚠️ **`ci-weighted.csv` needs one more run.** The first run held the weights
+fixed across permutations; `input.csv` now re-derives them (`w_1` to `w_20`
+changed, `p_score` was added, every other column is unchanged). Its test skips
+until the new file is returned. The other six CSVs came from columns that did
+not change, so they stand.
+
+First run 2026-09-30 under SAS 9.04.01M8P02222023 on Linux. The log ends
 `NOTE: STDDIFF_ORACLE_COMPLETE expected_outputs=10` and its SHA-256 is
 `19b5475752262e1dce3c4d1aca7463bdc9626e5611662158958149805e22e44c`. It has no `ERROR:` except the `%mw_var` RTF report, which cannot
 render in a batch session without fonts; its datasets are exported

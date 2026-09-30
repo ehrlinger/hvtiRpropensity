@@ -11,10 +11,10 @@ oracle_dir <- test_path("fixtures", "stddiff-sas")
 oracle_files <- c("sd-unweighted.csv", "sd-weighted.csv", "ci-unweighted.csv", "ci-weighted.csv",
                   "mw-summary.csv", "mw-replicates.csv")
 
-skip_without_oracle <- function() {
-  missing <- oracle_files[!file.exists(file.path(oracle_dir, oracle_files))]
+skip_without_oracle <- function(files = oracle_files) {
+  missing <- files[!file.exists(file.path(oracle_dir, files))]
   if (length(missing) > 0L) {
-    skip(paste("SAS oracle output not yet returned:", paste(missing, collapse = ", ")))
+    testthat::skip(paste("SAS oracle output not yet returned:", paste(missing, collapse = ", ")))
   }
 }
 
@@ -43,13 +43,13 @@ sas_by_variable <- function(d, value) {
 # ---- %stddiff ---------------------------------------------------------------
 
 test_that("ps_stddiff() matches %stddiff to 4 decimals, unweighted", {
-  skip_without_oracle()
+  skip_without_oracle("sd-unweighted.csv")
   sas <- sas_by_variable(read_oracle("sd-unweighted.csv"), "stddiff")
   expect_equal(r_stddiff()[unname(variables)], sas, tolerance = 5e-5, ignore_attr = TRUE)
 })
 
 test_that("ps_stddiff() matches %stddiff to 4 decimals, weighted", {
-  skip_without_oracle()
+  skip_without_oracle("sd-weighted.csv")
   sas <- sas_by_variable(read_oracle("sd-weighted.csv"), "stddiff")
   expect_equal(r_stddiff(weight = "w")[unname(variables)], sas, tolerance = 5e-5, ignore_attr = TRUE)
 })
@@ -57,32 +57,53 @@ test_that("ps_stddiff() matches %stddiff to 4 decimals, weighted", {
 # ---- %stddiffci -------------------------------------------------------------
 # %stddiffci takes its permutations from the input (fgrp_1..fgrp_20), so both
 # sides score the same permuted groups and the percentiles can be compared
-# exactly. ps_stddiff_perm() draws its own permutations, so its percentile
-# step (.perm_percentiles(type = 2)) is checked on the shared ones.
+# exactly. ps_stddiff_perm() draws its own permutations, so its per-permutation
+# step is reproduced here on the shared ones: put the permuted group in the
+# treatment column, re-derive the weights with `reweight`, score, then take
+# .perm_percentiles(type = 2).
+
+matching_weight <- function(p, g) round(pmin(p, 1 - p) / (p * g + (1 - p) * (1 - g)), 6)
+reweight <- function(d) matching_weight(d$p_score, d$grp)
+
+permuted_stddiff <- function(k, weighted) {
+  d <- fixture
+  d$grp <- d[[paste0("fgrp_", k)]]
+  if (weighted) d$w <- reweight(d)
+  tbl <- ps_stddiff(d, treatment_col = "grp", gaussian = variables[["gaussian"]], nong_ord = variables[["nong_ord"]],
+                    binary = variables[["binary"]], categorical = variables[["categorical"]],
+                    weight_col = if (weighted) "w")$tables$stddiff
+  stats::setNames(tbl$stddiff, tbl$variable)[unname(variables)]
+}
 
 check_permutation_reference <- function(file, weighted) {
   sas <- read_oracle(file)
   observed <- r_stddiff(weight = if (weighted) "w")
-  perms <- vapply(seq_len(n_perm), function(k) {
-    r_stddiff(group = paste0("fgrp_", k), weight = if (weighted) paste0("w_", k))[unname(variables)]
-  }, numeric(length(variables)))
+  perms <- vapply(seq_len(n_perm), permuted_stddiff, numeric(length(variables)), weighted = weighted)
   pct <- t(apply(perms, 1L, .perm_percentiles, type = 2))
   colnames(pct) <- c("p_2_5", "p_16", "p_50", "p_84", "p_97_5")
   for (v in unname(variables)) {
     row <- sas[tolower(sas$varname) == v, ]
-    expect_equal(unname(observed[[v]]), row$stddiff, tolerance = 5e-5, label = paste(v, "observed"))
-    expect_equal(unname(pct[v, ]), unname(unlist(row[colnames(pct)])), tolerance = 5e-5,
-                 label = paste(v, "percentiles"))
+    testthat::expect_equal(unname(observed[[v]]), row$stddiff, tolerance = 5e-5, label = paste(v, "observed"))
+    testthat::expect_equal(unname(pct[v, ]), unname(unlist(row[colnames(pct)])), tolerance = 5e-5,
+                           label = paste(v, "percentiles"))
   }
 }
 
+test_that("the w_k columns SAS reads are the weights reweight() derives", {
+  for (k in seq_len(n_perm)) {
+    d <- fixture
+    d$grp <- d[[paste0("fgrp_", k)]]
+    expect_equal(d[[paste0("w_", k)]], reweight(d), label = paste0("w_", k))
+  }
+})
+
 test_that("the permutation reference matches %stddiffci, unweighted", {
-  skip_without_oracle()
+  skip_without_oracle("ci-unweighted.csv")
   check_permutation_reference("ci-unweighted.csv", weighted = FALSE)
 })
 
 test_that("the permutation reference matches %stddiffci, weighted", {
-  skip_without_oracle()
+  skip_without_oracle("ci-weighted.csv")
   check_permutation_reference("ci-weighted.csv", weighted = TRUE)
 })
 
@@ -92,7 +113,7 @@ test_that("the permutation reference matches %stddiffci, weighted", {
 # ps_mw_var()'s SD and percentile definitions, applied to SAS's own replicates.
 
 test_that("ps_mw_var() matches %mw_var on the observed difference and group summaries", {
-  skip_without_oracle()
+  skip_without_oracle("mw-summary.csv")
   sas <- read_oracle("mw-summary.csv")
   r <- ps_mw_var(fixture, treatment_col = "grp", outcomes = c("y_cont", "y_bin"), weight_col = "w",
                  n_rep = 10, seed = 1)$tables$mw_var
@@ -109,7 +130,7 @@ test_that("ps_mw_var() matches %mw_var on the observed difference and group summ
 })
 
 test_that("ps_mw_var()'s SD and PCTLDEF=1 percentiles reproduce %mw_var on its own replicates", {
-  skip_without_oracle()
+  skip_without_oracle(c("mw-summary.csv", "mw-replicates.csv"))
   sas <- read_oracle("mw-summary.csv")
   reps <- read_oracle("mw-replicates.csv")
   reps <- reps[rowSums(!is.na(reps[c("y_cont", "y_bin")])) > 0L, ] # the macro's first row is empty
@@ -119,5 +140,22 @@ test_that("ps_mw_var()'s SD and PCTLDEF=1 percentiles reproduce %mw_var on its o
     expect_equal(stats::sd(reps[[v]]), s$`_sd_trt`, tolerance = 1e-6, label = paste(v, "bootstrap SD"))
     expect_equal(.perm_percentiles(reps[[v]], type = 4), unname(unlist(s[c("p2_5", "p16", "p50", "p84", "p97_5")])),
                  tolerance = 1e-6, label = paste(v, "percentiles"))
+  }
+})
+
+test_that("ps_mw_var()'s bootstrap SD is within Monte Carlo error of %mw_var's (spec section 9, item 3)", {
+  skip_without_oracle("mw-summary.csv")
+  sas <- read_oracle("mw-summary.csv")
+  n_rep <- 2000L
+  r <- ps_mw_var(fixture, treatment_col = "grp", outcomes = c("y_cont", "y_bin"), weight_col = "w",
+                 n_rep = n_rep, seed = 20260930)$tables$mw_var
+  for (v in c("y_cont", "y_bin")) {
+    s <- sas[tolower(sas$`_outcome`) == v, ]
+    # A bootstrap SD from B replicates has relative standard error about
+    # 1 / sqrt(2 (B - 1)): about 5.0% for SAS's 200 and 1.6% for R's 2000, so
+    # about 5.3% for their ratio. Four of those, 21%, keeps a false failure
+    # below 1 in 10,000 while still catching an SD of the wrong kind.
+    se_ratio <- sqrt(1 / (2 * (s$resample - 1)) + 1 / (2 * (n_rep - 1)))
+    expect_lt(abs(log(r$sd[r$outcome == v] / s$`_sd_trt`)), 4 * se_ratio, label = paste(v, "bootstrap SD"))
   }
 })
