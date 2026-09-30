@@ -127,3 +127,11 @@ test_that("ps_rmst() reports NA intervals when a subset has only one arm", {
   expect_true(is.na(row$diff_days) && is.na(row$lo_days) && is.na(row$hi_days))
   expect_equal(row$n_failed, 5L)
 })
+
+test_that("ps_forest() group_counts names groups by their treatment value", {
+  counts <- fo$tables$group_counts
+  expect_named(counts, c("group", "treated", "n"))
+  expect_identical(counts$group, c("0", "1"))
+  expect_identical(counts$treated, c(FALSE, TRUE))
+  expect_equal(counts$n, c(sum(dta$tavr == 0), sum(dta$tavr == 1)))
+})

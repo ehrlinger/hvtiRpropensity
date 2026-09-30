@@ -1,5 +1,11 @@
 # hvtiRpropensity (unreleased)
 
+* The group tables of `ps_match()`, `ps_weight()`, `ps_forest()` and
+  `sa_overlap()` no longer label the groups `control` and `treated`. `group`
+  now holds the value in `treatment_col` (`0`/`1`, or `FALSE`/`TRUE`), and a
+  new logical `treated` column says which group is treated, as in
+  `ps_logistic()`. **Code that matched `group == "treated"` should use the
+  `treated` column** (#51).
 * `ps_ordinal()` and `ps_nominal()` now return a balance table, `$tables$smd`,
   as `ps_logistic()` does. It has one row per covariate and pair of treatment
   levels (`variable`, `level`, `versus`, `smd`), each computed on the patients

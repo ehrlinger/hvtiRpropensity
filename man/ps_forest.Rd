@@ -48,7 +48,8 @@ weight are computed. Forest probabilities can be exactly 0 or 1.}
 A \code{ps_forest} / \code{ps_data} object. \verb{$data} is \code{data} plus
 \code{score_col}, \code{logit_col}, \code{weight_col} (overlap weights), \code{quintile} and
 \code{decile}; \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"};
-\verb{$tables} holds \code{smd} and \code{group_counts}; \verb{$models$forest} is the fitted
+\verb{$tables} holds \code{smd} and \code{group_counts} (\code{group}, the value in
+\code{treatment_col}; a logical \code{treated}; \code{n}); \verb{$models$forest} is the fitted
 forest.
 }
 \description{

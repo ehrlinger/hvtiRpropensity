@@ -141,3 +141,15 @@ test_that("ps_weight() errors on out-of-range propensity score", {
   bad$prob_t[1] <- -0.1
   expect_error(ps_weight(bad))
 })
+
+test_that("group tables name groups by their treatment value", {
+  obj <- ps_weight(dta)
+  expect_named(obj$tables$group_counts, c("group", "treated", "n"))
+  expect_named(obj$tables$effective_n, c("group", "treated", "n_effective"))
+  expect_identical(obj$tables$group_counts$group, c("0", "1"))
+  expect_identical(obj$tables$effective_n$treated, c(FALSE, TRUE))
+
+  logical_dta <- dta
+  logical_dta$tavr <- logical_dta$tavr == 1
+  expect_identical(ps_weight(logical_dta)$tables$group_counts$group, c("FALSE", "TRUE"))
+})

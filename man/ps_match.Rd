@@ -61,7 +61,9 @@ obtain the matched subset.}
 \code{match_col}, \code{pair_id_col}, \code{caliper}, \code{method}, \code{n_total},
 \code{n_matched}, \code{n_unmatched}.}
 \item{\verb{$tables}}{Named list: \code{smd_before}, \code{smd_after},
-\code{group_counts_before}, \code{group_counts_after}.}
+\code{group_counts_before}, \code{group_counts_after}. Group tables name each
+group by its value in \code{treatment_col} (\code{0}/\code{1} or \code{FALSE}/\code{TRUE}) and
+carry a logical \code{treated} column.}
 }
 }
 \description{

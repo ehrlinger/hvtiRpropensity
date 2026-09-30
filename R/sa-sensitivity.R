@@ -470,13 +470,14 @@ sa_evalue <- function(estimate,
 #'
 #' @return A list with:
 #' \describe{
-#'   \item{`$summary`}{Data frame: one row per treatment group with `group`,
-#'     `n`, `ps_min`, `ps_q25`, `ps_median`, `ps_mean`, `ps_q75`, `ps_max`.}
+#'   \item{`$summary`}{Data frame: one row per treatment group with `group`
+#'     (the value in `treatment_col`), a logical `treated`, `n`, `ps_min`,
+#'     `ps_q25`, `ps_median`, `ps_mean`, `ps_q75`, `ps_max`.}
 #'   \item{`$overlap_region`}{Named numeric vector: `lower` and `upper` bounds
 #'     of the empirical common support region.}
-#'   \item{`$outside_overlap`}{Data frame: `group`, `n_outside`,
+#'   \item{`$outside_overlap`}{Data frame: `group`, `treated`, `n_outside`,
 #'     `pct_outside` -- patients whose PS is outside the overlap region.}
-#'   \item{`$positivity_flags`}{Data frame: `group`, `n_near_zero`
+#'   \item{`$positivity_flags`}{Data frame: `group`, `treated`, `n_near_zero`
 #'     (PS < `trim_threshold`), `n_near_one` (PS > `1 - trim_threshold`),
 #'     `pct_near_zero`, `pct_near_one`.}
 #' }
@@ -502,9 +503,11 @@ sa_overlap <- function(x,
                        trim_threshold = 0.05) {
 
   # ---- Extract data frame --------------------------------------------------
+  treated_level <- NULL
   if (is_ps_data(x)) {
     score_col     <- rlang::`%||%`(x$meta$score_col,     score_col)
     treatment_col <- rlang::`%||%`(x$meta$treatment_col, treatment_col)
+    treated_level <- x$meta$treated_level
     dta <- x$data
   } else if (is.data.frame(x)) {
     dta <- x
@@ -524,7 +527,9 @@ sa_overlap <- function(x,
   }
 
   ps  <- dta[[score_col]]
-  trt <- as.integer(dta[[treatment_col]])
+  # A scored object may declare 0 (or FALSE) as the treated value.
+  group_labels <- .binary_group_labels(dta[[treatment_col]], treated_level)
+  trt <- as.integer(as.character(dta[[treatment_col]]) == group_labels[[2L]])
 
   # Drop rows where PS is NA before computing group sizes, so that n0/n1
   # match the summary statistics (which use na.rm=TRUE but still exclude NAs).
@@ -562,9 +567,10 @@ sa_overlap <- function(x,
   }
 
   # ---- Summary statistics --------------------------------------------------
-  .ps_summary <- function(psv, grp, n) {
+  .ps_summary <- function(psv, grp, treated, n) {
     data.frame(
       group     = grp,
+      treated   = treated,
       n         = n,
       ps_min    = round(min(psv,    na.rm = TRUE), 4),
       ps_q25    = round(stats::quantile(psv, 0.25, na.rm = TRUE), 4),
@@ -576,8 +582,8 @@ sa_overlap <- function(x,
       row.names = NULL
     )
   }
-  summary_tbl <- rbind(.ps_summary(ps0, "control", n0),
-                       .ps_summary(ps1, "treated", n1))
+  summary_tbl <- rbind(.ps_summary(ps0, group_labels[[1L]], FALSE, n0),
+                       .ps_summary(ps1, group_labels[[2L]], TRUE, n1))
 
   # ---- Overlap region ------------------------------------------------------
   overlap_lo <- max(min(ps0), min(ps1))
@@ -605,7 +611,8 @@ sa_overlap <- function(x,
   n_out1 <- .n_outside(ps1)
 
   outside_overlap <- data.frame(
-    group      = c("control", "treated"),
+    group      = group_labels,
+    treated    = c(FALSE, TRUE),
     n_outside  = c(n_out0, n_out1),
     pct_outside = round(100 * c(n_out0 / n0, n_out1 / n1), 1),
     stringsAsFactors = FALSE
@@ -618,7 +625,8 @@ sa_overlap <- function(x,
   no1 <- sum(ps1 > 1 - trim_threshold, na.rm = TRUE)
 
   positivity_flags <- data.frame(
-    group        = c("control", "treated"),
+    group        = group_labels,
+    treated      = c(FALSE, TRUE),
     n_near_zero  = c(nz0, nz1),
     n_near_one   = c(no0, no1),
     pct_near_zero = round(100 * c(nz0 / n0, nz1 / n1), 1),
