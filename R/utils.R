@@ -248,7 +248,8 @@
 #'
 #' With `treated_level = NULL` the column must be 0/1 or logical, and 1 or
 #' `TRUE` is the treated value. With a `treated_level`, the column may hold any
-#' two values and `treated_level` names the treated one.
+#' two values and `treated_level` names the treated one. Both values must be
+#' present.
 #'
 #' @param data A data frame.
 #' @param col Name of the treatment column.
@@ -268,7 +269,7 @@
   }
   treated_level <- as.character(treated_level)
   values <- unique(as.character(x[!is.na(x)]))
-  if (length(values) > 2L) {
+  if (length(values) != 2L) {
     rlang::abort(
       sprintf("Column `%s` must hold two treatment values; it holds %d.", col, length(values)),
       call = call_env
@@ -289,7 +290,6 @@
       )
     )
   }
-  reference <- setdiff(values, treated_level)
-  if (length(reference) == 0L) reference <- NA_character_
-  list(trt = as.integer(as.character(x) == treated_level), labels = c(reference, treated_level))
+  list(trt = as.integer(as.character(x) == treated_level),
+       labels = c(setdiff(values, treated_level), treated_level))
 }

@@ -27,6 +27,7 @@ missing), and \code{labels}, the reference then the treated value as character.
 \description{
 With \code{treated_level = NULL} the column must be 0/1 or logical, and 1 or
 \code{TRUE} is the treated value. With a \code{treated_level}, the column may hold any
-two values and \code{treated_level} names the treated one.
+two values and \code{treated_level} names the treated one. Both values must be
+present.
 }
 \keyword{internal}

@@ -111,4 +111,21 @@ test_that("treated_level is validated", {
   three$tavr[1:5] <- "hybrid"
   expect_error(ps_weight(three, treated_level = lvl), "must hold two treatment values; it holds 3")
   expect_error(ps_weight(labelled, treated_level = c("a", "b")), "single non-missing value")
+  expect_error(ps_weight(labelled, treated_level = NA), "single non-missing value")
+})
+
+test_that("treated_level needs both treatment values present", {
+  one <- labelled[labelled$tavr == lvl, ]
+  expect_error(ps_weight(one, treated_level = lvl), "must hold two treatment values; it holds 1")
+  none <- labelled
+  none$tavr <- NA_character_
+  expect_error(ps_weight(none, treated_level = lvl), "must hold two treatment values; it holds 0")
+})
+
+test_that("sa_trim_sweep() excludes patients with a missing treatment", {
+  missing <- binary
+  missing$tavr[c(1, 200)] <- NA
+  expect_warning(swept <- sa_trim_sweep(missing), "2 NA value")
+  expect_equal(swept, sa_trim_sweep(binary[-c(1, 200), ]))
+  expect_false(anyNA(swept))
 })

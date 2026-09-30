@@ -745,6 +745,10 @@ sa_trim_sweep <- function(x,
 
   ps  <- dta[[score_col]]
   trt <- .treatment_indicator(dta, treatment_col, treated_level)$trt
+  # Patients with a missing treatment are excluded, as the warning says.
+  keep <- !is.na(trt)
+  ps  <- ps[keep]
+  trt <- trt[keep]
   n   <- length(ps)
 
   # ---- Compute raw IPTW weights once ---------------------------------------

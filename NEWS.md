@@ -15,6 +15,8 @@
 * `sa_trim_sweep()` and `sa_rosenbaum()` now check the treatment column. A
   column that is not 0/1 or logical used to be coerced with warnings and
   return a result; it is now an error unless `treated_level` is given.
+* `sa_trim_sweep()` excludes patients whose treatment is missing, with a
+  warning. It used to keep them, which made every effective sample size `NA`.
 * The group tables of `ps_match()`, `ps_weight()`, `ps_forest()` and
   `sa_overlap()` no longer label the groups `control` and `treated`. `group`
   now holds the value in `treatment_col` (`0`/`1`, or `FALSE`/`TRUE`), and a
