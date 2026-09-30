@@ -143,7 +143,9 @@ the historical 0/1 or logical interface.</p></dd>
 <code>n_imputations</code>, <code>n_total</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>smd</code>, <code>group_counts</code>.</p></dd>
+<dd><p>Named list: <code>smd</code>, <code>group_counts</code>. <code>group_counts</code> has one
+row per treatment level, named as declared, with a logical <code>treated</code>
+flag and the count <code>n</code>.</p></dd>
 
 
 </dl></div>
@@ -200,9 +202,9 @@ matched) estimand weight and is used as input to <code><a href="ps_match.html">p
 <span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Estimates:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           term    estimate  std.error  statistic  df      p.value    conf.low</span>

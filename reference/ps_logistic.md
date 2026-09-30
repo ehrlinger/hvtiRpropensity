@@ -99,7 +99,9 @@ An object of class `c("ps_logistic", "ps_data")` with:
 
 - `$tables`:
 
-  Named list: `smd`, `group_counts`.
+  Named list: `smd`, `group_counts`. `group_counts` has one row per
+  treatment level, named as declared, with a logical `treated` flag and
+  the count `n`.
 
 ## Details
 
@@ -160,9 +162,9 @@ summary(obj)
 #> match               match      NA
 #> 
 #> Group counts:
-#>     group   n
-#> 1 control 200
-#> 2 treated 200
+#>   group treated   n
+#> 1     0   FALSE 200
+#> 2     1    TRUE 200
 #> 
 #> Estimates:
 #>           term    estimate  std.error  statistic  df      p.value    conf.low
