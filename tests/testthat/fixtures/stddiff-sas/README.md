@@ -51,5 +51,23 @@ accepting the run, confirm it has no `ERROR:`.
 `%mw_var` draws its bootstrap with `PROC SURVEYSELECT`, which R cannot
 reproduce, so the replicates themselves are not compared.
 
-Until the output is committed, the tests in `test_stddiff_sas_oracle.R` skip and
-say which files are missing.
+The tests skip, naming the missing files, if the output CSVs are absent.
+
+## Status
+Run 2026-09-30 under SAS 9.04.01M8P02222023 on Linux. The log ends
+`NOTE: STDDIFF_ORACLE_COMPLETE expected_outputs=10` and its SHA-256 is
+`19b5475752262e1dce3c4d1aca7463bdc9626e5611662158958149805e22e44c`. It has no `ERROR:` except the `%mw_var` RTF report, which cannot
+render in a batch session without fonts; its datasets are exported
+afterwards. The three macro sources that ran match `~/Documents/macro.library`
+line for line, apart from line endings.
+
+All 32 comparisons in `test_stddiff_sas_oracle.R` pass. The largest
+difference in a standardized difference is 3.5e-7, for the categorical
+variable, whose value `%stddiff` passes through a macro variable and so rounds
+to six significant digits. The `%mw_var` difference agrees to 3e-10.
+
+Two things about the macros this run showed:
+- `%mw_var` passes the same `SEED=` to `PROC SURVEYSELECT` on every replicate,
+  so a positive seed draws one sample repeatedly and the bootstrap SD is 0. Only
+  the default `SEED=-1` gives a bootstrap. `ps_mw_var()` seeds once.
+- `%mw_var`'s report step prints `_LABEL_`, so unlabelled outcomes stop it.

@@ -1,0 +1,5 @@
+LABEL,VarName,StdDiff
+,x_bin,0.2050029806
+,x_cat,0.86597
+,x_gauss,0.1569350667
+,x_ord,0.4197822647
