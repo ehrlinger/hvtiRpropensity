@@ -503,9 +503,11 @@ sa_overlap <- function(x,
                        trim_threshold = 0.05) {
 
   # ---- Extract data frame --------------------------------------------------
+  treated_level <- NULL
   if (is_ps_data(x)) {
     score_col     <- rlang::`%||%`(x$meta$score_col,     score_col)
     treatment_col <- rlang::`%||%`(x$meta$treatment_col, treatment_col)
+    treated_level <- x$meta$treated_level
     dta <- x$data
   } else if (is.data.frame(x)) {
     dta <- x
@@ -525,7 +527,9 @@ sa_overlap <- function(x,
   }
 
   ps  <- dta[[score_col]]
-  trt <- as.integer(dta[[treatment_col]])
+  # A scored object may declare 0 (or FALSE) as the treated value.
+  group_labels <- .binary_group_labels(dta[[treatment_col]], treated_level)
+  trt <- as.integer(as.character(dta[[treatment_col]]) == group_labels[[2L]])
 
   # Drop rows where PS is NA before computing group sizes, so that n0/n1
   # match the summary statistics (which use na.rm=TRUE but still exclude NAs).
@@ -563,7 +567,6 @@ sa_overlap <- function(x,
   }
 
   # ---- Summary statistics --------------------------------------------------
-  group_labels <- .binary_group_labels(dta[[treatment_col]])
   .ps_summary <- function(psv, grp, treated, n) {
     data.frame(
       group     = grp,

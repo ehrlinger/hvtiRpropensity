@@ -503,3 +503,15 @@ test_that("sa_overlap() tables name groups by their treatment value", {
   }
   expect_equal(res$summary$n, c(sum(dta$tavr == 0), sum(dta$tavr == 1)))
 })
+
+test_that("sa_overlap() follows the treated level a scored object declares", {
+  dta <- sample_ps_data(n = 200, seed = 16)
+  dta$prob_t <- NULL
+  fit <- ps_logistic(tavr ~ age + ef, dta, treatment_levels = c(1, 0), treated_level = 0)
+  res <- sa_overlap(fit)
+  expect_identical(res$summary$group, c("1", "0"))
+  expect_identical(res$summary$treated, c(FALSE, TRUE))
+  expect_equal(res$summary$n, c(sum(dta$tavr == 1), sum(dta$tavr == 0)))
+  # The treated row summarises the score of the patients whose value is 0.
+  expect_equal(res$summary$ps_mean[2], round(mean(fit$data$prob_t[fit$data$tavr == 0]), 4))
+})
