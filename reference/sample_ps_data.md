@@ -26,7 +26,7 @@ sample_ps_data(n = 500L, seed = 42L, separation = 1)
 - separation:
 
   Numeric scalar controlling how well the covariates separate the two
-  groups. Higher values → less overlap. Default `1.0`.
+  groups. Higher values give less overlap. Default `1.0`.
 
 ## Value
 
@@ -62,7 +62,7 @@ A data frame with `2 * n` rows and the following columns:
 
 - `prob_t`:
 
-  Estimated propensity score (numeric, 0–1).
+  Estimated propensity score (numeric, 0 to 1).
 
 - `match`:
 

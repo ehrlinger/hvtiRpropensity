@@ -42,14 +42,14 @@
 
 <div id="hvtirpropensity" class="section level1">
 
-<p>Propensity-score analysis for the HVTI CORR group: score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>), application (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>), balance statistics (<code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>) and four sensitivity methods (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>), plus synthetic data generators. Sixteen exports.</p>
+<p>Propensity-score analysis for the HVTI CORR group: score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="reference/ps_forest.html">ps_forest()</a></code>), the general model bundle behind them (<code><a href="reference/fit_logistic.html">fit_logistic()</a></code>, <code><a href="reference/validate_logistic.html">validate_logistic()</a></code>), application (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>, <code><a href="reference/ps_support.html">ps_support()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>), balance statistics (<code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>, <code><a href="reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code>, <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>) and four sensitivity methods (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>), plus <code><a href="reference/is_ps_data.html">is_ps_data()</a></code> and four synthetic data generators. Twenty-four exports; <code>NAMESPACE</code> is the authority.</p>
 <p>This file is the operational contract and applies in full. It is tool neutral, so Codex and any other agent read the same rules. Claude Code affordances live in <code>CLAUDE.md</code>, which imports this file.</p>
 <div class="section level2">
 <h2 id="definition-of-done">Definition of done<a class="anchor" aria-label="anchor" href="#definition-of-done"></a></h2>
 <ul><li>
 <code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> passes. The runner is <code>tests/test-all.R</code>.</li>
 <li>
-<code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> is <strong>0 errors, 0 warnings, and no NEW notes.</strong> ⚠️ <strong>This package is not at 0/0/0.</strong> As of 2026-08-20 one NOTE stands: <code>rnorm</code> is used in the <code>sample_ps_data*()</code> generators without <code>importFrom("stats", "rnorm")</code>. It is a real defect, not an artifact, and it is not yours unless you touch those functions — but do not let a second note hide behind it.</li>
+<code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> is <strong>0 errors, 0 warnings, 0 notes.</strong> Verified 2026-09-30 at 0.1.9 under <code>R CMD check --as-cran</code> with the manual built, from a clean <code>git archive</code> export.</li>
 <li>
 <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> has been run and <code>man/</code> and <code>NAMESPACE</code> are committed with the source change.</li>
 </ul></div>
@@ -97,7 +97,7 @@ Adding a <code>ps_*()</code> function means returning that shape through the con
 <li>
 <strong>Test files are <code>test_*.R</code> with an underscore, and the runner is <code>tests/test-all.R</code>.</strong> ⚠️ This matches <code>hvtiPlotR</code> and differs from <code>hvtiRutilities</code>, <code>hvtiRdatabuild</code>, <code>hvtiRtables</code> and <code>hvtiRbootstrap</code>, which use <code>test-*.R</code> and <code>tests/testthat.R</code>.</li>
 <li>
-<strong><code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code> requires <code>rbounds</code>; the other three sensitivity methods do not.</strong> Keep it that way — <code><a href="reference/sa_evalue.html">sa_evalue()</a></code> is deliberately dependency-free, and adding a hard dependency to the cheap methods removes the reason they exist.</li>
+<strong>None of the four sensitivity methods needs a package outside <code>Imports</code>.</strong> <code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code> computes its bounds in base R and does not use <code>rbounds</code>. Keep it that way: adding a hard dependency to the cheap methods removes the reason they exist.</li>
 <li>
 <strong>Roxygen markdown is ENABLED</strong> (<code>Roxygen: list(markdown = TRUE)</code>). ⚠️ <code>hvtiRutilities</code> and <code>hvtiRtemplates</code> have no such field and need Rd markup instead.</li>
 <li>
@@ -106,9 +106,10 @@ Adding a <code>ps_*()</code> function means returning that shape through the con
 <div class="section level2">
 <h2 id="gotchas">Gotchas<a class="anchor" aria-label="anchor" href="#gotchas"></a></h2>
 <ul><li>
-<strong><code>DESCRIPTION</code>’s <code>Date:</code> is stale</strong> — 2026-04-02 against version 0.1.1. Refresh it on the next version bump rather than carrying it further.</li>
+<strong><code>DESCRIPTION</code>’s <code>Date:</code> moves with <code>Version:</code>.</strong> Update both in the same version-bump commit.</li>
 <li>The package is <strong>0.x</strong>: the API is not frozen, but the <code>ps_data</code> structure above is what every subclass and both base methods rely on, so changing it is a breaking change in practice.</li>
-<li>The sample-data generators are the only functions using the RNG, and they are the source of the outstanding NOTE. If you touch them, fix the import rather than adding a <code><a href="https://rdrr.io/r/utils/globalVariables.html" class="external-link">utils::globalVariables()</a></code> suppression.</li>
+<li>
+<strong>Every function that draws random numbers restores the caller’s stream</strong>, through <code><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">withr::local_seed()</a></code>: the sample-data generators, <code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>. Qualify RNG calls (<code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">stats::rnorm()</a></code>) rather than adding a <code><a href="https://rdrr.io/r/utils/globalVariables.html" class="external-link">utils::globalVariables()</a></code> suppression.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="git-and-versioning">Git and versioning<a class="anchor" aria-label="anchor" href="#git-and-versioning"></a></h2>

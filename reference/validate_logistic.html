@@ -91,6 +91,36 @@ bundle.</p>
     <p>An object of class <code>c("lm_validation", "ps_data")</code>.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">150</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">odd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">dta</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">2</span> <span class="op">==</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span><span class="co"># Fit on one half, then score the other half without refitting.</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_logistic.html">fit_logistic</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span>,</span></span>
+<span class="r-in"><span>  data           <span class="op">=</span> <span class="va">dta</span><span class="op">[</span><span class="va">odd</span>, <span class="op">]</span>,</span></span>
+<span class="r-in"><span>  family         <span class="op">=</span> <span class="st">"binary"</span>,</span></span>
+<span class="r-in"><span>  outcome_levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  event_level    <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu">validate_logistic</span><span class="op">(</span><span class="va">fit</span>, <span class="va">dta</span><span class="op">[</span><span class="op">!</span><span class="va">odd</span>, <span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">val</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">performance</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     n observed expected  oe_ratio       auc    brier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 150       75 77.24495 0.9709373 0.7607111 0.199376</span>
+<span class="r-in"><span><span class="va">val</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">calibration</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    group  n observed  expected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1 15        2  2.426137</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2 15        4  4.038097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3 15        3  5.137954</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      4 15        7  6.241516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      5 15        6  7.155727</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      6 15        9  8.128755</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7      7 15       10  9.049067</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8      8 15       11 10.100560</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9      9 15        9 11.685894</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    10 15       14 13.281238</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

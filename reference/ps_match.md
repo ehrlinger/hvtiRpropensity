@@ -96,8 +96,8 @@ An object of class `c("ps_match", "ps_data")` with:
 ## Details
 
 The `$tables` slot contains standardised mean difference (SMD) tables
-before and after matching, and group counts — the same diagnostics
-expected by `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()`.
+before and after matching, and group counts. These are the diagnostics
+that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
 
 ## See also
 

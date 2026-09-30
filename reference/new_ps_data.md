@@ -14,7 +14,7 @@ new_ps_data(data, meta, tables = list(), models = list(), subclass)
 
 - data:
 
-  A data frame — the original data with propensity scores or weights
+  A data frame: the original data with propensity scores or weights
   appended.
 
 - meta:

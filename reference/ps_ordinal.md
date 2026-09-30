@@ -103,33 +103,28 @@ Install with `install.packages("MASS")` if missing.
 #   followed by decomposition of cumulative to marginal probabilities
 #   and rank-based quintile / decile assignment.
 # \donttest{
-dta <- sample_ps_data_ordinal(n = 300, seed = 42)
-obj <- ps_ordinal(
-  nyha_grp ~ age + female + ef + diabetes,
-  data = dta
-)
-print(obj)
+if (requireNamespace("MASS", quietly = TRUE)) {
+  dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+  obj <- ps_ordinal(
+    nyha_grp ~ age + female + ef + diabetes,
+    data = dta
+  )
+  print(obj)
+
+  # Each level gets its own probability column (marginal, not cumulative).
+  # The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
+  # ps_ordinal() performs this decomposition internally.
+  head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
+
+  # Quintile and decile columns are appended, ordered by p(highest level).
+  table(obj$data$quintile)
+}
 #> <ps_ordinal>
 #>   N total     : 900
 #>   Treatment   : nyha_grp (3 levels: I < II < III)
 #>   Score cols  : prob_I, prob_II, prob_III
 #>   Method      : ordinal-logistic
 #>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status 
-
-# Each level gets its own probability column (marginal, not cumulative).
-# The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
-# ps_ordinal() performs this decomposition internally.
-head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
-#>   id nyha_grp    prob_I   prob_II   prob_III
-#> 1  1        I 0.1302370 0.4272536 0.44250940
-#> 2  2        I 0.5722279 0.3461715 0.08160063
-#> 3  3        I 0.4942729 0.3973029 0.10842419
-#> 4  4        I 0.2825090 0.4856240 0.23186705
-#> 5  5        I 0.5355977 0.3709744 0.09342789
-#> 6  6        I 0.5654068 0.3508839 0.08370928
-
-# Quintile and decile columns are appended, ordered by p(highest level).
-table(obj$data$quintile)
 #> 
 #>   1   2   3   4   5 
 #> 180 180 180 180 180 

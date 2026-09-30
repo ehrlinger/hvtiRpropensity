@@ -152,33 +152,28 @@ base R).  Install with <code>install.packages("MASS")</code> if missing.</p>
 <span class="r-in"><span><span class="co">#   followed by decomposition of cumulative to marginal probabilities</span></span></span>
 <span class="r-in"><span><span class="co">#   and rank-based quintile / decile assignment.</span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data_ordinal.html">sample_ps_data_ordinal</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_ordinal</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">nyha_grp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">dta</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"MASS"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data_ordinal.html">sample_ps_data_ordinal</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_ordinal</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">nyha_grp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span></span>
+<span class="r-in"><span>    data <span class="op">=</span> <span class="va">dta</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Each level gets its own probability column (marginal, not cumulative).</span></span></span>
+<span class="r-in"><span>  <span class="co"># The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.</span></span></span>
+<span class="r-in"><span>  <span class="co"># ps_ordinal() performs this decomposition internally.</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"nyha_grp"</span>, <span class="st">"prob_I"</span>, <span class="st">"prob_II"</span>, <span class="st">"prob_III"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Quintile and decile columns are appended, ordered by p(highest level).</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">quintile</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;ps_ordinal&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   N total     : 900</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Treatment   : nyha_grp (3 levels: I &lt; II &lt; III)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Score cols  : prob_I, prob_II, prob_III</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : ordinal-logistic</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status </span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Each level gets its own probability column (marginal, not cumulative).</span></span></span>
-<span class="r-in"><span><span class="co"># The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.</span></span></span>
-<span class="r-in"><span><span class="co"># ps_ordinal() performs this decomposition internally.</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"nyha_grp"</span>, <span class="st">"prob_I"</span>, <span class="st">"prob_II"</span>, <span class="st">"prob_III"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   id nyha_grp    prob_I   prob_II   prob_III</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1        I 0.1302370 0.4272536 0.44250940</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2        I 0.5722279 0.3461715 0.08160063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3        I 0.4942729 0.3973029 0.10842419</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4        I 0.2825090 0.4856240 0.23186705</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  5        I 0.5355977 0.3709744 0.09342789</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  6        I 0.5654068 0.3508839 0.08370928</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Quintile and decile columns are appended, ordered by p(highest level).</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">quintile</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1   2   3   4   5 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 180 180 180 180 180 </span>

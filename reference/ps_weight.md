@@ -42,14 +42,14 @@ ps_weight(
 
   Causal estimand. One of:
 
-  - `"ATE"` (default) — average treatment effect. Treated weights =
+  - `"ATE"` (default): average treatment effect. Treated weights =
     `1/ps`; control weights = `1/(1-ps)`.
 
-  - `"ATT"` — average treatment effect on the treated. Treated weights =
+  - `"ATT"`: average treatment effect on the treated. Treated weights =
     `1`; control weights = `ps/(1-ps)`.
 
-  - `"ATC"` — average treatment effect on the controls. Treated weights
-    = `(1-ps)/ps`; control weights = `1`.
+  - `"ATC"`: average treatment effect on the controls. Treated weights =
+    `(1-ps)/ps`; control weights = `1`.
 
 - stabilise:
 

@@ -161,12 +161,26 @@ Install with <code>install.packages("nnet")</code> if missing.</p>
 <span class="r-in"><span><span class="co"># The first factor level is used as the reference category, matching</span></span></span>
 <span class="r-in"><span><span class="co"># SAS REF=first.  Change ref_level to match a different reference.</span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data_nominal.html">sample_ps_data_nominal</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_nominal</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">rtyp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span></span>
-<span class="r-in"><span>  data <span class="op">=</span> <span class="va">dta</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"nnet"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data_nominal.html">sample_ps_data_nominal</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_nominal</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">rtyp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span></span>
+<span class="r-in"><span>    data <span class="op">=</span> <span class="va">dta</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># One probability column per treatment level (analogous to p_cos, p_per,</span></span></span>
+<span class="r-in"><span>  <span class="co"># p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"rtyp"</span>, <span class="st">"prob_COS"</span>, <span class="st">"prob_PER"</span>, <span class="st">"prob_DEV"</span>, <span class="st">"prob_CE"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Explicitly set a different reference level</span></span></span>
+<span class="r-in"><span>  <span class="va">obj_ce</span> <span class="op">&lt;-</span> <span class="fu">ps_nominal</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">rtyp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span></span>
+<span class="r-in"><span>    data      <span class="op">=</span> <span class="va">dta</span>,</span></span>
+<span class="r-in"><span>    ref_level <span class="op">=</span> <span class="st">"CE"</span>    <span class="co"># matches REF=last in SAS</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">obj_ce</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">ref_level</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;ps_nominal&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   N total     : 1200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Treatment   : rtyp (4 levels)</span>
@@ -174,24 +188,7 @@ Install with <code>install.packages("nnet")</code> if missing.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : nominal-logistic</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status </span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># One probability column per treatment level (analogous to p_cos, p_per,</span></span></span>
-<span class="r-in"><span><span class="co"># p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"rtyp"</span>, <span class="st">"prob_COS"</span>, <span class="st">"prob_PER"</span>, <span class="st">"prob_DEV"</span>, <span class="st">"prob_CE"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   id rtyp  prob_COS  prob_PER  prob_DEV    prob_CE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1  COS 0.1055278 0.1780586 0.3405289 0.37588468</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2  COS 0.4016693 0.3427668 0.1668590 0.08870491</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  3  COS 0.3225837 0.3404853 0.2131848 0.12374626</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  4  COS 0.1762023 0.2953493 0.2866436 0.24180480</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  5  COS 0.3849803 0.2885476 0.2067771 0.11969503</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  6  COS 0.4507948 0.2804114 0.1759815 0.09281226</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Explicitly set a different reference level</span></span></span>
-<span class="r-in"><span><span class="va">obj_ce</span> <span class="op">&lt;-</span> <span class="fu">ps_nominal</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">rtyp</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span>,</span></span>
-<span class="r-in"><span>  data      <span class="op">=</span> <span class="va">dta</span>,</span></span>
-<span class="r-in"><span>  ref_level <span class="op">=</span> <span class="st">"CE"</span>    <span class="co"># matches REF=last in SAS</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "CE"</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

@@ -3,19 +3,31 @@
 Propensity-score analysis for the HVTI CORR group: score estimation
 ([`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
 [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
-[`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)),
+[`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)),
+the general model bundle behind them
+([`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md),
+[`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)),
 application
 ([`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
-[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)),
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+[`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md),
+[`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)),
 balance statistics
 ([`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
-[`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md))
+[`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md),
+[`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md),
+[`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md),
+[`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md))
 and four sensitivity methods
 ([`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
 [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
 [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
 [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)),
-plus synthetic data generators. Sixteen exports.
+plus
+[`is_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.md)
+and four synthetic data generators. Twenty-four exports; `NAMESPACE` is
+the authority.
 
 This file is the operational contract and applies in full. It is tool
 neutral, so Codex and any other agent read the same rules. Claude Code
@@ -26,12 +38,9 @@ affordances live in `CLAUDE.md`, which imports this file.
 - [`devtools::test()`](https://devtools.r-lib.org/reference/test.html)
   passes. The runner is `tests/test-all.R`.
 - [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
-  is **0 errors, 0 warnings, and no NEW notes.** ⚠️ **This package is
-  not at 0/0/0.** As of 2026-08-20 one NOTE stands: `rnorm` is used in
-  the `sample_ps_data*()` generators without
-  `importFrom("stats", "rnorm")`. It is a real defect, not an artifact,
-  and it is not yours unless you touch those functions — but do not let
-  a second note hide behind it.
+  is **0 errors, 0 warnings, 0 notes.** Verified 2026-09-30 at 0.1.9
+  under `R CMD check --as-cran` with the manual built, from a clean
+  `git archive` export.
 - [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
   has been run and `man/` and `NAMESPACE` are committed with the source
   change.
@@ -90,12 +99,12 @@ feedback faster than a public release allows, not to lower the bar.
   `tests/test-all.R`.** ⚠️ This matches `hvtiPlotR` and differs from
   `hvtiRutilities`, `hvtiRdatabuild`, `hvtiRtables` and
   `hvtiRbootstrap`, which use `test-*.R` and `tests/testthat.R`.
-- **[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
-  requires `rbounds`; the other three sensitivity methods do not.** Keep
-  it that way —
-  [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md)
-  is deliberately dependency-free, and adding a hard dependency to the
-  cheap methods removes the reason they exist.
+- **None of the four sensitivity methods needs a package outside
+  `Imports`.**
+  [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
+  computes its bounds in base R and does not use `rbounds`. Keep it that
+  way: adding a hard dependency to the cheap methods removes the reason
+  they exist.
 - **Roxygen markdown is ENABLED** (`Roxygen: list(markdown = TRUE)`). ⚠️
   `hvtiRutilities` and `hvtiRtemplates` have no such field and need Rd
   markup instead.
@@ -103,15 +112,23 @@ feedback faster than a public release allows, not to lower the bar.
 
 ## Gotchas
 
-- **`DESCRIPTION`’s `Date:` is stale** — 2026-04-02 against version
-  0.1.1. Refresh it on the next version bump rather than carrying it
-  further.
+- **`DESCRIPTION`’s `Date:` moves with `Version:`.** Update both in the
+  same version-bump commit.
 - The package is **0.x**: the API is not frozen, but the `ps_data`
   structure above is what every subclass and both base methods rely on,
   so changing it is a breaking change in practice.
-- The sample-data generators are the only functions using the RNG, and
-  they are the source of the outstanding NOTE. If you touch them, fix
-  the import rather than adding a
+- **Every function that draws random numbers restores the caller’s
+  stream**, through
+  [`withr::local_seed()`](https://withr.r-lib.org/reference/with_seed.html):
+  the sample-data generators,
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md),
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md).
+  Qualify RNG calls
+  ([`stats::rnorm()`](https://rdrr.io/r/stats/Normal.html)) rather than
+  adding a
   [`utils::globalVariables()`](https://rdrr.io/r/utils/globalVariables.html)
   suppression.
 

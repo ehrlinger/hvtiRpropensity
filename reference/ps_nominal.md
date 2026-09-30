@@ -117,12 +117,26 @@ with `install.packages("nnet")` if missing.
 # The first factor level is used as the reference category, matching
 # SAS REF=first.  Change ref_level to match a different reference.
 # \donttest{
-dta <- sample_ps_data_nominal(n = 300, seed = 42)
-obj <- ps_nominal(
-  rtyp ~ age + female + ef + diabetes,
-  data = dta
-)
-print(obj)
+if (requireNamespace("nnet", quietly = TRUE)) {
+  dta <- sample_ps_data_nominal(n = 300, seed = 42)
+  obj <- ps_nominal(
+    rtyp ~ age + female + ef + diabetes,
+    data = dta
+  )
+  print(obj)
+
+  # One probability column per treatment level (analogous to p_cos, p_per,
+  # p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
+  head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
+
+  # Explicitly set a different reference level
+  obj_ce <- ps_nominal(
+    rtyp ~ age + female + ef + diabetes,
+    data      = dta,
+    ref_level = "CE"    # matches REF=last in SAS
+  )
+  obj_ce$meta$ref_level
+}
 #> <ps_nominal>
 #>   N total     : 1200
 #>   Treatment   : rtyp (4 levels)
@@ -130,23 +144,6 @@ print(obj)
 #>   Score cols  : prob_COS, prob_PER, prob_DEV, prob_CE
 #>   Method      : nominal-logistic
 #>   Tables      : group_counts, estimates, covariance, by_imputation, fit_status 
-
-# One probability column per treatment level (analogous to p_cos, p_per,
-# p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
-head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
-#>   id rtyp  prob_COS  prob_PER  prob_DEV    prob_CE
-#> 1  1  COS 0.1055278 0.1780586 0.3405289 0.37588468
-#> 2  2  COS 0.4016693 0.3427668 0.1668590 0.08870491
-#> 3  3  COS 0.3225837 0.3404853 0.2131848 0.12374626
-#> 4  4  COS 0.1762023 0.2953493 0.2866436 0.24180480
-#> 5  5  COS 0.3849803 0.2885476 0.2067771 0.11969503
-#> 6  6  COS 0.4507948 0.2804114 0.1759815 0.09281226
-
-# Explicitly set a different reference level
-obj_ce <- ps_nominal(
-  rtyp ~ age + female + ef + diabetes,
-  data      = dta,
-  ref_level = "CE"    # matches REF=last in SAS
-)
+#> [1] "CE"
 # }
 ```

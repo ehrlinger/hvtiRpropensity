@@ -85,12 +85,14 @@ column `w_<weighting>` per scheme.
 ## Examples
 
 ``` r
-dta <- sample_ps_data(n = 200, seed = 5)[, c("id", "tavr", "age", "ef")]
-dta$t <- stats::rexp(nrow(dta), 0.2)
-dta$e <- as.integer(dta$t < 5)
-dta$t <- pmin(dta$t, 5)
-res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
-res$tables$estimates
+if (requireNamespace("survival", quietly = TRUE)) {
+  dta <- sample_ps_data(n = 200, seed = 5)[, c("id", "tavr", "age", "ef")]
+  dta$t <- stats::rexp(nrow(dta), 0.2)
+  dta$e <- as.integer(dta$t < 5)
+  dta$t <- pmin(dta$t, 5)
+  res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
+  res$tables$estimates
+}
 #>        estimator subset  weighting   n ess_treated ess_control rmst_treated
 #> 1 all/unweighted    all unweighted 400    200.0000    200.0000     2.730575
 #> 2        all/ato    all        ato 400    157.8078    155.2728     2.727508

@@ -72,3 +72,30 @@ fit_logistic(
 ## Value
 
 An object of class `c("lm_fit", "ps_data")`.
+
+## Examples
+
+``` r
+dta <- sample_ps_data(n = 150, seed = 42)
+fit <- fit_logistic(
+  tavr ~ age + female + ef,
+  data           = dta,
+  family         = "binary",
+  outcome_levels = c(0, 1),
+  event_level    = 1
+)
+fit$tables$estimates[, c("term", "estimate", "odds_ratio")]
+#>          term    estimate odds_ratio
+#> 1 (Intercept)  3.55713646 35.0626500
+#> 2         age -0.09113276  0.9128965
+#> 3      female  0.18166589  1.1992135
+#> 4          ef  0.05839068  1.0601291
+head(fit$data[, c("id", "tavr", "prob")])
+#>   id tavr      prob
+#> 1  1    0 0.1657534
+#> 2  2    0 0.5493138
+#> 3  3    0 0.2856728
+#> 4  4    0 0.2041096
+#> 5  5    0 0.5254897
+#> 6  6    0 0.3978214
+```
