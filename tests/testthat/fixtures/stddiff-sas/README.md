@@ -59,20 +59,22 @@ reproduce, so the replicates themselves are not compared.
 The tests skip, naming the missing files, if the output CSVs are absent.
 
 ## Status
-⚠️ **`ci-weighted.csv` needs one more run.** The first run held the weights
-fixed across permutations; `input.csv` now re-derives them (`w_1` to `w_20`
-changed, `p_score` was added, every other column is unchanged). Its test skips
-until the new file is returned. The other six CSVs came from columns that did
-not change, so they stand.
-
-First run 2026-09-30 under SAS 9.04.01M8P02222023 on Linux. The log ends
+Run 2026-09-30 under SAS 9.04.01M8P02222023 on Linux, twice. The first run
+held the permutation weights fixed; `input.csv` now re-derives them (`w_1` to
+`w_20` changed, `p_score` was added, every other column is unchanged), and the
+second run, 16:57, is the one committed here. Its log ends
 `NOTE: STDDIFF_ORACLE_COMPLETE expected_outputs=10` and its SHA-256 is
-`19b5475752262e1dce3c4d1aca7463bdc9626e5611662158958149805e22e44c`. It has no `ERROR:` except the `%mw_var` RTF report, which cannot
+`5f7e0520f241ad320f24b931df60e29b06d6d97548fcfe3844884392ce0b11ab`. It has no `ERROR:` except the `%mw_var` RTF report, which cannot
 render in a batch session without fonts; its datasets are exported
 afterwards. The three macro sources that ran match `~/Documents/macro.library`
 line for line, apart from line endings.
 
-All 32 comparisons in `test_stddiff_sas_oracle.R` pass. The largest
+Between the two runs, every output that does not depend on the new columns or
+on random draws came out byte-identical: both `%stddiff` runs, the unweighted
+`%stddiffci`, and `%mw_var`'s group means, SDs and sums of weights. The
+`%mw_var` bootstrap differs, as it should with `SEED=-1`.
+
+Every comparison in `test_stddiff_sas_oracle.R` passes. The largest
 difference in a standardized difference is 3.5e-7, for the categorical
 variable, whose value `%stddiff` passes through a macro variable and so rounds
 to six significant digits. The `%mw_var` difference agrees to 3e-10.
