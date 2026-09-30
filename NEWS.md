@@ -1,5 +1,10 @@
 # hvtiRpropensity (unreleased)
 
+* New tests compare `ps_stddiff()`, `ps_stddiff_perm()` and `ps_mw_var()` with
+  the CCF macros `%stddiff`, `%stddiffci` and `%mw_var`, run in SAS on a
+  synthetic dataset (`tests/testthat/fixtures/stddiff-sas/`). All three agree
+  with the macros: standardized differences to within 4e-7, the `%mw_var`
+  estimate to 3e-10 (#34).
 * New `treated_level` argument on `ps_match()`, `ps_weight()`, `ps_stddiff()`,
   `ps_stddiff_perm()`, `ps_mw_var()`, `sa_overlap()`, `sa_trim_sweep()` and
   `sa_rosenbaum()`. It names the treated value, so the treatment column may
