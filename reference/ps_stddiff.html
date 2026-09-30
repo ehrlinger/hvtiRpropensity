@@ -63,7 +63,8 @@ reproduce its <code>est.stddiff</code> output.</p>
 <span>  nong_ord <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  binary <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  categorical <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  weight_col <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  weight_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -90,6 +91,13 @@ coded 0/1 or logical; a <code>categorical</code> column may have any coding.</p>
 <dt id="arg-weight-col">weight_col<a class="anchor" aria-label="anchor" href="#arg-weight-col"></a></dt>
 <dd><p>Optional name of a column of positive weights, for
 example matching weights from <code><a href="ps_weight.html">ps_weight()</a></code>. Weights must be finite.</p></dd>
+
+
+<dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
+<dd><p>The value of <code>treatment_col</code> that is treated. <code>NULL</code>
+(default) requires a 0/1 or logical column and takes 1 or <code>TRUE</code>. Give a
+value, for example <code>"transcatheter"</code>, to use a column holding any two
+values.</p></dd>
 
 </dl></div>
     <div class="section level2">

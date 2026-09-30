@@ -12,7 +12,8 @@ sa_overlap(
   x,
   score_col = "prob_t",
   treatment_col = "tavr",
-  trim_threshold = 0.05
+  trim_threshold = 0.05,
+  treated_level = NULL
 )
 ```
 
@@ -38,6 +39,12 @@ sa_overlap(
   Numeric in (0, 0.5). PS values below this threshold or above
   `1 - trim_threshold` are flagged as near-positivity violations.
   Default `0.05`.
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. Read from the metadata
+  of a `ps_data` object when it records one. `NULL` (default) requires a
+  0/1 or logical column and takes 1 or `TRUE`.
 
 ## Value
 

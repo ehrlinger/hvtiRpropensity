@@ -15,7 +15,8 @@ ps_stddiff(
   nong_ord = NULL,
   binary = NULL,
   categorical = NULL,
-  weight_col = NULL
+  weight_col = NULL,
+  treated_level = NULL
 )
 ```
 
@@ -43,6 +44,12 @@ ps_stddiff(
   weights from
   [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md).
   Weights must be finite.
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. `NULL` (default)
+  requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
+  for example `"transcatheter"`, to use a column holding any two values.
 
 ## Value
 

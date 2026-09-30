@@ -18,7 +18,8 @@ ps_weight(
   stabilise = TRUE,
   trim = NULL,
   covariates = NULL,
-  weight_col = "iptw"
+  weight_col = "iptw",
+  treated_level = NULL
 )
 ```
 
@@ -72,6 +73,12 @@ ps_weight(
 
   Name of the output weight column appended to `$data`. Default
   `"iptw"`. If the column already exists it is overwritten.
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. `NULL` (default)
+  requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
+  for example `"transcatheter"`, to use a column holding any two values.
 
 ## Value
 

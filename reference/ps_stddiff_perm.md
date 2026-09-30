@@ -20,7 +20,8 @@ ps_stddiff_perm(
   weight_col = NULL,
   reweight = NULL,
   n_perm = 1000L,
-  seed = NULL
+  seed = NULL,
+  treated_level = NULL
 )
 ```
 
@@ -62,6 +63,12 @@ ps_stddiff_perm(
 - seed:
 
   Optional integer seed.
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. `NULL` (default)
+  requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
+  for example `"transcatheter"`, to use a column holding any two values.
 
 ## Value
 

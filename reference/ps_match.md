@@ -17,7 +17,8 @@ ps_match(
   covariates = NULL,
   match_col = "match",
   ratio = 1L,
-  seed = NULL
+  seed = NULL,
+  treated_level = NULL
 )
 ```
 
@@ -69,6 +70,12 @@ ps_match(
   reduces order-dependence. Pass an integer for a reproducible matched
   set; `NULL` (default) uses the session's current RNG state (not
   reproducible across sessions).
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. `NULL` (default)
+  requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
+  for example `"transcatheter"`, to use a column holding any two values.
 
 ## Value
 

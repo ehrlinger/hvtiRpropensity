@@ -15,7 +15,8 @@ sa_trim_sweep(
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
   score_col = "prob_t",
-  treatment_col = "tavr"
+  treatment_col = "tavr",
+  treated_level = NULL
 )
 ```
 
@@ -54,6 +55,12 @@ sa_trim_sweep(
 
   Name of the binary treatment column. Taken from `x$meta$treatment_col`
   when `x` is a `ps_data` object`. Default `"tavr"\`.
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. Read from the metadata
+  of a `ps_data` object when it records one. `NULL` (default) requires a
+  0/1 or logical column and takes 1 or `TRUE`.
 
 ## Value
 

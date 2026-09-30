@@ -17,7 +17,8 @@ sa_rosenbaum(
   gamma_inc = 0.25,
   alpha = 0.05,
   treatment_col = NULL,
-  pair_id_col = "pair_id"
+  pair_id_col = "pair_id",
+  treated_level = NULL
 )
 ```
 
@@ -56,6 +57,12 @@ sa_rosenbaum(
   Name of the pair-ID column created by
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md).
   Default `"pair_id"`.
+
+- treated_level:
+
+  The value of `treatment_col` that is treated. Read from the metadata
+  of a `ps_data` object when it records one. `NULL` (default) requires a
+  0/1 or logical column and takes 1 or `TRUE`.
 
 ## Value
 
