@@ -15,7 +15,8 @@ ps_nominal(
   score_col_prefix = "prob",
   trace = FALSE,
   covariates = NULL,
-  treatment_levels = NULL
+  treatment_levels = NULL,
+  smd_pairs = "reference"
 )
 }
 \arguments{
@@ -41,10 +42,17 @@ by default).  Default \code{"prob"}.}
 \item{trace}{Logical.  If \code{FALSE} (default), suppresses
 \code{\link[nnet:multinom]{nnet::multinom()}} iteration messages.}
 
-\item{covariates}{Covariate columns for diagnostics.}
+\item{covariates}{Covariate columns for the balance table. \code{NULL}
+(default) uses every numeric column other than the treatment, score,
+identifier and strata columns.}
 
 \item{treatment_levels}{Complete nominal treatment levels. \code{NULL} preserves
 the levels inferred by the historical interface.}
+
+\item{smd_pairs}{Which pairs of treatment levels the balance table
+compares. \code{"reference"} (default) compares each level with \code{ref_level};
+\code{"all"} compares every pair. The levels have no order, so there is no
+\code{"adjacent"} choice.}
 }
 \value{
 An object of class \code{c("ps_nominal", "ps_data")} with:
@@ -54,7 +62,8 @@ treatment level appended.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
 \code{imputation_col}, \code{score_cols}, \code{levels}, \code{ref_level}, \code{method},
 \code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{group_counts}.}
+\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}. \code{smd} has one row per
+covariate and pair of levels: \code{variable}, \code{level}, \code{versus}, \code{smd}.}
 }
 }
 \description{

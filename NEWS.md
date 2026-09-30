@@ -1,5 +1,12 @@
 # hvtiRpropensity (unreleased)
 
+* `ps_ordinal()` and `ps_nominal()` now return a balance table, `$tables$smd`,
+  as `ps_logistic()` does. It has one row per covariate and pair of treatment
+  levels (`variable`, `level`, `versus`, `smd`), each computed on the patients
+  in those two levels. A new `smd_pairs` argument chooses the pairs:
+  `"reference"` (default) compares each level with the reference, `"adjacent"`
+  (ordinal only) compares each level with the one below it, and `"all"`
+  compares every pair. The choices can be combined (#48).
 * `ps_rmst()` now defaults to `seed = NULL`, as `ps_match()`,
   `ps_stddiff_perm()` and `ps_mw_var()` already did. The default was
   `seed = 1024L`, which gave the same bootstrap draws on every call. **A call
