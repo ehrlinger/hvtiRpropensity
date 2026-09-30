@@ -13,7 +13,7 @@ sample_ps_data(n = 500L, seed = 42L, separation = 1)
 \item{seed}{Random seed for reproducibility.  Default \code{42L}.}
 
 \item{separation}{Numeric scalar controlling how well the covariates
-separate the two groups.  Higher values → less overlap.  Default \code{1.0}.}
+separate the two groups.  Higher values give less overlap.  Default \code{1.0}.}
 }
 \value{
 A data frame with \code{2 * n} rows and the following columns:
@@ -25,7 +25,7 @@ A data frame with \code{2 * n} rows and the following columns:
 \item{\code{ef}}{Continuous: ejection fraction (\%).}
 \item{\code{diabetes}}{Binary: \code{1} = diabetic.}
 \item{\code{hypertension}}{Binary: \code{1} = hypertensive.}
-\item{\code{prob_t}}{Estimated propensity score (numeric, 0–1).}
+\item{\code{prob_t}}{Estimated propensity score (numeric, 0 to 1).}
 \item{\code{match}}{Match indicator, initialised to \code{0}.  Populated by
 \code{\link[=ps_match]{ps_match()}}.}
 }

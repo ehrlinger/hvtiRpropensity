@@ -27,11 +27,11 @@ in [0, 1]).  Default \code{"prob_t"}.}
 
 \item{estimand}{Causal estimand.  One of:
 \itemize{
-\item \code{"ATE"} (default) — average treatment effect.
+\item \code{"ATE"} (default): average treatment effect.
 Treated weights = \code{1/ps}; control weights = \code{1/(1-ps)}.
-\item \code{"ATT"} — average treatment effect on the treated.
+\item \code{"ATT"}: average treatment effect on the treated.
 Treated weights = \code{1}; control weights = \code{ps/(1-ps)}.
-\item \code{"ATC"} — average treatment effect on the controls.
+\item \code{"ATC"}: average treatment effect on the controls.
 Treated weights = \code{(1-ps)/ps}; control weights = \code{1}.
 }}
 

@@ -5,8 +5,8 @@
 ##
 ## Four complementary methods:
 ##
-##   sa_rosenbaum()  -- Rosenbaum gamma bounds for matched analyses
-##                     (requires rbounds)
+##   sa_rosenbaum()  -- Rosenbaum gamma bounds for matched analyses; no extra
+##                     dependency
 ##   sa_evalue()     -- E-values (VanderWeele & Ding 2017); no extra dependency
 ##   sa_overlap()    -- Overlap / positivity diagnostics on the PS distribution
 ##   sa_trim_sweep() -- IPTW trim-threshold sensitivity sweep

@@ -40,7 +40,7 @@
 #' `$models`) and
 #' attaches the two-level S3 class vector.
 #'
-#' @param data     A data frame — the original data with propensity scores or
+#' @param data     A data frame: the original data with propensity scores or
 #'   weights appended.
 #' @param meta     A named list of metadata (column names, formula, method
 #'   parameters, computed statistics, etc.).

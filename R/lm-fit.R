@@ -68,6 +68,18 @@
 #' @param trace Whether model engines should print fitting progress.
 #'
 #' @return An object of class `c("lm_fit", "ps_data")`.
+#'
+#' @examples
+#' dta <- sample_ps_data(n = 150, seed = 42)
+#' fit <- fit_logistic(
+#'   tavr ~ age + female + ef,
+#'   data           = dta,
+#'   family         = "binary",
+#'   outcome_levels = c(0, 1),
+#'   event_level    = 1
+#' )
+#' fit$tables$estimates[, c("term", "estimate", "odds_ratio")]
+#' head(fit$data[, c("id", "tavr", "prob")])
 #' @export
 fit_logistic <- function(formula, data,
                          family = c("binary", "ordinal", "nominal"),

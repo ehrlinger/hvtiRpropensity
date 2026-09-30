@@ -396,20 +396,22 @@ print.ps_logistic <- function(x, ...) {
 #' #   followed by decomposition of cumulative to marginal probabilities
 #' #   and rank-based quintile / decile assignment.
 #' \donttest{
-#' dta <- sample_ps_data_ordinal(n = 300, seed = 42)
-#' obj <- ps_ordinal(
-#'   nyha_grp ~ age + female + ef + diabetes,
-#'   data = dta
-#' )
-#' print(obj)
+#' if (requireNamespace("MASS", quietly = TRUE)) {
+#'   dta <- sample_ps_data_ordinal(n = 300, seed = 42)
+#'   obj <- ps_ordinal(
+#'     nyha_grp ~ age + female + ef + diabetes,
+#'     data = dta
+#'   )
+#'   print(obj)
 #'
-#' # Each level gets its own probability column (marginal, not cumulative).
-#' # The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
-#' # ps_ordinal() performs this decomposition internally.
-#' head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
+#'   # Each level gets its own probability column (marginal, not cumulative).
+#'   # The SAS template computes: p1=col1; p2=col2-col1; p3=1-col2.
+#'   # ps_ordinal() performs this decomposition internally.
+#'   head(obj$data[, c("id", "nyha_grp", "prob_I", "prob_II", "prob_III")])
 #'
-#' # Quintile and decile columns are appended, ordered by p(highest level).
-#' table(obj$data$quintile)
+#'   # Quintile and decile columns are appended, ordered by p(highest level).
+#'   table(obj$data$quintile)
+#' }
 #' }
 #'
 #' @export
@@ -589,23 +591,26 @@ print.ps_ordinal <- function(x, ...) {
 #' # The first factor level is used as the reference category, matching
 #' # SAS REF=first.  Change ref_level to match a different reference.
 #' \donttest{
-#' dta <- sample_ps_data_nominal(n = 300, seed = 42)
-#' obj <- ps_nominal(
-#'   rtyp ~ age + female + ef + diabetes,
-#'   data = dta
-#' )
-#' print(obj)
+#' if (requireNamespace("nnet", quietly = TRUE)) {
+#'   dta <- sample_ps_data_nominal(n = 300, seed = 42)
+#'   obj <- ps_nominal(
+#'     rtyp ~ age + female + ef + diabetes,
+#'     data = dta
+#'   )
+#'   print(obj)
 #'
-#' # One probability column per treatment level (analogous to p_cos, p_per,
-#' # p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
-#' head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
+#'   # One probability column per treatment level (analogous to p_cos, p_per,
+#'   # p_dev, p_ce from the PROC TRANSPOSE step in the SAS template).
+#'   head(obj$data[, c("id", "rtyp", "prob_COS", "prob_PER", "prob_DEV", "prob_CE")])
 #'
-#' # Explicitly set a different reference level
-#' obj_ce <- ps_nominal(
-#'   rtyp ~ age + female + ef + diabetes,
-#'   data      = dta,
-#'   ref_level = "CE"    # matches REF=last in SAS
-#' )
+#'   # Explicitly set a different reference level
+#'   obj_ce <- ps_nominal(
+#'     rtyp ~ age + female + ef + diabetes,
+#'     data      = dta,
+#'     ref_level = "CE"    # matches REF=last in SAS
+#'   )
+#'   obj_ce$meta$ref_level
+#' }
 #' }
 #'
 #' @export

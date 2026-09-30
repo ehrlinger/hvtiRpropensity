@@ -15,12 +15,14 @@ Encoding: UTF-8
 URL: https://github.com/ehrlinger/hvtiRpropensity, https://ehrlinger.github.io/hvtiRpropensity/
 BugReports: https://github.com/ehrlinger/hvtiRpropensity/issues
 Description: Propensity score estimation, matching, and inverse-probability
-    treatment weighting (IPTW) for clinical investigations within The Heart
-    & Vascular Institute (HVTI) at the Cleveland Clinic. Provides a consistent
-    two-step workflow — construct a scored/weighted dataset with a `ps_*()`
-    function, then inspect or pass results downstream — with standardised
-    balance diagnostics (SMD tables, effective N) compatible with
-    `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()`.
+    treatment weighting (IPTW) for clinical investigations by the
+    Cardiovascular Outcomes, Registries and Research (CORR) group within The
+    Heart & Vascular Institute (HVTI) at the Cleveland Clinic. Provides a
+    consistent two-step workflow: construct a scored or weighted dataset, then
+    inspect the results or pass them downstream. Balance diagnostics
+    (standardized mean difference (SMD) tables, effective sample size) are
+    compatible with the plotting functions in 'hvtiPlotR'. The propensity
+    score follows Rosenbaum and Rubin (1983) <doi:10.1093/biomet/70.1.41>.
 Depends:
     R (>= 4.1.0)
 Imports:
