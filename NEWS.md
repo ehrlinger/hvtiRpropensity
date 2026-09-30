@@ -1,5 +1,13 @@
 # hvtiRpropensity (unreleased)
 
+* `ps_rmst()` now defaults to `seed = NULL`, as `ps_match()`,
+  `ps_stddiff_perm()` and `ps_mw_var()` already did. The default was
+  `seed = 1024L`, which gave the same bootstrap draws on every call. **A call
+  that relied on the default now gives an interval that varies from run to
+  run; pass `seed` for a reproducible one.** Point estimates are unchanged.
+* `sample_ps_data_count(seed = NULL)` no longer errors and returns a fresh
+  dataset, as the other three generators did. The generators keep their fixed
+  default, `seed = 42L`, so that examples share one demo dataset (#53).
 * `fit_logistic()` and `validate_logistic()` have examples.
 * The examples for `ps_ordinal()`, `ps_nominal()` and `ps_rmst()` run only when
   the suggested package they need ('MASS', 'nnet', 'survival') is installed.

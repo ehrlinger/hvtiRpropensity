@@ -13,7 +13,7 @@ ps_rmst(
   subsets = list(),
   n_boot = 200L,
   refit = FALSE,
-  seed = 1024L,
+  seed = NULL,
   time_unit_days = 365.2425,
   clip = 0.001
 )
@@ -39,7 +39,10 @@ subset). The full data is always included as \code{"all"}.}
 which understates uncertainty. If \code{TRUE} the score model is refit on each
 draw (supported for \code{ps_logistic} and \code{ps_forest} inputs).}
 
-\item{seed}{Bootstrap seed.}
+\item{seed}{Optional integer bootstrap seed. With \code{NULL} (default) the draws
+come from the caller's random number stream, so the interval varies from
+run to run. With a seed the result is reproducible and the caller's stream
+is restored afterwards.}
 
 \item{time_unit_days}{Days per unit of \code{time_col}, for the \code{diff_days}
 column. Default \code{365.2425} (time in years).}
@@ -68,7 +71,8 @@ if (requireNamespace("survival", quietly = TRUE)) {
   dta$t <- stats::rexp(nrow(dta), 0.2)
   dta$e <- as.integer(dta$t < 5)
   dta$t <- pmin(dta$t, 5)
-  res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20)
+  res <- ps_rmst(ps_logistic(tavr ~ age + ef, dta), "t", "e", tau = 4, n_boot = 20,
+                  seed = 1024)
   res$tables$estimates
 }
 }

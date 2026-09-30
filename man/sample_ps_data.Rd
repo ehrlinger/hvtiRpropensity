@@ -10,7 +10,8 @@ sample_ps_data(n = 500L, seed = 42L, separation = 1)
 \item{n}{Number of patients per treatment arm.  Total rows =
 \code{2 * n}.  Must be a positive integer.  Default \code{500}.}
 
-\item{seed}{Random seed for reproducibility.  Default \code{42L}.}
+\item{seed}{Random seed for reproducibility.  Default \code{42L}. The fixed default gives the
+same demo dataset on every call; \code{NULL} gives a fresh one.}
 
 \item{separation}{Numeric scalar controlling how well the covariates
 separate the two groups.  Higher values give less overlap.  Default \code{1.0}.}
