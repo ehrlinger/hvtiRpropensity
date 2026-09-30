@@ -1,0 +1,55 @@
+# Synthetic SAS oracle for the standardized-difference ports
+
+`input.csv` is synthetic and deterministic (`make-input.R`), holds no study
+data, and is the only input to `generate-fixtures.sas`. That program runs the
+production CCF macros `%stddiff`, `%stddiffci` and `%mw_var` from `!MACROS`, and
+the CSVs it writes are the oracle for `test_stddiff_sas_oracle.R`. Do not
+substitute R-generated values. Tracked in issue #34.
+
+## What the input exercises
+- Unequal groups: 70 in group 0, 50 in group 1.
+- One variable of each `%stddiff` type: `x_gauss` (Gaussian), `x_ord`
+  (non-Gaussian or ordinal, ranked), `x_bin` (binary) and `x_cat` (categorical,
+  four levels).
+- Missing values in `x_gauss`, `x_ord` and `x_cat`, so the oracle also shows how
+  each side drops them.
+- A matching weight, `w`.
+- Two outcomes for `%mw_var`: `y_cont` and `y_bin`.
+- Twenty permuted groups, `fgrp_1` to `fgrp_20`, with weights `w_1` to `w_20`.
+  `%stddiffci` reads its permutations from the input rather than drawing them,
+  so R scores the same permuted groups and its percentiles can be compared
+  exactly. The weights are held fixed across permutations.
+
+## Controlled run
+1. Stage this folder as `/studies/general/_development/stddiff-oracle-20260930/`
+   with `program/generate-fixtures.sas`, `input/input.csv` and an empty `out/`.
+2. In the program, check `%let root=` matches that path. No trailing slash.
+3. Submit the program. The last log line must be:
+
+   ```text
+   NOTE: STDDIFF_ORACLE_COMPLETE expected_outputs=10.
+   ```
+
+4. Copy these from `out/` into this directory, without opening or resaving any
+   CSV: `sd-unweighted.csv`, `sd-weighted.csv`, `ci-unweighted.csv`,
+   `ci-weighted.csv`, `mw-summary.csv`, `mw-replicates.csv`,
+   `sas-environment.csv`.
+
+The run also writes three `macro-*.sas` files, the macro sources as they ran,
+plus `mw-var.rtf` and `generate-fixtures.log`. The log stays with the controlled
+run, outside Git, because its SAS header carries licensing metadata. Before
+accepting the run, confirm it has no `ERROR:`.
+
+## What is compared
+| SAS output | R | tolerance |
+|---|---|---|
+| `%stddiff`, unweighted and weighted | `ps_stddiff()` | 4 decimals |
+| `%stddiffci` observed value and 2.5/16/50/84/97.5 percentiles | `ps_stddiff()` on each permuted group, then `.perm_percentiles(type = 2)` | 4 decimals |
+| `%mw_var` difference, group means, SDs and sums of weights | `ps_mw_var()` | 1e-6 |
+| `%mw_var` bootstrap SD and percentiles | `sd()` and `.perm_percentiles(type = 4)` on SAS's own replicates | 1e-6 |
+
+`%mw_var` draws its bootstrap with `PROC SURVEYSELECT`, which R cannot
+reproduce, so the replicates themselves are not compared.
+
+Until the output is committed, the tests in `test_stddiff_sas_oracle.R` skip and
+say which files are missing.
