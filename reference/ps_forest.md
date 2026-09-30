@@ -84,7 +84,8 @@ A `ps_forest` / `ps_data` object. `$data` is `data` plus `score_col`,
 `logit_col`, `weight_col` (overlap weights), `quintile` and `decile`;
 `$meta` follows
 [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
-with `method = "forest-oob"`; `$tables` holds `smd` and `group_counts`;
+with `method = "forest-oob"`; `$tables` holds `smd` and `group_counts`
+(`group`, the value in `treatment_col`; a logical `treated`; `n`);
 `$models$forest` is the fitted forest.
 
 ## Examples

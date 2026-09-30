@@ -131,7 +131,8 @@ weight are computed. Forest probabilities can be exactly 0 or 1.</p></dd>
     <p>A <code>ps_forest</code> / <code>ps_data</code> object. <code>$data</code> is <code>data</code> plus
 <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code> (overlap weights), <code>quintile</code> and
 <code>decile</code>; <code>$meta</code> follows <code><a href="ps_logistic.html">ps_logistic()</a></code> with <code>method = "forest-oob"</code>;
-<code>$tables</code> holds <code>smd</code> and <code>group_counts</code>; <code>$models$forest</code> is the fitted
+<code>$tables</code> holds <code>smd</code> and <code>group_counts</code> (<code>group</code>, the value in
+<code>treatment_col</code>; a logical <code>treated</code>; <code>n</code>); <code>$models$forest</code> is the fitted
 forest.</p>
     </div>
 

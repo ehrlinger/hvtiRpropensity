@@ -89,7 +89,9 @@ An object of class `c("ps_weight", "ps_data")` with:
 - `$tables`:
 
   Named list: `smd_unweighted`, `smd_weighted`, `group_counts`,
-  `effective_n`.
+  `effective_n`. Group tables name each group by its value in
+  `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and carry a logical
+  `treated` column.
 
 ## See also
 
@@ -135,14 +137,14 @@ summary(obj)
 #> match               match      NA
 #> 
 #> Group counts:
-#>     group   n
-#> 1 control 200
-#> 2 treated 200
+#>   group treated   n
+#> 1     0   FALSE 200
+#> 2     1    TRUE 200
 #> 
 #> Effective n:
-#>     group n_effective
-#> 1 control       127.9
-#> 2 treated       107.6
+#>   group treated n_effective
+#> 1     0   FALSE       127.9
+#> 2     1    TRUE       107.6
 #> 
 
 # 2. ATT weights, stabilised
@@ -171,14 +173,14 @@ summary(obj_att)
 #> match               match      NA
 #> 
 #> Group counts:
-#>     group   n
-#> 1 control 200
-#> 2 treated 200
+#>   group treated   n
+#> 1     0   FALSE 200
+#> 2     1    TRUE 200
 #> 
 #> Effective n:
-#>     group n_effective
-#> 1 control        62.5
-#> 2 treated       200.0
+#>   group treated n_effective
+#> 1     0   FALSE        62.5
+#> 2     1    TRUE       200.0
 #> 
 
 # 3. Extract data with weights appended

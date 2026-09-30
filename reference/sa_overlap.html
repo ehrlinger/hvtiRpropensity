@@ -88,19 +88,20 @@ Default <code>0.05</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with:</p><dl><dt><code>$summary</code></dt>
-<dd><p>Data frame: one row per treatment group with <code>group</code>,
-<code>n</code>, <code>ps_min</code>, <code>ps_q25</code>, <code>ps_median</code>, <code>ps_mean</code>, <code>ps_q75</code>, <code>ps_max</code>.</p></dd>
+<dd><p>Data frame: one row per treatment group with <code>group</code>
+(the value in <code>treatment_col</code>), a logical <code>treated</code>, <code>n</code>, <code>ps_min</code>,
+<code>ps_q25</code>, <code>ps_median</code>, <code>ps_mean</code>, <code>ps_q75</code>, <code>ps_max</code>.</p></dd>
 
 <dt><code>$overlap_region</code></dt>
 <dd><p>Named numeric vector: <code>lower</code> and <code>upper</code> bounds
 of the empirical common support region.</p></dd>
 
 <dt><code>$outside_overlap</code></dt>
-<dd><p>Data frame: <code>group</code>, <code>n_outside</code>,
+<dd><p>Data frame: <code>group</code>, <code>treated</code>, <code>n_outside</code>,
 <code>pct_outside</code> – patients whose PS is outside the overlap region.</p></dd>
 
 <dt><code>$positivity_flags</code></dt>
-<dd><p>Data frame: <code>group</code>, <code>n_near_zero</code>
+<dd><p>Data frame: <code>group</code>, <code>treated</code>, <code>n_near_zero</code>
 (PS &lt; <code>trim_threshold</code>), <code>n_near_one</code> (PS &gt; <code>1 - trim_threshold</code>),
 <code>pct_near_zero</code>, <code>pct_near_one</code>.</p></dd>
 
@@ -129,17 +130,17 @@ above <code>1 - trim_threshold</code> (near-positivity-violation flags).</p></li
 <span class="r-out co"><span class="r-pr">#&gt;</span>  lower  upper </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0.0856 0.9082 </span>
 <span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">positivity_flags</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group n_near_zero n_near_one pct_near_zero pct_near_one</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control           1          0           0.2          0.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated           0          2           0.0          0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated n_near_zero n_near_one pct_near_zero pct_near_one</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE           1          0           0.2          0.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE           0          2           0.0          0.5</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># From a ps_match object</span></span></span>
 <span class="r-in"><span><span class="va">m</span>   <span class="op">&lt;-</span> <span class="fu"><a href="ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">sa_overlap</span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">outside_overlap</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group n_outside pct_outside</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control        11         2.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated        19         4.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated n_outside pct_outside</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE        11         2.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE        19         4.8</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

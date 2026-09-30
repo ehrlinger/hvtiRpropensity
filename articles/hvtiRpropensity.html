@@ -569,14 +569,14 @@
 <span><span class="co">#&gt; hypertension hypertension -0.0615</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Group counts before:</span></span>
-<span><span class="co">#&gt;     group   n</span></span>
-<span><span class="co">#&gt; 1 control 400</span></span>
-<span><span class="co">#&gt; 2 treated 400</span></span>
+<span><span class="co">#&gt;   group treated   n</span></span>
+<span><span class="co">#&gt; 1     0   FALSE 400</span></span>
+<span><span class="co">#&gt; 2     1    TRUE 400</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Group counts after:</span></span>
-<span><span class="co">#&gt;     group   n</span></span>
-<span><span class="co">#&gt; 1 control 400</span></span>
-<span><span class="co">#&gt; 2 treated 400</span></span></code></pre></div>
+<span><span class="co">#&gt;   group treated   n</span></span>
+<span><span class="co">#&gt; 1     0   FALSE 400</span></span>
+<span><span class="co">#&gt; 2     1    TRUE 400</span></span></code></pre></div>
 </div>
 <p>The <code>$tables</code> slot is a named list you can access directly:</p>
 <div class="cell">
@@ -669,14 +669,14 @@
 <span><span class="co">#&gt; match               match      NA</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Group counts:</span></span>
-<span><span class="co">#&gt;     group   n</span></span>
-<span><span class="co">#&gt; 1 control 400</span></span>
-<span><span class="co">#&gt; 2 treated 400</span></span>
+<span><span class="co">#&gt;   group treated   n</span></span>
+<span><span class="co">#&gt; 1     0   FALSE 400</span></span>
+<span><span class="co">#&gt; 2     1    TRUE 400</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Effective n:</span></span>
-<span><span class="co">#&gt;     group n_effective</span></span>
-<span><span class="co">#&gt; 1 control       299.6</span></span>
-<span><span class="co">#&gt; 2 treated       319.2</span></span></code></pre></div>
+<span><span class="co">#&gt;   group treated n_effective</span></span>
+<span><span class="co">#&gt; 1     0   FALSE       299.6</span></span>
+<span><span class="co">#&gt; 2     1    TRUE       319.2</span></span></code></pre></div>
 </div>
 <p>The <code>iptw</code> column holds the stabilised weights.</p>
 <div class="cell">
@@ -745,13 +745,13 @@
 <span><span class="co">#&gt;  lower  upper </span></span>
 <span><span class="co">#&gt; 0.0483 0.9015</span></span>
 <span><span class="va">ov</span><span class="op">$</span><span class="va">outside_overlap</span></span>
-<span><span class="co">#&gt;     group n_outside pct_outside</span></span>
-<span><span class="co">#&gt; 1 control         2         0.4</span></span>
-<span><span class="co">#&gt; 2 treated        16         3.2</span></span>
+<span><span class="co">#&gt;   group treated n_outside pct_outside</span></span>
+<span><span class="co">#&gt; 1     0   FALSE         2         0.4</span></span>
+<span><span class="co">#&gt; 2     1    TRUE        16         3.2</span></span>
 <span><span class="va">ov</span><span class="op">$</span><span class="va">positivity_flags</span></span>
-<span><span class="co">#&gt;     group n_near_zero n_near_one pct_near_zero pct_near_one</span></span>
-<span><span class="co">#&gt; 1 control           3          0           0.6          0.0</span></span>
-<span><span class="co">#&gt; 2 treated           1          2           0.2          0.4</span></span></code></pre></div>
+<span><span class="co">#&gt;   group treated n_near_zero n_near_one pct_near_zero pct_near_one</span></span>
+<span><span class="co">#&gt; 1     0   FALSE           3          0           0.6          0.0</span></span>
+<span><span class="co">#&gt; 2     1    TRUE           1          2           0.2          0.4</span></span></code></pre></div>
 </div>
 </section><section class="level3" data-number="8.2"><h3 data-number="8.2" id="weight-trimming-sensitivity-sweep-sa_trim_sweep">
 <span class="header-section-number">8.2</span> Weight-trimming sensitivity sweep — <code>sa_trim_sweep()</code>

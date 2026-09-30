@@ -91,7 +91,9 @@ An object of class `c("ps_match", "ps_data")` with:
 - `$tables`:
 
   Named list: `smd_before`, `smd_after`, `group_counts_before`,
-  `group_counts_after`.
+  `group_counts_after`. Group tables name each group by its value in
+  `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and carry a logical
+  `treated` column.
 
 ## Details
 
@@ -141,14 +143,14 @@ summary(obj)
 #> hypertension hypertension -0.0310
 #> 
 #> Group counts before:
-#>     group   n
-#> 1 control 200
-#> 2 treated 200
+#>   group treated   n
+#> 1     0   FALSE 200
+#> 2     1    TRUE 200
 #> 
 #> Group counts after:
-#>     group   n
-#> 1 control 200
-#> 2 treated 200
+#>   group treated   n
+#> 1     0   FALSE 200
+#> 2     1    TRUE 200
 #> 
 
 # 3. Extract the full data (with match indicator)

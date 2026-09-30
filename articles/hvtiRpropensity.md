@@ -532,14 +532,14 @@ summary(m)
 #> hypertension hypertension -0.0615
 #> 
 #> Group counts before:
-#>     group   n
-#> 1 control 400
-#> 2 treated 400
+#>   group treated   n
+#> 1     0   FALSE 400
+#> 2     1    TRUE 400
 #> 
 #> Group counts after:
-#>     group   n
-#> 1 control 400
-#> 2 treated 400
+#>   group treated   n
+#> 1     0   FALSE 400
+#> 2     1    TRUE 400
 ```
 
 The `$tables` slot is a named list you can access directly:
@@ -644,14 +644,14 @@ summary(w_ate)
 #> match               match      NA
 #> 
 #> Group counts:
-#>     group   n
-#> 1 control 400
-#> 2 treated 400
+#>   group treated   n
+#> 1     0   FALSE 400
+#> 2     1    TRUE 400
 #> 
 #> Effective n:
-#>     group n_effective
-#> 1 control       299.6
-#> 2 treated       319.2
+#>   group treated n_effective
+#> 1     0   FALSE       299.6
+#> 2     1    TRUE       319.2
 ```
 
 The `iptw` column holds the stabilised weights.
@@ -738,13 +738,13 @@ ov$overlap_region
 #>  lower  upper 
 #> 0.0483 0.9015
 ov$outside_overlap
-#>     group n_outside pct_outside
-#> 1 control         2         0.4
-#> 2 treated        16         3.2
+#>   group treated n_outside pct_outside
+#> 1     0   FALSE         2         0.4
+#> 2     1    TRUE        16         3.2
 ov$positivity_flags
-#>     group n_near_zero n_near_one pct_near_zero pct_near_one
-#> 1 control           3          0           0.6          0.0
-#> 2 treated           1          2           0.2          0.4
+#>   group treated n_near_zero n_near_one pct_near_zero pct_near_one
+#> 1     0   FALSE           3          0           0.6          0.0
+#> 2     1    TRUE           1          2           0.2          0.4
 ```
 
 ### 8.2 Weight-trimming sensitivity sweep — `sa_trim_sweep()`

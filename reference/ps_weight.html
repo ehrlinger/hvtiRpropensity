@@ -136,7 +136,9 @@ Default <code>"iptw"</code>.  If the column already exists it is overwritten.</p
 
 <dt><code>$tables</code></dt>
 <dd><p>Named list: <code>smd_unweighted</code>, <code>smd_weighted</code>,
-<code>group_counts</code>, <code>effective_n</code>.</p></dd>
+<code>group_counts</code>, <code>effective_n</code>. Group tables name each
+group by its value in <code>treatment_col</code> (<code>0</code>/<code>1</code> or <code>FALSE</code>/<code>TRUE</code>) and
+carry a logical <code>treated</code> column.</p></dd>
 
 
 </dl></div>
@@ -183,14 +185,14 @@ Default <code>"iptw"</code>.  If the column already exists it is overwritten.</p
 <span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Effective n:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group n_effective</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control       127.9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated       107.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated n_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE       127.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE       107.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># 2. ATT weights, stabilised</span></span></span>
@@ -219,14 +221,14 @@ Default <code>"iptw"</code>.  If the column already exists it is overwritten.</p
 <span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Effective n:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group n_effective</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control        62.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated       200.0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated n_effective</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE        62.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE       200.0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># 3. Extract data with weights appended</span></span></span>

@@ -139,7 +139,9 @@ obtain the matched subset.</p></dd>
 
 <dt><code>$tables</code></dt>
 <dd><p>Named list: <code>smd_before</code>, <code>smd_after</code>,
-<code>group_counts_before</code>, <code>group_counts_after</code>.</p></dd>
+<code>group_counts_before</code>, <code>group_counts_after</code>. Group tables name each
+group by its value in <code>treatment_col</code> (<code>0</code>/<code>1</code> or <code>FALSE</code>/<code>TRUE</code>) and
+carry a logical <code>treated</code> column.</p></dd>
 
 
 </dl></div>
@@ -190,14 +192,14 @@ that <code>hvtiPlotR::hv_mirror_hist()</code> and <code>hvtiPlotR::hv_balance()<
 <span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0310</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts before:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts after:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     group   n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 control 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 treated 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0   FALSE 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1    TRUE 200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># 3. Extract the full data (with match indicator)</span></span></span>

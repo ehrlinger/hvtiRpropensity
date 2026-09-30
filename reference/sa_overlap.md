@@ -45,8 +45,9 @@ A list with:
 
 - `$summary`:
 
-  Data frame: one row per treatment group with `group`, `n`, `ps_min`,
-  `ps_q25`, `ps_median`, `ps_mean`, `ps_q75`, `ps_max`.
+  Data frame: one row per treatment group with `group` (the value in
+  `treatment_col`), a logical `treated`, `n`, `ps_min`, `ps_q25`,
+  `ps_median`, `ps_mean`, `ps_q75`, `ps_max`.
 
 - `$overlap_region`:
 
@@ -55,14 +56,14 @@ A list with:
 
 - `$outside_overlap`:
 
-  Data frame: `group`, `n_outside`, `pct_outside` – patients whose PS is
-  outside the overlap region.
+  Data frame: `group`, `treated`, `n_outside`, `pct_outside` – patients
+  whose PS is outside the overlap region.
 
 - `$positivity_flags`:
 
-  Data frame: `group`, `n_near_zero` (PS \< `trim_threshold`),
-  `n_near_one` (PS \> `1 - trim_threshold`), `pct_near_zero`,
-  `pct_near_one`.
+  Data frame: `group`, `treated`, `n_near_zero` (PS \<
+  `trim_threshold`), `n_near_one` (PS \> `1 - trim_threshold`),
+  `pct_near_zero`, `pct_near_one`.
 
 ## Details
 
@@ -95,15 +96,15 @@ res$overlap_region
 #>  lower  upper 
 #> 0.0856 0.9082 
 res$positivity_flags
-#>     group n_near_zero n_near_one pct_near_zero pct_near_one
-#> 1 control           1          0           0.2          0.0
-#> 2 treated           0          2           0.0          0.5
+#>   group treated n_near_zero n_near_one pct_near_zero pct_near_one
+#> 1     0   FALSE           1          0           0.2          0.0
+#> 2     1    TRUE           0          2           0.0          0.5
 
 # From a ps_match object
 m   <- ps_match(dta)
 res <- sa_overlap(m)
 res$outside_overlap
-#>     group n_outside pct_outside
-#> 1 control        11         2.8
-#> 2 treated        19         4.8
+#>   group treated n_outside pct_outside
+#> 1     0   FALSE        11         2.8
+#> 2     1    TRUE        19         4.8
 ```
