@@ -443,6 +443,7 @@ test_that("ps_logistic() group_counts names the declared treatment levels", {
 # ---------------------------------------------------------------------------
 
 test_that("ps_ordinal() reports each level against the first by default", {
+  skip_if_not_installed("MASS")
   dta <- sample_ps_data_ordinal(n = 300, seed = 42)
   obj <- ps_ordinal(nyha_grp ~ age + ef, data = dta, covariates = c("age", "ef"))
   smd <- obj$tables$smd
@@ -459,6 +460,7 @@ test_that("ps_ordinal() reports each level against the first by default", {
 })
 
 test_that("ps_ordinal() smd_pairs selects and combines comparisons", {
+  skip_if_not_installed("MASS")
   dta <- sample_ps_data_ordinal(n = 300, seed = 42)
   pairs_of <- function(smd_pairs) {
     smd <- ps_ordinal(nyha_grp ~ age + ef, data = dta, covariates = "age", smd_pairs = smd_pairs)$tables$smd
@@ -471,6 +473,7 @@ test_that("ps_ordinal() smd_pairs selects and combines comparisons", {
 })
 
 test_that("ps_ordinal() balance table defaults to numeric covariates only", {
+  skip_if_not_installed("MASS")
   dta <- sample_ps_data_ordinal(n = 300, seed = 42)
   obj <- ps_ordinal(nyha_grp ~ age + ef, data = dta)
   expect_false(any(c("id", "nyha_grp", "quintile", "decile", obj$meta$score_cols) %in% obj$tables$smd$variable))
@@ -478,6 +481,7 @@ test_that("ps_ordinal() balance table defaults to numeric covariates only", {
 })
 
 test_that("ps_nominal() reports each level against ref_level", {
+  skip_if_not_installed("nnet")
   dta <- sample_ps_data_nominal(n = 300, seed = 42)
   obj <- ps_nominal(rtyp ~ age + ef, data = dta, ref_level = "CE", covariates = "age")
   smd <- obj$tables$smd
