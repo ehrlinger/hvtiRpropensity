@@ -10,7 +10,8 @@ sa_trim_sweep(
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
   score_col = "prob_t",
-  treatment_col = "tavr"
+  treatment_col = "tavr",
+  treated_level = NULL
 )
 }
 \arguments{
@@ -35,6 +36,10 @@ when \code{x} is a \code{ps_weight} object; defaults to \code{"ATE"} otherwise.}
 
 \item{treatment_col}{Name of the binary treatment column.  Taken from
 \code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object\verb{.  Default }"tavr"`.}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. Read
+from the metadata of a \code{ps_data} object when it records one. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
 }
 \value{
 A data frame with one row per trim value and columns:

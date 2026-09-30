@@ -8,7 +8,8 @@ sa_overlap(
   x,
   score_col = "prob_t",
   treatment_col = "tavr",
-  trim_threshold = 0.05
+  trim_threshold = 0.05,
+  treated_level = NULL
 )
 }
 \arguments{
@@ -23,6 +24,10 @@ sa_overlap(
 \item{trim_threshold}{Numeric in (0, 0.5).  PS values below this threshold
 or above \code{1 - trim_threshold} are flagged as near-positivity violations.
 Default \code{0.05}.}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. Read
+from the metadata of a \code{ps_data} object when it records one. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
 }
 \value{
 A list with:

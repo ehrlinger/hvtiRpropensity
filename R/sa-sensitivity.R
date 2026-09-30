@@ -43,6 +43,9 @@
 #' @param pair_id_col   Name of the pair-ID column created by [ps_match()].
 #'   Default `"pair_id"`.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. Read
+#'   from the metadata of a `ps_data` object when it records one. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`.
 #' @return A list with three elements:
 #' \describe{
 #'   \item{`$bounds`}{Data frame with columns `gamma`, `p_upper`, `p_lower`,
@@ -72,11 +75,13 @@ sa_rosenbaum <- function(x,
                          gamma_inc     = 0.25,
                          alpha         = 0.05,
                          treatment_col = NULL,
-                         pair_id_col   = "pair_id") {
+                         pair_id_col   = "pair_id",
+                         treated_level = NULL) {
 
   # ---- Extract data frame --------------------------------------------------
   if (is_ps_data(x)) {
     if (is.null(treatment_col)) treatment_col <- x$meta$treatment_col
+    treated_level <- rlang::`%||%`(x$meta$treated_level, treated_level)
     dta <- x$data
   } else if (is.data.frame(x)) {
     if (is.null(treatment_col)) {
@@ -124,8 +129,9 @@ sa_rosenbaum <- function(x,
     )
   }
 
-  trt_rows <- matched[as.integer(matched[[treatment_col]]) == 1L, , drop = FALSE]
-  ctl_rows <- matched[as.integer(matched[[treatment_col]]) == 0L, , drop = FALSE]
+  matched_trt <- .treatment_indicator(matched, treatment_col, treated_level)$trt
+  trt_rows <- matched[matched_trt == 1L, , drop = FALSE]
+  ctl_rows <- matched[matched_trt == 0L, , drop = FALSE]
 
   pair_ids <- sort(unique(trt_rows[[pair_id_col]]))
   trt_out  <- trt_rows[[outcome_col]][match(pair_ids, trt_rows[[pair_id_col]])]
@@ -468,6 +474,9 @@ sa_evalue <- function(estimate,
 #'   or above `1 - trim_threshold` are flagged as near-positivity violations.
 #'   Default `0.05`.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. Read
+#'   from the metadata of a `ps_data` object when it records one. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`.
 #' @return A list with:
 #' \describe{
 #'   \item{`$summary`}{Data frame: one row per treatment group with `group`
@@ -500,14 +509,14 @@ sa_evalue <- function(estimate,
 sa_overlap <- function(x,
                        score_col     = "prob_t",
                        treatment_col = "tavr",
-                       trim_threshold = 0.05) {
+                       trim_threshold = 0.05,
+                       treated_level = NULL) {
 
   # ---- Extract data frame --------------------------------------------------
-  treated_level <- NULL
   if (is_ps_data(x)) {
     score_col     <- rlang::`%||%`(x$meta$score_col,     score_col)
     treatment_col <- rlang::`%||%`(x$meta$treatment_col, treatment_col)
-    treated_level <- x$meta$treated_level
+    treated_level <- rlang::`%||%`(x$meta$treated_level, treated_level)
     dta <- x$data
   } else if (is.data.frame(x)) {
     dta <- x
@@ -517,7 +526,6 @@ sa_overlap <- function(x,
 
   # ---- Validate inputs -----------------------------------------------------
   .check_cols(dta, c(score_col, treatment_col))
-  .check_binary(dta, treatment_col)
   .check_probability(dta, score_col)
 
   if (!is.numeric(trim_threshold) || length(trim_threshold) != 1L ||
@@ -527,9 +535,9 @@ sa_overlap <- function(x,
   }
 
   ps  <- dta[[score_col]]
-  # A scored object may declare 0 (or FALSE) as the treated value.
-  group_labels <- .binary_group_labels(dta[[treatment_col]], treated_level)
-  trt <- as.integer(as.character(dta[[treatment_col]]) == group_labels[[2L]])
+  treatment <- .treatment_indicator(dta, treatment_col, treated_level)
+  group_labels <- treatment$labels
+  trt <- treatment$trt
 
   # Drop rows where PS is NA before computing group sizes, so that n0/n1
   # match the summary statistics (which use na.rm=TRUE but still exclude NAs).
@@ -673,6 +681,9 @@ sa_overlap <- function(x,
 #'   `x$meta$treatment_col` when `x` is a `ps_data` object`.  Default
 #'   `"tavr"`.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. Read
+#'   from the metadata of a `ps_data` object when it records one. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`.
 #' @return A data frame with one row per trim value and columns:
 #' \describe{
 #'   \item{`trim`}{The winsorisation threshold.}
@@ -701,7 +712,8 @@ sa_trim_sweep <- function(x,
                           estimand      = c("ATE", "ATT", "ATC"),
                           stabilise     = TRUE,
                           score_col     = "prob_t",
-                          treatment_col = "tavr") {
+                          treatment_col = "tavr",
+                          treated_level = NULL) {
 
   # ---- Extract data frame and metadata -------------------------------------
   if (is_ps_data(x)) {
@@ -709,6 +721,7 @@ sa_trim_sweep <- function(x,
     treatment_col <- rlang::`%||%`(x$meta$treatment_col, treatment_col)
     estimand_use  <- rlang::`%||%`(x$meta$estimand,      match.arg(estimand))
     stabilise     <- rlang::`%||%`(x$meta$stabilised,    stabilise)
+    treated_level <- rlang::`%||%`(x$meta$treated_level, treated_level)
     dta <- x$data
   } else if (is.data.frame(x)) {
     estimand_use <- match.arg(estimand)
@@ -731,7 +744,7 @@ sa_trim_sweep <- function(x,
   }
 
   ps  <- dta[[score_col]]
-  trt <- as.integer(dta[[treatment_col]])
+  trt <- .treatment_indicator(dta, treatment_col, treated_level)$trt
   n   <- length(ps)
 
   # ---- Compute raw IPTW weights once ---------------------------------------

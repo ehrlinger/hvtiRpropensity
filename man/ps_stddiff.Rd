@@ -11,7 +11,8 @@ ps_stddiff(
   nong_ord = NULL,
   binary = NULL,
   categorical = NULL,
-  weight_col = NULL
+  weight_col = NULL,
+  treated_level = NULL
 )
 }
 \arguments{
@@ -27,6 +28,11 @@ coded 0/1 or logical; a \code{categorical} column may have any coding.}
 
 \item{weight_col}{Optional name of a column of positive weights, for
 example matching weights from \code{\link[=ps_weight]{ps_weight()}}. Weights must be finite.}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
+value, for example \code{"transcatheter"}, to use a column holding any two
+values.}
 }
 \value{
 An object of class \code{c("ps_stddiff", "ps_data")} with:

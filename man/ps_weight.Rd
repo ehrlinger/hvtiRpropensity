@@ -12,7 +12,8 @@ ps_weight(
   stabilise = TRUE,
   trim = NULL,
   covariates = NULL,
-  weight_col = "iptw"
+  weight_col = "iptw",
+  treated_level = NULL
 )
 }
 \arguments{
@@ -48,6 +49,11 @@ diagnostics.  If \code{NULL} (default), all numeric columns other than
 
 \item{weight_col}{Name of the output weight column appended to \verb{$data}.
 Default \code{"iptw"}.  If the column already exists it is overwritten.}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
+value, for example \code{"transcatheter"}, to use a column holding any two
+values.}
 }
 \value{
 An object of class \code{c("ps_weight", "ps_data")} with:
