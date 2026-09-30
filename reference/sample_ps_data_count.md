@@ -19,7 +19,8 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
 
 - seed:
 
-  Random seed. Default `42L`.
+  Random seed. Default `42L`. The fixed default gives the same demo
+  dataset on every call; `NULL` gives a fresh one.
 
 - n_imputations:
 

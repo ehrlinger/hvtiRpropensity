@@ -19,7 +19,8 @@ sample_ps_data_nominal(n = 200L, seed = 42L)
 
 - seed:
 
-  Random seed. Default `42L`.
+  Random seed. Default `42L`. The fixed default gives the same demo
+  dataset on every call; `NULL` gives a fresh one.
 
 ## Value
 

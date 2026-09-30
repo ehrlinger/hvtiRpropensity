@@ -21,7 +21,8 @@ sample_ps_data(n = 500L, seed = 42L, separation = 1)
 
 - seed:
 
-  Random seed for reproducibility. Default `42L`.
+  Random seed for reproducibility. Default `42L`. The fixed default
+  gives the same demo dataset on every call; `NULL` gives a fresh one.
 
 - separation:
 
