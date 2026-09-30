@@ -60,6 +60,10 @@
 #' @param n_perm Number of permutations. Default `1000`, the macro's.
 #' @param seed Optional integer seed.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
+#'   value, for example `"transcatheter"`, to use a column holding any two
+#'   values.
 #' @return An object of class `c("ps_stddiff_perm", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
@@ -89,7 +93,8 @@ ps_stddiff_perm <- function(data,
                             weight_col    = NULL,
                             reweight      = NULL,
                             n_perm        = 1000L,
-                            seed          = NULL) {
+                            seed          = NULL,
+                            treated_level = NULL) {
   .check_df(data)
   if (!is.numeric(n_perm) || length(n_perm) != 1L || !is.finite(n_perm) ||
       n_perm < 1 || n_perm > .Machine$integer.max || n_perm != round(n_perm)) {
@@ -119,7 +124,8 @@ ps_stddiff_perm <- function(data,
     }
     withCallingHandlers(
       ps_stddiff(d, treatment_col = treatment_col, gaussian = gaussian, nong_ord = nong_ord,
-                 binary = binary, categorical = categorical, weight_col = weight_col)$tables$stddiff,
+                 binary = binary, categorical = categorical, weight_col = weight_col,
+                 treated_level = treated_level)$tables$stddiff,
       # A permutation can leave a categorical variable with no shared levels.
       # Its NA is dropped from the percentiles, so that one warning would only
       # repeat; every other warning, reweight's included, still surfaces.

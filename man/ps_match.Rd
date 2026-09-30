@@ -13,7 +13,8 @@ ps_match(
   covariates = NULL,
   match_col = "match",
   ratio = 1L,
-  seed = NULL
+  seed = NULL,
+  treated_level = NULL
 )
 }
 \arguments{
@@ -48,6 +49,11 @@ only \code{1} (1:1) is supported.  Default \code{1}.}
 patient order that reduces order-dependence.  Pass an integer for a
 reproducible matched set; \code{NULL} (default) uses the session's current
 RNG state (not reproducible across sessions).}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
+value, for example \code{"transcatheter"}, to use a column holding any two
+values.}
 }
 \value{
 An object of class \code{c("ps_match", "ps_data")} with:

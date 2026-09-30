@@ -11,7 +11,8 @@ sa_rosenbaum(
   gamma_inc = 0.25,
   alpha = 0.05,
   treatment_col = NULL,
-  pair_id_col = "pair_id"
+  pair_id_col = "pair_id",
+  treated_level = NULL
 )
 }
 \arguments{
@@ -32,6 +33,10 @@ plain data frame whose rows are matched patients.}
 
 \item{pair_id_col}{Name of the pair-ID column created by \code{\link[=ps_match]{ps_match()}}.
 Default \code{"pair_id"}.}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. Read
+from the metadata of a \code{ps_data} object when it records one. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
 }
 \value{
 A list with three elements:

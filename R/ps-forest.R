@@ -60,7 +60,6 @@ ps_forest <- function(formula,
     rlang::abort("`treatment_col` must match the response on the left of `formula`.", call. = FALSE)
   }
   .check_cols(data, treatment_col)
-  .check_binary(data, treatment_col)
   .check_output_columns(data, c(score_col, logit_col, weight_col, "quintile", "decile"))
 
   vars <- all.vars(formula)
@@ -70,9 +69,9 @@ ps_forest <- function(formula,
                  call. = FALSE)
   }
 
-  if (is.null(treated_level)) treated_level <- if (is.logical(data[[treatment_col]])) TRUE else 1
-  treated_level <- as.character(treated_level)
-  trt <- as.integer(as.character(data[[treatment_col]]) == treated_level)
+  treatment <- .treatment_indicator(data, treatment_col, treated_level)
+  treated_level <- treatment$labels[[2L]]
+  trt <- treatment$trt
 
   fit_data <- data[, vars, drop = FALSE]
   fit_data[[treatment_col]] <- factor(trt, levels = c(0L, 1L))
@@ -101,12 +100,12 @@ ps_forest <- function(formula,
     meta = list(
       formula = formula, treatment_col = treatment_col, id_col = id_col,
       score_col = score_col, logit_col = logit_col, weight_col = weight_col,
-      treated_level = treated_level, treatment_levels = c("0", "1"),
+      treated_level = treated_level, treatment_levels = treatment$labels,
       method = "forest-oob", ntree = ntree, n_total = nrow(out)
     ),
     tables = list(
       smd = smd_tbl,
-      group_counts = data.frame(group = .binary_group_labels(data[[treatment_col]], treated_level),
+      group_counts = data.frame(group = treatment$labels,
                                 treated = c(FALSE, TRUE),
                                 n = c(sum(trt == 0L), sum(trt == 1L)))
     ),

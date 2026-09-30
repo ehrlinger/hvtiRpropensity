@@ -59,6 +59,10 @@
 #'   `RESAMPL=`.
 #' @param seed Optional integer seed.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
+#'   value, for example `"transcatheter"`, to use a column holding any two
+#'   values.
 #' @return An object of class `c("ps_mw_var", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
@@ -90,7 +94,8 @@ ps_mw_var <- function(data,
                       outcomes,
                       weight_col,
                       n_rep         = 1000L,
-                      seed          = NULL) {
+                      seed          = NULL,
+                      treated_level = NULL) {
   .check_df(data)
   if (!is.numeric(n_rep) || length(n_rep) != 1L || !is.finite(n_rep) ||
       n_rep < 1 || n_rep > .Machine$integer.max || n_rep != round(n_rep)) {
@@ -108,10 +113,9 @@ ps_mw_var <- function(data,
 
   keep <- !is.na(data[[treatment_col]])
   base <- data[keep, , drop = FALSE]
-  .check_binary(base, treatment_col)
-  grp <- as.integer(base[[treatment_col]])
+  grp <- .treatment_indicator(base, treatment_col, treated_level)$trt
   if (!all(c(0L, 1L) %in% grp)) {
-    rlang::abort(sprintf("Column `%s` must contain both groups, 0 and 1.", treatment_col), call = NULL)
+    rlang::abort(sprintf("Column `%s` must contain both treatment groups.", treatment_col), call = NULL)
   }
   w <- base[[weight_col]]
   if (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0)) {

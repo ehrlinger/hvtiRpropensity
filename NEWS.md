@@ -1,5 +1,22 @@
 # hvtiRpropensity (unreleased)
 
+* New `treated_level` argument on `ps_match()`, `ps_weight()`, `ps_stddiff()`,
+  `ps_stddiff_perm()`, `ps_mw_var()`, `sa_overlap()`, `sa_trim_sweep()` and
+  `sa_rosenbaum()`. It names the treated value, so the treatment column may
+  hold any two values (for example `"surgical"` and `"transcatheter"`), as
+  `ps_logistic()` already allowed. Results equal those from the same data
+  coded 0/1, the group tables show the study's own level names, and `$data`
+  keeps the column as it was given. `ps_forest()` accepts such a column through
+  its existing `treated_level`. The default, `NULL`, keeps the 0/1 or logical
+  requirement, so existing calls are unchanged (#60).
+* `sa_overlap()`, `sa_trim_sweep()` and `sa_rosenbaum()` read the treated level
+  from a scored or matched object, so an object scored with
+  `treated_level = 0` is no longer analysed with the arms swapped.
+* `sa_trim_sweep()` and `sa_rosenbaum()` now check the treatment column. A
+  column that is not 0/1 or logical used to be coerced with warnings and
+  return a result; it is now an error unless `treated_level` is given.
+* `sa_trim_sweep()` excludes patients whose treatment is missing, with a
+  warning. It used to keep them, which made every effective sample size `NA`.
 * The group tables of `ps_match()`, `ps_weight()`, `ps_forest()` and
   `sa_overlap()` no longer label the groups `control` and `treated`. `group`
   now holds the value in `treatment_col` (`0`/`1`, or `FALSE`/`TRUE`), and a

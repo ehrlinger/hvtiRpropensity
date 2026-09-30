@@ -242,3 +242,54 @@
   treated_level <- as.character(treated_level)
   c(setdiff(labels, treated_level), treated_level)
 }
+
+
+#' Recode a two-valued treatment column to a 0/1 indicator
+#'
+#' With `treated_level = NULL` the column must be 0/1 or logical, and 1 or
+#' `TRUE` is the treated value. With a `treated_level`, the column may hold any
+#' two values and `treated_level` names the treated one. Both values must be
+#' present.
+#'
+#' @param data A data frame.
+#' @param col Name of the treatment column.
+#' @param treated_level The treated value, or `NULL`.
+#' @param call_env Environment for the error call.
+#' @return A list: `trt`, an integer 0/1 vector (`NA` where the column is
+#'   missing), and `labels`, the reference then the treated value as character.
+#' @keywords internal
+.treatment_indicator <- function(data, col, treated_level = NULL, call_env = rlang::caller_env()) {
+  x <- data[[col]]
+  if (is.null(treated_level)) {
+    .check_binary(data, col, call_env)
+    return(list(trt = as.integer(x), labels = .binary_group_labels(x)))
+  }
+  if (length(treated_level) != 1L || is.na(treated_level)) {
+    rlang::abort("`treated_level` must be a single non-missing value.", call = call_env)
+  }
+  treated_level <- as.character(treated_level)
+  values <- unique(as.character(x[!is.na(x)]))
+  if (length(values) != 2L) {
+    rlang::abort(
+      sprintf("Column `%s` must hold two treatment values; it holds %d.", col, length(values)),
+      call = call_env
+    )
+  }
+  if (!treated_level %in% values) {
+    rlang::abort(
+      sprintf("`treated_level` (\"%s\") is not a value of column `%s`.", treated_level, col),
+      call = call_env
+    )
+  }
+  n_na <- sum(is.na(x))
+  if (n_na > 0L) {
+    rlang::warn(
+      sprintf(
+        "Column `%s` contains %d NA value(s). Those patients will be silently excluded from analysis.",
+        col, n_na
+      )
+    )
+  }
+  list(trt = as.integer(as.character(x) == treated_level),
+       labels = c(setdiff(values, treated_level), treated_level))
+}

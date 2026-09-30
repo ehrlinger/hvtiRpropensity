@@ -47,6 +47,10 @@
 #' @param weight_col     Name of the output weight column appended to `$data`.
 #'   Default `"iptw"`.  If the column already exists it is overwritten.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
+#'   value, for example `"transcatheter"`, to use a column holding any two
+#'   values.
 #' @return An object of class `c("ps_weight", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame with `weight_col` appended.}
@@ -84,13 +88,16 @@ ps_weight <- function(data,
                       stabilise     = TRUE,
                       trim          = NULL,
                       covariates    = NULL,
-                      weight_col    = "iptw") {
+                      weight_col    = "iptw",
+                      treated_level = NULL) {
 
   # ---- Input validation ---------------------------------------------------
   estimand <- match.arg(estimand)
   .check_df(data)
   .check_cols(data, c(treatment_col, score_col))
-  .check_binary(data, treatment_col)
+  treatment <- .treatment_indicator(data, treatment_col, treated_level)
+  original_treatment <- data[[treatment_col]]
+  data[[treatment_col]] <- treatment$trt
   .check_probability(data, score_col)
 
   if (!is.null(trim)) {
@@ -149,7 +156,8 @@ ps_weight <- function(data,
   # Weighted SMD uses the weight column via a weighted mean / variance
   smd_weighted <- .smd_table(out, treatment_col, covariates, weight_col = weight_col)
 
-  group_labels <- .binary_group_labels(data[[treatment_col]])
+  group_labels <- treatment$labels
+  out[[treatment_col]] <- original_treatment
   group_counts <- data.frame(
     group   = group_labels,
     treated = c(FALSE, TRUE),
@@ -170,6 +178,7 @@ ps_weight <- function(data,
     data = out,
     meta = list(
       treatment_col = treatment_col,
+      treated_level = treatment$labels[[2L]],
       score_col     = score_col,
       weight_col    = weight_col,
       estimand      = estimand,

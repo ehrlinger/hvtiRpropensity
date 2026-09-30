@@ -49,6 +49,10 @@
 #'   reproducible matched set; `NULL` (default) uses the session's current
 #'   RNG state (not reproducible across sessions).
 #'
+#' @param treated_level The value of `treatment_col` that is treated. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
+#'   value, for example `"transcatheter"`, to use a column holding any two
+#'   values.
 #' @return An object of class `c("ps_match", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The full input data frame with `match_col` and `pair_id`
@@ -95,12 +99,15 @@ ps_match <- function(data,
                      covariates    = NULL,
                      match_col     = "match",
                      ratio         = 1L,
-                     seed          = NULL) {
+                     seed          = NULL,
+                     treated_level = NULL) {
 
   # ---- Input validation ---------------------------------------------------
   .check_df(data)
   .check_cols(data, c(treatment_col, score_col, id_col))
-  .check_binary(data, treatment_col)
+  treatment <- .treatment_indicator(data, treatment_col, treated_level)
+  original_treatment <- data[[treatment_col]]
+  data[[treatment_col]] <- treatment$trt
   .check_probability(data, score_col)
 
   if (!is.null(caliper) &&
@@ -197,7 +204,8 @@ ps_match <- function(data,
   n_matched_t <- length(pair_t)
   n_matched_c <- length(pair_c)
 
-  group_labels <- .binary_group_labels(data[[treatment_col]])
+  group_labels <- treatment$labels
+  out[[treatment_col]] <- original_treatment
   group_counts_before <- data.frame(
     group   = group_labels,
     treated = c(FALSE, TRUE),
@@ -214,6 +222,7 @@ ps_match <- function(data,
     data = out,
     meta = list(
       treatment_col = treatment_col,
+      treated_level = treatment$labels[[2L]],
       score_col     = score_col,
       id_col        = id_col,
       match_col     = match_col,

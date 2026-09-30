@@ -69,6 +69,10 @@
 #' @param weight_col Optional name of a column of positive weights, for
 #'   example matching weights from [ps_weight()]. Weights must be finite.
 #'
+#' @param treated_level The value of `treatment_col` that is treated. `NULL`
+#'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
+#'   value, for example `"transcatheter"`, to use a column holding any two
+#'   values.
 #' @return An object of class `c("ps_stddiff", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
@@ -99,7 +103,8 @@ ps_stddiff <- function(data,
                        nong_ord      = NULL,
                        binary        = NULL,
                        categorical   = NULL,
-                       weight_col    = NULL) {
+                       weight_col    = NULL,
+                       treated_level = NULL) {
   .check_df(data)
   vars <- list(gaussian = gaussian, nong_ord = nong_ord, binary = binary, categorical = categorical)
   vars <- lapply(vars, function(v) if (is.null(v)) character(0) else as.character(v))
@@ -126,10 +131,9 @@ ps_stddiff <- function(data,
 
   keep <- !is.na(data[[treatment_col]])
   base <- data[keep, , drop = FALSE]
-  .check_binary(base, treatment_col)
-  grp <- as.integer(base[[treatment_col]])
+  grp <- .treatment_indicator(base, treatment_col, treated_level)$trt
   if (!all(c(0L, 1L) %in% grp)) {
-    rlang::abort(sprintf("Column `%s` must contain both groups, 0 and 1.", treatment_col), call = NULL)
+    rlang::abort(sprintf("Column `%s` must contain both treatment groups.", treatment_col), call = NULL)
   }
   w <- if (is.null(weight_col)) rep(1, nrow(base)) else base[[weight_col]]
   if (!is.null(weight_col) && (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0))) {

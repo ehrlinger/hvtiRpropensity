@@ -10,7 +10,8 @@ ps_mw_var(
   outcomes,
   weight_col,
   n_rep = 1000L,
-  seed = NULL
+  seed = NULL,
+  treated_level = NULL
 )
 }
 \arguments{
@@ -28,6 +29,11 @@ positive and finite.}
 \verb{RESAMPL=}.}
 
 \item{seed}{Optional integer seed.}
+
+\item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
+(default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
+value, for example \code{"transcatheter"}, to use a column holding any two
+values.}
 }
 \value{
 An object of class \code{c("ps_mw_var", "ps_data")} with:
