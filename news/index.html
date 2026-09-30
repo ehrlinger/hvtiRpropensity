@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,15 @@
       <small>Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.9" id="hvtirpropensity-019">hvtiRpropensity 0.1.9<a class="anchor" aria-label="anchor" href="#hvtirpropensity-019"></a></h2>
+<ul><li>
+<code><a href="../reference/ps_match.html">ps_match()</a></code>, <code><a href="../reference/ps_rmst.html">ps_rmst()</a></code> and the <code>sample_ps_data*()</code> generators restore the caller’s random number stream when they return. Each called <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> and left the stream reseeded, so everything the caller drew afterwards depended on the seed passed here. They now use <code><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">withr::local_seed()</a></code>, as <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> already did. Results for a given seed are unchanged.</li>
+<li>
+<code><a href="../reference/bs_count.html">bs_count()</a></code> and other count-family models now name the exponentiated coefficient column <code>rate_ratio</code>. It was labelled <code>odds_ratio</code>, but the exponent of a log-link Poisson or negative-binomial coefficient is a rate ratio. Binary, ordinal and nominal models keep <code>odds_ratio</code> (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/46" class="external-link">#46</a>).</li>
+<li>
+<code><a href="../reference/ps_logistic.html">ps_logistic()</a></code>’s <code>$tables$group_counts</code> names each row by the declared treatment level instead of <code>control</code>/<code>treated</code>, and adds a logical <code>treated</code> column, so it reads the same as <code><a href="../reference/ps_ordinal.html">ps_ordinal()</a></code> and <code><a href="../reference/ps_nominal.html">ps_nominal()</a></code>. Without <code>treatment_levels</code> the groups are <code>0</code>/<code>1</code> (or <code>FALSE</code>/<code>TRUE</code>) (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/47" class="external-link">#47</a>).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.8" id="hvtirpropensity-018">hvtiRpropensity 0.1.8<a class="anchor" aria-label="anchor" href="#hvtirpropensity-018"></a></h2>
 <ul><li>New <code><a href="../reference/ps_forest.html">ps_forest()</a></code>: out-of-bag random-forest propensity score with the same <code>ps_data</code> contract as <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code> (needs the suggested <code>randomForestSRC</code>).</li>

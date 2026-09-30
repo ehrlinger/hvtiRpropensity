@@ -1,5 +1,36 @@
 # Changelog
 
+## hvtiRpropensity 0.1.9
+
+- [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+  and the `sample_ps_data*()` generators restore the caller’s random
+  number stream when they return. Each called
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) and left the stream
+  reseeded, so everything the caller drew afterwards depended on the
+  seed passed here. They now use
+  [`withr::local_seed()`](https://withr.r-lib.org/reference/with_seed.html),
+  as
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  already did. Results for a given seed are unchanged.
+- [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md)
+  and other count-family models now name the exponentiated coefficient
+  column `rate_ratio`. It was labelled `odds_ratio`, but the exponent of
+  a log-link Poisson or negative-binomial coefficient is a rate ratio.
+  Binary, ordinal and nominal models keep `odds_ratio`
+  ([\#46](https://github.com/ehrlinger/hvtiRpropensity/issues/46)).
+- [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)’s
+  `$tables$group_counts` names each row by the declared treatment level
+  instead of `control`/`treated`, and adds a logical `treated` column,
+  so it reads the same as
+  [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
+  and
+  [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md).
+  Without `treatment_levels` the groups are `0`/`1` (or `FALSE`/`TRUE`)
+  ([\#47](https://github.com/ehrlinger/hvtiRpropensity/issues/47)).
+
 ## hvtiRpropensity 0.1.8
 
 - New

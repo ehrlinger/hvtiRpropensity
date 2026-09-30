@@ -903,7 +903,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] hvtiRpropensity_0.1.8
+#> [1] hvtiRpropensity_0.1.9
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39   fastmap_1.2.0   xfun_0.61       nnet_7.3-20    
