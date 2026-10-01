@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.10
 
 * New tests compare `ps_stddiff()`, `ps_stddiff_perm()` and `ps_mw_var()` with
   the CCF macros `%stddiff`, `%stddiffci` and `%mw_var`, run in SAS on a

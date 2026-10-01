@@ -16,7 +16,7 @@ imports this file.
 ## Definition of done
 
 - `devtools::test()` passes. The runner is `tests/test-all.R`.
-- `devtools::check()` is **0 errors, 0 warnings, 0 notes.** Verified 2026-09-30 at 0.1.9
+- `devtools::check()` is **0 errors, 0 warnings, 0 notes.** Verified 2026-09-30 at 0.1.10
   under `R CMD check --as-cran` with the manual built, from a clean `git archive` export.
 - `devtools::document()` has been run and `man/` and `NAMESPACE` are committed with the
   source change.
