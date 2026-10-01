@@ -1,5 +1,113 @@
 # Changelog
 
+## hvtiRpropensity 0.1.10
+
+- New tests compare
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md),
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  with the CCF macros `%stddiff`, `%stddiffci` and `%mw_var`, run in SAS
+  on a synthetic dataset (`tests/testthat/fixtures/stddiff-sas/`). All
+  three agree with the macros: standardized differences to within 4e-7,
+  the `%mw_var` estimate to 3e-10
+  ([\#34](https://github.com/ehrlinger/hvtiRpropensity/issues/34)).
+- New `treated_level` argument on
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md),
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md),
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md),
+  [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+  [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
+  and
+  [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md).
+  It names the treated value, so the treatment column may hold any two
+  values (for example `"surgical"` and `"transcatheter"`), as
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+  already allowed. Results equal those from the same data coded 0/1, the
+  group tables show the study’s own level names, and `$data` keeps the
+  column as it was given.
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+  accepts such a column through its existing `treated_level`. The
+  default, `NULL`, keeps the 0/1 or logical requirement, so existing
+  calls are unchanged
+  ([\#60](https://github.com/ehrlinger/hvtiRpropensity/issues/60)).
+- [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+  [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
+  and
+  [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
+  read the treated level from a scored or matched object, so an object
+  scored with `treated_level = 0` is no longer analysed with the arms
+  swapped.
+- [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
+  and
+  [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
+  now check the treatment column. A column that is not 0/1 or logical
+  used to be coerced with warnings and return a result; it is now an
+  error unless `treated_level` is given.
+- [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
+  excludes patients whose treatment is missing, with a warning. It used
+  to keep them, which made every effective sample size `NA`.
+- The group tables of
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+  and
+  [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md)
+  no longer label the groups `control` and `treated`. `group` now holds
+  the value in `treatment_col` (`0`/`1`, or `FALSE`/`TRUE`), and a new
+  logical `treated` column says which group is treated, as in
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md).
+  **Code that matched `group == "treated"` should use the `treated`
+  column**
+  ([\#51](https://github.com/ehrlinger/hvtiRpropensity/issues/51)).
+- [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
+  and
+  [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md)
+  now return a balance table, `$tables$smd`, as
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+  does. It has one row per covariate and pair of treatment levels
+  (`variable`, `level`, `versus`, `smd`), each computed on the patients
+  in those two levels. A new `smd_pairs` argument chooses the pairs:
+  `"reference"` (default) compares each level with the reference,
+  `"adjacent"` (ordinal only) compares each level with the one below it,
+  and `"all"` compares every pair. The choices can be combined
+  ([\#48](https://github.com/ehrlinger/hvtiRpropensity/issues/48)).
+- [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+  now defaults to `seed = NULL`, as
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  already did. The default was `seed = 1024L`, which gave the same
+  bootstrap draws on every call. **A call that relied on the default now
+  gives an interval that varies from run to run; pass `seed` for a
+  reproducible one.** Point estimates are unchanged.
+- `sample_ps_data_count(seed = NULL)` no longer errors and returns a
+  fresh dataset, as the other three generators did. The generators keep
+  their fixed default, `seed = 42L`, so that examples share one demo
+  dataset
+  ([\#53](https://github.com/ehrlinger/hvtiRpropensity/issues/53)).
+- [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
+  and
+  [`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)
+  have examples.
+- The examples for
+  [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
+  [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md)
+  and
+  [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+  run only when the suggested package they need (‘MASS’, ‘nnet’,
+  ‘survival’) is installed.
+- The package help no longer says
+  [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
+  requires ‘rbounds’. It never did: the bounds are computed in base R.
+- `DESCRIPTION` spells out CORR and SMD, quotes ‘hvtiPlotR’ and cites
+  Rosenbaum and Rubin (1983). Help pages use ASCII punctuation in place
+  of em dashes and arrows
+  ([\#53](https://github.com/ehrlinger/hvtiRpropensity/issues/53)).
+
 ## hvtiRpropensity 0.1.9
 
 - [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),

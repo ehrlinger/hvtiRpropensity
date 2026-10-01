@@ -38,7 +38,7 @@ affordances live in `CLAUDE.md`, which imports this file.
 - [`devtools::test()`](https://devtools.r-lib.org/reference/test.html)
   passes. The runner is `tests/test-all.R`.
 - [`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
-  is **0 errors, 0 warnings, 0 notes.** Verified 2026-09-30 at 0.1.9
+  is **0 errors, 0 warnings, 0 notes.** Verified 2026-09-30 at 0.1.10
   under `R CMD check --as-cran` with the manual built, from a clean
   `git archive` export.
 - [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)

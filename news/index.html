@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.9</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,30 @@
       <small>Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.10" id="hvtirpropensity-0110">hvtiRpropensity 0.1.10<a class="anchor" aria-label="anchor" href="#hvtirpropensity-0110"></a></h2>
+<ul><li>New tests compare <code><a href="../reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> with the CCF macros <code>%stddiff</code>, <code>%stddiffci</code> and <code>%mw_var</code>, run in SAS on a synthetic dataset (<code>tests/testthat/fixtures/stddiff-sas/</code>). All three agree with the macros: standardized differences to within 4e-7, the <code>%mw_var</code> estimate to 3e-10 (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/34" class="external-link">#34</a>).</li>
+<li>New <code>treated_level</code> argument on <code><a href="../reference/ps_match.html">ps_match()</a></code>, <code><a href="../reference/ps_weight.html">ps_weight()</a></code>, <code><a href="../reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code>, <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code>, <code><a href="../reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code> and <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>. It names the treated value, so the treatment column may hold any two values (for example <code>"surgical"</code> and <code>"transcatheter"</code>), as <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code> already allowed. Results equal those from the same data coded 0/1, the group tables show the study’s own level names, and <code>$data</code> keeps the column as it was given. <code><a href="../reference/ps_forest.html">ps_forest()</a></code> accepts such a column through its existing <code>treated_level</code>. The default, <code>NULL</code>, keeps the 0/1 or logical requirement, so existing calls are unchanged (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/60" class="external-link">#60</a>).</li>
+<li>
+<code><a href="../reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code> and <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code> read the treated level from a scored or matched object, so an object scored with <code>treated_level = 0</code> is no longer analysed with the arms swapped.</li>
+<li>
+<code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code> and <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code> now check the treatment column. A column that is not 0/1 or logical used to be coerced with warnings and return a result; it is now an error unless <code>treated_level</code> is given.</li>
+<li>
+<code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code> excludes patients whose treatment is missing, with a warning. It used to keep them, which made every effective sample size <code>NA</code>.</li>
+<li>The group tables of <code><a href="../reference/ps_match.html">ps_match()</a></code>, <code><a href="../reference/ps_weight.html">ps_weight()</a></code>, <code><a href="../reference/ps_forest.html">ps_forest()</a></code> and <code><a href="../reference/sa_overlap.html">sa_overlap()</a></code> no longer label the groups <code>control</code> and <code>treated</code>. <code>group</code> now holds the value in <code>treatment_col</code> (<code>0</code>/<code>1</code>, or <code>FALSE</code>/<code>TRUE</code>), and a new logical <code>treated</code> column says which group is treated, as in <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code>. <strong>Code that matched <code>group == "treated"</code> should use the <code>treated</code> column</strong> (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/51" class="external-link">#51</a>).</li>
+<li>
+<code><a href="../reference/ps_ordinal.html">ps_ordinal()</a></code> and <code><a href="../reference/ps_nominal.html">ps_nominal()</a></code> now return a balance table, <code>$tables$smd</code>, as <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code> does. It has one row per covariate and pair of treatment levels (<code>variable</code>, <code>level</code>, <code>versus</code>, <code>smd</code>), each computed on the patients in those two levels. A new <code>smd_pairs</code> argument chooses the pairs: <code>"reference"</code> (default) compares each level with the reference, <code>"adjacent"</code> (ordinal only) compares each level with the one below it, and <code>"all"</code> compares every pair. The choices can be combined (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/48" class="external-link">#48</a>).</li>
+<li>
+<code><a href="../reference/ps_rmst.html">ps_rmst()</a></code> now defaults to <code>seed = NULL</code>, as <code><a href="../reference/ps_match.html">ps_match()</a></code>, <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> already did. The default was <code>seed = 1024L</code>, which gave the same bootstrap draws on every call. <strong>A call that relied on the default now gives an interval that varies from run to run; pass <code>seed</code> for a reproducible one.</strong> Point estimates are unchanged.</li>
+<li>
+<code>sample_ps_data_count(seed = NULL)</code> no longer errors and returns a fresh dataset, as the other three generators did. The generators keep their fixed default, <code>seed = 42L</code>, so that examples share one demo dataset (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/53" class="external-link">#53</a>).</li>
+<li>
+<code><a href="../reference/fit_logistic.html">fit_logistic()</a></code> and <code><a href="../reference/validate_logistic.html">validate_logistic()</a></code> have examples.</li>
+<li>The examples for <code><a href="../reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="../reference/ps_nominal.html">ps_nominal()</a></code> and <code><a href="../reference/ps_rmst.html">ps_rmst()</a></code> run only when the suggested package they need (‘MASS’, ‘nnet’, ‘survival’) is installed.</li>
+<li>The package help no longer says <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code> requires ‘rbounds’. It never did: the bounds are computed in base R.</li>
+<li>
+<code>DESCRIPTION</code> spells out CORR and SMD, quotes ‘hvtiPlotR’ and cites Rosenbaum and Rubin (1983). Help pages use ASCII punctuation in place of em dashes and arrows (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/53" class="external-link">#53</a>).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.9" id="hvtirpropensity-019">hvtiRpropensity 0.1.9<a class="anchor" aria-label="anchor" href="#hvtirpropensity-019"></a></h2>
 <ul><li>
