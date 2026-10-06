@@ -24,7 +24,7 @@ Description: Propensity score estimation, matching, and inverse-probability
     compatible with the plotting functions in 'hvtiPlotR'. The propensity
     score follows Rosenbaum and Rubin (1983) <doi:10.1093/biomet/70.1.41>.
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.4.0)
 Imports:
     rlang (>= 1.0.0),
     stats,
