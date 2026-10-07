@@ -65,8 +65,13 @@ ps_forest(
 
 - seed:
 
-  Optional integer seed passed to
-  [`randomForestSRC::rfsrc()`](https://www.randomforestsrc.org//reference/rfsrc.html).
+  `NULL` (default) or one whole number. With a seed, R's random number
+  stream is set to `abs(seed)` immediately before the fit and
+  [`randomForestSRC::rfsrc()`](https://www.randomforestsrc.org//reference/rfsrc.html)
+  is given `seed = -abs(seed)`, the sign it requires; the caller's
+  stream is restored afterwards and the seed is kept in `$meta$seed`.
+  With `NULL`, `rfsrc()` takes its seed from the caller's stream, so the
+  scores depend on whatever drew random numbers earlier in the session.
 
 - clip:
 
@@ -84,9 +89,21 @@ A `ps_forest` / `ps_data` object. `$data` is `data` plus `score_col`,
 `logit_col`, `weight_col` (overlap weights), `quintile` and `decile`;
 `$meta` follows
 [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
-with `method = "forest-oob"`; `$tables` holds `smd` and `group_counts`
-(`group`, the value in `treatment_col`; a logical `treated`; `n`);
-`$models$forest` is the fitted forest.
+with `method = "forest-oob"` and `seed`, the seed used (`NA` when none
+was given); `$tables` holds `smd` and `group_counts` (`group`, the value
+in `treatment_col`; a logical `treated`; `n`); `$models$forest` is the
+fitted forest.
+
+## Threads and reproducibility
+
+A seed makes the forest reproducible: seeded this way, fits have matched
+to the last digit on a 192-thread OpenMP Linux server and a
+single-threaded Mac. `randomForestSRC` uses every core unless
+`options(rf.cores = )` says otherwise, and some `randomForestSRC`
+procedures have not been stable from run to run under OpenMP. When two
+runs with the same seed disagree, set `options(rf.cores = 1L)` before
+calling `ps_forest()`; it costs speed and buys a single-threaded,
+repeatable fit. This function leaves the option alone.
 
 ## Examples
 

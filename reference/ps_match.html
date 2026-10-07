@@ -13,7 +13,7 @@ $data slot is the full original dataset with a match column set to
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,10 +118,13 @@ only <code>1</code> (1:1) is supported.  Default <code>1</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Integer seed for the random shuffling of treated-
-patient order that reduces order-dependence.  Pass an integer for a
-reproducible matched set; <code>NULL</code> (default) uses the session's current
-RNG state (not reproducible across sessions).</p></dd>
+<dd><p>Seed for the random shuffling of treated-patient
+order that reduces order-dependence. <code>NULL</code> (default) or one whole number. With a
+seed, the random number stream is set to <code>abs(seed)</code> immediately before the draws,
+the result is reproducible whatever ran earlier in the session, the
+caller's stream is restored afterwards, and the seed is kept in
+<code>$meta$seed</code>. With <code>NULL</code> the draws come from the caller's stream and
+advance it, and <code>$meta$seed</code> is <code>NA</code>.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
@@ -142,7 +145,7 @@ obtain the matched subset.</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>treatment_col</code>, <code>score_col</code>, <code>id_col</code>,
-<code>match_col</code>, <code>pair_id_col</code>, <code>caliper</code>, <code>method</code>, <code>n_total</code>,
+<code>match_col</code>, <code>pair_id_col</code>, <code>caliper</code>, <code>method</code>, <code>seed</code>, <code>n_total</code>,
 <code>n_matched</code>, <code>n_unmatched</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
@@ -220,12 +223,12 @@ that <code>hvtiPlotR::hv_mirror_hist()</code> and <code>hvtiPlotR::hv_balance()<
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5  5    0 81.23415      1 50.53527        0            0 0.3751620     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6  6    0 77.15100      0 51.42113        0            0 0.3148051     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   pair_id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      44</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     127</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     186</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     129</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      27</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">match</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1 </span>

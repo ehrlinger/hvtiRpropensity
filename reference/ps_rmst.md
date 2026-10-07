@@ -60,10 +60,12 @@ ps_rmst(
 
 - seed:
 
-  Optional integer bootstrap seed. With `NULL` (default) the draws come
-  from the caller's random number stream, so the interval varies from
-  run to run. With a seed the result is reproducible and the caller's
-  stream is restored afterwards.
+  Bootstrap seed: `NULL` (default) or one whole number. With a seed, the
+  random number stream is set to `abs(seed)` immediately before the
+  draws, the result is reproducible whatever ran earlier in the session,
+  the caller's stream is restored afterwards, and the seed is kept in
+  `$meta$seed`. With `NULL` the draws come from the caller's stream and
+  advance it, and `$meta$seed` is `NA`.
 
 - time_unit_days:
 
@@ -83,7 +85,8 @@ subset-and-weighting estimator: `estimator`, `subset`, `weighting`, `n`,
 `lo_days`, `hi_days` (2.5 and 97.5 percent bootstrap) and `n_failed`.
 `$tables$curves` has the weighted Kaplan-Meier steps (`estimator`,
 `arm`, `time`, `surv`) for plotting; `$data` is `x$data` plus one weight
-column `w_<weighting>` per scheme.
+column `w_<weighting>` per scheme. `$meta$seed` is the seed used (`NA`
+when none was given).
 
 ## Examples
 

@@ -13,7 +13,7 @@ as described by Li and Greene (2013)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,12 @@ positive and finite.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional integer seed.</p></dd>
+<dd><p><code>NULL</code> (default) or one whole number. With a seed, the
+random number stream is set to <code>abs(seed)</code> immediately before the draws,
+the result is reproducible whatever ran earlier in the session, the
+caller's stream is restored afterwards, and the seed is kept in
+<code>$meta$seed</code>. With <code>NULL</code> the draws come from the caller's stream and
+advance it, and <code>$meta$seed</code> is <code>NA</code>.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>

@@ -17,7 +17,7 @@ hvtiPlotR::hv_balance() / hvtiPlotR::hv_mirror_hist() unchanged."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +114,13 @@ is P(treated)). Defaults to <code>1</code> / <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional integer seed passed to <code><a href="https://www.randomforestsrc.org//reference/rfsrc.html" class="external-link">randomForestSRC::rfsrc()</a></code>.</p></dd>
+<dd><p><code>NULL</code> (default) or one whole number. With a seed, R's random
+number stream is set to <code>abs(seed)</code> immediately before the fit and
+<code><a href="https://www.randomforestsrc.org//reference/rfsrc.html" class="external-link">randomForestSRC::rfsrc()</a></code> is given <code>seed = -abs(seed)</code>, the sign it
+requires; the caller's stream is restored afterwards and the seed is kept
+in <code>$meta$seed</code>. With <code>NULL</code>, <code>rfsrc()</code> takes its seed from the caller's
+stream, so the scores depend on whatever drew random numbers earlier in
+the session.</p></dd>
 
 
 <dt id="arg-clip">clip<a class="anchor" aria-label="anchor" href="#arg-clip"></a></dt>
@@ -130,10 +136,23 @@ weight are computed. Forest probabilities can be exactly 0 or 1.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ps_forest</code> / <code>ps_data</code> object. <code>$data</code> is <code>data</code> plus
 <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code> (overlap weights), <code>quintile</code> and
-<code>decile</code>; <code>$meta</code> follows <code><a href="ps_logistic.html">ps_logistic()</a></code> with <code>method = "forest-oob"</code>;
-<code>$tables</code> holds <code>smd</code> and <code>group_counts</code> (<code>group</code>, the value in
-<code>treatment_col</code>; a logical <code>treated</code>; <code>n</code>); <code>$models$forest</code> is the fitted
-forest.</p>
+<code>decile</code>; <code>$meta</code> follows <code><a href="ps_logistic.html">ps_logistic()</a></code> with <code>method = "forest-oob"</code>
+and <code>seed</code>, the seed used (<code>NA</code> when none was given); <code>$tables</code> holds
+<code>smd</code> and <code>group_counts</code> (<code>group</code>, the value in <code>treatment_col</code>; a logical
+<code>treated</code>; <code>n</code>); <code>$models$forest</code> is the fitted forest.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="threads-and-reproducibility">Threads and reproducibility<a class="anchor" aria-label="anchor" href="#threads-and-reproducibility"></a></h2>
+
+
+<p>A seed makes the forest reproducible: seeded this way, fits have matched to
+the last digit on a 192-thread OpenMP Linux server and a single-threaded
+Mac. <code>randomForestSRC</code> uses every core unless <code>options(rf.cores = )</code> says
+otherwise, and some <code>randomForestSRC</code> procedures have not been stable from
+run to run under OpenMP. When two runs with the same seed disagree, set
+<code>options(rf.cores = 1L)</code> before calling <code>ps_forest()</code>; it costs speed and
+buys a single-threaded, repeatable fit. This function leaves the option
+alone.</p>
     </div>
 
     <div class="section level2">

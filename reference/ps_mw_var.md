@@ -46,7 +46,12 @@ ps_mw_var(
 
 - seed:
 
-  Optional integer seed.
+  `NULL` (default) or one whole number. With a seed, the random number
+  stream is set to `abs(seed)` immediately before the draws, the result
+  is reproducible whatever ran earlier in the session, the caller's
+  stream is restored afterwards, and the seed is kept in `$meta$seed`.
+  With `NULL` the draws come from the caller's stream and advance it,
+  and `$meta$seed` is `NA`.
 
 - treated_level:
 

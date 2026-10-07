@@ -11,7 +11,7 @@ the dataset used in tp.lm.logistic_propensity.polytomous.sas."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@ Default <code>200L</code>.</p></dd>
 <dd><p>Random seed.  Default <code>42L</code>. The fixed default gives the
 same demo dataset on every call. <code>NULL</code> draws from the caller's random-number stream, as
 <code><a href="ps_match.html">ps_match()</a></code> does: the data differ from call to call, and <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the call
-reproduces them.</p></dd>
+reproduces them. A negative seed gives the same data as its absolute value.</p></dd>
 
 </dl></div>
     <div class="section level2">

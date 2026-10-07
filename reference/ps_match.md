@@ -66,10 +66,13 @@ ps_match(
 
 - seed:
 
-  Integer seed for the random shuffling of treated- patient order that
-  reduces order-dependence. Pass an integer for a reproducible matched
-  set; `NULL` (default) uses the session's current RNG state (not
-  reproducible across sessions).
+  Seed for the random shuffling of treated-patient order that reduces
+  order-dependence. `NULL` (default) or one whole number. With a seed,
+  the random number stream is set to `abs(seed)` immediately before the
+  draws, the result is reproducible whatever ran earlier in the session,
+  the caller's stream is restored afterwards, and the seed is kept in
+  `$meta$seed`. With `NULL` the draws come from the caller's stream and
+  advance it, and `$meta$seed` is `NA`.
 
 - treated_level:
 
@@ -92,7 +95,7 @@ An object of class `c("ps_match", "ps_data")` with:
 - `$meta`:
 
   Named list: `treatment_col`, `score_col`, `id_col`, `match_col`,
-  `pair_id_col`, `caliper`, `method`, `n_total`, `n_matched`,
+  `pair_id_col`, `caliper`, `method`, `seed`, `n_total`, `n_matched`,
   `n_unmatched`.
 
 - `$tables`:
@@ -170,12 +173,12 @@ head(obj$data)
 #> 5  5    0 81.23415      1 50.53527        0            0 0.3751620     1
 #> 6  6    0 77.15100      0 51.42113        0            0 0.3148051     1
 #>   pair_id
-#> 1     185
-#> 2      44
-#> 3     100
-#> 4     127
-#> 5       2
-#> 6     118
+#> 1     186
+#> 2      45
+#> 3     104
+#> 4     129
+#> 5       3
+#> 6      27
 table(obj$data$match)
 #> 
 #>   1 

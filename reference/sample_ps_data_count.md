@@ -25,7 +25,8 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
   does: the data differ from call to call, and
   [`set.seed()`](https://rdrr.io/r/base/Random.html) before the call
-  reproduces them.
+  reproduces them. A negative seed gives the same data as its absolute
+  value.
 
 - n_imputations:
 

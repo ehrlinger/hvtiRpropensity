@@ -13,7 +13,7 @@ tau, differenced, with a stratified bootstrap interval."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,10 +110,12 @@ draw (supported for <code>ps_logistic</code> and <code>ps_forest</code> inputs).
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional integer bootstrap seed. With <code>NULL</code> (default) the draws
-come from the caller's random number stream, so the interval varies from
-run to run. With a seed the result is reproducible and the caller's stream
-is restored afterwards.</p></dd>
+<dd><p>Bootstrap seed: <code>NULL</code> (default) or one whole number. With a seed, the
+random number stream is set to <code>abs(seed)</code> immediately before the draws,
+the result is reproducible whatever ran earlier in the session, the
+caller's stream is restored afterwards, and the seed is kept in
+<code>$meta$seed</code>. With <code>NULL</code> the draws come from the caller's stream and
+advance it, and <code>$meta$seed</code> is <code>NA</code>.</p></dd>
 
 
 <dt id="arg-time-unit-days">time_unit_days<a class="anchor" aria-label="anchor" href="#arg-time-unit-days"></a></dt>
@@ -134,7 +136,8 @@ per subset-and-weighting estimator: <code>estimator</code>, <code>subset</code>,
 <code>lo_days</code>, <code>hi_days</code> (2.5 and 97.5 percent bootstrap) and <code>n_failed</code>.
 <code>$tables$curves</code> has the weighted Kaplan-Meier steps (<code>estimator</code>, <code>arm</code>,
 <code>time</code>, <code>surv</code>) for plotting; <code>$data</code> is <code>x$data</code> plus one weight column
-<code>w_&lt;weighting&gt;</code> per scheme.</p>
+<code>w_&lt;weighting&gt;</code> per scheme. <code>$meta$seed</code> is the seed used (<code>NA</code> when none
+was given).</p>
     </div>
 
     <div class="section level2">

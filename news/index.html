@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">hvtiRpropensity</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.10</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.11</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,18 @@
       <small>Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.11" id="hvtirpropensity-0111">hvtiRpropensity 0.1.11<a class="anchor" aria-label="anchor" href="#hvtirpropensity-0111"></a></h2>
+<ul><li>A seed now makes every random function reproducible whatever the session drew before it. <code><a href="../reference/ps_forest.html">ps_forest()</a></code>, <code><a href="../reference/ps_match.html">ps_match()</a></code>, <code><a href="../reference/ps_rmst.html">ps_rmst()</a></code>, <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> set the stream to <code>abs(seed)</code> immediately before their draws and restore the caller’s stream afterwards. <code><a href="../reference/ps_forest.html">ps_forest()</a></code> now does this as well as passing <code>seed = -abs(seed)</code> to <code><a href="https://www.randomforestsrc.org//reference/rfsrc.html" class="external-link">randomForestSRC::rfsrc()</a></code>; before, it set no R seed. The default stays <code>seed = NULL</code>, which draws from the caller’s stream as before. A positive seed gives the same result as in 0.1.10; a negative one now gives the same result as its absolute value.</li>
+<li>Each of those five functions records the seed it used in <code>$meta$seed</code>, <code>NA</code> when none was given. <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> used to store <code>NULL</code> there. A seed that is not one whole number is an error.</li>
+<li>
+<code><a href="../reference/ps_forest.html">ps_forest()</a></code> documents the thread trade-off: if two runs with the same seed disagree, set <code>options(rf.cores = 1L)</code>.</li>
+<li>A new test scans every function in the package and fails on a random draw that no seeding call precedes.</li>
+<li>
+<code><a href="../reference/sample_ps_data.html">sample_ps_data()</a></code>, <code><a href="../reference/sample_ps_data_ordinal.html">sample_ps_data_ordinal()</a></code>, <code><a href="../reference/sample_ps_data_nominal.html">sample_ps_data_nominal()</a></code> and <code><a href="../reference/sample_ps_data_count.html">sample_ps_data_count()</a></code> no longer warn when called with <code>seed = NULL</code>. <code>NULL</code> now draws from the caller’s random-number stream, as <code><a href="../reference/ps_match.html">ps_match()</a></code> and <code><a href="../reference/ps_rmst.html">ps_rmst()</a></code> do, so <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the call reproduces the data. Before, the generators reseeded from the clock and warned that <code>.Random.seed</code> was <code>NULL</code>.</li>
+<li>The generators now check <code>seed</code> and use its absolute value, as the five functions above do: a negative seed gives the same data as its absolute value, and a seed that is not one whole number is an error.</li>
+<li>Now requires R 4.4.0 or newer, up from 4.1.0, to match the rest of the HVTI family. <code>hvtiR::install()</code> installs the members together, and several already required 4.4.0, so on an older R the install failed whatever this package declared.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.10" id="hvtirpropensity-0110">hvtiRpropensity 0.1.10<a class="anchor" aria-label="anchor" href="#hvtirpropensity-0110"></a></h2>
 <ul><li>New tests compare <code><a href="../reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> with the CCF macros <code>%stddiff</code>, <code>%stddiffci</code> and <code>%mw_var</code>, run in SAS on a synthetic dataset (<code>tests/testthat/fixtures/stddiff-sas/</code>). All three agree with the macros: standardized differences to within 4e-7, the <code>%mw_var</code> estimate to 3e-10 (<a href="https://github.com/ehrlinger/hvtiRpropensity/issues/34" class="external-link">#34</a>).</li>

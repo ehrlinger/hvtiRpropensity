@@ -1,5 +1,57 @@
 # Changelog
 
+## hvtiRpropensity 0.1.11
+
+- A seed now makes every random function reproducible whatever the
+  session drew before it.
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md),
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+  [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md),
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  set the stream to `abs(seed)` immediately before their draws and
+  restore the caller’s stream afterwards.
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+  now does this as well as passing `seed = -abs(seed)` to
+  [`randomForestSRC::rfsrc()`](https://www.randomforestsrc.org//reference/rfsrc.html);
+  before, it set no R seed. The default stays `seed = NULL`, which draws
+  from the caller’s stream as before. A positive seed gives the same
+  result as in 0.1.10; a negative one now gives the same result as its
+  absolute value.
+- Each of those five functions records the seed it used in `$meta$seed`,
+  `NA` when none was given.
+  [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+  and
+  [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+  used to store `NULL` there. A seed that is not one whole number is an
+  error.
+- [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+  documents the thread trade-off: if two runs with the same seed
+  disagree, set `options(rf.cores = 1L)`.
+- A new test scans every function in the package and fails on a random
+  draw that no seeding call precedes.
+- [`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md),
+  [`sample_ps_data_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_ordinal.md),
+  [`sample_ps_data_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_nominal.md)
+  and
+  [`sample_ps_data_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_count.md)
+  no longer warn when called with `seed = NULL`. `NULL` now draws from
+  the caller’s random-number stream, as
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+  and
+  [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+  do, so [`set.seed()`](https://rdrr.io/r/base/Random.html) before the
+  call reproduces the data. Before, the generators reseeded from the
+  clock and warned that `.Random.seed` was `NULL`.
+- The generators now check `seed` and use its absolute value, as the
+  five functions above do: a negative seed gives the same data as its
+  absolute value, and a seed that is not one whole number is an error.
+- Now requires R 4.4.0 or newer, up from 4.1.0, to match the rest of the
+  HVTI family. `hvtiR::install()` installs the members together, and
+  several already required 4.4.0, so on an older R the install failed
+  whatever this package declared.
+
 ## hvtiRpropensity 0.1.10
 
 - New tests compare
