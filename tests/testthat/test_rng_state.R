@@ -66,3 +66,18 @@ test_that("the sample-data generators accept seed = NULL and draw fresh data", {
   expect_equal(nrow(count), 100L)
   expect_false(identical(count$age[1:50], count$age[51:100]))
 })
+
+test_that("seed = NULL draws from the caller's stream, so set.seed() reproduces it", {
+  gens <- list(
+    function() sample_ps_data(n = 50, seed = NULL),
+    function() sample_ps_data_ordinal(n = 30, seed = NULL),
+    function() sample_ps_data_nominal(n = 30, seed = NULL),
+    function() sample_ps_data_count(n = 50, seed = NULL, n_imputations = 2)
+  )
+  for (gen in gens) {
+    set.seed(99)
+    expect_no_warning(first <- gen())
+    set.seed(99)
+    expect_identical(gen(), first)
+  }
+})
