@@ -70,7 +70,9 @@ Default <code>300L</code>.</p></dd>
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Random seed.  Default <code>42L</code>. The fixed default gives the
-same demo dataset on every call; <code>NULL</code> gives a fresh one.</p></dd>
+same demo dataset on every call. <code>NULL</code> draws from the caller's random-number stream, as
+<code><a href="ps_match.html">ps_match()</a></code> does: the data differ from call to call, and <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the call
+reproduces them.</p></dd>
 
 </dl></div>
     <div class="section level2">

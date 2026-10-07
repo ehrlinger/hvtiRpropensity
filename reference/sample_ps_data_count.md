@@ -20,7 +20,12 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
 - seed:
 
   Random seed. Default `42L`. The fixed default gives the same demo
-  dataset on every call; `NULL` gives a fresh one.
+  dataset on every call. `NULL` draws from the caller's random-number
+  stream, as
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+  does: the data differ from call to call, and
+  [`set.seed()`](https://rdrr.io/r/base/Random.html) before the call
+  reproduces them.
 
 - n_imputations:
 
