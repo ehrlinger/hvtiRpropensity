@@ -12,7 +12,7 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
 \item{seed}{Random seed.  Default \code{42L}. The fixed default gives the
 same demo dataset on every call. \code{NULL} draws from the caller's random-number stream, as
 \code{\link[=ps_match]{ps_match()}} does: the data differ from call to call, and \code{set.seed()} before the call
-reproduces them.}
+reproduces them. A negative seed gives the same data as its absolute value.}
 
 \item{n_imputations}{If \verb{> 1}, returns a stacked multiply-imputed data
 frame with an \verb{_IMPUTATION_} index column containing \code{n_imputations}

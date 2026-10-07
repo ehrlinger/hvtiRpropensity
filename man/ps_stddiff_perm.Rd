@@ -39,7 +39,12 @@ rejected without it.}
 
 \item{n_perm}{Number of permutations. Default \code{1000}, the macro's.}
 
-\item{seed}{Optional integer seed.}
+\item{seed}{\code{NULL} (default) or one whole number. With a seed, the
+random number stream is set to \code{abs(seed)} immediately before the draws,
+the result is reproducible whatever ran earlier in the session, the
+caller's stream is restored afterwards, and the seed is kept in
+\verb{$meta$seed}. With \code{NULL} the draws come from the caller's stream and
+advance it, and \verb{$meta$seed} is \code{NA}.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a

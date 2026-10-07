@@ -13,7 +13,7 @@ sample_ps_data(n = 500L, seed = 42L, separation = 1)
 \item{seed}{Random seed for reproducibility.  Default \code{42L}. The fixed default gives the
 same demo dataset on every call. \code{NULL} draws from the caller's random-number stream, as
 \code{\link[=ps_match]{ps_match()}} does: the data differ from call to call, and \code{set.seed()} before the call
-reproduces them.}
+reproduces them. A negative seed gives the same data as its absolute value.}
 
 \item{separation}{Numeric scalar controlling how well the covariates
 separate the two groups.  Higher values give less overlap.  Default \code{1.0}.}

@@ -45,10 +45,13 @@ overwritten.}
 \item{ratio}{Matching ratio (controls : treated).  Currently
 only \code{1} (1:1) is supported.  Default \code{1}.}
 
-\item{seed}{Integer seed for the random shuffling of treated-
-patient order that reduces order-dependence.  Pass an integer for a
-reproducible matched set; \code{NULL} (default) uses the session's current
-RNG state (not reproducible across sessions).}
+\item{seed}{Seed for the random shuffling of treated-patient
+order that reduces order-dependence. \code{NULL} (default) or one whole number. With a
+seed, the random number stream is set to \code{abs(seed)} immediately before the draws,
+the result is reproducible whatever ran earlier in the session, the
+caller's stream is restored afterwards, and the seed is kept in
+\verb{$meta$seed}. With \code{NULL} the draws come from the caller's stream and
+advance it, and \verb{$meta$seed} is \code{NA}.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
@@ -64,7 +67,7 @@ appended.  \code{match_col} is \code{1} for matched patients and \code{0} otherw
 belongs to (\code{NA} for unmatched patients).  Filter to \code{match == 1} to
 obtain the matched subset.}
 \item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{id_col},
-\code{match_col}, \code{pair_id_col}, \code{caliper}, \code{method}, \code{n_total},
+\code{match_col}, \code{pair_id_col}, \code{caliper}, \code{method}, \code{seed}, \code{n_total},
 \code{n_matched}, \code{n_unmatched}.}
 \item{\verb{$tables}}{Named list: \code{smd_before}, \code{smd_after},
 \code{group_counts_before}, \code{group_counts_after}. Group tables name each

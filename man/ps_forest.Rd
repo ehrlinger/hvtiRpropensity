@@ -37,7 +37,13 @@ is P(treated)). Defaults to \code{1} / \code{TRUE}.}
 
 \item{ntree}{Number of trees.}
 
-\item{seed}{Optional integer seed passed to \code{\link[randomForestSRC:rfsrc]{randomForestSRC::rfsrc()}}.}
+\item{seed}{\code{NULL} (default) or one whole number. With a seed, R's random
+number stream is set to \code{abs(seed)} immediately before the fit and
+\code{\link[randomForestSRC:rfsrc]{randomForestSRC::rfsrc()}} is given \code{seed = -abs(seed)}, the sign it
+requires; the caller's stream is restored afterwards and the seed is kept
+in \verb{$meta$seed}. With \code{NULL}, \code{rfsrc()} takes its seed from the caller's
+stream, so the scores depend on whatever drew random numbers earlier in
+the session.}
 
 \item{clip}{Scores are clipped to \verb{[clip, 1 - clip]} before the logit and
 weight are computed. Forest probabilities can be exactly 0 or 1.}
@@ -47,10 +53,10 @@ weight are computed. Forest probabilities can be exactly 0 or 1.}
 \value{
 A \code{ps_forest} / \code{ps_data} object. \verb{$data} is \code{data} plus
 \code{score_col}, \code{logit_col}, \code{weight_col} (overlap weights), \code{quintile} and
-\code{decile}; \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"};
-\verb{$tables} holds \code{smd} and \code{group_counts} (\code{group}, the value in
-\code{treatment_col}; a logical \code{treated}; \code{n}); \verb{$models$forest} is the fitted
-forest.
+\code{decile}; \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"}
+and \code{seed}, the seed used (\code{NA} when none was given); \verb{$tables} holds
+\code{smd} and \code{group_counts} (\code{group}, the value in \code{treatment_col}; a logical
+\code{treated}; \code{n}); \verb{$models$forest} is the fitted forest.
 }
 \description{
 Estimates P(treated) with a random-forest classifier
@@ -60,6 +66,18 @@ The result has the same contract as \code{\link[=ps_logistic]{ps_logistic()}}, s
 \code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_match]{ps_match()}}, \code{\link[=sa_overlap]{sa_overlap()}} and
 \code{hvtiPlotR::hv_balance()} / \code{hvtiPlotR::hv_mirror_hist()} unchanged.
 }
+\section{Threads and reproducibility}{
+
+A seed makes the forest reproducible: seeded this way, fits have matched to
+the last digit on a 192-thread OpenMP Linux server and a single-threaded
+Mac. \code{randomForestSRC} uses every core unless \code{options(rf.cores = )} says
+otherwise, and some \code{randomForestSRC} procedures have not been stable from
+run to run under OpenMP. When two runs with the same seed disagree, set
+\code{options(rf.cores = 1L)} before calling \code{ps_forest()}; it costs speed and
+buys a single-threaded, repeatable fit. This function leaves the option
+alone.
+}
+
 \examples{
 \donttest{
 if (requireNamespace("randomForestSRC", quietly = TRUE)) {

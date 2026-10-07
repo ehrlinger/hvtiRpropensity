@@ -39,10 +39,12 @@ subset). The full data is always included as \code{"all"}.}
 which understates uncertainty. If \code{TRUE} the score model is refit on each
 draw (supported for \code{ps_logistic} and \code{ps_forest} inputs).}
 
-\item{seed}{Optional integer bootstrap seed. With \code{NULL} (default) the draws
-come from the caller's random number stream, so the interval varies from
-run to run. With a seed the result is reproducible and the caller's stream
-is restored afterwards.}
+\item{seed}{Bootstrap seed: \code{NULL} (default) or one whole number. With a seed, the
+random number stream is set to \code{abs(seed)} immediately before the draws,
+the result is reproducible whatever ran earlier in the session, the
+caller's stream is restored afterwards, and the seed is kept in
+\verb{$meta$seed}. With \code{NULL} the draws come from the caller's stream and
+advance it, and \verb{$meta$seed} is \code{NA}.}
 
 \item{time_unit_days}{Days per unit of \code{time_col}, for the \code{diff_days}
 column. Default \code{365.2425} (time in years).}
@@ -57,7 +59,8 @@ per subset-and-weighting estimator: \code{estimator}, \code{subset}, \code{weigh
 \code{lo_days}, \code{hi_days} (2.5 and 97.5 percent bootstrap) and \code{n_failed}.
 \verb{$tables$curves} has the weighted Kaplan-Meier steps (\code{estimator}, \code{arm},
 \code{time}, \code{surv}) for plotting; \verb{$data} is \code{x$data} plus one weight column
-\verb{w_<weighting>} per scheme.
+\verb{w_<weighting>} per scheme. \verb{$meta$seed} is the seed used (\code{NA} when none
+was given).
 }
 \description{
 Design-based comparison of restricted mean survival time (RMST) between
