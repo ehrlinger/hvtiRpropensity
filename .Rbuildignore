@@ -13,3 +13,4 @@
 ^\.superpowers$
 ^\.git$
 ^reports$
+^pkgdown$
