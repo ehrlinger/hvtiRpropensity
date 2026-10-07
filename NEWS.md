@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.11
 
 * A seed now makes every random function reproducible whatever the session
   drew before it. `ps_forest()`, `ps_match()`, `ps_rmst()`,
