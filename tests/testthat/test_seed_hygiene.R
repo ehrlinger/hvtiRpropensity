@@ -82,6 +82,16 @@ test_that("ps_mw_var() with a seed ignores the session's history and records the
   expect_identical(run(8)$meta$seed, 8L)
 })
 
+test_that("the sample-data generators take a seed's absolute value and reject a bad one", {
+  expect_identical(sample_ps_data(n = 50, seed = -3), sample_ps_data(n = 50, seed = 3))
+  expect_identical(sample_ps_data_ordinal(n = 50, seed = -3), sample_ps_data_ordinal(n = 50, seed = 3))
+  expect_identical(sample_ps_data_nominal(n = 50, seed = -3), sample_ps_data_nominal(n = 50, seed = 3))
+  expect_identical(sample_ps_data_count(n = 50, seed = -3, n_imputations = 2),
+                   sample_ps_data_count(n = 50, seed = 3, n_imputations = 2))
+  expect_error(sample_ps_data(n = 50, seed = 1.5), "whole number")
+  expect_error(sample_ps_data_count(n = 50, seed = "1"), "whole number")
+})
+
 test_that("a seed that is not one whole number is rejected", {
   d <- sample_ps_data(n = 60, seed = 42)
   expect_error(ps_match(d, seed = 1.5), "whole number")
