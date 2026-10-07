@@ -11,7 +11,9 @@ sample_ps_data_ordinal(n = 300L, seed = 42L)
 Default \code{300L}.}
 
 \item{seed}{Random seed.  Default \code{42L}. The fixed default gives the
-same demo dataset on every call; \code{NULL} gives a fresh one.}
+same demo dataset on every call. \code{NULL} draws from the caller's random-number stream, as
+\code{\link[=ps_match]{ps_match()}} does: the data differ from call to call, and \code{set.seed()} before the call
+reproduces them.}
 }
 \value{
 A data frame with \code{3 * n} rows and columns: \code{id}, \code{nyha_grp}

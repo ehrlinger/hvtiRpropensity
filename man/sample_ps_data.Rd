@@ -11,7 +11,9 @@ sample_ps_data(n = 500L, seed = 42L, separation = 1)
 \code{2 * n}.  Must be a positive integer.  Default \code{500}.}
 
 \item{seed}{Random seed for reproducibility.  Default \code{42L}. The fixed default gives the
-same demo dataset on every call; \code{NULL} gives a fresh one.}
+same demo dataset on every call. \code{NULL} draws from the caller's random-number stream, as
+\code{\link[=ps_match]{ps_match()}} does: the data differ from call to call, and \code{set.seed()} before the call
+reproduces them.}
 
 \item{separation}{Numeric scalar controlling how well the covariates
 separate the two groups.  Higher values give less overlap.  Default \code{1.0}.}

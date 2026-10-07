@@ -1,5 +1,12 @@
 # hvtiRpropensity (unreleased)
 
+* `sample_ps_data()`, `sample_ps_data_ordinal()`, `sample_ps_data_nominal()` and
+  `sample_ps_data_count()` no longer warn when called with `seed = NULL`. `NULL`
+  now draws from the caller's random-number stream, as `ps_match()` and
+  `ps_rmst()` do, so `set.seed()` before the call reproduces the data. Before,
+  the generators reseeded from the clock and warned that `.Random.seed` was
+  `NULL`.
+
 * Now requires R 4.4.0 or newer, up from 4.1.0, to match the rest of the
   HVTI family. `hvtiR::install()` installs the members together, and several
   already required 4.4.0, so on an older R the install failed whatever this

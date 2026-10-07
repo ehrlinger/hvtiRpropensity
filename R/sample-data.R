@@ -23,7 +23,9 @@
 #' @param n         Number of patients per treatment arm.  Total rows =
 #'   `2 * n`.  Must be a positive integer.  Default `500`.
 #' @param seed      Random seed for reproducibility.  Default `42L`. The fixed default gives the
-#'   same demo dataset on every call; `NULL` gives a fresh one.
+#'   same demo dataset on every call. `NULL` draws from the caller's random-number stream, as
+#'   [ps_match()] does: the data differ from call to call, and `set.seed()` before the call
+#'   reproduces them.
 #' @param separation Numeric scalar controlling how well the covariates
 #'   separate the two groups.  Higher values give less overlap.  Default `1.0`.
 #'
@@ -56,7 +58,7 @@ sample_ps_data <- function(n = 500L, seed = 42L, separation = 1.0) {
   if (!is.numeric(separation) || length(separation) != 1L || separation <= 0)
     stop("`separation` must be a positive number.", call. = FALSE)
 
-  withr::local_seed(seed)
+  if (!is.null(seed)) withr::local_seed(seed)
   n <- as.integer(n)
 
   # Control arm (tavr = 0): older, lower EF
@@ -110,7 +112,9 @@ sample_ps_data <- function(n = 500L, seed = 42L, separation = 1.0) {
 #' @param n    Number of patients per treatment level.  Total rows = `3 * n`.
 #'   Default `300L`.
 #' @param seed Random seed.  Default `42L`. The fixed default gives the
-#'   same demo dataset on every call; `NULL` gives a fresh one.
+#'   same demo dataset on every call. `NULL` draws from the caller's random-number stream, as
+#'   [ps_match()] does: the data differ from call to call, and `set.seed()` before the call
+#'   reproduces them.
 #'
 #' @return A data frame with `3 * n` rows and columns: `id`, `nyha_grp`
 #'   (ordered factor: I < II < III), `age`, `female`, `ef`, `diabetes`,
@@ -128,7 +132,7 @@ sample_ps_data_ordinal <- function(n = 300L, seed = 42L) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
     stop("`n` must be a positive integer.", call. = FALSE)
 
-  withr::local_seed(seed)
+  if (!is.null(seed)) withr::local_seed(seed)
   n <- as.integer(n)
 
   # NYHA I: younger, higher EF, fewer comorbidities
@@ -181,7 +185,9 @@ sample_ps_data_ordinal <- function(n = 300L, seed = 42L) {
 #' @param n    Number of patients per treatment level.  Total rows = `4 * n`.
 #'   Default `200L`.
 #' @param seed Random seed.  Default `42L`. The fixed default gives the
-#'   same demo dataset on every call; `NULL` gives a fresh one.
+#'   same demo dataset on every call. `NULL` draws from the caller's random-number stream, as
+#'   [ps_match()] does: the data differ from call to call, and `set.seed()` before the call
+#'   reproduces them.
 #'
 #' @return A data frame with `4 * n` rows and columns: `id`, `rtyp`
 #'   (unordered factor), `age`, `female`, `ef`, `diabetes`, `hypertension`.
@@ -198,7 +204,7 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
     stop("`n` must be a positive integer.", call. = FALSE)
 
-  withr::local_seed(seed)
+  if (!is.null(seed)) withr::local_seed(seed)
   n <- as.integer(n)
 
   # COS (commissurotomy): younger, lower EF
@@ -257,7 +263,9 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
 #'
 #' @param n             Number of patients.  Default `500L`.
 #' @param seed          Random seed.  Default `42L`. The fixed default gives the
-#'   same demo dataset on every call; `NULL` gives a fresh one.
+#'   same demo dataset on every call. `NULL` draws from the caller's random-number stream, as
+#'   [ps_match()] does: the data differ from call to call, and `set.seed()` before the call
+#'   reproduces them.
 #' @param n_imputations If `> 1`, returns a stacked multiply-imputed data
 #'   frame with an `_IMPUTATION_` index column containing `n_imputations`
 #'   replicates (each with slightly jittered covariate values to mimic
@@ -286,7 +294,7 @@ sample_ps_data_count <- function(n = 500L, seed = 42L, n_imputations = 1L) {
       n_imputations < 1L)
     stop("`n_imputations` must be a positive integer.", call. = FALSE)
 
-  withr::local_seed(seed)
+  if (!is.null(seed)) withr::local_seed(seed)
   n             <- as.integer(n)
   n_imputations <- as.integer(n_imputations)
 
