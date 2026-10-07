@@ -1,3 +1,9 @@
+# hvtiRpropensity (unreleased)
+
+* `DESCRIPTION` now declares the Quarto command line tool in
+  `SystemRequirements`. The vignettes have always needed it to build; the
+  field makes that visible to installers and to `R CMD check`.
+
 # hvtiRpropensity 0.1.11
 
 * A seed now makes every random function reproducible whatever the session
