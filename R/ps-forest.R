@@ -17,17 +17,33 @@
 #' @param treated_level Value of `treatment_col` that is "treated" (the score
 #'   is P(treated)). Defaults to `1` / `TRUE`.
 #' @param ntree Number of trees.
-#' @param seed Optional integer seed passed to [randomForestSRC::rfsrc()].
+#' @param seed `NULL` (default) or one whole number. With a seed, R's random
+#'   number stream is set to `abs(seed)` immediately before the fit and
+#'   [randomForestSRC::rfsrc()] is given `seed = -abs(seed)`, the sign it
+#'   requires; the caller's stream is restored afterwards and the seed is kept
+#'   in `$meta$seed`. With `NULL`, `rfsrc()` takes its seed from the caller's
+#'   stream, so the scores depend on whatever drew random numbers earlier in
+#'   the session.
 #' @param clip Scores are clipped to `[clip, 1 - clip]` before the logit and
 #'   weight are computed. Forest probabilities can be exactly 0 or 1.
 #' @param ... Further arguments for [randomForestSRC::rfsrc()].
 #'
+#' @section Threads and reproducibility:
+#' A seed makes the forest reproducible: seeded this way, fits have matched to
+#' the last digit on a 192-thread OpenMP Linux server and a single-threaded
+#' Mac. `randomForestSRC` uses every core unless `options(rf.cores = )` says
+#' otherwise, and some `randomForestSRC` procedures have not been stable from
+#' run to run under OpenMP. When two runs with the same seed disagree, set
+#' `options(rf.cores = 1L)` before calling `ps_forest()`; it costs speed and
+#' buys a single-threaded, repeatable fit. This function leaves the option
+#' alone.
+#'
 #' @return A `ps_forest` / `ps_data` object. `$data` is `data` plus
 #'   `score_col`, `logit_col`, `weight_col` (overlap weights), `quintile` and
-#'   `decile`; `$meta` follows [ps_logistic()] with `method = "forest-oob"`;
-#'   `$tables` holds `smd` and `group_counts` (`group`, the value in
-#'   `treatment_col`; a logical `treated`; `n`); `$models$forest` is the fitted
-#'   forest.
+#'   `decile`; `$meta` follows [ps_logistic()] with `method = "forest-oob"`
+#'   and `seed`, the seed used (`NA` when none was given); `$tables` holds
+#'   `smd` and `group_counts` (`group`, the value in `treatment_col`; a logical
+#'   `treated`; `n`); `$models$forest` is the fitted forest.
 #'
 #' @examples
 #' \donttest{
@@ -55,6 +71,7 @@ ps_forest <- function(formula,
     rlang::abort("`formula` must be an R formula.", call. = FALSE)
   }
   .check_df(data)
+  seed <- .seed_value(seed)
   if (is.null(treatment_col)) treatment_col <- as.character(formula[[2L]])
   if (!identical(treatment_col, as.character(formula[[2L]]))) {
     rlang::abort("`treatment_col` must match the response on the left of `formula`.", call. = FALSE)
@@ -75,9 +92,12 @@ ps_forest <- function(formula,
 
   fit_data <- data[, vars, drop = FALSE]
   fit_data[[treatment_col]] <- factor(trt, levels = c(0L, 1L))
-  if (!is.null(seed)) seed <- -abs(as.integer(seed))   # rfsrc wants a negative seed
-  args <- c(list(formula = formula, data = fit_data, ntree = ntree), if (!is.null(seed)) list(seed = seed),
+  # Seed R's stream as well as rfsrc's own: rfsrc wants a negative seed, and
+  # without set.seed() immediately before it some draws still follow the
+  # session's history.
+  args <- c(list(formula = formula, data = fit_data, ntree = ntree), if (!is.null(seed)) list(seed = -seed),
             list(...))
+  if (!is.null(seed)) withr::local_seed(seed)
   fit <- do.call(randomForestSRC::rfsrc, args)
 
   probs <- pmin(pmax(fit$predicted.oob[, "1"], clip), 1 - clip)
@@ -101,7 +121,8 @@ ps_forest <- function(formula,
       formula = formula, treatment_col = treatment_col, id_col = id_col,
       score_col = score_col, logit_col = logit_col, weight_col = weight_col,
       treated_level = treated_level, treatment_levels = treatment$labels,
-      method = "forest-oob", ntree = ntree, n_total = nrow(out)
+      method = "forest-oob", ntree = ntree, seed = if (is.null(seed)) NA_integer_ else seed,
+      n_total = nrow(out)
     ),
     tables = list(
       smd = smd_tbl,

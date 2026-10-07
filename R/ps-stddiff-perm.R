@@ -58,7 +58,12 @@
 #'   returns matching weights. Required when `weight_col` is given, and
 #'   rejected without it.
 #' @param n_perm Number of permutations. Default `1000`, the macro's.
-#' @param seed Optional integer seed.
+#' @param seed `NULL` (default) or one whole number. With a seed, the
+#'   random number stream is set to `abs(seed)` immediately before the draws,
+#'   the result is reproducible whatever ran earlier in the session, the
+#'   caller's stream is restored afterwards, and the seed is kept in
+#'   `$meta$seed`. With `NULL` the draws come from the caller's stream and
+#'   advance it, and `$meta$seed` is `NA`.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. `NULL`
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
@@ -109,6 +114,7 @@ ps_stddiff_perm <- function(data,
     rlang::abort("`reweight` was given without `weight_col` to write its weights to.", call = NULL)
   }
   .check_cols(data, treatment_col)
+  seed <- .seed_value(seed)
 
   # Seed before anything that may draw, reweight on the observed data
   # included, and restore the caller's stream on exit.
@@ -154,7 +160,8 @@ ps_stddiff_perm <- function(data,
     meta   = list(treatment_col = treatment_col, weight_col = weight_col,
                   variables = list(gaussian = gaussian, nong_ord = nong_ord,
                                    binary = binary, categorical = categorical),
-                  method = "stddiff_perm", n_perm = n_perm, seed = seed, n_total = nrow(data)),
+                  method = "stddiff_perm", n_perm = n_perm, seed = if (is.null(seed)) NA_integer_ else seed,
+                  n_total = nrow(data)),
     tables = list(stddiff_perm = tbl),
     subclass = "ps_stddiff_perm"
   )
