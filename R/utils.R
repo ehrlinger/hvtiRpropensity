@@ -293,3 +293,28 @@
   list(trt = as.integer(as.character(x) == treated_level),
        labels = c(setdiff(values, treated_level), treated_level))
 }
+
+
+# ---------------------------------------------------------------------------
+# Seeds
+# ---------------------------------------------------------------------------
+
+#' Validate a seed and return its absolute value
+#'
+#' Every function that draws random numbers passes its `seed` through here.
+#' The draws are seeded with `withr::local_seed(abs(seed))` and
+#' `randomForestSRC::rfsrc()` is given `-abs(seed)`, the sign it requires, so
+#' `seed = 5` and `seed = -5` give the same result.
+#'
+#' @param seed `NULL`, or one whole number.
+#' @param call_env Environment for the error call.
+#' @return `NULL`, or `abs(seed)` as an integer.
+#' @keywords internal
+.seed_value <- function(seed, call_env = rlang::caller_env()) {
+  if (is.null(seed)) return(NULL)
+  if (!is.numeric(seed) || length(seed) != 1L || !is.finite(seed) || seed != round(seed) ||
+        abs(seed) > .Machine$integer.max) {
+    rlang::abort("`seed` must be `NULL` or one whole number.", call = call_env)
+  }
+  as.integer(abs(seed))
+}

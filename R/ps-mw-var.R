@@ -57,7 +57,12 @@
 #'   positive and finite.
 #' @param n_rep Number of bootstrap replicates. Default `1000`, the macro's
 #'   `RESAMPL=`.
-#' @param seed Optional integer seed.
+#' @param seed `NULL` (default) or one whole number. With a seed, the
+#'   random number stream is set to `abs(seed)` immediately before the draws,
+#'   the result is reproducible whatever ran earlier in the session, the
+#'   caller's stream is restored afterwards, and the seed is kept in
+#'   `$meta$seed`. With `NULL` the draws come from the caller's stream and
+#'   advance it, and `$meta$seed` is `NA`.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. `NULL`
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
@@ -105,6 +110,7 @@ ps_mw_var <- function(data,
   outcomes <- as.character(outcomes)
   if (length(outcomes) == 0L) rlang::abort("Name at least one column in `outcomes`.", call = NULL)
   .check_cols(data, c(treatment_col, outcomes, weight_col))
+  seed <- .seed_value(seed)
   for (v in outcomes) {
     if (!is.numeric(data[[v]])) {
       rlang::abort(sprintf("Outcome column `%s` must be numeric.", v), call = NULL)
@@ -171,7 +177,8 @@ ps_mw_var <- function(data,
   new_ps_data(
     data   = data,
     meta   = list(treatment_col = treatment_col, weight_col = weight_col, outcomes = outcomes,
-                  method = "mw_var", n_rep = n_rep, seed = seed, n_total = nrow(data), n_dropped = sum(!keep)),
+                  method = "mw_var", n_rep = n_rep, seed = if (is.null(seed)) NA_integer_ else seed,
+                  n_total = nrow(data), n_dropped = sum(!keep)),
     tables = list(mw_var = tbl),
     subclass = "ps_mw_var"
   )

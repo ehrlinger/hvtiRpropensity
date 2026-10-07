@@ -18,10 +18,12 @@
 #' @param refit If `FALSE` (default) the score is held fixed in the bootstrap,
 #'   which understates uncertainty. If `TRUE` the score model is refit on each
 #'   draw (supported for `ps_logistic` and `ps_forest` inputs).
-#' @param seed Optional integer bootstrap seed. With `NULL` (default) the draws
-#'   come from the caller's random number stream, so the interval varies from
-#'   run to run. With a seed the result is reproducible and the caller's stream
-#'   is restored afterwards.
+#' @param seed Bootstrap seed: `NULL` (default) or one whole number. With a seed, the
+#'   random number stream is set to `abs(seed)` immediately before the draws,
+#'   the result is reproducible whatever ran earlier in the session, the
+#'   caller's stream is restored afterwards, and the seed is kept in
+#'   `$meta$seed`. With `NULL` the draws come from the caller's stream and
+#'   advance it, and `$meta$seed` is `NA`.
 #' @param time_unit_days Days per unit of `time_col`, for the `diff_days`
 #'   column. Default `365.2425` (time in years).
 #' @param clip Scores are clipped to `[clip, 1 - clip]` before weighting.
@@ -33,7 +35,8 @@
 #'   `lo_days`, `hi_days` (2.5 and 97.5 percent bootstrap) and `n_failed`.
 #'   `$tables$curves` has the weighted Kaplan-Meier steps (`estimator`, `arm`,
 #'   `time`, `surv`) for plotting; `$data` is `x$data` plus one weight column
-#'   `w_<weighting>` per scheme.
+#'   `w_<weighting>` per scheme. `$meta$seed` is the seed used (`NA` when none
+#'   was given).
 #'
 #' @examples
 #' if (requireNamespace("survival", quietly = TRUE)) {
@@ -55,6 +58,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
   if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
   weights <- match.arg(weights, c("unweighted", "ato", "att", "ate"), several.ok = TRUE)
   .check_cols(x$data, c(time_col, event_col))
+  seed <- .seed_value(seed)
   if (!is.numeric(tau) || length(tau) != 1L || !is.finite(tau) || tau <= 0) {
     rlang::abort("`tau` must be one positive number.", call. = FALSE)
   }
@@ -160,7 +164,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
     data = d,
     meta = c(x$meta[c("treatment_col", "score_col", "treated_level")],
              list(time_col = time_col, event_col = event_col, tau = tau, n_boot = n_boot, refit = refit,
-                  time_unit_days = time_unit_days, n_total = nrow(d))),
+                  seed = if (is.null(seed)) NA_integer_ else seed, time_unit_days = time_unit_days, n_total = nrow(d))),
     tables = list(estimates = do.call(rbind, rows), curves = do.call(rbind, curves)),
     subclass = "ps_rmst"
   )

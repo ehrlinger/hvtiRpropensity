@@ -44,10 +44,13 @@
 #'   overwritten.
 #' @param ratio          Matching ratio (controls : treated).  Currently
 #'   only `1` (1:1) is supported.  Default `1`.
-#' @param seed           Integer seed for the random shuffling of treated-
-#'   patient order that reduces order-dependence.  Pass an integer for a
-#'   reproducible matched set; `NULL` (default) uses the session's current
-#'   RNG state (not reproducible across sessions).
+#' @param seed           Seed for the random shuffling of treated-patient
+#'   order that reduces order-dependence. `NULL` (default) or one whole number. With a
+#'   seed, the random number stream is set to `abs(seed)` immediately before the draws,
+#'   the result is reproducible whatever ran earlier in the session, the
+#'   caller's stream is restored afterwards, and the seed is kept in
+#'   `$meta$seed`. With `NULL` the draws come from the caller's stream and
+#'   advance it, and `$meta$seed` is `NA`.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. `NULL`
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
@@ -61,7 +64,7 @@
 #'     belongs to (`NA` for unmatched patients).  Filter to `match == 1` to
 #'     obtain the matched subset.}
 #'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `id_col`,
-#'     `match_col`, `pair_id_col`, `caliper`, `method`, `n_total`,
+#'     `match_col`, `pair_id_col`, `caliper`, `method`, `seed`, `n_total`,
 #'     `n_matched`, `n_unmatched`.}
 #'   \item{`$tables`}{Named list: `smd_before`, `smd_after`,
 #'     `group_counts_before`, `group_counts_after`. Group tables name each
@@ -104,6 +107,7 @@ ps_match <- function(data,
 
   # ---- Input validation ---------------------------------------------------
   .check_df(data)
+  seed <- .seed_value(seed)
   .check_cols(data, c(treatment_col, score_col, id_col))
   treatment <- .treatment_indicator(data, treatment_col, treated_level)
   original_treatment <- data[[treatment_col]]
@@ -229,6 +233,7 @@ ps_match <- function(data,
       pair_id_col   = "pair_id",
       caliper       = caliper,
       method        = "nearest-neighbour 1:1",
+      seed          = if (is.null(seed)) NA_integer_ else seed,
       n_total       = nrow(data),
       n_matched     = n_matched_t,   # matched pairs (each arm)
       n_unmatched   = length(idx_t) - n_matched_t
