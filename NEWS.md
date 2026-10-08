@@ -4,6 +4,11 @@
   `SystemRequirements`. The vignettes have always needed it to build; the
   field makes that visible to installers and to `R CMD check`.
 
+* Articles on the pkgdown site put the table of contents on the left and use
+  the full width of the window, through `pkgdown/extra.css`. The installed
+  vignettes are unchanged: the Quarto vignette engine renders them in its own
+  minimal format, which has no sidebar layout.
+
 # hvtiRpropensity 0.1.11
 
 * A seed now makes every random function reproducible whatever the session
