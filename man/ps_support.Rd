@@ -43,6 +43,13 @@ object; any other rule (for example an isolation-forest tail flag) can be
 supplied as a logical vector.
 }
 \details{
+\strong{Trimming changes the estimand.} Dropping the patients a rule flags
+leaves a population defined by the rule: an effect estimated after trimming
+at \code{c(0.1, 0.9)}, or after restricting to common support, describes the
+patients with adequate overlap, not the full sample, the treated or the
+controls. Name that population when you report it. This function only
+flags patients; it drops nobody.
+
 A patient with a missing treatment or a missing score cannot be judged.
 Those rows are left out of the common-support interval and every rule, get
 a missing \verb{weak_<rule>} flag, and one warning states how many there are.

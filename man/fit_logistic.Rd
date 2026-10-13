@@ -23,12 +23,16 @@ fit_logistic(
 
 \item{data}{A data frame containing the outcome and predictors.}
 
-\item{family}{Model family.}
+\item{family}{Model family: \code{"binary"} (default, \code{\link[stats:glm]{stats::glm()}} with a logit
+link), \code{"ordinal"} (proportional-odds cumulative logit, \code{\link[MASS:polr]{MASS::polr()}}; a
+two-level outcome is fitted with \code{\link[stats:glm]{stats::glm()}}) or \code{"nominal"}
+(generalized logit, \code{\link[nnet:multinom]{nnet::multinom()}}).}
 
 \item{outcome_col}{Outcome column. By default it is read from \code{formula}.}
 
-\item{id_col}{Patient identifier column. Required, and checked, only when
-\code{imputation_col} is set.}
+\item{id_col}{Patient identifier column. Default \code{"id"}. Required, and
+checked, only when \code{imputation_col} is set, where it aligns each patient's
+rows across imputations.}
 
 \item{imputation_col}{Imputation-index column, or \code{NULL} for one dataset.}
 
@@ -44,12 +48,56 @@ ordinal and nominal level-specific probability columns.}
 \item{trace}{Whether model engines should print fitting progress.}
 }
 \value{
-An object of class \code{c("lm_fit", "ps_data")}.
+An object of class \code{c("lm_fit", "ps_data")} with:
+\describe{
+\item{\verb{$data}}{\code{data} (the lowest-numbered imputation when
+\code{imputation_col} is set, without that column) with the predicted
+probabilities appended: one column named \code{prediction_prefix} for a
+binary model (\code{prob} by default), the probability of \code{event_level}; or
+one \verb{<prediction_prefix>_<level>} column per outcome level for an
+ordinal or nominal model, whose outcome column is returned as a factor
+(ordered for an ordinal model). A row missing a predictor has missing
+probabilities.}
+\item{\verb{$meta}}{Named list: \code{bundle_version} (1), \code{formula}, \code{outcome_col},
+\code{model_family}, \code{outcome_levels}, \code{event_level} (binary only, else
+\code{NULL}), \code{reference_level} (nominal only, else \code{NULL}),
+\code{cumulative_direction} (ordinal only, else \code{NULL}), \code{predictors},
+\code{id_col}, \code{imputation_col}, \code{n_imputations}, \code{n_input}, \code{n_analyzed},
+\code{n_excluded} (summed over imputations), \code{prediction_prefix} and
+\code{package_versions} (R, this package and the model engine).}
+\item{\verb{$tables}}{Named list: \code{estimates} (one row per term: \code{term},
+\code{estimate}, \code{std.error}, \code{statistic}, \code{df}, \code{p.value}, \code{conf.low},
+\code{conf.high}, \code{odds_ratio} (\code{NA} for an ordinal threshold), and
+\code{pooled}, \code{TRUE} when Rubin's rules
+combined imputations), \code{covariance} (the coefficient covariance matrix,
+pooled when imputed), \code{by_imputation} (\code{imputation}, \code{term},
+\code{estimate}, \code{std.error}) and \code{fit_status} (one row per imputation:
+\code{imputation}, \code{converged}, \code{n_input}, \code{n_analyzed}, \code{n_excluded}).}
+\item{\verb{$models}}{The fitted models, one per imputation, named by
+imputation index (\code{"1"} for a single dataset). For binary bundles,
+\code{\link[=validate_logistic]{validate_logistic()}} scores new data with them; it rejects ordinal and
+nominal bundles.}
+}
 }
 \description{
 Fits binary, proportional-odds ordinal, or generalized-logit nominal models
 under an explicit outcome-level contract. Stacked long-form imputations are
-fitted separately and combined with Rubin's rules.
+fitted separately, one model per imputation. The coefficients are combined
+with Rubin's rules; the predicted probabilities are averaged per patient.
+}
+\details{
+\strong{Multiple imputation.} With \code{imputation_col} set, one model is fitted to
+each imputed dataset. The two outputs are then combined differently.
+\verb{$tables$estimates} and \verb{$tables$covariance} pool the coefficients and their
+variances with Rubin's rules. The probability columns in \verb{$data} are the
+per-patient mean, on the probability scale, of the predictions from each
+imputation's model. Rubin's rules play no part there: averaging the
+predictions is what Leyrat et al. (2019) call the "across" approach. For a
+propensity score they favour the "within" approach instead; see
+\code{\link[=ps_logistic]{ps_logistic()}} for the recipe.
+
+\verb{$data} is built from the lowest-numbered imputation: its rows, ordered as
+they appear there, its covariate values, and no \code{imputation_col}.
 }
 \examples{
 dta <- sample_ps_data(n = 150, seed = 42)
@@ -62,4 +110,11 @@ fit <- fit_logistic(
 )
 fit$tables$estimates[, c("term", "estimate", "odds_ratio")]
 head(fit$data[, c("id", "tavr", "prob")])
+}
+\references{
+Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+analysis with partially observed covariates: how should multiple
+imputation be used? \emph{Statistical Methods in Medical Research}, 28(1),
+3--19. \doi{10.1177/0962280217713032}
 }

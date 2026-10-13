@@ -269,10 +269,13 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
 #'   same demo dataset on every call. `NULL` draws from the caller's random-number stream, as
 #'   [ps_match()] does: the data differ from call to call, and `set.seed()` before the call
 #'   reproduces them. A negative seed gives the same data as its absolute value.
-#' @param n_imputations If `> 1`, returns a stacked multiply-imputed data
-#'   frame with an `_IMPUTATION_` index column containing `n_imputations`
-#'   replicates (each with slightly jittered covariate values to mimic
-#'   imputed datasets).  Default `1L` (single complete dataset).
+#' @param n_imputations If `> 1`, returns `n_imputations` datasets stacked in
+#'   the long format, with an `_IMPUTATION_` index column. Each is an
+#'   independent draw of `n` patients, covariates and outcome alike, that
+#'   reuses the `id` values `1` to `n`. They exercise the stacked format; they
+#'   do not resemble real imputations, in which one patient's observed values
+#'   and outcome agree across datasets. Default `1L` (single complete
+#'   dataset).
 #'
 #' @return A data frame with columns: `id`, `rbc_tot` (count), `age`,
 #'   `female`, `diabetes`, `hypertension`, `hct_pr` (pre-op haematocrit),
@@ -335,7 +338,7 @@ sample_ps_data_count <- function(n = 500L, seed = 42L, n_imputations = 1L) {
     return(.one_dataset(0L))
   }
 
-  # Stacked MI format: same IDs, slightly jittered covariates per imputation
+  # Stacked MI format: an independent draw per imputation that reuses the IDs
   dsets <- lapply(seq_len(n_imputations), function(m) {
     d                    <- .one_dataset(seed_offset = m * 100L)
     d[["_IMPUTATION_"]] <- m

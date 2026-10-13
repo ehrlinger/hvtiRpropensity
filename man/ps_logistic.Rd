@@ -65,18 +65,27 @@ Given alone, the treatment may hold any two values (a factor such as
 \value{
 An object of class \code{c("ps_logistic", "ps_data")} with:
 \describe{
-\item{\verb{$data}}{The base data frame with \code{score_col}, \code{logit_col},
-\code{weight_col}, \code{quintile}, and \code{decile} columns appended. \code{weight_col}
+\item{\verb{$data}}{\code{data} (the lowest-numbered imputation when
+\code{imputation_col} is set, without that column) with \code{score_col},
+\code{logit_col}, \code{weight_col}, \code{quintile}, and \code{decile} columns appended.
+\code{score_col} is the probability of \code{treated_level}. \code{quintile} and
+\code{decile} rank \code{score_col} among patients with a treatment. \code{weight_col}
 holds the Li-Greene matching weight, \code{min(p, 1 - p) / p} for treated
 patients and \code{min(p, 1 - p) / (1 - p)} for controls, which targets the
 ATM estimand (average treatment effect among the matched; Li & Greene,
 2013, \doi{10.1515/ijb-2012-0030}).}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
-\code{imputation_col}, \code{score_col}, \code{logit_col}, \code{weight_col}, \code{method},
-\code{n_imputations}, \code{n_total}, \code{n_missing_treatment}.}
-\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}. \code{group_counts} has one
-row per treatment level, named as declared, with a logical \code{treated}
-flag and the count \code{n}.}
+\code{imputation_col}, \code{score_col}, \code{logit_col}, \code{weight_col},
+\code{treatment_levels}, \code{treated_level}, \code{bundle_version}, \code{model_family}
+(\code{"binary"}), \code{package_versions}, \code{method} (\code{"logistic"} or
+\code{"logistic-MI"}), \code{n_imputations}, \code{n_total}, \code{n_missing_treatment}.}
+\item{\verb{$tables}}{Named list: \code{smd} (\code{variable}, \code{smd}), \code{group_counts},
+and the model tables of \code{\link[=fit_logistic]{fit_logistic()}}: \code{estimates}, \code{covariance},
+\code{by_imputation} and \code{fit_status}. \code{group_counts} has one row per
+treatment level, named as declared, with a logical \code{treated} flag and
+the count \code{n}.}
+\item{\verb{$models}}{The fitted \code{\link[stats:glm]{stats::glm()}} models, one per imputation,
+named by imputation index.}
 }
 }
 \description{
@@ -85,19 +94,35 @@ propensity score, its logit, and a matching weight to the dataset.
 Supports multiply-imputed data in a stacked "long" format.
 }
 \details{
-When \code{imputation_col} is supplied, the model is fit separately on each
-imputed dataset; predicted probabilities are averaged per patient across
-imputations (Rubin's combination rule for predictions), and the first
-imputed dataset's covariate values form the base output data frame.
-This mirrors the SAS template workflow of
-\verb{PROC LOGISTIC ... BY _IMPUTATION_} followed by \verb{PROC SUMMARY mean=}.
+\strong{Multiple imputation.} When \code{imputation_col} is supplied, the model is
+fit separately on each imputed dataset, and each patient's predicted
+probabilities are averaged across the imputations on the probability scale,
+not the logit scale. \code{logit_col} is the logit of that average. Leyrat et
+al. (2019) call this the "across" approach. It is not Rubin's rules, which
+pool coefficients and their variances; \verb{$tables$estimates} holds the
+coefficients pooled that way. The averaging mirrors the SAS template
+workflow of \verb{PROC LOGISTIC ... BY _IMPUTATION_} followed by
+\verb{PROC SUMMARY mean=}.
 
-The \strong{matching weight} appended as \code{weight_col} is
+\verb{$data} is built from the lowest-numbered imputation, and its covariate
+values are the ones the \code{smd} balance table measures. That table reports
+balance in one imputed dataset, not across all of them.
+
+In Leyrat et al.'s simulations of inverse probability of treatment
+weighting, only the "within" approach was unbiased in every scenario they
+studied, and they recommend it with the outcome included in the imputation
+model. To follow it, call \code{ps_logistic()} once per imputed dataset, without
+\code{imputation_col}; match or weight within each dataset; estimate the
+treatment effect in each; then pool those estimates and their variances
+with Rubin's rules.
+
+\strong{The matching weight} appended as \code{weight_col} is
 \code{min(p, 1-p) / (p * trt + (1-p) * (1-trt))},
 which equals the \code{mt_wt} column produced in the SAS templates (Li &
-Greene, 2013).  It is the ATM (average treatment effect among the
-matched) estimand weight and is used as input to \code{\link[=ps_match]{ps_match()}} or
-\code{\link[=ps_weight]{ps_weight()}}.
+Greene, 2013). It targets the ATM estimand (average treatment effect among
+the matched). Neither \code{\link[=ps_match]{ps_match()}} nor \code{\link[=ps_weight]{ps_weight()}} reads it; both work
+from \code{score_col}. Pass it as \code{weight_col} to \code{\link[=ps_stddiff]{ps_stddiff()}} or
+\code{\link[=ps_mw_var]{ps_mw_var()}}, or use it as the weight in an outcome model.
 
 A patient with a missing treatment is left out of the model fit, as
 \code{\link[stats:glm]{stats::glm()}} drops the row, and out of the strata, the balance tables and
@@ -124,7 +149,7 @@ summary(obj)
 #   prob_t   -- propensity score (p-hat; SAS _p_ / _propen_)
 #   logit_t  -- log(p/(1-p))    (SAS _logit_)
 #   mt_wt    -- matching weight  (SAS mt_wt = min(p,1-p)/(p*trt+(1-p)*(1-trt)))
-#   quintile -- rank-based quintile (SAS int(_n_/(nobs/5))+1)
+#   quintile -- rank-based quintile, ceiling(rank * 5 / n)
 #   decile   -- rank-based decile
 head(obj$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
                   "quintile", "decile")])
@@ -158,7 +183,18 @@ head(obj_mi$data[, c("id", "tavr", "prob_t")])
 }
 
 }
+\references{
+Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+analysis with partially observed covariates: how should multiple
+imputation be used? \emph{Statistical Methods in Medical Research}, 28(1),
+3--19. \doi{10.1177/0962280217713032}
+
+Li L, Greene T (2013). A weighting analogue to pair matching in
+propensity score analysis. \emph{The International Journal of Biostatistics},
+9(2), 215--234. \doi{10.1515/ijb-2012-0030}
+}
 \seealso{
 \code{\link[=ps_match]{ps_match()}}, \code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_ordinal]{ps_ordinal()}}, \code{\link[=ps_nominal]{ps_nominal()}},
-\code{\link[=sample_ps_data]{sample_ps_data()}}
+\code{\link[=fit_logistic]{fit_logistic()}}, \code{\link[=sample_ps_data]{sample_ps_data()}}
 }

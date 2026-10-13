@@ -18,8 +18,8 @@
 ## Multiple imputation (MI) is supported by all three functions via a
 ## stacked "long" data frame with an imputation-index column
 ## (e.g. mice::complete(mids, action = "long")).  The model is fit
-## separately on each imputed dataset, and per-patient predictions are
-## averaged across imputations — mirroring the SAS approach of
+## separately on each imputed dataset, and per-patient predicted probabilities
+## are averaged across imputations, mirroring the SAS approach of
 ## BY _IMPUTATION_ followed by PROC SUMMARY mean=.
 ##
 ## Functions:
@@ -35,9 +35,16 @@
 
 #' Assign rank-based quintile and decile columns
 #'
-#' Mirrors the SAS logic:
-#'   proc sort by _propen;
-#'   quintile = int(_n_ / (nobs/5)) + 1;  if quintile > 5 then quintile = 5;
+#' Ranks the scored patients and assigns `ceiling(rank * k / n)`, which gives
+#' groups of equal size when `n` divides by `k`. This does not reproduce the
+#' SAS templates exactly. They assign
+#' `quintile = int(_n_ / (nobs/5)) + 1; if quintile > 5 then quintile = 5;`,
+#' which puts one patient too few in the first group and folds the surplus
+#' into the last: with n = 10, SAS gives quintile sizes 1, 2, 2, 2, 3 and this
+#' gives 2, 2, 2, 2, 2. A patient can sit one stratum apart in the two.
+#'
+#' @param score Numeric score; a missing score gets missing strata.
+#' @return A named list: `quintile`, `decile`.
 #' @keywords internal
 .assign_ps_strata <- function(score) {
   scored <- !is.na(score)
@@ -112,19 +119,35 @@
 #' propensity score, its logit, and a matching weight to the dataset.
 #' Supports multiply-imputed data in a stacked "long" format.
 #'
-#' When `imputation_col` is supplied, the model is fit separately on each
-#' imputed dataset; predicted probabilities are averaged per patient across
-#' imputations (Rubin's combination rule for predictions), and the first
-#' imputed dataset's covariate values form the base output data frame.
-#' This mirrors the SAS template workflow of
-#' `PROC LOGISTIC ... BY _IMPUTATION_` followed by `PROC SUMMARY mean=`.
+#' **Multiple imputation.** When `imputation_col` is supplied, the model is
+#' fit separately on each imputed dataset, and each patient's predicted
+#' probabilities are averaged across the imputations on the probability scale,
+#' not the logit scale. `logit_col` is the logit of that average. Leyrat et
+#' al. (2019) call this the "across" approach. It is not Rubin's rules, which
+#' pool coefficients and their variances; `$tables$estimates` holds the
+#' coefficients pooled that way. The averaging mirrors the SAS template
+#' workflow of `PROC LOGISTIC ... BY _IMPUTATION_` followed by
+#' `PROC SUMMARY mean=`.
 #'
-#' The **matching weight** appended as `weight_col` is
+#' `$data` is built from the lowest-numbered imputation, and its covariate
+#' values are the ones the `smd` balance table measures. That table reports
+#' balance in one imputed dataset, not across all of them.
+#'
+#' In Leyrat et al.'s simulations of inverse probability of treatment
+#' weighting, only the "within" approach was unbiased in every scenario they
+#' studied, and they recommend it with the outcome included in the imputation
+#' model. To follow it, call `ps_logistic()` once per imputed dataset, without
+#' `imputation_col`; match or weight within each dataset; estimate the
+#' treatment effect in each; then pool those estimates and their variances
+#' with Rubin's rules.
+#'
+#' **The matching weight** appended as `weight_col` is
 #' `min(p, 1-p) / (p * trt + (1-p) * (1-trt))`,
 #' which equals the `mt_wt` column produced in the SAS templates (Li &
-#' Greene, 2013).  It is the ATM (average treatment effect among the
-#' matched) estimand weight and is used as input to [ps_match()] or
-#' [ps_weight()].
+#' Greene, 2013). It targets the ATM estimand (average treatment effect among
+#' the matched). Neither [ps_match()] nor [ps_weight()] reads it; both work
+#' from `score_col`. Pass it as `weight_col` to [ps_stddiff()] or
+#' [ps_mw_var()], or use it as the weight in an outcome model.
 #'
 #' A patient with a missing treatment is left out of the model fit, as
 #' [stats::glm()] drops the row, and out of the strata, the balance tables and
@@ -169,22 +192,41 @@
 #'
 #' @return An object of class `c("ps_logistic", "ps_data")` with:
 #' \describe{
-#'   \item{`$data`}{The base data frame with `score_col`, `logit_col`,
-#'     `weight_col`, `quintile`, and `decile` columns appended. `weight_col`
+#'   \item{`$data`}{`data` (the lowest-numbered imputation when
+#'     `imputation_col` is set, without that column) with `score_col`,
+#'     `logit_col`, `weight_col`, `quintile`, and `decile` columns appended.
+#'     `score_col` is the probability of `treated_level`. `quintile` and
+#'     `decile` rank `score_col` among patients with a treatment. `weight_col`
 #'     holds the Li-Greene matching weight, `min(p, 1 - p) / p` for treated
 #'     patients and `min(p, 1 - p) / (1 - p)` for controls, which targets the
 #'     ATM estimand (average treatment effect among the matched; Li & Greene,
 #'     2013, \doi{10.1515/ijb-2012-0030}).}
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
-#'     `imputation_col`, `score_col`, `logit_col`, `weight_col`, `method`,
-#'     `n_imputations`, `n_total`, `n_missing_treatment`.}
-#'   \item{`$tables`}{Named list: `smd`, `group_counts`. `group_counts` has one
-#'     row per treatment level, named as declared, with a logical `treated`
-#'     flag and the count `n`.}
+#'     `imputation_col`, `score_col`, `logit_col`, `weight_col`,
+#'     `treatment_levels`, `treated_level`, `bundle_version`, `model_family`
+#'     (`"binary"`), `package_versions`, `method` (`"logistic"` or
+#'     `"logistic-MI"`), `n_imputations`, `n_total`, `n_missing_treatment`.}
+#'   \item{`$tables`}{Named list: `smd` (`variable`, `smd`), `group_counts`,
+#'     and the model tables of [fit_logistic()]: `estimates`, `covariance`,
+#'     `by_imputation` and `fit_status`. `group_counts` has one row per
+#'     treatment level, named as declared, with a logical `treated` flag and
+#'     the count `n`.}
+#'   \item{`$models`}{The fitted [stats::glm()] models, one per imputation,
+#'     named by imputation index.}
 #' }
 #'
+#' @references Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+#'   Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+#'   analysis with partially observed covariates: how should multiple
+#'   imputation be used? *Statistical Methods in Medical Research*, 28(1),
+#'   3--19. \doi{10.1177/0962280217713032}
+#'
+#'   Li L, Greene T (2013). A weighting analogue to pair matching in
+#'   propensity score analysis. *The International Journal of Biostatistics*,
+#'   9(2), 215--234. \doi{10.1515/ijb-2012-0030}
+#'
 #' @seealso [ps_match()], [ps_weight()], [ps_ordinal()], [ps_nominal()],
-#'   [sample_ps_data()]
+#'   [fit_logistic()], [sample_ps_data()]
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 42)
@@ -203,7 +245,7 @@
 #' #   prob_t   -- propensity score (p-hat; SAS _p_ / _propen_)
 #' #   logit_t  -- log(p/(1-p))    (SAS _logit_)
 #' #   mt_wt    -- matching weight  (SAS mt_wt = min(p,1-p)/(p*trt+(1-p)*(1-trt)))
-#' #   quintile -- rank-based quintile (SAS int(_n_/(nobs/5))+1)
+#' #   quintile -- rank-based quintile, ceiling(rank * 5 / n)
 #' #   decile   -- rank-based decile
 #' head(obj$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
 #'                   "quintile", "decile")])
@@ -400,7 +442,10 @@ print.ps_logistic <- function(x, ...) {
 #'
 #' When `imputation_col` is supplied, models are fit on each imputed dataset
 #' separately and per-level probabilities are averaged per patient across
-#' imputations.
+#' imputations, on the probability scale. This is the "across" approach of
+#' Leyrat et al. (2019), not Rubin's rules; [ps_logistic()] describes it and
+#' the "within" alternative. `$data` and the `smd` table use the
+#' lowest-numbered imputation's covariates.
 #'
 #' @param formula          A formula with the ordered factor treatment on the
 #'   LHS, e.g. `nyha_grp ~ age + female + ef`.  The treatment must be an
@@ -431,14 +476,32 @@ print.ps_logistic <- function(x, ...) {
 #'
 #' @return An object of class `c("ps_ordinal", "ps_data")` with:
 #' \describe{
-#'   \item{`$data`}{Base data frame with one `prob_<level>` column per
-#'     treatment level.}
+#'   \item{`$data`}{`data` (the lowest-numbered imputation when
+#'     `imputation_col` is set, without that column) with one
+#'     `<score_col_prefix>_<level>` column per treatment level, the marginal
+#'     probability of that level, and `quintile` and `decile`, which rank the
+#'     probability of the highest level. The treatment column is returned as
+#'     an ordered factor.}
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
-#'     `imputation_col`, `score_cols`, `levels`, `method`,
-#'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `smd`, `group_counts`. `smd` has one row per
-#'     covariate and pair of levels: `variable`, `level`, `versus`, `smd`.}
+#'     `imputation_col`, `score_cols`, `score_col_prefix`, `levels`,
+#'     `smd_pairs`, `treatment_levels`, `bundle_version`, `model_family`
+#'     (`"ordinal"`), `package_versions`, `cumulative_direction`, `method`
+#'     (`"ordinal-logistic"` or `"ordinal-logistic-MI"`), `n_imputations`,
+#'     `n_total`.}
+#'   \item{`$tables`}{Named list: `smd`, `group_counts` (`group`, `n`), and
+#'     the model tables of [fit_logistic()]: `estimates`, `covariance`,
+#'     `by_imputation` and `fit_status`. `smd` has one row per covariate and
+#'     pair of levels: `variable`, `level`, `versus`, `smd`.}
+#'   \item{`$models`}{The fitted models, one per imputation, named by
+#'     imputation index: [MASS::polr()] fits, or [stats::glm()] fits for a
+#'     two-level treatment.}
 #' }
+#'
+#' @references Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+#'   Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+#'   analysis with partially observed covariates: how should multiple
+#'   imputation be used? *Statistical Methods in Medical Research*, 28(1),
+#'   3--19. \doi{10.1177/0962280217713032}
 #'
 #' @section Package dependency:
 #'   Requires the \pkg{MASS} package (a recommended package shipped with
@@ -625,7 +688,11 @@ print.ps_ordinal <- function(x, ...) {
 #' level is appended to the dataset.
 #'
 #' When `imputation_col` is supplied, models are fit on each imputed dataset
-#' and per-level probabilities are averaged per patient across imputations.
+#' and per-level probabilities are averaged per patient across imputations, on
+#' the probability scale. This is the "across" approach of Leyrat et al.
+#' (2019), not Rubin's rules; [ps_logistic()] describes it and the "within"
+#' alternative. `$data` and the `smd` table use the lowest-numbered
+#' imputation's covariates.
 #'
 #' @param formula          A formula with the nominal treatment on the LHS,
 #'   e.g. `rtyp ~ age + female + ef + diabetes`.
@@ -654,14 +721,30 @@ print.ps_ordinal <- function(x, ...) {
 #'
 #' @return An object of class `c("ps_nominal", "ps_data")` with:
 #' \describe{
-#'   \item{`$data`}{Base data frame with one `prob_<level>` column per
-#'     treatment level appended.}
+#'   \item{`$data`}{`data` (the lowest-numbered imputation when
+#'     `imputation_col` is set, without that column) with one
+#'     `<score_col_prefix>_<level>` column per treatment level appended,
+#'     `ref_level` first. The treatment column is returned as a factor with
+#'     `ref_level` as its first level.}
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
-#'     `imputation_col`, `score_cols`, `levels`, `ref_level`, `method`,
-#'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `smd`, `group_counts`. `smd` has one row per
-#'     covariate and pair of levels: `variable`, `level`, `versus`, `smd`.}
+#'     `imputation_col`, `score_cols`, `score_col_prefix`, `levels` (in model
+#'     order, `ref_level` first), `smd_pairs`, `ref_level`,
+#'     `treatment_levels` (as declared), `bundle_version`, `model_family`
+#'     (`"nominal"`), `package_versions`, `method` (`"nominal-logistic"` or
+#'     `"nominal-logistic-MI"`), `n_imputations`, `n_total`.}
+#'   \item{`$tables`}{Named list: `smd`, `group_counts` (`group`, `n`), and
+#'     the model tables of [fit_logistic()]: `estimates`, `covariance`,
+#'     `by_imputation` and `fit_status`. `smd` has one row per covariate and
+#'     pair of levels: `variable`, `level`, `versus`, `smd`.}
+#'   \item{`$models`}{The fitted [nnet::multinom()] models, one per
+#'     imputation, named by imputation index.}
 #' }
+#'
+#' @references Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+#'   Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+#'   analysis with partially observed covariates: how should multiple
+#'   imputation be used? *Statistical Methods in Medical Research*, 28(1),
+#'   3--19. \doi{10.1177/0962280217713032}
 #'
 #' @section Package dependency:
 #'   Requires \pkg{nnet} (a recommended R package, usually pre-installed).

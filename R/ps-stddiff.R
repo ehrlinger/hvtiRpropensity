@@ -77,7 +77,8 @@
 #'   variable may appear under one type only. A `binary` column must be
 #'   coded 0/1 or logical; a `categorical` column may have any coding.
 #' @param weight_col Optional name of a column of positive weights, for
-#'   example matching weights from [ps_weight()]. Weights must be finite.
+#'   example the inverse-probability weights from [ps_weight()] or the
+#'   matching weight `mt_wt` from [ps_logistic()]. Weights must be finite.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. `NULL`
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a

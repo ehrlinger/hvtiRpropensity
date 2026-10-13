@@ -14,10 +14,13 @@ same demo dataset on every call. \code{NULL} draws from the caller's random-numb
 \code{\link[=ps_match]{ps_match()}} does: the data differ from call to call, and \code{set.seed()} before the call
 reproduces them. A negative seed gives the same data as its absolute value.}
 
-\item{n_imputations}{If \verb{> 1}, returns a stacked multiply-imputed data
-frame with an \verb{_IMPUTATION_} index column containing \code{n_imputations}
-replicates (each with slightly jittered covariate values to mimic
-imputed datasets).  Default \code{1L} (single complete dataset).}
+\item{n_imputations}{If \verb{> 1}, returns \code{n_imputations} datasets stacked in
+the long format, with an \verb{_IMPUTATION_} index column. Each is an
+independent draw of \code{n} patients, covariates and outcome alike, that
+reuses the \code{id} values \code{1} to \code{n}. They exercise the stacked format; they
+do not resemble real imputations, in which one patient's observed values
+and outcome agree across datasets. Default \code{1L} (single complete
+dataset).}
 }
 \value{
 A data frame with columns: \code{id}, \code{rbc_tot} (count), \code{age},

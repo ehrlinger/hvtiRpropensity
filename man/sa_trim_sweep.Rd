@@ -38,7 +38,8 @@ The score of a \code{\link[=ps_match]{ps_match()}} object built with \code{scale
 logit, and is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before use.}
 
 \item{treatment_col}{Name of the binary treatment column.  Taken from
-\code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object\verb{.  Default }"tavr"`.}
+\code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object.  Default
+\code{"tavr"}.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. Read
 from the metadata of a \code{ps_data} object when it records one. \code{NULL}

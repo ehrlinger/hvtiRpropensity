@@ -3,9 +3,9 @@
 #' Estimates P(treated) with a random-forest classifier
 #' ([randomForestSRC::rfsrc()]) and returns the **out-of-bag** class
 #' probability as the score, so no patient is scored by trees that saw them.
-#' The result has the same contract as [ps_logistic()], so it feeds
-#' [ps_weight()], [ps_match()], [sa_overlap()] and
-#' `hvtiPlotR::hv_balance()` / `hvtiPlotR::hv_mirror_hist()` unchanged.
+#' The result appends the same score columns as [ps_logistic()], so it feeds
+#' [ps_weight()], [ps_match()] and [sa_overlap()] unchanged, and its `$data`
+#' feeds `hvtiPlotR::hv_mirror_hist()`.
 #'
 #' @param formula Two-sided formula, `treatment ~ x1 + x2 + ...`.
 #' @param data Data frame with no missing values in the formula variables.
@@ -44,8 +44,10 @@
 #'   [ps_logistic()], `min(p, 1 - p) / p` for treated patients and
 #'   `min(p, 1 - p) / (1 - p)` for controls, which targets the ATM estimand
 #'   (average treatment effect among the matched; Li & Greene, 2013,
-#'   \doi{10.1515/ijb-2012-0030}); `$meta` follows [ps_logistic()] with `method = "forest-oob"`
-#'   and `seed`, the seed used (`NA` when none was given); `$tables` holds
+#'   \doi{10.1515/ijb-2012-0030}); `$meta` holds `formula`, `treatment_col`,
+#'   `id_col`, `score_col`, `logit_col`, `weight_col`, `treated_level`,
+#'   `treatment_levels`, `method` (`"forest-oob"`), `ntree`, `seed` (the seed
+#'   used, `NA` when none was given) and `n_total`; `$tables` holds
 #'   `smd` and `group_counts` (`group`, the value in `treatment_col`; a logical
 #'   `treated`; `n`); `$models$forest` is the fitted forest.
 #'

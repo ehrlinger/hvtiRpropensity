@@ -58,13 +58,23 @@ compares. \code{"reference"} (default) compares each level with \code{ref_level}
 \value{
 An object of class \code{c("ps_nominal", "ps_data")} with:
 \describe{
-\item{\verb{$data}}{Base data frame with one \verb{prob_<level>} column per
-treatment level appended.}
+\item{\verb{$data}}{\code{data} (the lowest-numbered imputation when
+\code{imputation_col} is set, without that column) with one
+\verb{<score_col_prefix>_<level>} column per treatment level appended,
+\code{ref_level} first. The treatment column is returned as a factor with
+\code{ref_level} as its first level.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
-\code{imputation_col}, \code{score_cols}, \code{levels}, \code{ref_level}, \code{method},
-\code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}. \code{smd} has one row per
-covariate and pair of levels: \code{variable}, \code{level}, \code{versus}, \code{smd}.}
+\code{imputation_col}, \code{score_cols}, \code{score_col_prefix}, \code{levels} (in model
+order, \code{ref_level} first), \code{smd_pairs}, \code{ref_level},
+\code{treatment_levels} (as declared), \code{bundle_version}, \code{model_family}
+(\code{"nominal"}), \code{package_versions}, \code{method} (\code{"nominal-logistic"} or
+\code{"nominal-logistic-MI"}), \code{n_imputations}, \code{n_total}.}
+\item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts} (\code{group}, \code{n}), and
+the model tables of \code{\link[=fit_logistic]{fit_logistic()}}: \code{estimates}, \code{covariance},
+\code{by_imputation} and \code{fit_status}. \code{smd} has one row per covariate and
+pair of levels: \code{variable}, \code{level}, \code{versus}, \code{smd}.}
+\item{\verb{$models}}{The fitted \code{\link[nnet:multinom]{nnet::multinom()}} models, one per
+imputation, named by imputation index.}
 }
 }
 \description{
@@ -75,7 +85,11 @@ level is appended to the dataset.
 }
 \details{
 When \code{imputation_col} is supplied, models are fit on each imputed dataset
-and per-level probabilities are averaged per patient across imputations.
+and per-level probabilities are averaged per patient across imputations, on
+the probability scale. This is the "across" approach of Leyrat et al.
+(2019), not Rubin's rules; \code{\link[=ps_logistic]{ps_logistic()}} describes it and the "within"
+alternative. \verb{$data} and the \code{smd} table use the lowest-numbered
+imputation's covariates.
 }
 \section{Package dependency}{
 
@@ -111,6 +125,13 @@ if (requireNamespace("nnet", quietly = TRUE)) {
 }
 }
 
+}
+\references{
+Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+analysis with partially observed covariates: how should multiple
+imputation be used? \emph{Statistical Methods in Medical Research}, 28(1),
+3--19. \doi{10.1177/0962280217713032}
 }
 \seealso{
 \code{\link[=ps_logistic]{ps_logistic()}}, \code{\link[=ps_ordinal]{ps_ordinal()}}, \code{\link[=ps_match]{ps_match()}}

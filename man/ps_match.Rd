@@ -87,15 +87,19 @@ appended.  \code{match_col} is \code{1} for matched patients and \code{0} otherw
 \code{pair_id} is an integer identifying which matched pair each patient
 belongs to (\code{NA} for unmatched patients).  Filter to \code{match == 1} to
 obtain the matched subset.}
-\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{id_col},
-\code{match_col}, \code{pair_id_col}, \code{scale}, \code{caliper} (the absolute caliper
-applied, on \code{scale}), \code{caliper_sd}, \code{method}, \code{seed}, \code{n_total},
-\code{n_excluded} (rows with a missing treatment or score), \code{n_matched},
-\code{n_unmatched}.}
-\item{\verb{$tables}}{Named list: \code{smd_before}, \code{smd_after},
-\code{group_counts_before}, \code{group_counts_after}. Group tables name each
-group by its value in \code{treatment_col} (\code{0}/\code{1} or \code{FALSE}/\code{TRUE}) and
-carry a logical \code{treated} column.}
+\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{treated_level} (the value of
+\code{treatment_col} taken as treated), \code{score_col}, \code{id_col}, \code{match_col},
+\code{pair_id_col}, \code{scale}, \code{caliper} (the absolute caliper applied, on
+\code{scale}), \code{caliper_sd}, \code{method}, \code{seed}, \code{n_total}, \code{n_excluded} (rows
+with a missing treatment or score), \code{n_matched} (the number of matched
+pairs, so the number of matched treated patients) and \code{n_unmatched}
+(treated patients left without a match; unmatched controls are not
+counted).}
+\item{\verb{$tables}}{Named list: \code{smd_before}, \code{smd_after} (\code{variable},
+\code{smd}), \code{group_counts_before}, \code{group_counts_after} (\code{group},
+\code{treated}, \code{n}). Group tables name each group by its value in
+\code{treatment_col} (\code{0}/\code{1}, \code{FALSE}/\code{TRUE}, or the two values when
+\code{treated_level} is given) and carry a logical \code{treated} column.}
 }
 }
 \description{
@@ -105,9 +109,19 @@ pre-computed propensity score column.  Returns a \code{ps_match} object whose
 \code{1} for matched pairs and \code{0} for unmatched patients.
 }
 \details{
+\strong{Estimand.} Every treated patient looks for a control, so the matched
+sample targets the average treatment effect on the treated (ATT). A treated
+patient who finds no control within the caliper, or none at all once the
+controls run out, is dropped, and the estimand shifts to the treated
+patients who could be matched, in practice those inside common support.
+\verb{$meta$n_unmatched} counts them; when it is not zero, say which population
+the estimate describes.
+
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
-before and after matching, and group counts. These are the diagnostics
-that \code{hvtiPlotR::hv_mirror_hist()} and \code{hvtiPlotR::hv_balance()} expect.
+before and after matching, and group counts. \code{hvtiPlotR::hv_mirror_hist()}
+reads \verb{$data} directly. \code{hvtiPlotR::hv_balance()} needs the two SMD tables
+stacked into long form with \code{variable}, \code{group} and \code{std_diff} (in percent);
+the vignette shows the reshape.
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in \verb{$data} with \code{match_col} set to \code{0}, are left out of the

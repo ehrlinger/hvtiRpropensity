@@ -21,7 +21,7 @@ The score of a \code{\link[=ps_match]{ps_match()}} object built with \code{scale
 logit, and is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before use.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1).  Taken from
-\code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object\verb{.  Default }"tavr"`.}
+\code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object.  Default \code{"tavr"}.}
 
 \item{trim_threshold}{Numeric in (0, 0.5).  PS values below this threshold
 or above \code{1 - trim_threshold} are flagged as near-positivity violations.

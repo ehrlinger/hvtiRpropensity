@@ -57,8 +57,10 @@ A \code{ps_forest} / \code{ps_data} object. \verb{$data} is \code{data} plus
 \code{\link[=ps_logistic]{ps_logistic()}}, \code{min(p, 1 - p) / p} for treated patients and
 \code{min(p, 1 - p) / (1 - p)} for controls, which targets the ATM estimand
 (average treatment effect among the matched; Li & Greene, 2013,
-\doi{10.1515/ijb-2012-0030}); \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"}
-and \code{seed}, the seed used (\code{NA} when none was given); \verb{$tables} holds
+\doi{10.1515/ijb-2012-0030}); \verb{$meta} holds \code{formula}, \code{treatment_col},
+\code{id_col}, \code{score_col}, \code{logit_col}, \code{weight_col}, \code{treated_level},
+\code{treatment_levels}, \code{method} (\code{"forest-oob"}), \code{ntree}, \code{seed} (the seed
+used, \code{NA} when none was given) and \code{n_total}; \verb{$tables} holds
 \code{smd} and \code{group_counts} (\code{group}, the value in \code{treatment_col}; a logical
 \code{treated}; \code{n}); \verb{$models$forest} is the fitted forest.
 }
@@ -66,9 +68,9 @@ and \code{seed}, the seed used (\code{NA} when none was given); \verb{$tables} h
 Estimates P(treated) with a random-forest classifier
 (\code{\link[randomForestSRC:rfsrc]{randomForestSRC::rfsrc()}}) and returns the \strong{out-of-bag} class
 probability as the score, so no patient is scored by trees that saw them.
-The result has the same contract as \code{\link[=ps_logistic]{ps_logistic()}}, so it feeds
-\code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_match]{ps_match()}}, \code{\link[=sa_overlap]{sa_overlap()}} and
-\code{hvtiPlotR::hv_balance()} / \code{hvtiPlotR::hv_mirror_hist()} unchanged.
+The result appends the same score columns as \code{\link[=ps_logistic]{ps_logistic()}}, so it feeds
+\code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_match]{ps_match()}} and \code{\link[=sa_overlap]{sa_overlap()}} unchanged, and its \verb{$data}
+feeds \code{hvtiPlotR::hv_mirror_hist()}.
 }
 \section{Threads and reproducibility}{
 

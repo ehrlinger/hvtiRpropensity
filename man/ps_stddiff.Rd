@@ -27,7 +27,8 @@ variable may appear under one type only. A \code{binary} column must be
 coded 0/1 or logical; a \code{categorical} column may have any coding.}
 
 \item{weight_col}{Optional name of a column of positive weights, for
-example matching weights from \code{\link[=ps_weight]{ps_weight()}}. Weights must be finite.}
+example the inverse-probability weights from \code{\link[=ps_weight]{ps_weight()}} or the
+matching weight \code{mt_wt} from \code{\link[=ps_logistic]{ps_logistic()}}. Weights must be finite.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a

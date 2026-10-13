@@ -21,9 +21,19 @@
 #' `$data` slot is the **full** original dataset with a `match` column set to
 #' `1` for matched pairs and `0` for unmatched patients.
 #'
+#' **Estimand.** Every treated patient looks for a control, so the matched
+#' sample targets the average treatment effect on the treated (ATT). A treated
+#' patient who finds no control within the caliper, or none at all once the
+#' controls run out, is dropped, and the estimand shifts to the treated
+#' patients who could be matched, in practice those inside common support.
+#' `$meta$n_unmatched` counts them; when it is not zero, say which population
+#' the estimate describes.
+#'
 #' The `$tables` slot contains standardised mean difference (SMD) tables
-#' before and after matching, and group counts. These are the diagnostics
-#' that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
+#' before and after matching, and group counts. `hvtiPlotR::hv_mirror_hist()`
+#' reads `$data` directly. `hvtiPlotR::hv_balance()` needs the two SMD tables
+#' stacked into long form with `variable`, `group` and `std_diff` (in percent);
+#' the vignette shows the reshape.
 #'
 #' A patient with a missing treatment or a missing score cannot be matched.
 #' Those rows stay in `$data` with `match_col` set to `0`, are left out of the
@@ -89,15 +99,19 @@
 #'     `pair_id` is an integer identifying which matched pair each patient
 #'     belongs to (`NA` for unmatched patients).  Filter to `match == 1` to
 #'     obtain the matched subset.}
-#'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `id_col`,
-#'     `match_col`, `pair_id_col`, `scale`, `caliper` (the absolute caliper
-#'     applied, on `scale`), `caliper_sd`, `method`, `seed`, `n_total`,
-#'     `n_excluded` (rows with a missing treatment or score), `n_matched`,
-#'     `n_unmatched`.}
-#'   \item{`$tables`}{Named list: `smd_before`, `smd_after`,
-#'     `group_counts_before`, `group_counts_after`. Group tables name each
-#'     group by its value in `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and
-#'     carry a logical `treated` column.}
+#'   \item{`$meta`}{Named list: `treatment_col`, `treated_level` (the value of
+#'     `treatment_col` taken as treated), `score_col`, `id_col`, `match_col`,
+#'     `pair_id_col`, `scale`, `caliper` (the absolute caliper applied, on
+#'     `scale`), `caliper_sd`, `method`, `seed`, `n_total`, `n_excluded` (rows
+#'     with a missing treatment or score), `n_matched` (the number of matched
+#'     pairs, so the number of matched treated patients) and `n_unmatched`
+#'     (treated patients left without a match; unmatched controls are not
+#'     counted).}
+#'   \item{`$tables`}{Named list: `smd_before`, `smd_after` (`variable`,
+#'     `smd`), `group_counts_before`, `group_counts_after` (`group`,
+#'     `treated`, `n`). Group tables name each group by its value in
+#'     `treatment_col` (`0`/`1`, `FALSE`/`TRUE`, or the two values when
+#'     `treated_level` is given) and carry a logical `treated` column.}
 #' }
 #'
 #' @seealso [ps_weight()], [sample_ps_data()],

@@ -54,14 +54,24 @@ indicator columns \code{stra_1} through \verb{stra_<n_strata>} are appended.}
 \value{
 An object of class \code{c("bs_count", "ps_data")} with:
 \describe{
-\item{\verb{$data}}{Base data frame with \code{score_col}, \code{"quintile"},
-\code{"decile"}, \code{strata_col}, and (if \code{create_binary_strata})
-\code{stra_1}...\code{stra_k} appended.}
+\item{\verb{$data}}{\code{data} (the lowest-numbered imputation when
+\code{imputation_col} is set, without that column) with \code{score_col},
+\code{"quintile"}, \code{"decile"}, \code{strata_col}, and (if
+\code{create_binary_strata}) \code{stra_1} through \verb{stra_<n_strata>} appended.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{outcome_col}, \code{id_col},
-\code{imputation_col}, \code{score_col}, \code{dist}, \code{n_strata}, \code{strata_col},
-\code{bundle_version}, \code{model_family}, \code{package_versions}, \code{method},
-\code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{strata_counts}.}
+\code{imputation_col}, \code{score_col}, \code{dist}, \code{theta} (the negative-binomial
+dispersion estimate, one per imputation, named by imputation index;
+\code{NULL} for \code{dist = "poisson"}), \code{n_strata}, \code{strata_col},
+\code{bundle_version}, \code{model_family} (\code{"count"}), \code{package_versions},
+\code{method}, \code{n_imputations}, \code{n_total}.}
+\item{\verb{$tables}}{Named list: \code{strata_counts} (\code{stratum}, \code{n}),
+\code{estimates}, \code{covariance}, \code{by_imputation} and \code{fit_status}, laid out
+as in \code{\link[=fit_logistic]{fit_logistic()}} except that \code{estimates} has \code{rate_ratio}, the
+exponentiated coefficient, in place of \code{odds_ratio}. With
+\code{imputation_col}, \code{estimates} and \code{covariance} are pooled with Rubin's
+rules.}
+\item{\verb{$models}}{The fitted models, one per imputation, named by
+imputation index: \code{\link[MASS:glm.nb]{MASS::glm.nb()}} or \code{\link[stats:glm]{stats::glm()}} fits.}
 }
 }
 \description{

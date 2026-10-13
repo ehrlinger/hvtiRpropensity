@@ -11,7 +11,7 @@
 ## containing all covariates thought to confound the exposure-outcome
 ## relationship.  Patients with similar balancing scores have similar
 ## expected exposure values, allowing direct within-stratum comparisons
-## with reduced confounding — analogous to propensity score stratification
+## with reduced confounding, analogous to propensity score stratification
 ## for binary treatments.
 ##
 ## Workflow mirrors the SAS templates:
@@ -20,7 +20,8 @@
 ##   2. Keep the linear predictor (xbeta) or fitted value (predict).
 ##   3. Average across imputations per patient (PROC SUMMARY mean=).
 ##   4. Sort by balancing score; assign quintile, decile, and cluster
-##      strata (the %grp macro in SAS).
+##      strata (after the %grp macro in SAS, which it does not reproduce
+##      exactly; see .assign_bs_strata()).
 ##   5. Optionally create binary indicator columns stra_1 ... stra_k.
 ##
 ## Functions:
@@ -35,10 +36,13 @@
 
 #' Assign quintile, decile, and k-cluster strata from a score vector
 #'
-#' Mirrors the SAS %grp macro:
-#'   proc sort by balancing_score;
-#'   quintile = int(_n_ / (nobs/5)) + 1;  if quintile > 5 then quintile = 5;
-#'   cluster  = decile;
+#' Ranks the scored patients and assigns `ceiling(rank * k / n)`, which gives
+#' groups of equal size when `n` divides by `k`. This does not reproduce the
+#' SAS %grp macro exactly. The macro assigns
+#' `quintile = int(_n_ / (nobs/5)) + 1; if quintile > 5 then quintile = 5;`,
+#' which puts one patient too few in the first group and folds the surplus
+#' into the last: with n = 10, SAS gives quintile sizes 1, 2, 2, 2, 3 and this
+#' gives 2, 2, 2, 2, 2. A patient can sit one stratum apart in the two.
 #'
 #' @param score    Numeric vector of balancing scores.
 #' @param n_strata Integer number of clusters (default 10 = deciles).
@@ -114,8 +118,11 @@
 #'     `imputation_col`, `score_col`, `n_strata`, `strata_col`,
 #'     `bundle_version`, `model_family`, `package_versions`, `method`,
 #'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `strata_counts`, `estimates` (Rubin-pooled
-#'     coefficients), `covariance`, `by_imputation` and `fit_status`.}
+#'   \item{`$tables`}{Named list: `strata_counts` (`stratum`, `n`),
+#'     `estimates` (Rubin-pooled coefficients when imputed), `covariance`,
+#'     `by_imputation` and `fit_status`, laid out as in [fit_linear()].}
+#'   \item{`$models`}{The fitted [stats::lm()] models, one per imputation,
+#'     named by imputation index.}
 #' }
 #'
 #' @seealso [bs_count()], [fit_linear()], [ps_logistic()], [sample_ps_data()]
@@ -310,14 +317,24 @@ print.bs_continuous <- function(x, ...) {
 #'
 #' @return An object of class `c("bs_count", "ps_data")` with:
 #' \describe{
-#'   \item{`$data`}{Base data frame with `score_col`, `"quintile"`,
-#'     `"decile"`, `strata_col`, and (if `create_binary_strata`)
-#'     `stra_1`...`stra_k` appended.}
+#'   \item{`$data`}{`data` (the lowest-numbered imputation when
+#'     `imputation_col` is set, without that column) with `score_col`,
+#'     `"quintile"`, `"decile"`, `strata_col`, and (if
+#'     `create_binary_strata`) `stra_1` through `stra_<n_strata>` appended.}
 #'   \item{`$meta`}{Named list: `formula`, `outcome_col`, `id_col`,
-#'     `imputation_col`, `score_col`, `dist`, `n_strata`, `strata_col`,
-#'     `bundle_version`, `model_family`, `package_versions`, `method`,
-#'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `strata_counts`.}
+#'     `imputation_col`, `score_col`, `dist`, `theta` (the negative-binomial
+#'     dispersion estimate, one per imputation, named by imputation index;
+#'     `NULL` for `dist = "poisson"`), `n_strata`, `strata_col`,
+#'     `bundle_version`, `model_family` (`"count"`), `package_versions`,
+#'     `method`, `n_imputations`, `n_total`.}
+#'   \item{`$tables`}{Named list: `strata_counts` (`stratum`, `n`),
+#'     `estimates`, `covariance`, `by_imputation` and `fit_status`, laid out
+#'     as in [fit_logistic()] except that `estimates` has `rate_ratio`, the
+#'     exponentiated coefficient, in place of `odds_ratio`. With
+#'     `imputation_col`, `estimates` and `covariance` are pooled with Rubin's
+#'     rules.}
+#'   \item{`$models`}{The fitted models, one per imputation, named by
+#'     imputation index: [MASS::glm.nb()] or [stats::glm()] fits.}
 #' }
 #'
 #' @section Package dependency:
