@@ -10,10 +10,12 @@ Provides functions for propensity score and balancing score analysis used
 in cardiac surgery comparative-effectiveness research.  Translates the
 Cleveland Clinic HVTI SAS template library into a consistent R workflow.
 
-\strong{Step 1: estimate scores} (new in this version):
+\strong{Step 1: estimate scores}:
 \itemize{
 \item \code{\link[=ps_logistic]{ps_logistic()}}: binary treatment propensity score (logistic regression;
 supports multiply-imputed data via a stacked data frame).
+\item \code{\link[=ps_forest]{ps_forest()}}: binary treatment propensity score from a random forest
+(\code{randomForestSRC}), scored out-of-bag.
 \item \code{\link[=ps_ordinal]{ps_ordinal()}}: ordered treatment propensity score (proportional-odds
 model via \code{MASS::polr}; equivalent to SAS \verb{PROC LOGISTIC} default for
 ordinal responses).
@@ -25,26 +27,69 @@ via \code{nnet::multinom}; equivalent to SAS \verb{PROC LOGISTIC link=glogit}).
 or Poisson regression; equivalent to SAS \verb{PROC GENMOD dist=nb}).
 }
 
+\strong{Outcome models}:
+\itemize{
+\item \code{\link[=fit_logistic]{fit_logistic()}}: binary, ordinal or nominal outcome-model bundle, with
+Rubin pooling over stacked imputations.
+\item \code{\link[=fit_linear]{fit_linear()}}: linear outcome-model bundle, with Rubin pooling.
+\item \code{\link[=validate_logistic]{validate_logistic()}}: applies a saved binary bundle to a validation
+cohort without refitting.
+}
+
 \strong{Step 2: balance and use scores}:
 \itemize{
-\item \code{\link[=ps_match]{ps_match()}}: 1:1 nearest-neighbour matching on a pre-computed score.
-Returns a \code{pair_id} column in \verb{$data} for use with \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}.
+\item \code{\link[=ps_match]{ps_match()}}: 1:1 nearest-neighbour matching on a pre-computed score,
+on the probability or the logit scale. \verb{scale = "logit", caliper_sd = 0.2}
+is the Austin (2011) caliper. Returns a \code{pair_id} column in \verb{$data} for
+use with \code{\link[=sa_rosenbaum]{sa_rosenbaum()}} and \code{\link[=ps_rmst]{ps_rmst()}}.
 \item \code{\link[=ps_weight]{ps_weight()}}: IPTW weights (ATE / ATT / ATC) from a pre-computed score.
+\item \code{\link[=ps_support]{ps_support()}}: compares common-support and trimming rules.
+\item \code{\link[=ps_rmst]{ps_rmst()}}: restricted mean survival contrast, weighted, or on the
+matched pairs of a \code{\link[=ps_match]{ps_match()}} object.
+}
+
+\strong{Balance statistics}:
+\itemize{
+\item \code{\link[=ps_stddiff]{ps_stddiff()}}: standardized differences by variable type, optionally
+weighted (CCF \verb{\%stddiff}).
+\item \code{\link[=ps_stddiff_perm]{ps_stddiff_perm()}}: permutation reference for those differences (CCF
+\verb{\%stddiffci}).
+\item \code{\link[=ps_mw_var]{ps_mw_var()}}: matching-weight difference in means with a bootstrap SD
+(CCF \verb{\%mw_var}).
 }
 
 \strong{Step 3: sensitivity analysis} (optional):
 \itemize{
-\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}: Rosenbaum gamma bounds for matched analyses; no extra
-dependency.
-\item \code{\link[=sa_evalue]{sa_evalue()}}: E-values (VanderWeele & Ding 2017); no extra dependency.
-\item \code{\link[=sa_overlap]{sa_overlap()}}: Overlap and positivity diagnostics on the PS distribution.
-\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}}: IPTW trim-threshold sensitivity sweep.
+\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}: Rosenbaum gamma bounds for matched analyses; how much
+hidden bias would overturn the result.
+\item \code{\link[=sa_evalue]{sa_evalue()}}: E-values (VanderWeele & Ding 2017) for unmeasured
+confounding. Odds and hazard ratios need \code{rare}.
+\item \code{\link[=sa_overlap]{sa_overlap()}}: overlap and positivity diagnostics on the score
+distribution.
+\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}}: how the effective sample size and the weights change
+across IPTW trim thresholds.
 }
 
-All functions return a \code{ps_data} S3 object whose \verb{$data} slot holds the
-original dataset with score / weight columns appended, and whose \verb{$tables}
-slot holds balance diagnostics compatible with \code{hvtiPlotR::hv_mirror_hist()}
-and \code{hvtiPlotR::hv_balance()}.
+\strong{Data}: \code{\link[=sample_ps_data]{sample_ps_data()}}, \code{\link[=sample_ps_data_ordinal]{sample_ps_data_ordinal()}},
+\code{\link[=sample_ps_data_nominal]{sample_ps_data_nominal()}} and \code{\link[=sample_ps_data_count]{sample_ps_data_count()}} generate synthetic
+datasets; \code{\link[=is_ps_data]{is_ps_data()}} tests for a \code{ps_data} object.
+
+Every function except the four data generators (which return data frames)
+and \code{\link[=is_ps_data]{is_ps_data()}} returns a \code{ps_data} S3 object. Its \verb{$data} slot holds
+the input data with any score, weight or flag columns appended, \verb{$meta}
+records the columns and parameters used, and \verb{$tables} holds the
+diagnostics: SMD tables, group counts, effective sample sizes, or a
+sensitivity function's bounds and sweeps.
+
+\code{hvtiPlotR::hv_mirror_hist()} reads the \verb{$data} of a \code{\link[=ps_match]{ps_match()}} or
+\code{\link[=ps_weight]{ps_weight()}} object directly. \code{hvtiPlotR::hv_balance()} does not read
+\verb{$tables} as they are: it needs one long data frame with \code{variable},
+\code{group} and \code{std_diff} columns, the difference in percent, so the SMD
+tables are stacked and multiplied by 100 first. The vignette shows the
+reshape.
+
+The SAS programs this package ports ship with it, in
+\code{system.file("sas-templates", package = "hvtiRpropensity")}.
 }
 \section{Typical two-step workflow (binary treatment)}{
 
@@ -60,8 +105,9 @@ score <- ps_logistic(
 )
 print(score)
 
-# Step 2a: match on the estimated score
-m <- ps_match(score$data, score_col = score$meta$score_col)
+# Step 2a: match on the logit of the score, caliper 0.2 SD
+m <- ps_match(score$data, score_col = "logit_t", scale = "logit",
+              caliper_sd = 0.2, seed = 42)
 matched <- m$data[m$data$match == 1L, ]
 
 # Step 2b: or weight
@@ -69,19 +115,24 @@ w <- ps_weight(score$data, score_col = score$meta$score_col)
 }\if{html}{\out{</div>}}
 }
 
+\references{
+Austin PC (2011). Optimal caliper widths for propensity-score
+matching when estimating differences in means and differences in
+proportions in observational studies. \emph{Pharmaceutical Statistics},
+10(2), 150--161.  \doi{10.1002/pst.433}
+}
 \seealso{
 \itemize{
-\item \code{\link[=ps_logistic]{ps_logistic()}}: binary propensity score estimation
-\item \code{\link[=ps_ordinal]{ps_ordinal()}}: ordinal propensity score estimation
-\item \code{\link[=ps_nominal]{ps_nominal()}}: nominal propensity score estimation
-\item \code{\link[=bs_continuous]{bs_continuous()}}: continuous-outcome balancing score
-\item \code{\link[=bs_count]{bs_count()}}: count-outcome balancing score
-\item \code{\link[=ps_match]{ps_match()}}: nearest-neighbour 1:1 matching
-\item \code{\link[=ps_weight]{ps_weight()}}: IPTW weighting (ATE / ATT / ATC)
-\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}: Rosenbaum sensitivity bounds (matched analyses)
-\item \code{\link[=sa_evalue]{sa_evalue()}}: E-value sensitivity analysis
-\item \code{\link[=sa_overlap]{sa_overlap()}}: overlap and positivity diagnostics
-\item \code{\link[=sa_trim_sweep]{sa_trim_sweep()}}: IPTW trim-threshold sensitivity sweep
+\item \code{\link[=ps_logistic]{ps_logistic()}}, \code{\link[=ps_forest]{ps_forest()}}, \code{\link[=ps_ordinal]{ps_ordinal()}}, \code{\link[=ps_nominal]{ps_nominal()}}:
+propensity score estimation
+\item \code{\link[=bs_continuous]{bs_continuous()}}, \code{\link[=bs_count]{bs_count()}}: balancing scores for continuous and
+count exposures
+\item \code{\link[=fit_logistic]{fit_logistic()}}, \code{\link[=fit_linear]{fit_linear()}}, \code{\link[=validate_logistic]{validate_logistic()}}: outcome models
+\item \code{\link[=ps_match]{ps_match()}}, \code{\link[=ps_weight]{ps_weight()}}: matching and IPTW weighting
+\item \code{\link[=ps_stddiff]{ps_stddiff()}}, \code{\link[=ps_stddiff_perm]{ps_stddiff_perm()}}, \code{\link[=ps_mw_var]{ps_mw_var()}}: balance statistics
+\item \code{\link[=ps_support]{ps_support()}}, \code{\link[=ps_rmst]{ps_rmst()}}: support rules and survival contrasts
+\item \code{\link[=sa_rosenbaum]{sa_rosenbaum()}}, \code{\link[=sa_evalue]{sa_evalue()}}, \code{\link[=sa_overlap]{sa_overlap()}}, \code{\link[=sa_trim_sweep]{sa_trim_sweep()}}:
+sensitivity analysis
 \item \code{\link[=sample_ps_data]{sample_ps_data()}}: synthetic dataset for examples / tests
 \item \code{\link[=is_ps_data]{is_ps_data()}}: predicate for \code{ps_data} objects
 }

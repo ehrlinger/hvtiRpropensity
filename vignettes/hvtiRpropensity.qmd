@@ -31,19 +31,24 @@ library(hvtiRpropensity)
 
 `hvtiRpropensity` provides propensity score methods for cardiac surgery
 comparative-effectiveness research.  It ports the balancing logic from six SAS
-templates into a tidy R API compatible with
-[hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/).
+templates into a tidy R API whose outputs feed
+[hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/). The six templates ship
+with the package, in `system.file("sas-templates", package = "hvtiRpropensity")`.
 
 The package covers the full workflow from raw covariates to sensitivity analysis:
 
-1. **Estimate a balancing score** — `ps_logistic()`, `ps_ordinal()`,
-   `ps_nominal()`, `bs_continuous()`, `bs_count()`
-2. **Balance treatment groups** — `ps_match()` (nearest-neighbour matching)
-   or `ps_weight()` (IPTW)
-3. **Diagnose balance** — SMD tables, group counts, and overlap diagnostics
-   in `$tables`, `sa_overlap()`
-4. **Assess sensitivity to unmeasured confounding** — `sa_rosenbaum()`,
-   `sa_evalue()`, `sa_overlap()`, `sa_trim_sweep()`
+1. **Estimate a balancing score**: `ps_logistic()`, `ps_forest()`,
+   `ps_ordinal()`, `ps_nominal()`, `bs_continuous()`, `bs_count()`.
+2. **Balance treatment groups**: `ps_match()` (nearest-neighbour matching)
+   or `ps_weight()` (IPTW).
+3. **Diagnose balance and support**: the SMD tables, group counts and
+   effective sample sizes in `$tables`, `ps_stddiff()` and
+   `ps_stddiff_perm()`, and `ps_support()` for the common-support rules.
+4. **Estimate the effect**: `ps_mw_var()` for a matching-weight difference in
+   means, `ps_rmst()` for restricted mean survival.
+5. **Check the assumptions**: `sa_overlap()` and `sa_trim_sweep()` for
+   positivity and overlap, `sa_rosenbaum()` and `sa_evalue()` for unmeasured
+   confounding.
 
 All score, balance, sensitivity, fit, and validation objects share a common
 `ps_data` S3 base class with four slots: `$data` carries patient-level outputs, `$meta`
@@ -72,8 +77,8 @@ table(dta$tavr)
 summary(dta$prob_t)
 ```
 
-The two treatment groups differ on all covariates — younger patients with higher
-ejection fraction were more likely to receive TF-TAVR — so the raw SMDs are
+The two treatment groups differ on all covariates (younger patients with higher
+ejection fraction were more likely to receive TF-TAVR), so the raw SMDs are
 non-trivial and the propensity scores have good overlap.
 
 ```{r}
@@ -166,7 +171,7 @@ validation$tables$performance
 
 ## Propensity score estimation
 
-### Binary treatment — `ps_logistic()`
+### Binary treatment: `ps_logistic()`
 
 In practice a propensity score is estimated from covariates before matching or
 weighting.  `ps_logistic()` fits `stats::glm(..., family = binomial())` and
@@ -235,7 +240,32 @@ print(obj_mi)
 summary(obj_mi$data$prob_t)
 ```
 
-### Ordinal treatment — `ps_ordinal()`
+### Random-forest score: `ps_forest()`
+
+When you would rather not commit to a main-effects logistic model,
+`ps_forest()` grows a classification forest with `randomForestSRC` and scores
+each patient **out-of-bag**, using only the trees that did not see that
+patient. It appends the same `prob_t`, `logit_t`, `mt_wt`, `quintile` and
+`decile` columns as `ps_logistic()`, so everything below takes either.
+`mt_wt` is the Li and Greene (2013) matching weight. Give a `seed`; the
+forest is random.
+
+```{r}
+#| label: ps-forest
+#| eval: !expr requireNamespace("randomForestSRC", quietly = TRUE)
+op <- options(rf.cores = 2L)
+obj_rf <- ps_forest(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data  = dta_ps,
+  ntree = 200,
+  seed  = 42
+)
+options(op)
+summary(obj_rf$data$prob_t)
+obj_rf$tables$smd
+```
+
+### Ordinal treatment: `ps_ordinal()`
 
 For ordered treatment variables (e.g. NYHA functional class I / II / III–IV),
 `ps_ordinal()` fits a proportional-odds cumulative logit model via
@@ -264,7 +294,7 @@ head(obj_ord$data[, c("id", "nyha_grp",
 table(obj_ord$data$quintile)
 ```
 
-### Nominal treatment — `ps_nominal()`
+### Nominal treatment: `ps_nominal()`
 
 For unordered multi-level treatments (e.g. repair type: CE / COS / PER / DEV),
 `ps_nominal()` fits a generalised logit model via `nnet::multinom()`, equivalent
@@ -296,7 +326,7 @@ saturated model.  Patients with similar balancing scores have similar expected
 exposure values, enabling within-stratum comparisons analogous to PS
 stratification.
 
-### Continuous exposure — `bs_continuous()`
+### Continuous exposure: `bs_continuous()`
 
 Mirrors `tp.rm.continuous.balncing_score.sas` (PROC REG balancing score on
 nadir HCT).  The fitted value from `stats::lm()` is used as the score.
@@ -318,11 +348,11 @@ head(obj_bs$data[, c("id", "ef", "bs", "quintile", "decile", "cluster")])
 table(obj_bs$data$cluster)
 ```
 
-### Count exposure — `bs_count()`
+### Count exposure: `bs_count()`
 
 Mirrors `tp.pm.count.balncing_score.sas` (PROC GENMOD dist=nb link=log).  The
 **linear predictor on the log scale** (`xbeta`) is used as the balancing score,
-not the fitted count — the log scale is continuous and unbounded, making it
+not the fitted count. The log scale is continuous and unbounded, making it
 more suitable for rank-based stratification.
 
 ```{r}
@@ -351,9 +381,13 @@ head(obj_cnt$data[, c("id", "rbc_tot", "bs", "cluster",
 `ps_match()` performs greedy 1:1 nearest-neighbour matching without
 replacement.
 
+Treated patients are matched in a shuffled order, so the pairs depend on
+the random-number stream. Give `seed` on every call and the match is
+reproducible whatever ran earlier in the session.
+
 ```{r}
 #| label: match-build
-m <- ps_match(dta)
+m <- ps_match(dta, seed = 42)
 print(m)
 ```
 
@@ -394,9 +428,34 @@ for tighter balance.
 
 ```{r}
 #| label: match-caliper
-m_cal <- ps_match(dta, caliper = 0.05)
+m_cal <- ps_match(dta, caliper = 0.05, seed = 42)
 print(m_cal)
 ```
+
+### Matching on the logit with a caliper in SD units
+
+A caliper of 0.05 on the probability scale means different things near 0.5
+and near the tails. Austin (2011) recommends matching on the **logit** of the
+propensity score with a caliper of 0.2 pooled standard deviations of that
+logit. Pass the `logit_t` column that `ps_logistic()` appends, set
+`scale = "logit"`, and give the caliper as `caliper_sd`. `ps_match()` turns it
+into an absolute caliper, `caliper_sd * sqrt((var_t + var_c) / 2)`, and
+records that value in `$meta$caliper`.
+
+```{r}
+#| label: match-logit
+m_logit <- ps_match(obj_ps$data,
+                    score_col  = "logit_t",
+                    scale      = "logit",
+                    caliper_sd = 0.2,
+                    seed       = 42)
+m_logit$meta[c("scale", "caliper_sd", "caliper", "n_matched", "n_unmatched")]
+m_logit$tables$smd_after
+```
+
+The object records `scale = "logit"`, and the functions that read it
+downstream (`sa_overlap()`, `ps_support()`, `ps_rmst()`) back-transform the
+score with `plogis()` before they work on the probability scale.
 
 ---
 
@@ -459,11 +518,107 @@ summary(w_trim$data$iptw)
 
 ---
 
+## Balance statistics and effect estimates
+
+The `$tables` of a match or a weight give a quick SMD per covariate. Three
+functions port the CCF SAS macros for the fuller analysis, and tests compare
+each with the macro's output.
+
+### Standardized differences: `ps_stddiff()`
+
+`ps_stddiff()` reproduces `%stddiff`. You say which formula each variable
+gets (Gaussian, non-Gaussian ordinal, binary, categorical) instead of letting
+the storage type decide. With `weight_col`, each group's weights are first
+scaled to average 1, so stabilised and unstabilised weights give the same
+answer. The result is a proportion of a standard deviation, not a percent.
+
+```{r}
+#| label: stddiff
+sd_mw <- ps_stddiff(obj_ps$data,
+                    gaussian   = c("age", "ef"),
+                    binary     = c("female", "diabetes", "hypertension"),
+                    weight_col = "mt_wt")
+sd_mw$tables$stddiff
+```
+
+### A permutation reference: `ps_stddiff_perm()`
+
+`ps_stddiff_perm()` reproduces `%stddiffci`. It shuffles the group labels and
+reports where the observed difference falls among the shuffled ones. The
+percentiles are not a confidence interval; they show what label shuffling
+alone produces. A weighted run needs a `reweight` function that recomputes
+the weights for each permutation, so this example is unweighted.
+
+```{r}
+#| label: stddiff-perm
+perm <- ps_stddiff_perm(obj_ps$data,
+                        gaussian = c("age", "ef"),
+                        binary   = "female",
+                        n_perm   = 200,
+                        seed     = 1)
+perm$tables$stddiff_perm
+```
+
+### Matching-weight difference in means: `ps_mw_var()`
+
+`ps_mw_var()` reproduces `%mw_var`: the weighted difference in means between
+groups, with a bootstrap standard deviation and percentiles. The weights are
+held fixed in the bootstrap, as in the macro, so the SD ignores the
+uncertainty in estimating the score. Here `ef` stands in for an outcome.
+
+```{r}
+#| label: mw-var
+mw <- ps_mw_var(obj_ps$data,
+                outcomes   = "ef",
+                weight_col = "mt_wt",
+                n_rep      = 200,
+                seed       = 1)
+mw$tables$mw_var[, c("outcome", "mean_0", "mean_1", "estimate", "sd",
+                     "p2_5", "p97_5")]
+```
+
+### Restricted mean survival: `ps_rmst()`
+
+For a time-to-event outcome, `ps_rmst()` integrates weighted Kaplan-Meier
+curves to a horizon `tau` and reports the treated-minus-control difference
+with a bootstrap interval. On a `ps_match()` object it analyses the matched
+pairs only, unweighted, and resamples whole pairs. It refuses score weights
+on a matched set, which would adjust for the same confounders twice. On a
+scored or weighted object it runs the weighting schemes you name.
+
+```{r}
+#| label: rmst
+#| eval: !expr requireNamespace("survival", quietly = TRUE)
+# Synthetic follow-up in years, censored at 5
+dta_s <- obj_ps$data
+dta_s$t <- withr::with_seed(7, stats::rexp(nrow(dta_s), 0.2))
+dta_s$e <- as.integer(dta_s$t < 5)
+dta_s$t <- pmin(dta_s$t, 5)
+
+m_s <- ps_match(dta_s,
+                score_col  = "logit_t",
+                scale      = "logit",
+                caliper_sd = 0.2,
+                covariates = c("age", "female", "ef", "diabetes", "hypertension"),
+                seed       = 42)
+rm_match <- ps_rmst(m_s, time_col = "t", event_col = "e", tau = 4,
+                    n_boot = 100, seed = 1)
+rm_match$meta$resampling
+rm_match$tables$estimates[, c("estimator", "n", "diff_days",
+                              "lo_days", "hi_days")]
+```
+
+---
+
 ## Sensitivity analysis
 
-Every observational study rests on the assumption of no unmeasured confounding.
-The four `sa_*` functions quantify how strong an unmeasured confounder would
-need to be to change the study's conclusions.
+A propensity analysis rests on two assumptions the data cannot prove. The
+first is positivity: every patient could have received either treatment, so
+the two score distributions overlap. `sa_overlap()`, `sa_trim_sweep()` and
+`ps_support()` check it. The second is no unmeasured confounding.
+`sa_rosenbaum()` and `sa_evalue()` ask how strong an unmeasured confounder
+would need to be to change the conclusion. Each `sa_*()` function returns a
+`ps_data` object, with its results in `$tables` and `$meta`.
 
 ```{r}
 #| label: sa-setup
@@ -472,7 +627,7 @@ m    <- ps_match(dta, seed = 42)
 w    <- ps_weight(dta, estimand = "ATE")
 ```
 
-### Overlap and positivity — `sa_overlap()`
+### Overlap and positivity: `sa_overlap()`
 
 Before any analysis, check that the PS distributions overlap sufficiently.
 `sa_overlap()` reports the common support region, the fraction of each group
@@ -486,7 +641,22 @@ ov$tables$outside_overlap
 ov$tables$positivity_flags
 ```
 
-### Weight-trimming sensitivity sweep — `sa_trim_sweep()`
+### Comparing support rules: `ps_support()`
+
+There is more than one way to call a patient "off support". `ps_support()`
+flags patients under several rules (outside a fixed trimming range, outside
+the range both groups occupy, or any logical flag you supply) and measures
+how well the rules agree, with Cohen's kappa and the Jaccard overlap of the
+patients each rule drops.
+
+```{r}
+#| label: ps-support
+sup <- ps_support(obj_ps, trim = c(0.1, 0.9))
+sup$tables$counts
+sup$tables$agreement
+```
+
+### Weight-trimming sensitivity sweep: `sa_trim_sweep()`
 
 Extreme IPTW weights inflate variance and can dominate estimates.
 `sa_trim_sweep()` sweeps a range of winsorisation thresholds and reports how
@@ -503,12 +673,14 @@ sweep[sweep$trim %in% c(0, 0.05), c("trim", "ess_control",
                                       "ess_treated", "max_weight")]
 ```
 
-### E-values — `sa_evalue()`
+### E-values: `sa_evalue()`
 
 The E-value (VanderWeele & Ding 2017) is the minimum risk-ratio that an
 unmeasured confounder would need with *both* the treatment and the outcome to
 fully explain away the observed association.  A large E-value indicates a more
-robust finding.
+robust finding. For an odds ratio or hazard ratio you must say whether the
+outcome is rare (under about 15 percent by the end of follow-up) with `rare`;
+the conversion to a risk ratio depends on it.
 
 ```{r}
 #| label: sa-evalue-rr
@@ -526,7 +698,14 @@ ev_rd <- sa_evalue(0.08, ci_lo = 0.02, ci_hi = 0.14,
 ev_rd$meta$evalue_estimate
 ```
 
-### Rosenbaum sensitivity bounds — `sa_rosenbaum()`
+```{r}
+#| label: sa-evalue-or
+# Odds ratio 1.6 (1.1 to 2.3) for a common outcome
+ev_or <- sa_evalue(1.6, ci_lo = 1.1, ci_hi = 2.3, type = "OR", rare = FALSE)
+ev_or$tables$evalue
+```
+
+### Rosenbaum sensitivity bounds: `sa_rosenbaum()`
 
 For matched analyses, `sa_rosenbaum()` computes worst- and best-case p-value
 bounds for the Wilcoxon signed-rank test under a hidden-bias parameter Γ
@@ -549,45 +728,71 @@ head(res$tables$bounds)
 
 ## Downstream use with hvtiPlotR
 
-The `$data` and `$tables` slots are designed for direct consumption by
-`hvtiPlotR::hv_mirror_hist()` (weighted mode) and `hvtiPlotR::hv_balance()`.
+`hvtiPlotR` draws the two standard figures. Both of its constructors return
+a data object, and `plot()` turns that into a bare `ggplot2` figure you then
+decorate. The chunks below run when `hvtiPlotR` is installed.
 
-### Mirror histogram (matched)
+### Mirror histogram
+
+`hv_mirror_hist()` reads the `$data` of a match directly. Its defaults are
+the column names this package uses (`prob_t`, `tavr`, `match`). It plots on
+the probability scale, so give it `prob_t` even for the logit-scale match
+from earlier; `ps_logistic()` left both columns in `$data`. The treated group
+plots above the axis, controls below, with matched patients shaded.
 
 ```{r}
 #| label: mirror-hist-match
-#| eval: false
-library(hvtiPlotR)
-
-mh <- hv_mirror_hist(
-  data          = m$data,
-  x             = prob_t,
-  treatment     = tavr,
-  match_col     = match,
-  group_labels  = c("SAVR", "TF-TAVR")
-)
-plot(mh) +
-  ggplot2::scale_y_continuous(labels = abs) +
-  ggplot2::labs(x = "Propensity Score", y = "Number of Patients") +
-  hv_theme("manuscript")
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+mh <- hvtiPlotR::hv_mirror_hist(m_logit$data,
+                                score_col = "prob_t",
+                                group_col = "tavr",
+                                match_col = "match")
+plot(mh)
 ```
 
-### Mirror histogram (weighted)
+For a weighted analysis, pass the weight column and the bars become weighted
+counts.
 
 ```{r}
 #| label: mirror-hist-weight
-#| eval: false
-mh_wt <- hv_mirror_hist(
-  data          = w_ate$data,
-  x             = prob_t,
-  treatment     = tavr,
-  weight_col    = iptw,
-  group_labels  = c("SAVR", "TF-TAVR")
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+mh_wt <- hvtiPlotR::hv_mirror_hist(w_ate$data,
+                                   score_col  = "prob_t",
+                                   group_col  = "tavr",
+                                   weight_col = "iptw")
+plot(mh_wt)
+```
+
+### Covariate balance plot
+
+`hv_balance()` does **not** read `$tables` as they come. It wants one long
+data frame, one row per covariate and comparison, with columns `variable`,
+`group` and `std_diff`, and the difference in **percent** (its reference
+lines sit at plus and minus 10). The SMD tables here are proportions of a
+standard deviation, one table per comparison, so stack them and multiply by
+100. Here is the logit-scale match from earlier.
+
+```{r}
+#| label: balance-reshape
+balance_long <- rbind(
+  data.frame(variable = m_logit$tables$smd_before$variable,
+             group    = "Before match",
+             std_diff = 100 * m_logit$tables$smd_before$smd),
+  data.frame(variable = m_logit$tables$smd_after$variable,
+             group    = "After match",
+             std_diff = 100 * m_logit$tables$smd_after$smd)
 )
-plot(mh_wt) +
-  ggplot2::scale_y_continuous(labels = abs) +
-  ggplot2::labs(x = "Propensity Score", y = "Weighted Count") +
-  hv_theme("manuscript")
+balance_long
+```
+
+For a `ps_weight()` object the two tables are `smd_unweighted` and
+`smd_weighted`.
+
+```{r}
+#| label: balance-plot
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+cb <- hvtiPlotR::hv_balance(balance_long)
+plot(cb)
 ```
 
 ---
