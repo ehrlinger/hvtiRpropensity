@@ -30,7 +30,7 @@ response. Binary, 0/1 or logical.}
 \item{id_col}{Optional patient identifier column, carried through.}
 
 \item{score_col, logit_col, weight_col}{Names of the appended score, logit and
-overlap-weight columns.}
+matching-weight columns.}
 
 \item{treated_level}{Value of \code{treatment_col} that is "treated" (the score
 is P(treated)). Defaults to \code{1} / \code{TRUE}.}
@@ -52,8 +52,12 @@ weight are computed. Forest probabilities can be exactly 0 or 1.}
 }
 \value{
 A \code{ps_forest} / \code{ps_data} object. \verb{$data} is \code{data} plus
-\code{score_col}, \code{logit_col}, \code{weight_col} (overlap weights), \code{quintile} and
-\code{decile}; \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"}
+\code{score_col}, \code{logit_col}, \code{weight_col}, \code{quintile} and \code{decile}.
+\code{weight_col} holds the Li-Greene matching weight computed as in
+\code{\link[=ps_logistic]{ps_logistic()}}, \code{min(p, 1 - p) / p} for treated patients and
+\code{min(p, 1 - p) / (1 - p)} for controls, which targets the ATM estimand
+(average treatment effect among the matched; Li & Greene, 2013,
+\doi{10.1515/ijb-2012-0030}); \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"}
 and \code{seed}, the seed used (\code{NA} when none was given); \verb{$tables} holds
 \code{smd} and \code{group_counts} (\code{group}, the value in \code{treatment_col}; a logical
 \code{treated}; \code{n}); \verb{$models$forest} is the fitted forest.

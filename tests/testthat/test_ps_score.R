@@ -45,10 +45,15 @@ test_that("ps_logistic() appends score, logit, weight, quintile, decile", {
   expect_equal(range(obj$data$decile),   c(1L, 10L))
 })
 
-test_that("ps_logistic() matching weights are non-negative", {
+test_that("ps_logistic() writes Li-Greene matching weights to mt_wt", {
   dta <- unscored_ps_data(n = 150, seed = 3)
   obj <- ps_logistic(tavr ~ age + ef, data = dta)
-  expect_true(all(obj$data$mt_wt >= 0, na.rm = TRUE))
+  p   <- obj$data$prob_t
+  trt <- obj$data$tavr == 1
+  expect_true(any(trt) && any(!trt))
+  expect_equal(obj$data$mt_wt[trt],  pmin(p[trt], 1 - p[trt]) / p[trt])
+  expect_equal(obj$data$mt_wt[!trt], pmin(p[!trt], 1 - p[!trt]) / (1 - p[!trt]))
+  expect_true(all(obj$data$mt_wt > 0 & obj$data$mt_wt <= 1))
 })
 
 test_that("ps_logistic() meta fields are correctly populated", {
