@@ -65,6 +65,38 @@ test_that("ps_weight() stabilises with the treated share of the analysable rows"
   expect_equal(part$data$iptw[keep], full$data$iptw)
 })
 
+test_that("ps_weight() gives an excluded reference-arm patient a missing weight for every estimand", {
+  dta <- sample_ps_data(n = 60, seed = 11)
+  ctl <- which(dta$tavr == 0L)[1L]
+  trt <- which(dta$tavr == 1L)[1L]
+  dta$prob_t[c(ctl, trt)] <- NA
+  for (estimand in c("ATE", "ATT", "ATC")) {
+    w <- suppressWarnings(ps_weight(dta, estimand = estimand))
+    expect_true(all(is.na(w$data$iptw[c(ctl, trt)])), info = estimand)
+  }
+})
+
+test_that("ps_weight() trims over the kept rows only, and ps_rmst() analyses the kept rows", {
+  dta <- sample_ps_data(n = 60, seed = 12)
+  dta$time <- 1 + (dta$id %% 17) / 2
+  dta$event <- as.integer(dta$id %% 3 != 0L)
+  # Under the ATT a treated patient's weight is 1 whatever the score, so a
+  # missing treated score is the case that used to keep a usable weight.
+  gone <- c(which(dta$tavr == 1L)[1:2], which(dta$tavr == 0L)[1L])
+  dta$prob_t[gone] <- NA
+  keep <- !is.na(dta$prob_t)
+  part <- suppressWarnings(ps_weight(dta, estimand = "ATT", trim = 0.05))
+  full <- ps_weight(dta[keep, ], estimand = "ATT", trim = 0.05)
+  expect_true(all(is.na(part$data$iptw[gone])))
+  expect_equal(part$data$iptw[keep], full$data$iptw)
+  skip_if_not_installed("survival")
+  r_part <- suppressWarnings(ps_rmst(part, "time", "event", tau = 5, weights = "att", n_boot = 2L, seed = 1))
+  r_full <- ps_rmst(full, "time", "event", tau = 5, weights = "att", n_boot = 2L, seed = 1)
+  expect_equal(sum(!is.na(r_part$data$w_att)), sum(keep))
+  expect_equal(r_part$tables$estimates$rmst_control, r_full$tables$estimates$rmst_control)
+  expect_equal(r_part$tables$estimates$rmst_treated, r_full$tables$estimates$rmst_treated)
+})
+
 # ---------------------------------------------------------------------------
 # ps_support
 # ---------------------------------------------------------------------------
@@ -81,6 +113,15 @@ test_that("ps_support() computes bounds on analysable rows and flags excluded ro
   expect_equal(s$tables$counts$n, rep(nrow(dta) - 5L, 2L))
   expect_equal(s$tables$counts$n_excluded, c(5L, 5L))
   expect_gt(s$tables$counts$n_weak[s$tables$counts$rule == "common"], 0)
+})
+
+test_that("ps_support() counts a supplied rule over its own non-missing flags", {
+  dta <- sample_ps_data(n = 3, seed = 13)
+  m <- ps_match(dta, seed = 1)
+  s <- ps_support(m, flags = list(custom = c(TRUE, NA, FALSE, NA, TRUE, FALSE)), trim = NULL, common = FALSE)
+  expect_equal(s$tables$counts$n, 4L)
+  expect_equal(s$tables$counts$n_excluded, 2L)
+  expect_equal(s$tables$counts$n_weak, 2)
 })
 
 test_that("ps_support() works with a single rule", {

@@ -26,9 +26,11 @@ both groups" (common support).}
 \value{
 A \code{ps_support} / \code{ps_data} object. \verb{$data} is \code{x$data} plus one
 logical column \verb{weak_<rule>} per rule. \verb{$tables$counts} gives the number
-flagged per rule (\code{n_weak}), the number of rows judged (\code{n}) and the number
-left out for a missing treatment or score (\code{n_excluded}, also in
-\verb{$meta$n_excluded}); \verb{$tables$agreement} gives, for every pair of rules,
+flagged per rule (\code{n_weak}), the number of rows that rule judged (\code{n})
+and the number it did not (\code{n_excluded}): rows with a missing treatment
+or score, plus any missing values in a rule supplied through \code{flags}.
+\verb{$meta$n_excluded} counts the rows with a missing treatment or score;
+\verb{$tables$agreement} gives, for every pair of rules,
 \code{n_both}, \code{n_neither}, \code{pct_agree}, Cohen \code{kappa} and \code{jaccard} (overlap
 of the two dropped sets). \verb{$meta$common_support} is the interval used,
 on the probability scale. \verb{$meta$scale} is the scale of \code{score_col},

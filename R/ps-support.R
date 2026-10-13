@@ -24,9 +24,11 @@
 #'
 #' @return A `ps_support` / `ps_data` object. `$data` is `x$data` plus one
 #'   logical column `weak_<rule>` per rule. `$tables$counts` gives the number
-#'   flagged per rule (`n_weak`), the number of rows judged (`n`) and the number
-#'   left out for a missing treatment or score (`n_excluded`, also in
-#'   `$meta$n_excluded`); `$tables$agreement` gives, for every pair of rules,
+#'   flagged per rule (`n_weak`), the number of rows that rule judged (`n`)
+#'   and the number it did not (`n_excluded`): rows with a missing treatment
+#'   or score, plus any missing values in a rule supplied through `flags`.
+#'   `$meta$n_excluded` counts the rows with a missing treatment or score;
+#'   `$tables$agreement` gives, for every pair of rules,
 #'   `n_both`, `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap
 #'   of the two dropped sets). `$meta$common_support` is the interval used,
 #'   on the probability scale. `$meta$scale` is the scale of `score_col`,
@@ -91,7 +93,9 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
     data.frame()
   }
   counts <- data.frame(rule = names(rules), n_weak = vapply(rules, sum, numeric(1L), na.rm = TRUE),
-                       n = sum(kept), n_excluded = sum(excluded), row.names = NULL)
+                       n = vapply(rules, function(flag) sum(!is.na(flag)), integer(1L)),
+                       row.names = NULL)
+  counts$n_excluded <- n - counts$n
 
   new_ps_data(
     data = out,

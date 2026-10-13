@@ -135,6 +135,7 @@ ps_weight <- function(data,
     ATT = ifelse(trt == 1L, 1,      ps / (1 - ps)),
     ATC = ifelse(trt == 1L, (1 - ps) / ps, 1)
   )
+  w[excluded] <- NA_real_
 
   # ---- Stabilise (ATE only) -----------------------------------------------
   # Stabilising by the marginal treatment probability is defined for the ATE.
