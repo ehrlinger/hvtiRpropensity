@@ -76,9 +76,12 @@ Kaplan-Meier curves (weights from the propensity score) integrated to
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>ps_data</code> object with a score and treatment column. The score of
-a <code><a href="ps_match.html">ps_match()</a></code> object built with <code>scale = "logit"</code> is a logit, and is
-back-transformed with <code><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">stats::plogis()</a></code> before the weights are built.</p></dd>
+<dd><p>A <code>ps_data</code> object with a score and treatment column. A
+<code><a href="ps_match.html">ps_match()</a></code> object is analysed on its matched pairs only, and a
+<code><a href="ps_weight.html">ps_weight()</a></code> object contributes its stored weight column; see Details.
+A score on the logit scale (<code>scale = "logit"</code>, as a <code><a href="ps_match.html">ps_match()</a></code> object
+can carry) is back-transformed with <code><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">stats::plogis()</a></code> before any weights
+are built.</p></dd>
 
 
 <dt id="arg-time-col-event-col">time_col, event_col<a class="anchor" aria-label="anchor" href="#arg-time-col-event-col"></a></dt>
@@ -87,12 +90,15 @@ of <code>x$data</code>.</p></dd>
 
 
 <dt id="arg-tau">tau<a class="anchor" aria-label="anchor" href="#arg-tau"></a></dt>
-<dd><p>Horizon, in the units of <code>time_col</code>.</p></dd>
+<dd><p>Horizon, in the units of <code>time_col</code>. It must not exceed the
+largest observed time among the rows that enter either arm's curve, for
+any analysed subset and weighting.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
 <dd><p>Weighting schemes to run: any of <code>"unweighted"</code>, <code>"ato"</code>
-(overlap), <code>"att"</code>, <code>"ate"</code>.</p></dd>
+(overlap), <code>"att"</code>, <code>"ate"</code>. For a <code><a href="ps_match.html">ps_match()</a></code> input the default is
+<code>"unweighted"</code> alone, and no other scheme is accepted.</p></dd>
 
 
 <dt id="arg-subsets">subsets<a class="anchor" aria-label="anchor" href="#arg-subsets"></a></dt>
@@ -102,13 +108,15 @@ subset). The full data is always included as <code>"all"</code>.</p></dd>
 
 
 <dt id="arg-n-boot">n_boot<a class="anchor" aria-label="anchor" href="#arg-n-boot"></a></dt>
-<dd><p>Bootstrap draws. Resampling is stratified by arm.</p></dd>
+<dd><p>Bootstrap draws. Resampling is by matched pair for a
+<code><a href="ps_match.html">ps_match()</a></code> input and by row, stratified by arm, otherwise.</p></dd>
 
 
 <dt id="arg-refit">refit<a class="anchor" aria-label="anchor" href="#arg-refit"></a></dt>
 <dd><p>If <code>FALSE</code> (default) the score is held fixed in the bootstrap,
-which understates uncertainty. If <code>TRUE</code> the score model is refit on each
-draw (supported for <code>ps_logistic</code> and <code>ps_forest</code> inputs).</p></dd>
+so the intervals ignore the uncertainty in estimating the propensity
+score and understate the total uncertainty. If <code>TRUE</code> the score model is
+refit on each draw (supported for <code>ps_logistic</code> and <code>ps_forest</code> inputs).</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -133,14 +141,52 @@ column. Default <code>365.2425</code> (time in years).</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ps_rmst</code> / <code>ps_data</code> object. <code>$tables$estimates</code> has one row
 per subset-and-weighting estimator: <code>estimator</code>, <code>subset</code>, <code>weighting</code>,
-<code>n</code>, <code>ess_treated</code>, <code>ess_control</code>, <code>rmst_treated</code>, <code>rmst_control</code>, <code>diff</code>
+<code>n</code> (rows analysed; for a matched input, twice the matched pairs),
+<code>ess_treated</code>, <code>ess_control</code>, <code>rmst_treated</code>, <code>rmst_control</code>, <code>diff</code>
 (treated minus control, positive favours treated), <code>diff_days</code>,
-<code>lo_days</code>, <code>hi_days</code> (2.5 and 97.5 percent bootstrap) and <code>n_failed</code>.
+<code>lo_days</code>, <code>hi_days</code> (2.5 and 97.5 percent bootstrap) and <code>n_failed</code>
+(bootstrap draws that gave no estimate).
 <code>$tables$curves</code> has the weighted Kaplan-Meier steps (<code>estimator</code>, <code>arm</code>,
 <code>time</code>, <code>surv</code>) for plotting; <code>$data</code> is <code>x$data</code> plus one weight column
 <code>w_&lt;weighting&gt;</code> per scheme. <code>$meta$seed</code> is the seed used (<code>NA</code> when none
 was given). <code>$meta$scale</code> is the scale of <code>score_col</code>, carried from <code>x</code>
-(<code>"probability"</code> when <code>x</code> records none).</p>
+(<code>"probability"</code> when <code>x</code> records none). <code>$meta$resampling</code> is <code>"pair"</code>
+for a matched input and <code>"row"</code> (stratified by arm) otherwise, and
+<code>$meta$stored_weighting</code> names the scheme that used a <code><a href="ps_weight.html">ps_weight()</a></code>
+object's stored weights (<code>NA</code> when none did).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><strong>Weights.</strong> <code>"unweighted"</code> gives every row weight 1. <code>"ato"</code> weights
+treated rows by <code>1 - p</code> and controls by <code>p</code>, targeting the overlap
+population; <code>"att"</code> weights controls by <code>p / (1 - p)</code>, targeting the
+treated; <code>"ate"</code> weights by <code>1 / p</code> and <code>1 / (1 - p)</code>, targeting the whole
+cohort. Here <code>p</code> is the score clipped to <code>[clip, 1 - clip]</code>.</p>
+<p><strong>Matched input.</strong> For a <code><a href="ps_match.html">ps_match()</a></code> object only the rows with
+<code>match_col == 1</code> are analysed, so <code>n</code> is twice the number of matched pairs,
+and the estimand is the one the match targets. Weighting a matched set by
+the score adjusts twice for the same confounders, so only <code>"unweighted"</code>
+is accepted. The bootstrap resamples whole pairs: it draws <code>pair_id</code>
+values with replacement, as many as there are pairs, and takes both members
+of each drawn pair, so a pair drawn twice enters twice. This keeps the
+within-pair correlation that a row bootstrap ignores. A subset that splits
+a pair keeps the member it contains, which is then resampled alone.</p>
+<p><strong>Weighted input.</strong> For a <code><a href="ps_weight.html">ps_weight()</a></code> object, the scheme that matches its
+estimand (<code>"ate"</code> for <code>estimand = "ATE"</code>, <code>"att"</code> for <code>"ATT"</code>) uses the
+stored column <code>x$meta$weight_col</code> instead of recomputing weights from the
+score, so any trimming is kept. Stabilisation multiplies each arm by a
+constant, which leaves each arm's Kaplan-Meier curve and effective sample
+size unchanged. The other schemes are computed from the score, and an
+<code>estimand = "ATC"</code> object has no matching scheme. In the bootstrap each row
+keeps its stored weight.</p>
+<p><strong>Horizon.</strong> The weighted Kaplan-Meier curve is not defined past the last
+observed time in an arm, counting only the rows that enter the curve (time
+and event present, weight above zero), so a <code>tau</code> beyond it stops with an error rather
+than carrying the last survival value forward. A bootstrap draw can still
+end short of <code>tau</code>, and its curve is then carried flat to <code>tau</code>.</p>
+<p><strong>Failures.</strong> A bootstrap draw that errors, or that leaves an arm empty,
+gives <code>NA</code>; the interval is taken over the other draws and the number of
+<code>NA</code> draws is reported as <code>n_failed</code>.</p>
     </div>
 
     <div class="section level2">
