@@ -112,8 +112,9 @@
 #' @param data           A data frame.  If `imputation_col` is set, `data`
 #'   must be a stacked "long" MI data frame as produced by
 #'   `mice::complete(mids, action = "long")`.
-#' @param treatment_col  Name of the binary treatment column (0/1 or
-#'   logical).  If `NULL` (default), extracted from the LHS of `formula`.
+#' @param treatment_col  Name of the binary treatment column: 0/1 or
+#'   logical, or any two values when `treated_level` or `treatment_levels`
+#'   names them.  If `NULL` (default), extracted from the LHS of `formula`.
 #' @param id_col         Patient identifier column.  Required when
 #'   `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col Name of the imputation-index column in a stacked
@@ -129,10 +130,13 @@
 #'   balance diagnostics.  If `NULL` (default), all numeric columns other
 #'   than `treatment_col`, `score_col`, `logit_col`, `weight_col`,
 #'   `id_col`, `"quintile"`, and `"decile"` are used.
-#' @param treatment_levels Complete binary treatment levels. `NULL` preserves
-#'   the historical 0/1 or logical interface.
+#' @param treatment_levels Complete binary treatment levels. `NULL` takes them
+#'   from the data: the two values present when `treated_level` is given,
+#'   otherwise 0/1 or `FALSE`/`TRUE`.
 #' @param treated_level Level whose probability is the propensity score. When
 #'   `treatment_levels` is supplied and this is `NULL`, its last value is used.
+#'   Given alone, the treatment may hold any two values (a factor such as
+#'   `"TAVR"`/`"SAVR"`, for example) and this names the treated one.
 #'
 #' @return An object of class `c("ps_logistic", "ps_data")` with:
 #' \describe{
@@ -222,6 +226,9 @@ ps_logistic <- function(formula,
     treatment_col <- as.character(formula[[2L]])
   }
   .check_cols(data, treatment_col)
+  if (is.null(treatment_levels) && !is.null(treated_level)) {
+    treatment_levels <- .treatment_indicator(data, treatment_col, treated_level)$labels
+  }
   if (is.null(treatment_levels)) {
     .check_binary(data, treatment_col)
     treatment_levels <- if (is.logical(data[[treatment_col]])) {
@@ -359,12 +366,15 @@ print.ps_logistic <- function(x, ...) {
 #' imputations.
 #'
 #' @param formula          A formula with the ordered factor treatment on the
-#'   LHS, e.g. `nyha_grp ~ age + female + ef`.  The response is coerced to
-#'   an ordered factor if it is not already one.
+#'   LHS, e.g. `nyha_grp ~ age + female + ef`.  The treatment must be an
+#'   ordered factor, whose level order is the order the model uses, unless
+#'   `treatment_levels` gives that order.  Any other treatment is an error:
+#'   alphabetical order is not a safe guess for an ordinal scale.
 #' @param data             A data frame (single or stacked MI).
 #' @param treatment_col    Name of the ordinal treatment column.  `NULL`
 #'   (default) extracts from `formula`.
-#' @param id_col           Patient identifier column.  Default `"id"`.
+#' @param id_col           Patient identifier column.  Required when
+#'   `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col   Imputation-index column for stacked MI data.
 #'   `NULL` (default) assumes a single complete dataset.
 #' @param score_col_prefix Prefix for the per-level output columns.  Columns
@@ -378,8 +388,9 @@ print.ps_logistic <- function(x, ...) {
 #'   level; `"adjacent"` compares each level with the one below it; `"all"`
 #'   compares every pair. Give more than one to combine them, for example
 #'   `c("reference", "adjacent")`.
-#' @param treatment_levels Complete ordered treatment levels. `NULL` preserves
-#'   the levels inferred by the historical interface.
+#' @param treatment_levels Complete treatment levels, lowest first. `NULL`
+#'   (default) takes the levels of the treatment, which must then be an ordered
+#'   factor.
 #'
 #' @return An object of class `c("ps_ordinal", "ps_data")` with:
 #' \describe{
@@ -453,6 +464,16 @@ ps_ordinal <- function(formula,
   .check_cols(data, treatment_col)
   smd_pairs <- match.arg(smd_pairs, c("reference", "adjacent", "all"), several.ok = TRUE)
   if (is.null(treatment_levels)) {
+    if (!is.ordered(data[[treatment_col]])) {
+      rlang::abort(
+        c(
+          sprintf("Column `%s` must be an ordered factor, or the level order must be given.", treatment_col),
+          i = sprintf("Convert it with `ordered(%s, levels = c(...))`, lowest level first.", treatment_col),
+          i = "Or pass `treatment_levels`, lowest level first."
+        ),
+        call. = FALSE
+      )
+    }
     treatment_levels <- levels(factor(data[[treatment_col]]))
   }
   treatment_levels <- as.character(treatment_levels)
@@ -573,7 +594,8 @@ print.ps_ordinal <- function(x, ...) {
 #' @param data             A data frame (single or stacked MI).
 #' @param treatment_col    Name of the nominal treatment column.  `NULL`
 #'   (default) extracts from `formula`.
-#' @param id_col           Patient identifier column.  Default `"id"`.
+#' @param id_col           Patient identifier column.  Required when
+#'   `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col   Imputation-index column.  `NULL` (default) means
 #'   a single complete dataset.
 #' @param ref_level        Reference level for the multinomial model.  `NULL`

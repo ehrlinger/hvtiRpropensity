@@ -106,7 +106,7 @@
                              require_stable_response = TRUE) {
   .check_df(data)
   .check_cols(data, response_col)
-  if (!is.null(id_col)) .check_cols(data, id_col)
+  if (!is.null(id_col) && !is.null(imputation_col)) .check_cols(data, id_col)
   if (length(predictor_cols)) .check_cols(data, predictor_cols)
 
   if (is.null(imputation_col)) {

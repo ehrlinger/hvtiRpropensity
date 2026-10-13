@@ -24,7 +24,7 @@ columns, excluding the response, \code{id_col} and \code{imputation_col}.}
 formula's response; if supplied, it must be one of the variables in the
 response.}
 
-\item{id_col}{Patient identifier column.}
+\item{id_col}{Patient identifier column. Required only when \code{imputation_col} is set.}
 
 \item{imputation_col}{Imputation-index column, or \code{NULL} for one dataset.}
 
