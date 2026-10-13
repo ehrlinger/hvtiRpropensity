@@ -48,6 +48,13 @@ test_that("ATE, ATT, and ATC estimands all produce valid weights", {
 
 # ---- Stabilisation ----------------------------------------------------------
 
+test_that("stabilising the weights does not change the weighted SMDs", {
+  # Stabilising multiplies each group's weights by a constant, which cannot
+  # change balance (issue #82).
+  expect_equal(ps_weight(dta, stabilise = TRUE)$tables$smd_weighted,
+               ps_weight(dta, stabilise = FALSE)$tables$smd_weighted)
+})
+
 test_that("stabilised weights have smaller variance than unstabilised", {
   obj_stab   <- ps_weight(dta, stabilise = TRUE)
   obj_unstab <- ps_weight(dta, stabilise = FALSE)

@@ -13,8 +13,10 @@
 ##   categorical  sqrt((t - c)' S^-1 (t - c)), Yang and Dalton (2012)
 ##   one level    0
 ##
-## Weighted means are sum(w x) / sum(w) and weighted variances are PROC MEANS'
-## sum(w (x - m)^2) / (n - 1). Weighted proportions are PROC FREQ's.
+## Weights are first normalised to mean 1 within each group (issue #82). Weighted
+## means are then sum(w x) / sum(w) and weighted variances are PROC MEANS'
+## sum(w (x - m)^2) / (n - 1). Weighted proportions are PROC FREQ's, which
+## already ignore the weights' scale within a group.
 ###############################################################################
 
 
@@ -47,9 +49,17 @@
 #'   When `S` is singular, as when the two groups share no levels, the
 #'   difference is `NA` with a warning naming the variable.
 #'
-#' **Weights.** Means are `sum(w x) / sum(w)`; variances are
-#' `sum(w (x - m)^2) / (n - 1)`, which is what `PROC MEANS` reports with a
-#' `WEIGHT` statement. Weights must be positive.
+#' **Weights.** Within each group, the weights are first divided by their
+#' mean in that group, so that they average 1 there. Means are then
+#' `sum(w x) / sum(w)` and variances `sum(w (x - m)^2) / (n - 1)`, which is
+#' what `PROC MEANS` reports with a `WEIGHT` statement and `VARDEF=DF`. The
+#' result is therefore the same when every weight in a group is multiplied by
+#' one constant, so stabilised and unstabilised weights from [ps_weight()]
+#' give the same differences. It equals the `%stddiff` macro's output when the
+#' weights already average 1 in each group, and otherwise does not: the
+#' macro's Gaussian and rank differences change with the scale of the weights.
+#' Proportions, for `binary` and `categorical`, are `sum(w x) / sum(w)` within
+#' a group and never depended on that scale. Weights must be positive.
 #'
 #' **Missing values.** Rows with a missing group are dropped. Otherwise a
 #' missing value is dropped for that variable only, and a variable with no
@@ -192,12 +202,16 @@ ps_stddiff <- function(data,
 
 
 #' Mean difference over sqrt of the averaged weighted variances
+#'
+#' Weights are normalised to mean 1 within each group first, so the result
+#' does not depend on their scale (issue #82).
 #' @keywords internal
 #' @noRd
 .stddiff_mean <- function(x, grp, w) {
   stat <- function(g) {
     xi <- x[grp == g]
     wi <- w[grp == g]
+    wi <- wi / mean(wi)
     m  <- sum(wi * xi) / sum(wi)
     c(m, if (length(xi) < 2L) NA_real_ else sum(wi * (xi - m)^2) / (length(xi) - 1L))
   }
