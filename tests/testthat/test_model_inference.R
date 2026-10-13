@@ -159,3 +159,30 @@ test_that(".model_inference() labels exponentiated count coefficients rate_ratio
   expect_true("odds_ratio" %in% names(binary$estimates))
   expect_false("rate_ratio" %in% names(binary$estimates))
 })
+
+test_that("a single linear fit is inferred on the t with residual degrees of freedom", {
+  d <- sample_ps_data(n = 120, seed = 7)
+  fit <- stats::lm(ef ~ age + female, data = d)
+  out <- .model_inference(list("1" = fit), "linear")
+  expected <- summary(fit)$coefficients
+  expect_equal(out$estimates$estimate, unname(expected[, "Estimate"]))
+  expect_equal(out$estimates$std.error, unname(expected[, "Std. Error"]))
+  expect_equal(out$estimates$p.value, unname(expected[, "Pr(>|t|)"]))
+  expect_equal(out$estimates$df, rep(fit$df.residual, 3L))
+  expect_equal(out$estimates$conf.low, unname(stats::confint(fit)[, 1L]))
+  expect_false("odds_ratio" %in% names(out$estimates))
+  expect_false(any(out$estimates$pooled))
+})
+
+test_that("linear fits over imputations are Rubin pooled without an odds ratio", {
+  d <- sample_ps_data(n = 120, seed = 7)
+  second <- d
+  second$age <- second$age + 0.5
+  fits <- list("1" = stats::lm(ef ~ age, d), "2" = stats::lm(ef ~ age, second))
+  out <- .model_inference(fits, "linear")
+  pooled <- .rubin_pool(lapply(fits, stats::coef), lapply(fits, stats::vcov))
+  expect_equal(out$estimates$estimate, pooled$estimates$estimate)
+  expect_equal(out$estimates$df, pooled$estimates$df)
+  expect_true(all(out$estimates$pooled))
+  expect_false("odds_ratio" %in% names(out$estimates))
+})

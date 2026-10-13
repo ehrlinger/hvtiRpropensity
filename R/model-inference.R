@@ -183,7 +183,7 @@
 #' @return A list with `estimate` and `covariance`.
 #' @keywords internal
 .model_components <- function(fit, family) {
-  if (family %in% c("binary", "count")) {
+  if (family %in% c("binary", "count", "linear")) {
     estimate <- stats::coef(fit)
     covariance <- stats::vcov(fit)
     terms <- names(estimate)
@@ -238,13 +238,13 @@
 #' Compute normalized inference for a model bundle
 #'
 #' @param models Non-empty list of fitted models.
-#' @param family One of `"binary"`, `"ordinal"`, `"nominal"`, or `"count"`.
+#' @param family One of `"binary"`, `"ordinal"`, `"nominal"`, `"count"`, or `"linear"`.
 #' @param conf_level Confidence level.
 #' @return A list with final estimates, covariance and per-imputation values.
 #' @keywords internal
 .model_inference <- function(models, family, conf_level = 0.95) {
   .check_conf_level(conf_level)
-  family <- match.arg(family, c("binary", "ordinal", "nominal", "count"))
+  family <- match.arg(family, c("binary", "ordinal", "nominal", "count", "linear"))
   if (!is.list(models) || !length(models)) {
     rlang::abort("`models` must be a non-empty list of fitted models.",
                  call. = FALSE)
@@ -271,7 +271,14 @@
     result <- list(
       estimates = .inference_table(
         terms, estimates[[1L]], covariances[[1L]],
-        rep.int(Inf, length(terms)), conf_level, FALSE
+        # An OLS fit is inferred on the t with its residual degrees of freedom,
+        # as PROC REG reports it; the other families are large-sample.
+        if (identical(family, "linear")) {
+          rep.int(models[[1L]]$df.residual, length(terms))
+        } else {
+          rep.int(Inf, length(terms))
+        },
+        conf_level, FALSE
       ),
       covariance = covariances[[1L]],
       by_imputation = data.frame(
@@ -290,6 +297,10 @@
   if (identical(family, "count")) {
     # exp() of a log-link coefficient is a rate ratio, not an odds ratio
     names(result$estimates)[names(result$estimates) == "odds_ratio"] <- "rate_ratio"
+  }
+  if (identical(family, "linear")) {
+    # An identity-link coefficient has no ratio scale; exp() of it means nothing.
+    result$estimates$odds_ratio <- NULL
   }
   imputation_labels <- names(models)
   if (is.null(imputation_labels) || any(!nzchar(imputation_labels))) {
