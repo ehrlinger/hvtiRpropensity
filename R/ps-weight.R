@@ -23,6 +23,12 @@
 #' `hvtiPlotR::hv_mirror_hist()` (weighted mode) and
 #' `hvtiPlotR::hv_balance()`.
 #'
+#' A patient with a missing treatment or a missing score cannot be weighted.
+#' Those rows stay in `$data` with a missing `weight_col`, are left out of the
+#' stabilising treatment proportion, the SMD tables, the group counts and the
+#' effective sample sizes, and one warning states how many there are.
+#' `$meta$n_excluded` keeps the count.
+#'
 #' @param data           A data frame.  Must contain `treatment_col` and
 #'   `score_col`.
 #' @param treatment_col  Name of the binary treatment column (0/1 or logical).
@@ -64,7 +70,8 @@
 #' \describe{
 #'   \item{`$data`}{The input data frame with `weight_col` appended.}
 #'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `weight_col`,
-#'     `estimand`, `stabilised`, `trim`, `method`, `n_total`.}
+#'     `estimand`, `stabilised`, `trim`, `method`, `n_total`, `n_excluded`
+#'     (rows with a missing treatment or score).}
 #'   \item{`$tables`}{Named list: `smd_unweighted`, `smd_weighted`,
 #'     `group_counts`, `effective_n`. Group tables name each
 #'     group by its value in `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and
@@ -105,7 +112,7 @@ ps_weight <- function(data,
   estimand <- match.arg(estimand)
   .check_df(data)
   .check_cols(data, c(treatment_col, score_col))
-  treatment <- .treatment_indicator(data, treatment_col, treated_level)
+  treatment <- .treatment_indicator(data, treatment_col, treated_level, warn_na = FALSE)
   original_treatment <- data[[treatment_col]]
   data[[treatment_col]] <- treatment$trt
   .check_probability(data, score_col)
@@ -119,6 +126,9 @@ ps_weight <- function(data,
   # ---- Compute raw IPTW weights ------------------------------------------
   ps  <- data[[score_col]]
   trt <- as.integer(data[[treatment_col]])
+  excluded <- .warn_excluded(is.na(trt) | is.na(ps), treatment_col, score_col,
+                             "weighting and the balance tables, and get a missing weight")
+  kept <- !excluded
 
   w <- switch(estimand,
     ATE = ifelse(trt == 1L, 1 / ps, 1 / (1 - ps)),
@@ -131,7 +141,7 @@ ps_weight <- function(data,
   # For the ATT and ATC the reference arm's weights stay exactly 1.
   stabilised <- isTRUE(stabilise) && estimand == "ATE"
   if (stabilised) {
-    p_trt <- mean(trt == 1L)
+    p_trt <- mean(trt[kept] == 1L)
     p_ctl <- 1 - p_trt
     stab  <- ifelse(trt == 1L, p_trt, p_ctl)
     w     <- w * stab
@@ -161,25 +171,25 @@ ps_weight <- function(data,
     covariates <- .default_covariates(data, c(treatment_col, score_col, weight_col, id_col))
   }
 
-  smd_unweighted <- .smd_table(data, treatment_col, covariates)
+  smd_unweighted <- .smd_table(data[kept, , drop = FALSE], treatment_col, covariates)
 
   # Weighted SMD uses the weight column via a weighted mean / variance
-  smd_weighted <- .smd_table(out, treatment_col, covariates, weight_col = weight_col)
+  smd_weighted <- .smd_table(out[kept, , drop = FALSE], treatment_col, covariates, weight_col = weight_col)
 
   group_labels <- treatment$labels
   out[[treatment_col]] <- original_treatment
   group_counts <- data.frame(
     group   = group_labels,
     treated = c(FALSE, TRUE),
-    n       = c(sum(trt == 0L), sum(trt == 1L))
+    n       = c(sum(kept & trt == 0L), sum(kept & trt == 1L))
   )
 
   effective_n <- data.frame(
     group       = group_labels,
     treated     = c(FALSE, TRUE),
     n_effective = c(
-      .effective_n(w[trt == 0L]),
-      .effective_n(w[trt == 1L])
+      .effective_n(w[kept & trt == 0L]),
+      .effective_n(w[kept & trt == 1L])
     )
   )
 
@@ -195,7 +205,8 @@ ps_weight <- function(data,
       stabilised    = stabilised,
       trim          = trim,
       method        = paste0("IPTW-", estimand),
-      n_total       = nrow(data)
+      n_total       = nrow(data),
+      n_excluded    = sum(excluded)
     ),
     tables = list(
       smd_unweighted = smd_unweighted,

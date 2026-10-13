@@ -26,7 +26,9 @@ both groups" (common support).}
 \value{
 A \code{ps_support} / \code{ps_data} object. \verb{$data} is \code{x$data} plus one
 logical column \verb{weak_<rule>} per rule. \verb{$tables$counts} gives the number
-flagged per rule; \verb{$tables$agreement} gives, for every pair of rules,
+flagged per rule (\code{n_weak}), the number of rows judged (\code{n}) and the number
+left out for a missing treatment or score (\code{n_excluded}, also in
+\verb{$meta$n_excluded}); \verb{$tables$agreement} gives, for every pair of rules,
 \code{n_both}, \code{n_neither}, \code{pct_agree}, Cohen \code{kappa} and \code{jaccard} (overlap
 of the two dropped sets). \verb{$meta$common_support} is the interval used,
 on the probability scale. \verb{$meta$scale} is the scale of \code{score_col},
@@ -37,6 +39,11 @@ Flags patients with weak support under several rules and measures how well
 the rules agree. Built-in rules use the propensity score of a \code{ps_data}
 object; any other rule (for example an isolation-forest tail flag) can be
 supplied as a logical vector.
+}
+\details{
+A patient with a missing treatment or a missing score cannot be judged.
+Those rows are left out of the common-support interval and every rule, get
+a missing \verb{weak_<rule>} flag, and one warning states how many there are.
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 3)[, c("id", "tavr", "age", "ef")]

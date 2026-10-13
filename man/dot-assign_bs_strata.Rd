@@ -12,7 +12,8 @@
 \item{n_strata}{Integer number of clusters (default 10 = deciles).}
 }
 \value{
-A named list: \code{quintile}, \code{decile}, \code{cluster}.
+A named list: \code{quintile}, \code{decile}, \code{cluster}. A missing score gets
+missing strata, and the strata divide the scored patients only.
 }
 \description{
 Mirrors the SAS \%grp macro:

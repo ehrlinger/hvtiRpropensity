@@ -22,7 +22,7 @@ linters: linters_with_defaults(
 # else and move loudly if the corresponding call moves.
 exclusions: list(
     "R/bs-score.R" = list(
-      object_usage_linter = c(175L, 212L, 420L, 430L, 461L)
+      object_usage_linter = c(175L, 212L, 419L, 429L, 460L)
     ),
     "R/lm-fit.R" = list(
       object_usage_linter = c(208L, 217L, 267L)
@@ -34,7 +34,7 @@ exclusions: list(
       object_usage_linter = 238L
     ),
     "R/ps-score.R" = list(
-      object_usage_linter = c(217L, 264L, 422L, 450L, 616L, 646L)
+      object_usage_linter = c(225L, 272L, 438L, 466L, 632L, 662L)
     ),
     "tests/testthat/test_lm_validate.R" = list(
       object_usage_linter = 13L

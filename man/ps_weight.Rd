@@ -71,7 +71,8 @@ An object of class \code{c("ps_weight", "ps_data")} with:
 \describe{
 \item{\verb{$data}}{The input data frame with \code{weight_col} appended.}
 \item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{weight_col},
-\code{estimand}, \code{stabilised}, \code{trim}, \code{method}, \code{n_total}.}
+\code{estimand}, \code{stabilised}, \code{trim}, \code{method}, \code{n_total}, \code{n_excluded}
+(rows with a missing treatment or score).}
 \item{\verb{$tables}}{Named list: \code{smd_unweighted}, \code{smd_weighted},
 \code{group_counts}, \code{effective_n}. Group tables name each
 group by its value in \code{treatment_col} (\code{0}/\code{1} or \code{FALSE}/\code{TRUE}) and
@@ -85,6 +86,13 @@ Returns a \code{ps_weight} object whose \verb{$tables} slot contains SMD tables
 (unweighted and weighted) and effective-N diagnostics compatible with
 \code{hvtiPlotR::hv_mirror_hist()} (weighted mode) and
 \code{hvtiPlotR::hv_balance()}.
+}
+\details{
+A patient with a missing treatment or a missing score cannot be weighted.
+Those rows stay in \verb{$data} with a missing \code{weight_col}, are left out of the
+stabilising treatment proportion, the SMD tables, the group counts and the
+effective sample sizes, and one warning states how many there are.
+\verb{$meta$n_excluded} keeps the count.
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)

@@ -4,17 +4,20 @@
 \alias{.model_nobs}
 \title{Count rows used by a fitted model}
 \usage{
-.model_nobs(fit, fallback)
+.model_nobs(fit, n_input)
 }
 \arguments{
 \item{fit}{A fitted model object.}
 
-\item{fallback}{Count to return when the model has no \code{nobs()} method.}
+\item{n_input}{Number of rows the model was given.}
 }
 \value{
 A single integer.
 }
 \description{
-Count rows used by a fitted model
+Every model this package fits uses \code{na.action = na.exclude}, so the rows
+dropped for a missing value are recorded in the fit whatever the family.
+\code{nnet::multinom()} has no \code{nobs()} method, so counting from \code{nobs()} would
+report every input row as analysed.
 }
 \keyword{internal}
