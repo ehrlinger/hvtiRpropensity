@@ -3,7 +3,7 @@ sas8.2 lm.rtyp.propensity.sas
 //spool cont to email
 spool cont printer 'lptxt -l110 -s6 -f LetterGothic-Bold'
 cp  lm.rtyp.propensity.l*\
-   /studies/cardiac/valves/tricuspid/repair/analyses/.
+   /studies/<study>/analyses/.
 splfile lm.rtyp.propensity.l*
 // FILE lm.rtyp.propensity.sas
 *______________________________________________________________________________;
@@ -11,13 +11,13 @@ splfile lm.rtyp.propensity.l*
 * /analysis/lm.rtyp.propensity.sas
 *______________________________________________________________________________;
 *                                                                              ;
-  %let STUDY=/studies/cardiac/valves/tricuspid/repair;
+  %let STUDY=/studies/<study>;
   %let STUDYDESC = xxxxxxxxxxxxxxxxxxxxxxxx;
   %let STUDYPOP  = CCF, 19xx to 20xx, n=xxxx;    
 *______________________________________________________________________________;
 *                                                                              ;
-* Durable Tricuspid Valve Repair                                               ;
-* CCF, 1990 to 1999, n=789                                                    ;
+* <study description>                                                        ;
+* CCF, 19xx to 20xx, n=xxxx                                                    ;
 *                                                                              ;
 * Multivariable analysis of tricuspid valve reoperation for regurgitation      ;
 * Propensity analysis of repair types                                              ;

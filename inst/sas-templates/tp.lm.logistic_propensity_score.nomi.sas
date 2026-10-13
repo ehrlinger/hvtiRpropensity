@@ -2,7 +2,7 @@
 // JOB lm.mip.sas
 sas9.1 lm.mip.sas
 //cp lm.mip.l*\
-//   /studies/cardiac/valves/general/mip/aortic_valve/analysis/.
+//   /studies/<study>/analysis/.
 //spool cont printer 'lptxt -l110 -s6 -f LetterGothic-Bold'
 spool cont to email
 splfile lm.mip.l*
@@ -14,11 +14,11 @@ splfile lm.mip.l*
 * /analyses/lm.mip.sas
 *______________________________________________________________________________;
 *                                                                              ;
-  %let STUDY=/studies/cardiac/valves/general/mip/aortic_valve;
+  %let STUDY=/studies/<study>;
 *______________________________________________________________________________;
 *                                                                              ;
-* Aortic valve mini vs. full surgery
-* (CCF, 1995 to 2003, n=2689)
+* <study description>
+* (CCF, 19xx to 20xx, n=xxxx)
 *
 * Multivariable logistic regression analysis of mitral valve mini vs. full surgery
 * Parsimoneous and propensity models on mitralprocedure alone patients
@@ -30,8 +30,8 @@ splfile lm.mip.l*
   filename deciles "!MACROS/deciles.new"; %inc deciles;
   
   title1 "Aortic valve alone surgery";
-  title2 "(CCF, 1995 to 2004, n=2689)";
-  title3 "Multivariable Analysis of Aortic valve mini vs. full surgery";
+  title2 "(CCF, 19xx to 20xx, n=xxxx)";
+  title3 "Multivariable Analysis of <study description>";
 *******************************************************************************;
 *******************************************************************************;
 * read in the imputed complete datasets;

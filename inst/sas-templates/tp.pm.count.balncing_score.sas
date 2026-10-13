@@ -2,7 +2,7 @@
 //JOB pm.rbctot.balncing_score.sas
 sas9.2 pm.rbctot.balncing_score.sas
 //cp  splfile pm.rbctot.balncing_score.l*\
-//  /studies/cardiac/support/cpb/hematocrit/transfusion/analyses/.
+//  /studies/<study>/analyses/.
 //spool cont printer 'lptxt -l115 -s6 -f LetterGothic-Bold'
 spool cont to email
 splfile pm.rbctot.balncing_score.l*
@@ -13,13 +13,13 @@ splfile pm.rbctot.balncing_score.l*
 * /analyses/gm.rbctot.balcing_score.sas
 *______________________________________________________________________________;
 *                                                                              ;
-  %let STUDY=/studies/cardiac/support/cpb/hematocrit/transfusion;
+  %let STUDY=/studies/<study>;
   %let STUDYDESC = xxxxxxxxxxxxxxxxxxxxxxxx;
   %let STUDYPOP  = CCF, 19xx to 20xx, n=xxxx;    
 *______________________________________________________________________________;
 *                                                                              ;
-* Transfusion and Severe Anemia during CPB
-* (CCF, 11/2004 to10/2009, n=15282)
+* <study description>
+* (CCF, 19xx to 20xx, n=xxxx)
 * Poisson regression analysis on total number of intrasop RBC units
 * Predictors of number of units of intra-op RBC trasfusion
 * Estimating Balacing score based on number of units of post-op RBC;
