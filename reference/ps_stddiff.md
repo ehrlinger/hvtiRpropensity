@@ -98,9 +98,19 @@ treated as Gaussian.
   never negative. When `S` is singular, as when the two groups share no
   levels, the difference is `NA` with a warning naming the variable.
 
-**Weights.** Means are `sum(w x) / sum(w)`; variances are
-`sum(w (x - m)^2) / (n - 1)`, which is what `PROC MEANS` reports with a
-`WEIGHT` statement. Weights must be positive.
+**Weights.** Within each group, the weights are first divided by their
+mean in that group, so that they average 1 there. Means are then
+`sum(w x) / sum(w)` and variances `sum(w (x - m)^2) / (n - 1)`, which is
+what `PROC MEANS` reports with a `WEIGHT` statement and `VARDEF=DF`. The
+result is therefore the same when every weight in a group is multiplied
+by one constant, so stabilised and unstabilised weights from
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+give the same differences. It equals the `%stddiff` macro's output when
+the weights already average 1 in each group, and otherwise does not: the
+macro's Gaussian and rank differences change with the scale of the
+weights. Proportions, for `binary` and `categorical`, are
+`sum(w x) / sum(w)` within a group and never depended on that scale.
+Weights must be positive.
 
 **Missing values.** Rows with a missing group are dropped. Otherwise a
 missing value is dropped for that variable only, and a variable with no

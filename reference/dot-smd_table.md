@@ -2,8 +2,9 @@
 
 Every covariate is treated as Gaussian, so the denominator is
 `sqrt((var1 + var0) / 2)`, and with `weight_col` the variances are the
-`PROC MEANS` weighted ones, divided by `n - 1`. This is the one formula
-the package uses; see
+`PROC MEANS` weighted ones, divided by `n - 1`, after the weights are
+normalised to mean 1 within each group. This is the one formula the
+package uses; see
 [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md).
 A subset with a group absent, such as the matched rows of a match that
 found no pairs, gets `NA` for every covariate rather than an error.
