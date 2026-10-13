@@ -26,8 +26,9 @@ left-hand side, e.g. \code{tavr ~ age + female + ef + diabetes}.}
 must be a stacked "long" MI data frame as produced by
 \code{mice::complete(mids, action = "long")}.}
 
-\item{treatment_col}{Name of the binary treatment column (0/1 or
-logical).  If \code{NULL} (default), extracted from the LHS of \code{formula}.}
+\item{treatment_col}{Name of the binary treatment column: 0/1 or
+logical, or any two values when \code{treated_level} or \code{treatment_levels}
+names them.  If \code{NULL} (default), extracted from the LHS of \code{formula}.}
 
 \item{id_col}{Patient identifier column.  Required when
 \code{imputation_col} is set.  Default \code{"id"}.}
@@ -50,11 +51,14 @@ balance diagnostics.  If \code{NULL} (default), all numeric columns other
 than \code{treatment_col}, \code{score_col}, \code{logit_col}, \code{weight_col},
 \code{id_col}, \code{"quintile"}, and \code{"decile"} are used.}
 
-\item{treatment_levels}{Complete binary treatment levels. \code{NULL} preserves
-the historical 0/1 or logical interface.}
+\item{treatment_levels}{Complete binary treatment levels. \code{NULL} takes them
+from the data: the two values present when \code{treated_level} is given,
+otherwise 0/1 or \code{FALSE}/\code{TRUE}.}
 
 \item{treated_level}{Level whose probability is the propensity score. When
-\code{treatment_levels} is supplied and this is \code{NULL}, its last value is used.}
+\code{treatment_levels} is supplied and this is \code{NULL}, its last value is used.
+Given alone, the treatment may hold any two values (a factor such as
+\code{"TAVR"}/\code{"SAVR"}, for example) and this names the treated one.}
 }
 \value{
 An object of class \code{c("ps_logistic", "ps_data")} with:

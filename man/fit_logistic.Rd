@@ -27,7 +27,8 @@ fit_logistic(
 
 \item{outcome_col}{Outcome column. By default it is read from \code{formula}.}
 
-\item{id_col}{Patient identifier column.}
+\item{id_col}{Patient identifier column. Required, and checked, only when
+\code{imputation_col} is set.}
 
 \item{imputation_col}{Imputation-index column, or \code{NULL} for one dataset.}
 

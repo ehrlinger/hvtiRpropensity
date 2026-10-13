@@ -19,15 +19,18 @@ ps_ordinal(
 }
 \arguments{
 \item{formula}{A formula with the ordered factor treatment on the
-LHS, e.g. \code{nyha_grp ~ age + female + ef}.  The response is coerced to
-an ordered factor if it is not already one.}
+LHS, e.g. \code{nyha_grp ~ age + female + ef}.  The treatment must be an
+ordered factor, whose level order is the order the model uses, unless
+\code{treatment_levels} gives that order.  Any other treatment is an error:
+alphabetical order is not a safe guess for an ordinal scale.}
 
 \item{data}{A data frame (single or stacked MI).}
 
 \item{treatment_col}{Name of the ordinal treatment column.  \code{NULL}
 (default) extracts from \code{formula}.}
 
-\item{id_col}{Patient identifier column.  Default \code{"id"}.}
+\item{id_col}{Patient identifier column.  Required when
+\code{imputation_col} is set.  Default \code{"id"}.}
 
 \item{imputation_col}{Imputation-index column for stacked MI data.
 \code{NULL} (default) assumes a single complete dataset.}
@@ -40,8 +43,9 @@ Default \code{"prob"}.}
 (default) uses every numeric column other than the treatment, score,
 identifier and strata columns.}
 
-\item{treatment_levels}{Complete ordered treatment levels. \code{NULL} preserves
-the levels inferred by the historical interface.}
+\item{treatment_levels}{Complete treatment levels, lowest first. \code{NULL}
+(default) takes the levels of the treatment, which must then be an ordered
+factor.}
 
 \item{smd_pairs}{Which pairs of treatment levels the balance table
 compares. \code{"reference"} (default) compares each level with the first

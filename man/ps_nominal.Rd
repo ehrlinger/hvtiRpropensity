@@ -28,7 +28,8 @@ e.g. \code{rtyp ~ age + female + ef + diabetes}.}
 \item{treatment_col}{Name of the nominal treatment column.  \code{NULL}
 (default) extracts from \code{formula}.}
 
-\item{id_col}{Patient identifier column.  Default \code{"id"}.}
+\item{id_col}{Patient identifier column.  Required when
+\code{imputation_col} is set.  Default \code{"id"}.}
 
 \item{imputation_col}{Imputation-index column.  \code{NULL} (default) means
 a single complete dataset.}

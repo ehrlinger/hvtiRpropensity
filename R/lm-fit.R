@@ -58,7 +58,8 @@
 #' @param data A data frame containing the outcome and predictors.
 #' @param family Model family.
 #' @param outcome_col Outcome column. By default it is read from `formula`.
-#' @param id_col Patient identifier column.
+#' @param id_col Patient identifier column. Required, and checked, only when
+#'   `imputation_col` is set.
 #' @param imputation_col Imputation-index column, or `NULL` for one dataset.
 #' @param outcome_levels Complete outcome levels in their declared order.
 #' @param event_level Event level for a binary model.
@@ -105,8 +106,7 @@ fit_logistic <- function(formula, data,
                  call. = FALSE)
   }
   .check_cols(data, all.vars(formula))
-  if (!is.null(id_col)) .check_cols(data, id_col)
-  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+  if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.character(prediction_prefix) || length(prediction_prefix) != 1L ||
         is.na(prediction_prefix) || !nzchar(prediction_prefix)) {
     rlang::abort("`prediction_prefix` must be one non-empty string.",
@@ -388,7 +388,7 @@ fit_logistic <- function(formula, data,
 #' @param outcome_col Outcome column. By default the one variable in the
 #'   formula's response; if supplied, it must be one of the variables in the
 #'   response.
-#' @param id_col Patient identifier column.
+#' @param id_col Patient identifier column. Required only when `imputation_col` is set.
 #' @param imputation_col Imputation-index column, or `NULL` for one dataset.
 #' @param prediction_col Name of the fitted-value column added to `$data`,
 #'   averaged across imputations.
