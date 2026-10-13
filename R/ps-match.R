@@ -23,7 +23,7 @@
 #'
 #' The `$tables` slot contains standardised mean difference (SMD) tables
 #' before and after matching, and group counts. These are the diagnostics
-#' that [hvtiPlotR::hv_mirror_hist()] and [hvtiPlotR::hv_balance()] expect.
+#' that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
 #'
 #' @param data           A data frame.  Must contain `treatment_col`,
 #'   `score_col`, and `id_col`.

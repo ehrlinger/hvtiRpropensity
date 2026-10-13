@@ -43,8 +43,8 @@ dependency.
 
 All functions return a \code{ps_data} S3 object whose \verb{$data} slot holds the
 original dataset with score / weight columns appended, and whose \verb{$tables}
-slot holds balance diagnostics compatible with \code{\link[hvtiPlotR:hv_mirror_hist]{hvtiPlotR::hv_mirror_hist()}}
-and \code{\link[hvtiPlotR:hv_balance]{hvtiPlotR::hv_balance()}}.
+slot holds balance diagnostics compatible with \code{hvtiPlotR::hv_mirror_hist()}
+and \code{hvtiPlotR::hv_balance()}.
 }
 \section{Typical two-step workflow (binary treatment)}{
 

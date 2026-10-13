@@ -20,8 +20,8 @@
 #' appends them to the dataset.  Supports ATE, ATT, and ATC estimands.
 #' Returns a `ps_weight` object whose `$tables` slot contains SMD tables
 #' (unweighted and weighted) and effective-N diagnostics compatible with
-#' [hvtiPlotR::hv_mirror_hist()] (weighted mode) and
-#' [hvtiPlotR::hv_balance()].
+#' `hvtiPlotR::hv_mirror_hist()` (weighted mode) and
+#' `hvtiPlotR::hv_balance()`.
 #'
 #' @param data           A data frame.  Must contain `treatment_col` and
 #'   `score_col`.
