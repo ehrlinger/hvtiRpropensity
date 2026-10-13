@@ -75,8 +75,10 @@ treatment level to the dataset.  The model is equivalent to the default
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A formula with the ordered factor treatment on the
-LHS, e.g. <code>nyha_grp ~ age + female + ef</code>.  The response is coerced to
-an ordered factor if it is not already one.</p></dd>
+LHS, e.g. <code>nyha_grp ~ age + female + ef</code>.  The treatment must be an
+ordered factor, whose level order is the order the model uses, unless
+<code>treatment_levels</code> gives that order.  Any other treatment is an error:
+alphabetical order is not a safe guess for an ordinal scale.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -89,7 +91,8 @@ an ordered factor if it is not already one.</p></dd>
 
 
 <dt id="arg-id-col">id_col<a class="anchor" aria-label="anchor" href="#arg-id-col"></a></dt>
-<dd><p>Patient identifier column.  Default <code>"id"</code>.</p></dd>
+<dd><p>Patient identifier column.  Required when
+<code>imputation_col</code> is set.  Default <code>"id"</code>.</p></dd>
 
 
 <dt id="arg-imputation-col">imputation_col<a class="anchor" aria-label="anchor" href="#arg-imputation-col"></a></dt>
@@ -110,8 +113,9 @@ identifier and strata columns.</p></dd>
 
 
 <dt id="arg-treatment-levels">treatment_levels<a class="anchor" aria-label="anchor" href="#arg-treatment-levels"></a></dt>
-<dd><p>Complete ordered treatment levels. <code>NULL</code> preserves
-the levels inferred by the historical interface.</p></dd>
+<dd><p>Complete treatment levels, lowest first. <code>NULL</code>
+(default) takes the levels of the treatment, which must then be an ordered
+factor.</p></dd>
 
 
 <dt id="arg-smd-pairs">smd_pairs<a class="anchor" aria-label="anchor" href="#arg-smd-pairs"></a></dt>

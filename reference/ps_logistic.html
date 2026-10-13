@@ -84,8 +84,9 @@ must be a stacked "long" MI data frame as produced by
 
 
 <dt id="arg-treatment-col">treatment_col<a class="anchor" aria-label="anchor" href="#arg-treatment-col"></a></dt>
-<dd><p>Name of the binary treatment column (0/1 or
-logical).  If <code>NULL</code> (default), extracted from the LHS of <code>formula</code>.</p></dd>
+<dd><p>Name of the binary treatment column: 0/1 or
+logical, or any two values when <code>treated_level</code> or <code>treatment_levels</code>
+names them.  If <code>NULL</code> (default), extracted from the LHS of <code>formula</code>.</p></dd>
 
 
 <dt id="arg-id-col">id_col<a class="anchor" aria-label="anchor" href="#arg-id-col"></a></dt>
@@ -122,13 +123,16 @@ than <code>treatment_col</code>, <code>score_col</code>, <code>logit_col</code>,
 
 
 <dt id="arg-treatment-levels">treatment_levels<a class="anchor" aria-label="anchor" href="#arg-treatment-levels"></a></dt>
-<dd><p>Complete binary treatment levels. <code>NULL</code> preserves
-the historical 0/1 or logical interface.</p></dd>
+<dd><p>Complete binary treatment levels. <code>NULL</code> takes them
+from the data: the two values present when <code>treated_level</code> is given,
+otherwise 0/1 or <code>FALSE</code>/<code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
 <dd><p>Level whose probability is the propensity score. When
-<code>treatment_levels</code> is supplied and this is <code>NULL</code>, its last value is used.</p></dd>
+<code>treatment_levels</code> is supplied and this is <code>NULL</code>, its last value is used.
+Given alone, the treatment may hold any two values (a factor such as
+<code>"TAVR"</code>/<code>"SAVR"</code>, for example) and this names the treated one.</p></dd>
 
 </dl></div>
     <div class="section level2">

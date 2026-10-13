@@ -42,7 +42,8 @@ fit_logistic(
 
 - id_col:
 
-  Patient identifier column.
+  Patient identifier column. Required, and checked, only when
+  `imputation_col` is set.
 
 - imputation_col:
 

@@ -37,7 +37,7 @@ fit_linear(
 
 - id_col:
 
-  Patient identifier column.
+  Patient identifier column. Required only when `imputation_col` is set.
 
 - imputation_col:
 

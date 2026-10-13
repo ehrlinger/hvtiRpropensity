@@ -37,7 +37,8 @@ ps_logistic(
 
 - treatment_col:
 
-  Name of the binary treatment column (0/1 or logical). If `NULL`
+  Name of the binary treatment column: 0/1 or logical, or any two values
+  when `treated_level` or `treatment_levels` names them. If `NULL`
   (default), extracted from the LHS of `formula`.
 
 - id_col:
@@ -74,14 +75,17 @@ ps_logistic(
 
 - treatment_levels:
 
-  Complete binary treatment levels. `NULL` preserves the historical 0/1
-  or logical interface.
+  Complete binary treatment levels. `NULL` takes them from the data: the
+  two values present when `treated_level` is given, otherwise 0/1 or
+  `FALSE`/`TRUE`.
 
 - treated_level:
 
   Level whose probability is the propensity score. When
   `treatment_levels` is supplied and this is `NULL`, its last value is
-  used.
+  used. Given alone, the treatment may hold any two values (a factor
+  such as `"TAVR"`/`"SAVR"`, for example) and this names the treated
+  one.
 
 ## Value
 

@@ -27,8 +27,10 @@ ps_ordinal(
 - formula:
 
   A formula with the ordered factor treatment on the LHS, e.g.
-  `nyha_grp ~ age + female + ef`. The response is coerced to an ordered
-  factor if it is not already one.
+  `nyha_grp ~ age + female + ef`. The treatment must be an ordered
+  factor, whose level order is the order the model uses, unless
+  `treatment_levels` gives that order. Any other treatment is an error:
+  alphabetical order is not a safe guess for an ordinal scale.
 
 - data:
 
@@ -41,7 +43,8 @@ ps_ordinal(
 
 - id_col:
 
-  Patient identifier column. Default `"id"`.
+  Patient identifier column. Required when `imputation_col` is set.
+  Default `"id"`.
 
 - imputation_col:
 
@@ -61,8 +64,8 @@ ps_ordinal(
 
 - treatment_levels:
 
-  Complete ordered treatment levels. `NULL` preserves the levels
-  inferred by the historical interface.
+  Complete treatment levels, lowest first. `NULL` (default) takes the
+  levels of the treatment, which must then be an ordered factor.
 
 - smd_pairs:
 

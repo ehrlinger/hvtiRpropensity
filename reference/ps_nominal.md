@@ -42,7 +42,8 @@ ps_nominal(
 
 - id_col:
 
-  Patient identifier column. Default `"id"`.
+  Patient identifier column. Required when `imputation_col` is set.
+  Default `"id"`.
 
 - imputation_col:
 
