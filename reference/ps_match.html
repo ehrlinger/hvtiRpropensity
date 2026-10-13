@@ -66,7 +66,9 @@ pre-computed propensity score column.  Returns a <code>ps_match</code> object wh
 <span>  match_col <span class="op">=</span> <span class="st">"match"</span>,</span>
 <span>  ratio <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"probability"</span>, <span class="st">"logit"</span><span class="op">)</span>,</span>
+<span>  caliper_sd <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,8 +87,11 @@ logical).  Default <code>"tavr"</code>.</p></dd>
 
 
 <dt id="arg-score-col">score_col<a class="anchor" aria-label="anchor" href="#arg-score-col"></a></dt>
-<dd><p>Name of the numeric propensity score column
-(values in [0, 1]).  Default <code>"prob_t"</code>.</p></dd>
+<dd><p>Name of the numeric propensity score column, on the
+scale named by <code>scale</code>: probabilities in [0, 1] for
+<code>scale = "probability"</code>, or logits (any finite value, such as the
+<code>logit_t</code> column <code><a href="ps_logistic.html">ps_logistic()</a></code> appends) for <code>scale = "logit"</code>.
+Default <code>"prob_t"</code>.</p></dd>
 
 
 <dt id="arg-id-col">id_col<a class="anchor" aria-label="anchor" href="#arg-id-col"></a></dt>
@@ -95,9 +100,10 @@ Default <code>"id"</code>.</p></dd>
 
 
 <dt id="arg-caliper">caliper<a class="anchor" aria-label="anchor" href="#arg-caliper"></a></dt>
-<dd><p>Maximum allowable difference in propensity score
-for a match to be accepted.  <code>NULL</code> (default) imposes no caliper.
-Typical values: <code>0.1 * sd(score)</code> (20% of SD rule) or <code>0.2</code>.</p></dd>
+<dd><p>Maximum allowable difference in <code>score_col</code>, on its
+own scale, for a match to be accepted.  <code>NULL</code> (default) imposes no
+caliper unless <code>caliper_sd</code> is given.  Give at most one of <code>caliper</code> and
+<code>caliper_sd</code>.</p></dd>
 
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
@@ -133,6 +139,22 @@ advance it, and <code>$meta$seed</code> is <code>NA</code>.</p></dd>
 value, for example <code>"transcatheter"</code>, to use a column holding any two
 values.</p></dd>
 
+
+<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
+<dd><p>The scale <code>score_col</code> is on, and so the scale distances
+and the caliper are measured on: <code>"probability"</code> (default) or <code>"logit"</code>.
+The recommended caliper, 0.2 standard deviations of the logit of the
+propensity score (Austin 2011), needs <code>scale = "logit"</code>.</p></dd>
+
+
+<dt id="arg-caliper-sd">caliper_sd<a class="anchor" aria-label="anchor" href="#arg-caliper-sd"></a></dt>
+<dd><p>Caliper in pooled standard-deviation units of
+<code>score_col</code>: the caliper applied is <code>caliper_sd * sqrt((var_t + var_c) / 2)</code>,
+where <code>var_t</code> and <code>var_c</code> are the variances of <code>score_col</code> among treated
+and control patients (missing values dropped).  <code>NULL</code> (default) uses
+<code>caliper</code> instead.  <code>scale = "logit", caliper_sd = 0.2</code>
+is the Austin (2011) recommendation.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -145,7 +167,8 @@ obtain the matched subset.</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>treatment_col</code>, <code>score_col</code>, <code>id_col</code>,
-<code>match_col</code>, <code>pair_id_col</code>, <code>caliper</code>, <code>method</code>, <code>seed</code>, <code>n_total</code>,
+<code>match_col</code>, <code>pair_id_col</code>, <code>scale</code>, <code>caliper</code> (the absolute caliper
+applied, on <code>scale</code>), <code>caliper_sd</code>, <code>method</code>, <code>seed</code>, <code>n_total</code>,
 <code>n_matched</code>, <code>n_unmatched</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
@@ -161,6 +184,13 @@ carry a logical <code>treated</code> column.</p></dd>
     <p>The <code>$tables</code> slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. These are the diagnostics
 that <code>hvtiPlotR::hv_mirror_hist()</code> and <code>hvtiPlotR::hv_balance()</code> expect.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Austin PC (2011). Optimal caliper widths for propensity-score
+matching when estimating differences in means and differences in
+proportions in observational studies. <em>Pharmaceutical Statistics</em>,
+10(2), 150–161.  <a href="https://doi.org/10.1002/pst.433" class="external-link">doi:10.1002/pst.433</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -238,6 +268,12 @@ that <code>hvtiPlotR::hv_mirror_hist()</code> and <code>hvtiPlotR::hv_balance()<
 <span class="r-in"><span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">[</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">match</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">matched</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 400</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># 5. Match on the logit with a 0.2 SD caliper (Austin 2011)</span></span></span>
+<span class="r-in"><span><span class="va">dta</span><span class="op">$</span><span class="va">logit_t</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">qlogis</a></span><span class="op">(</span><span class="va">dta</span><span class="op">$</span><span class="va">prob_t</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">obj_logit</span> <span class="op">&lt;-</span> <span class="fu">ps_match</span><span class="op">(</span><span class="va">dta</span>, score_col <span class="op">=</span> <span class="st">"logit_t"</span>, scale <span class="op">=</span> <span class="st">"logit"</span>, caliper_sd <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">obj_logit</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">caliper</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2170102</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -18,7 +18,9 @@ ps_match(
   match_col = "match",
   ratio = 1L,
   seed = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  scale = c("probability", "logit"),
+  caliper_sd = NULL
 )
 ```
 
@@ -35,8 +37,11 @@ ps_match(
 
 - score_col:
 
-  Name of the numeric propensity score column (values in \[0, 1\]).
-  Default `"prob_t"`.
+  Name of the numeric propensity score column, on the scale named by
+  `scale`: probabilities in \[0, 1\] for `scale = "probability"`, or
+  logits (any finite value, such as the `logit_t` column
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+  appends) for `scale = "logit"`. Default `"prob_t"`.
 
 - id_col:
 
@@ -44,9 +49,9 @@ ps_match(
 
 - caliper:
 
-  Maximum allowable difference in propensity score for a match to be
-  accepted. `NULL` (default) imposes no caliper. Typical values:
-  `0.1 * sd(score)` (20% of SD rule) or `0.2`.
+  Maximum allowable difference in `score_col`, on its own scale, for a
+  match to be accepted. `NULL` (default) imposes no caliper unless
+  `caliper_sd` is given. Give at most one of `caliper` and `caliper_sd`.
 
 - covariates:
 
@@ -80,6 +85,22 @@ ps_match(
   requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
   for example `"transcatheter"`, to use a column holding any two values.
 
+- scale:
+
+  The scale `score_col` is on, and so the scale distances and the
+  caliper are measured on: `"probability"` (default) or `"logit"`. The
+  recommended caliper, 0.2 standard deviations of the logit of the
+  propensity score (Austin 2011), needs `scale = "logit"`.
+
+- caliper_sd:
+
+  Caliper in pooled standard-deviation units of `score_col`: the caliper
+  applied is `caliper_sd * sqrt((var_t + var_c) / 2)`, where `var_t` and
+  `var_c` are the variances of `score_col` among treated and control
+  patients (missing values dropped). `NULL` (default) uses `caliper`
+  instead. `scale = "logit", caliper_sd = 0.2` is the Austin (2011)
+  recommendation.
+
 ## Value
 
 An object of class `c("ps_match", "ps_data")` with:
@@ -95,7 +116,8 @@ An object of class `c("ps_match", "ps_data")` with:
 - `$meta`:
 
   Named list: `treatment_col`, `score_col`, `id_col`, `match_col`,
-  `pair_id_col`, `caliper`, `method`, `seed`, `n_total`, `n_matched`,
+  `pair_id_col`, `scale`, `caliper` (the absolute caliper applied, on
+  `scale`), `caliper_sd`, `method`, `seed`, `n_total`, `n_matched`,
   `n_unmatched`.
 
 - `$tables`:
@@ -110,6 +132,13 @@ An object of class `c("ps_match", "ps_data")` with:
 The `$tables` slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. These are the diagnostics
 that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
+
+## References
+
+Austin PC (2011). Optimal caliper widths for propensity-score matching
+when estimating differences in means and differences in proportions in
+observational studies. *Pharmaceutical Statistics*, 10(2), 150–161.
+[doi:10.1002/pst.433](https://doi.org/10.1002/pst.433)
 
 ## See also
 
@@ -188,4 +217,10 @@ table(obj$data$match)
 matched <- obj$data[obj$data$match == 1L, ]
 nrow(matched)
 #> [1] 400
+
+# 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
+dta$logit_t <- stats::qlogis(dta$prob_t)
+obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+obj_logit$meta$caliper
+#> [1] 0.2170102
 ```

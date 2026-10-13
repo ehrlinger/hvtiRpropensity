@@ -101,9 +101,9 @@ if (requireNamespace("survival", quietly = TRUE)) {
   res$tables$estimates
 }
 #>        estimator subset  weighting   n ess_treated ess_control rmst_treated
-#> 1 all/unweighted    all unweighted 400    200.0000    200.0000     2.730575
-#> 2        all/ato    all        ato 400    157.8078    155.2728     2.727508
-#>   rmst_control        diff diff_days    lo_days  hi_days n_failed
-#> 1     2.701130  0.02944547  10.75474  -63.96384 89.13301        0
-#> 2     2.820534 -0.09302584 -33.97699 -151.78152 69.04643        0
+#> 1 all/unweighted    all unweighted 400    200.0000    200.0000     2.728810
+#> 2        all/ato    all        ato 400    157.8078    155.2728     2.737144
+#>   rmst_control        diff diff_days   lo_days  hi_days n_failed
+#> 1     2.828556 -0.09974563 -36.43134 -158.0537 51.11612        0
+#> 2     2.791022 -0.05387833 -19.67865 -109.9290 74.75615        0
 ```
