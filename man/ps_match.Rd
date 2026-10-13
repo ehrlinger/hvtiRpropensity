@@ -52,7 +52,7 @@ to \verb{$data}.  Default \code{"match"}.  If the column already exists it is
 overwritten.}
 
 \item{ratio}{Matching ratio (controls : treated).  Currently
-only \code{1} (1:1) is supported.  Default \code{1}.}
+only the number \code{1} (1:1) is supported.  Default \code{1}.}
 
 \item{seed}{Seed for the random shuffling of treated-patient
 order that reduces order-dependence. \code{NULL} (default) or one whole number. With a

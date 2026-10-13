@@ -13,10 +13,12 @@ back-transformed with \code{\link[stats:plogis]{stats::plogis()}}, so \code{trim
 interval are on the probability scale.}
 
 \item{flags}{Optional named list of extra logical vectors, one element per
-row of \code{x$data}, \code{TRUE} meaning the rule would drop that patient.}
+row of \code{x$data}, \code{TRUE} meaning the rule would drop that patient. The
+names \code{"trim"} and \code{"common"} belong to the built-in rules and are refused.}
 
 \item{trim}{Length-2 numeric, or \code{NULL}. Adds the rule "score outside
-\verb{[trim[1], trim[2]]}". Default \code{c(0.1, 0.9)}.}
+\verb{[trim[1], trim[2]]}". Both values must lie in [0, 1], increasing.
+Default \code{c(0.1, 0.9)}.}
 
 \item{common}{Logical; add the rule "score outside the range occupied by
 both groups" (common support).}

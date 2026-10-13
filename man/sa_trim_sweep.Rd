@@ -29,7 +29,8 @@ estimand used to compute IPTW weights.  Taken from \code{x$meta$estimand}
 when \code{x} is a \code{ps_weight} object; defaults to \code{"ATE"} otherwise.}
 
 \item{stabilise}{Logical.  Whether to stabilise weights.  Taken from
-\code{x$meta$stabilised} when available; defaults to \code{TRUE}.}
+\code{x$meta$stabilised} when available; defaults to \code{TRUE}.  As in
+\code{\link[=ps_weight]{ps_weight()}}, stabilisation applies to the ATE only.}
 
 \item{score_col}{Name of the propensity score column.  Taken from
 \code{x$meta$score_col} when \code{x} is a \code{ps_data} object.  Default \code{"prob_t"}.
