@@ -53,10 +53,19 @@ to lower the bar.
   - `$meta` — column names used, method parameters, formula, computed statistics
   - `$tables` — diagnostic tables (SMD before/after, group counts, effective N); may be an
     empty list, but the element exists
+  - `$models`: fitted model objects; may be an empty list, but the element exists
 
   Adding a `ps_*()` function means returning that shape through the constructor, not
-  inventing a parallel one. `print()` and `summary()` methods are defined once on the base
-  class and inherited.
+  inventing a parallel one. The four `sa_*()` functions comply: each returns a subclass of
+  its own name (`sa_evalue()` has no input data, so its `$data` is an empty data frame).
+  `print()` and `summary()` are defined on the base class; `summary()` is inherited by
+  every subclass, and a subclass that has a headline result gets its own `print()` method
+  (`ps_logistic`, `ps_forest`, `ps_support`, `ps_rmst`, the four `sa_*` classes and others).
+  Read `NAMESPACE` for the current list.
+- **One precedence rule for arguments a `ps_data` input already records.** An argument the
+  caller supplies wins over `$meta`, and if it disagrees with `$meta` the call aborts naming
+  both values; an argument not supplied takes `$meta`, then its default. Detect "supplied"
+  with `missing()`. The `sa_*()` functions apply it through `.resolve_meta_arg()`.
 - **Lines are 120 characters here**, because the `ps_*()` and `bs_*()` constructors take many
   named arguments and read better whole than wrapped.
   ⚠️ The family runs 80, 100, 120 and 135. Read `.lintr`.

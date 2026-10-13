@@ -45,8 +45,8 @@ The package covers the full workflow from raw covariates to sensitivity analysis
 4. **Assess sensitivity to unmeasured confounding** — `sa_rosenbaum()`,
    `sa_evalue()`, `sa_overlap()`, `sa_trim_sweep()`
 
-All score, balance, fit, and validation objects share a common `ps_data` S3
-base class with four slots: `$data` carries patient-level outputs, `$meta`
+All score, balance, sensitivity, fit, and validation objects share a common
+`ps_data` S3 base class with four slots: `$data` carries patient-level outputs, `$meta`
 records the declared contract and row accounting, `$tables` carries inference
 and diagnostics, and `$models` retains every fitted model used to create the
 result.
@@ -481,9 +481,9 @@ outside it, and near-positivity-violation flags.
 ```{r}
 #| label: sa-overlap
 ov <- sa_overlap(m)
-ov$overlap_region
-ov$outside_overlap
-ov$positivity_flags
+ov$meta$overlap_region
+ov$tables$outside_overlap
+ov$tables$positivity_flags
 ```
 
 ### Weight-trimming sensitivity sweep — `sa_trim_sweep()`
@@ -495,7 +495,7 @@ that controls extreme weights without unacceptable loss of sample size.
 
 ```{r}
 #| label: sa-trim-sweep
-sweep <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))
+sweep <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))$tables$sweep
 head(sweep)
 
 # ESS at no trimming vs. 5% trimming
@@ -514,8 +514,8 @@ robust finding.
 #| label: sa-evalue-rr
 # Suppose a matched analysis yields RR = 1.8 (95% CI 1.3 to 2.5)
 ev <- sa_evalue(1.8, ci_lo = 1.3, ci_hi = 2.5, type = "RR")
-ev$evalue_estimate   # confounder must be this strong to explain the RR
-ev$evalue_ci         # must be this strong to explain even the CI lower bound
+ev$meta$evalue_estimate   # confounder must be this strong to explain the RR
+ev$meta$evalue_ci         # must be this strong to explain even the CI lower bound
 ```
 
 ```{r}
@@ -523,7 +523,7 @@ ev$evalue_ci         # must be this strong to explain even the CI lower bound
 # Risk difference of 0.08 with baseline outcome probability 0.15
 ev_rd <- sa_evalue(0.08, ci_lo = 0.02, ci_hi = 0.14,
                    type = "RD", p0 = 0.15)
-ev_rd$evalue_estimate
+ev_rd$meta$evalue_estimate
 ```
 
 ### Rosenbaum sensitivity bounds — `sa_rosenbaum()`
@@ -538,11 +538,11 @@ the largest Γ at which the analysis remains significant.
 res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 3, gamma_inc = 0.25)
 
 # Summary: how sensitive is the result?
-res$sensitivity_value   # largest Gamma where upper p-value < 0.05
-res$n_pairs
+res$meta$sensitivity_value   # largest Gamma where upper p-value < 0.05
+res$meta$n_pairs
 
 # Full bounds table
-head(res$bounds)
+head(res$tables$bounds)
 ```
 
 ---

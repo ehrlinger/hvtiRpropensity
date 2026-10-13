@@ -244,8 +244,9 @@ test_that("ps_support() back-transforms a logit-scale ps_match object", {
 
 test_that("sa_overlap() and sa_trim_sweep() back-transform a logit-scale ps_match object", {
   mp <- logit_pair()
-  expect_equal(sa_overlap(mp$logit), sa_overlap(mp$prob))
-  expect_equal(sa_trim_sweep(mp$logit), sa_trim_sweep(mp$prob))
+  expect_equal(sa_overlap(mp$logit)$tables, sa_overlap(mp$prob)$tables)
+  expect_equal(sa_overlap(mp$logit)$meta$overlap_region, sa_overlap(mp$prob)$meta$overlap_region)
+  expect_equal(sa_trim_sweep(mp$logit)$tables, sa_trim_sweep(mp$prob)$tables)
 })
 
 test_that("ps_rmst() gives the same matched-pair analysis from a logit-scale ps_match object as from prob_t", {
@@ -286,7 +287,7 @@ test_that("ps_support() and ps_rmst() carry the score scale forward when chained
   expect_equal(r_logit$data$w_ato, r_prob$data$w_ato)
   expect_lt(max(r_logit$data$w_ate), 1 / 1e-3)
   expect_equal(ps_support(r_logit)$tables, ps_support(r_prob)$tables)
-  expect_equal(sa_overlap(s_logit), sa_overlap(s_prob))
+  expect_equal(sa_overlap(s_logit)$tables, sa_overlap(s_prob)$tables)
 })
 
 test_that("ps_support() records scale = 'probability' when the input records none", {

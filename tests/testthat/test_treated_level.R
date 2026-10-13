@@ -64,10 +64,11 @@ test_that("ps_stddiff(), ps_stddiff_perm() and ps_mw_var() give the 0/1 result",
 test_that("sa_overlap() and sa_trim_sweep() give the 0/1 result", {
   ref <- sa_overlap(binary)
   obj <- sa_overlap(labelled, treated_level = lvl)
-  expect_identical(obj$summary$group, c("surgical", "transcatheter"))
-  expect_equal(obj$summary[, -1], ref$summary[, -1])
-  expect_equal(obj$positivity_flags[, -1], ref$positivity_flags[, -1])
-  expect_equal(sa_trim_sweep(labelled, treated_level = lvl), sa_trim_sweep(binary))
+  expect_identical(obj$tables$summary$group, c("surgical", "transcatheter"))
+  expect_identical(obj$meta$treated_level, lvl)
+  expect_equal(obj$tables$summary[, -1], ref$tables$summary[, -1])
+  expect_equal(obj$tables$positivity_flags[, -1], ref$tables$positivity_flags[, -1])
+  expect_equal(sa_trim_sweep(labelled, treated_level = lvl)$tables, sa_trim_sweep(binary)$tables)
 })
 
 test_that("a scored object carries its treated level downstream", {
@@ -76,14 +77,17 @@ test_that("a scored object carries its treated level downstream", {
   fit <- ps_logistic(tavr ~ age + ef, unscored,
                      treatment_levels = c("surgical", "transcatheter"), treated_level = lvl)
   overlap <- sa_overlap(fit)
-  expect_identical(overlap$summary$group, c("surgical", "transcatheter"))
-  expect_equal(overlap$summary$n, c(sum(binary$tavr == 0), sum(binary$tavr == 1)))
+  expect_identical(overlap$tables$summary$group, c("surgical", "transcatheter"))
+  expect_equal(overlap$tables$summary$n, c(sum(binary$tavr == 0), sum(binary$tavr == 1)))
   expect_no_warning(sa_trim_sweep(fit))
 
   matched <- ps_match(fit$data, seed = 3, treated_level = lvl)
   matched_ref <- ps_match(transform(fit$data, tavr = as.integer(tavr == lvl)), seed = 3)
-  expect_equal(sa_rosenbaum(matched, outcome_col = "ef", gamma_max = 2),
-               sa_rosenbaum(matched_ref, outcome_col = "ef", gamma_max = 2))
+  res <- sa_rosenbaum(matched, outcome_col = "ef", gamma_max = 2)
+  ref <- sa_rosenbaum(matched_ref, outcome_col = "ef", gamma_max = 2)
+  expect_equal(res$tables, ref$tables)
+  expect_equal(res$meta$sensitivity_value, ref$meta$sensitivity_value)
+  expect_identical(res$meta$treated_level, lvl)
 })
 
 test_that("ps_forest() accepts a labelled treatment", {
@@ -126,6 +130,6 @@ test_that("sa_trim_sweep() excludes patients with a missing treatment", {
   missing <- binary
   missing$tavr[c(1, 200)] <- NA
   expect_warning(swept <- sa_trim_sweep(missing), "2 NA value")
-  expect_equal(swept, sa_trim_sweep(binary[-c(1, 200), ]))
-  expect_false(anyNA(swept))
+  expect_equal(swept$tables, sa_trim_sweep(binary[-c(1, 200), ])$tables)
+  expect_false(anyNA(swept$tables$sweep))
 })

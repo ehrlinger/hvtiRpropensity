@@ -37,17 +37,24 @@ about 15\% at the end of follow-up).  \code{TRUE} uses the OR or HR as the RR;
 for OR and HR.  Ignored for other types.}
 }
 \value{
-A list with:
+An object of class \code{c("sa_evalue", "ps_data")}. There is no input
+data, so \verb{$data} is an empty data frame and \verb{$models} an empty list.
 \describe{
-\item{\verb{$evalue_estimate}}{E-value for the point estimate.}
-\item{\verb{$evalue_ci}}{E-value for the confidence interval bound closest to
-the null.  \code{NA} if \code{ci_lo}/\code{ci_hi} are not supplied.  Returns \code{1} if
+\item{\verb{$meta$evalue_estimate}}{E-value for the point estimate.}
+\item{\verb{$meta$evalue_ci}}{E-value for the confidence interval bound
+closest to the null.  \code{NA} if \code{ci_lo}/\code{ci_hi} are not supplied.  \code{1} if
 the CI already crosses the null.}
-\item{\verb{$rr_estimate}}{The point estimate converted to the risk-ratio
-scale (same as \code{estimate} when \code{type = "RR"}).}
-\item{\verb{$type}}{The measure type supplied.}
-\item{\verb{$rare}}{For \code{type = "OR"} or \code{"HR"}, the rare-outcome choice
+\item{\verb{$meta$rr_estimate}}{The point estimate converted to the
+risk-ratio scale (same as \code{estimate} when \code{type = "RR"}).}
+\item{\verb{$meta$type}}{The measure type supplied.}
+\item{\verb{$meta$rare}}{For \code{type = "OR"} or \code{"HR"}, the rare-outcome choice
 used for the conversion; \code{NA} for other types.}
+\item{\verb{$meta$estimate}, \verb{$meta$ci_lo}, \verb{$meta$ci_hi}, \verb{$meta$p0}}{The
+inputs, \code{NA} where not supplied.}
+\item{\verb{$tables$evalue}}{Data frame with one row for the estimate and one
+for the CI bound closest to the null: \code{quantity}, \code{value} on the
+original scale, \code{rr} on the risk-ratio scale (\code{NA} when the CI crosses
+the null) and \code{evalue}.}
 }
 }
 \description{
@@ -92,7 +99,9 @@ sa_evalue(0.6, ci_lo = 0.4, ci_hi = 0.9, type = "OR", rare = FALSE)
 sa_evalue(1.8, ci_lo = 1.2, ci_hi = 2.7, type = "HR", rare = TRUE)
 
 # Risk difference of 0.10 with baseline probability 0.20
-sa_evalue(0.10, ci_lo = 0.02, ci_hi = 0.18, type = "RD", p0 = 0.20)
+ev <- sa_evalue(0.10, ci_lo = 0.02, ci_hi = 0.18, type = "RD", p0 = 0.20)
+ev$meta$evalue_estimate
+ev$tables$evalue
 
 }
 \references{

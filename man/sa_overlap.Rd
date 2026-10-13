@@ -32,18 +32,25 @@ from the metadata of a \code{ps_data} object when it records one. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
 }
 \value{
-A list with:
+An object of class \code{c("sa_overlap", "ps_data")}:
 \describe{
-\item{\verb{$summary}}{Data frame: one row per treatment group with \code{group}
-(the value in \code{treatment_col}), a logical \code{treated}, \code{n}, \code{ps_min},
-\code{ps_q25}, \code{ps_median}, \code{ps_mean}, \code{ps_q75}, \code{ps_max}.}
-\item{\verb{$overlap_region}}{Named numeric vector: \code{lower} and \code{upper} bounds
-of the empirical common support region.}
-\item{\verb{$outside_overlap}}{Data frame: \code{group}, \code{treated}, \code{n_outside},
-\code{pct_outside} -- patients whose PS is outside the overlap region.}
-\item{\verb{$positivity_flags}}{Data frame: \code{group}, \code{treated}, \code{n_near_zero}
-(PS < \code{trim_threshold}), \code{n_near_one} (PS > \code{1 - trim_threshold}),
-\code{pct_near_zero}, \code{pct_near_one}.}
+\item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_data} object),
+unchanged.}
+\item{\verb{$meta}}{\code{score_col}, \code{treatment_col}, \code{treated_level}, \code{scale},
+\code{trim_threshold}, \code{n_total}, \code{n_score_missing}, \code{n_used} (patients
+with a score and a treatment), and \code{overlap_region}:
+a named numeric vector of the \code{lower} and \code{upper} bounds of the
+empirical common support region.}
+\item{\verb{$tables$summary}}{Data frame: one row per treatment group with
+\code{group} (the value in \code{treatment_col}), a logical \code{treated}, \code{n},
+\code{ps_min}, \code{ps_q25}, \code{ps_median}, \code{ps_mean}, \code{ps_q75}, \code{ps_max}.}
+\item{\verb{$tables$outside_overlap}}{Data frame: \code{group}, \code{treated},
+\code{n_outside}, \code{pct_outside} -- patients whose PS is outside the overlap
+region.}
+\item{\verb{$tables$positivity_flags}}{Data frame: \code{group}, \code{treated},
+\code{n_near_zero} (PS < \code{trim_threshold}), \code{n_near_one}
+(PS > \code{1 - trim_threshold}), \code{pct_near_zero}, \code{pct_near_one}.}
+\item{\verb{$models}}{An empty list.}
 }
 }
 \description{
@@ -61,17 +68,21 @@ min(max_treated, max_control)].
 \item The number and proportion of patients with PS below \code{trim_threshold} or
 above \code{1 - trim_threshold} (near-positivity-violation flags).
 }
+
+For a \code{ps_data} input, a supplied \code{score_col}, \code{treatment_col} or
+\code{treated_level} must agree with the object's metadata; a conflict aborts.
+Arguments not supplied are read from the metadata.
 }
 \examples{
 dta <- sample_ps_data(n = 400, seed = 7)
 res <- sa_overlap(dta, score_col = "prob_t", treatment_col = "tavr")
-res$overlap_region
-res$positivity_flags
+res$meta$overlap_region
+res$tables$positivity_flags
 
 # From a ps_match object
 m   <- ps_match(dta)
 res <- sa_overlap(m)
-res$outside_overlap
+res$tables$outside_overlap
 
 }
 \seealso{
