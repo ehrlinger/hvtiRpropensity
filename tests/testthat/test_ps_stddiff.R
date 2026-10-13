@@ -32,13 +32,40 @@ test_that("gaussian uses sqrt((var1 + var0) / 2), not a size-weighted pool", {
   expect_equal(sd_of(obj, "x"), -3 / sqrt(23 / 6))
 })
 
-test_that("weighted gaussian uses PROC MEANS weighted variance, n - 1", {
-  # g1: x 1 2 3, w 1 1 2. mean 9/4. sum w(x-m)^2 = 1.5625 + .0625 + 1.125 = 2.75, /2 = 1.375
-  # g0: x 2 4 6, w 2 1 1. mean 14/4. sum w(x-m)^2 = 4.5 + .25 + 6.25 = 11, /2 = 5.5
-  # (2.25 - 3.5) / sqrt((1.375 + 5.5) / 2)
+test_that("weighted gaussian uses PROC MEANS weighted variance, n - 1, on weights of mean 1 per group", {
+  # Both groups' weights average 4/3, so they are scaled by 3/4 first. Means are
+  # unchanged and each variance is 3/4 of the raw-weight PROC MEANS one.
+  # g1: x 1 2 3, w 1 1 2. mean 9/4. sum w(x-m)^2 = 1.5625 + .0625 + 1.125 = 2.75, /2 = 1.375, * 3/4 = 1.03125
+  # g0: x 2 4 6, w 2 1 1. mean 14/4. sum w(x-m)^2 = 4.5 + .25 + 6.25 = 11, /2 = 5.5, * 3/4 = 4.125
+  # (2.25 - 3.5) / sqrt((1.03125 + 4.125) / 2)
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6), w = c(1, 1, 2, 2, 1, 1))
   obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x", weight_col = "w")
-  expect_equal(sd_of(obj, "x"), -1.25 / sqrt(3.4375))
+  expect_equal(sd_of(obj, "x"), -1.25 / sqrt(2.578125))
+})
+
+test_that("weights that already average 1 in each group are used as given", {
+  # g1: w 0.5 1 1.5 (mean 1), x 1 2 3. mean 7/3.
+  #   sum w(x-m)^2 = .5 * 16/9 + 1/9 + 1.5 * 4/9 = 15/9, /2 = 5/6
+  # g0: w 1 1 1, x 2 4 6. mean 4, var 4.
+  # (7/3 - 4) / sqrt((5/6 + 4) / 2)
+  d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6), w = c(0.5, 1, 1.5, 1, 1, 1))
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x", weight_col = "w")
+  expect_equal(sd_of(obj, "x"), (7 / 3 - 4) / sqrt((5 / 6 + 4) / 2))
+})
+
+test_that("weighted differences do not change when a group's weights are multiplied by a constant", {
+  # Issue #82. Normalising to mean 1 within each group removes any per-group scale.
+  d <- sample_ps_data(n = 200, seed = 42)
+  d$w <- ps_weight(d)$data$iptw
+  d$ef_rank <- d$ef
+  score <- function(w) {
+    d$w_k <- w
+    ps_stddiff(d, treatment_col = "tavr", gaussian = c("age", "ef"), nong_ord = "ef_rank",
+               binary = c("female", "diabetes"), weight_col = "w_k")$tables$stddiff$stddiff
+  }
+  base <- score(d$w)
+  expect_equal(score(4 * d$w), base)
+  expect_equal(score(ifelse(d$tavr == 1, 3, 0.5) * d$w), base)
 })
 
 test_that("missing values are dropped per variable, missing group per row", {
@@ -64,9 +91,10 @@ test_that("weighted nong_ord weights the rank moments, not the ranks", {
   # ranks as above: g1 3.5 5 6, w 1 1 2 -> mean 20.5/4 = 5.125,
   #   sum w(r-m)^2 = 2.640625 + .015625 + 1.53125 = 4.1875, /2 = 2.09375
   # g0 1 2 3.5, w 2 1 1 -> mean 7.5/4 = 1.875, the same sum, /2 = 2.09375
+  # Weights average 4/3 in each group, so each variance is 2.09375 * 3/4 = 1.5703125.
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(3, 4, 5, 1, 2, 3), w = c(1, 1, 2, 2, 1, 1))
   obj <- ps_stddiff(d, treatment_col = "g", nong_ord = "x", weight_col = "w")
-  expect_equal(sd_of(obj, "x"), 3.25 / sqrt(2.09375))
+  expect_equal(sd_of(obj, "x"), 3.25 / sqrt(1.5703125))
 })
 
 # ---- Binary and categorical -------------------------------------------------

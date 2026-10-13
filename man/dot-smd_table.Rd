@@ -22,7 +22,8 @@ A data frame with columns \code{variable} and \code{smd}, rounded to 4 places.
 \description{
 Every covariate is treated as Gaussian, so the denominator is
 \code{sqrt((var1 + var0) / 2)}, and with \code{weight_col} the variances are the
-\verb{PROC MEANS} weighted ones, divided by \code{n - 1}. This is the one formula the
+\verb{PROC MEANS} weighted ones, divided by \code{n - 1}, after the weights are
+normalised to mean 1 within each group. This is the one formula the
 package uses; see \code{\link[=ps_stddiff]{ps_stddiff()}}. A subset with a group absent, such as the
 matched rows of a match that found no pairs, gets \code{NA} for every covariate
 rather than an error.

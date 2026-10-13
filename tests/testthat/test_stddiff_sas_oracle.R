@@ -40,6 +40,43 @@ sas_by_variable <- function(d, value) {
   stats::setNames(d[[value]], tolower(d$varname))[unname(variables)]
 }
 
+# ---- Weighted Gaussian and rank differences: two steps (issue #82) ----------
+# %stddiff's weighted Gaussian and rank differences are PROC MEANS VARDEF=DF
+# moments on the weights as given, so they change with the weights' scale.
+# ps_stddiff() normalises the weights to mean 1 within each group first and
+# then applies the same formula. The two agree only when the weights already
+# average 1 in each group, and the fixture's matching weights average about
+# 0.79 there. So for x_gauss and x_ord the weighted oracle is reached in two
+# steps: vardef_df_stddiff() on the raw weights reproduces SAS, and
+# ps_stddiff() reproduces vardef_df_stddiff() on the normalised weights.
+# Binary and categorical proportions never depended on the scale and are
+# compared to SAS directly.
+scale_sensitive <- unname(variables[c("gaussian", "nong_ord")])
+
+vardef_df_stddiff <- function(x, g, w, ranks = FALSE, normalise = FALSE) {
+  ok <- !is.na(x) & !is.na(g)
+  x <- x[ok]
+  g <- g[ok]
+  w <- w[ok]
+  if (ranks) x <- rank(x, ties.method = "average")
+  stat <- function(k) {
+    xi <- x[g == k]
+    wi <- w[g == k]
+    if (normalise) wi <- wi / mean(wi)
+    m <- sum(wi * xi) / sum(wi)
+    c(m, sum(wi * (xi - m)^2) / (length(xi) - 1L))
+  }
+  s1 <- stat(1)
+  s0 <- stat(0)
+  (s1[1L] - s0[1L]) / sqrt((s1[2L] + s0[2L]) / 2)
+}
+
+vardef_df_by_variable <- function(d, normalise) {
+  vapply(scale_sensitive, function(v) {
+    vardef_df_stddiff(d[[v]], d$grp, d$w, ranks = v == variables[["nong_ord"]], normalise = normalise)
+  }, numeric(1))
+}
+
 # ---- %stddiff ---------------------------------------------------------------
 
 test_that("ps_stddiff() matches %stddiff to 4 decimals, unweighted", {
@@ -51,7 +88,13 @@ test_that("ps_stddiff() matches %stddiff to 4 decimals, unweighted", {
 test_that("ps_stddiff() matches %stddiff to 4 decimals, weighted", {
   skip_without_oracle("sd-weighted.csv")
   sas <- sas_by_variable(read_oracle("sd-weighted.csv"), "stddiff")
-  expect_equal(r_stddiff(weight = "w")[unname(variables)], sas, tolerance = 5e-5, ignore_attr = TRUE)
+  r <- r_stddiff(weight = "w")
+  scale_free <- setdiff(unname(variables), scale_sensitive)
+  expect_equal(r[scale_free], sas[scale_free], tolerance = 5e-5, ignore_attr = TRUE)
+  # The two steps for x_gauss and x_ord; see vardef_df_stddiff().
+  expect_equal(vardef_df_by_variable(fixture, normalise = FALSE), sas[scale_sensitive], tolerance = 5e-5,
+               ignore_attr = TRUE)
+  expect_equal(r[scale_sensitive], vardef_df_by_variable(fixture, normalise = TRUE), ignore_attr = TRUE)
 })
 
 # ---- %stddiffci -------------------------------------------------------------
@@ -65,10 +108,15 @@ test_that("ps_stddiff() matches %stddiff to 4 decimals, weighted", {
 matching_weight <- function(p, g) round(pmin(p, 1 - p) / (p * g + (1 - p) * (1 - g)), 6)
 reweight <- function(d) matching_weight(d$p_score, d$grp)
 
-permuted_stddiff <- function(k, weighted) {
+permuted_data <- function(k, weighted) {
   d <- fixture
   d$grp <- d[[paste0("fgrp_", k)]]
   if (weighted) d$w <- reweight(d)
+  d
+}
+
+permuted_stddiff <- function(k, weighted) {
+  d <- permuted_data(k, weighted)
   tbl <- ps_stddiff(d, treatment_col = "grp", gaussian = variables[["gaussian"]], nong_ord = variables[["nong_ord"]],
                     binary = variables[["binary"]], categorical = variables[["categorical"]],
                     weight_col = if (weighted) "w")$tables$stddiff
@@ -79,6 +127,23 @@ check_permutation_reference <- function(file, weighted) {
   sas <- read_oracle(file)
   observed <- r_stddiff(weight = if (weighted) "w")
   perms <- vapply(seq_len(n_perm), permuted_stddiff, numeric(length(variables)), weighted = weighted)
+  if (weighted) {
+    # The two steps for x_gauss and x_ord; see vardef_df_stddiff(). ps_stddiff()
+    # must equal the formula on normalised weights for every permutation, and
+    # the formula on raw weights stands in for SAS's side below.
+    for (normalise in c(TRUE, FALSE)) {
+      ref <- vapply(seq_len(n_perm), function(k) vardef_df_by_variable(permuted_data(k, TRUE), normalise),
+                    numeric(length(scale_sensitive)))
+      ref_obs <- vardef_df_by_variable(fixture, normalise)
+      if (normalise) {
+        testthat::expect_equal(perms[scale_sensitive, ], ref, ignore_attr = TRUE, label = "permuted normalised")
+        testthat::expect_equal(observed[scale_sensitive], ref_obs, ignore_attr = TRUE, label = "observed normalised")
+      } else {
+        perms[scale_sensitive, ] <- ref
+        observed[scale_sensitive] <- ref_obs
+      }
+    }
+  }
   pct <- t(apply(perms, 1L, .perm_percentiles, type = 2))
   colnames(pct) <- c("p_2_5", "p_16", "p_50", "p_84", "p_97_5")
   for (v in unname(variables)) {

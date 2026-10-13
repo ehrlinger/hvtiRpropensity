@@ -76,9 +76,17 @@ When \code{S} is singular, as when the two groups share no levels, the
 difference is \code{NA} with a warning naming the variable.
 }
 
-\strong{Weights.} Means are \verb{sum(w x) / sum(w)}; variances are
-\code{sum(w (x - m)^2) / (n - 1)}, which is what \verb{PROC MEANS} reports with a
-\code{WEIGHT} statement. Weights must be positive.
+\strong{Weights.} Within each group, the weights are first divided by their
+mean in that group, so that they average 1 there. Means are then
+\verb{sum(w x) / sum(w)} and variances \code{sum(w (x - m)^2) / (n - 1)}, which is
+what \verb{PROC MEANS} reports with a \code{WEIGHT} statement and \code{VARDEF=DF}. The
+result is therefore the same when every weight in a group is multiplied by
+one constant, so stabilised and unstabilised weights from \code{\link[=ps_weight]{ps_weight()}}
+give the same differences. It equals the \verb{\%stddiff} macro's output when the
+weights already average 1 in each group, and otherwise does not: the
+macro's Gaussian and rank differences change with the scale of the weights.
+Proportions, for \code{binary} and \code{categorical}, are \verb{sum(w x) / sum(w)} within
+a group and never depended on that scale. Weights must be positive.
 
 \strong{Missing values.} Rows with a missing group are dropped. Otherwise a
 missing value is dropped for that variable only, and a variable with no
