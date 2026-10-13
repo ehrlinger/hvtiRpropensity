@@ -10,9 +10,11 @@
 #'   back-transformed with [stats::plogis()], so `trim` and the common-support
 #'   interval are on the probability scale.
 #' @param flags Optional named list of extra logical vectors, one element per
-#'   row of `x$data`, `TRUE` meaning the rule would drop that patient.
+#'   row of `x$data`, `TRUE` meaning the rule would drop that patient. The
+#'   names `"trim"` and `"common"` belong to the built-in rules and are refused.
 #' @param trim Length-2 numeric, or `NULL`. Adds the rule "score outside
-#'   `[trim[1], trim[2]]`". Default `c(0.1, 0.9)`.
+#'   `[trim[1], trim[2]]`". Both values must lie in \[0, 1\], increasing.
+#'   Default `c(0.1, 0.9)`.
 #' @param common Logical; add the rule "score outside the range occupied by
 #'   both groups" (common support).
 #'
@@ -43,14 +45,21 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
     rules$common <- score < bounds[1L] | score > bounds[2L]
   }
   if (!is.null(trim)) {
-    if (!is.numeric(trim) || length(trim) != 2L || trim[1L] >= trim[2L]) {
-      rlang::abort("`trim` must be two increasing numbers.", call. = FALSE)
+    if (!is.numeric(trim) || length(trim) != 2L || anyNA(trim) || trim[1L] >= trim[2L] ||
+          trim[1L] < 0 || trim[2L] > 1) {
+      rlang::abort(sprintf("`trim` must be two increasing probabilities in [0, 1], not %s.",
+                           paste(deparse(trim), collapse = "")), call. = FALSE)
     }
     rules$trim <- score < trim[1L] | score > trim[2L]
   }
   if (length(flags)) {
     if (is.null(names(flags)) || any(!nzchar(names(flags)))) {
       rlang::abort("`flags` must be a named list.", call. = FALSE)
+    }
+    clash <- intersect(names(flags), c("trim", "common"))
+    if (length(clash)) {
+      rlang::abort(sprintf("`flags` cannot use the built-in rule name(s) %s; rename the flag.",
+                           paste0("\"", clash, "\"", collapse = ", ")), call. = FALSE)
     }
     if (any(lengths(flags) != n)) {
       rlang::abort("Every element of `flags` must have one value per row of `x$data`.", call. = FALSE)

@@ -36,8 +36,12 @@ Treated weights = \code{1}; control weights = \code{ps/(1-ps)}.
 Treated weights = \code{(1-ps)/ps}; control weights = \code{1}.
 }}
 
-\item{stabilise}{Logical.  If \code{TRUE} (default), weights are
-stabilised by multiplying by the marginal treatment probability.}
+\item{stabilise}{Logical.  If \code{TRUE} (default) and \code{estimand = "ATE"},
+each weight is multiplied by the marginal probability of the patient's
+own arm (\code{P(treated)} or \code{P(control)}).  Stabilisation is defined for the
+ATE only: for \code{"ATT"} and \code{"ATC"} it has no effect, so the reference arm
+keeps weights of exactly 1.  \verb{$meta$stabilised} records whether it was
+applied.}
 
 \item{trim}{Optional numeric in (0, 0.5).  If supplied, weights
 outside the (\code{trim}, \code{1 - trim}) quantile range are winsorised.
@@ -83,8 +87,8 @@ obj <- ps_weight(dta)
 print(obj)
 summary(obj)
 
-# 2. ATT weights, stabilised
-obj_att <- ps_weight(dta, estimand = "ATT", stabilise = TRUE)
+# 2. ATT weights: treated patients keep a weight of 1
+obj_att <- ps_weight(dta, estimand = "ATT")
 summary(obj_att)
 
 # 3. Extract data with weights appended

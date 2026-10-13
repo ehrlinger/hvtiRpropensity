@@ -47,7 +47,7 @@
 #'   to `$data`.  Default `"match"`.  If the column already exists it is
 #'   overwritten.
 #' @param ratio          Matching ratio (controls : treated).  Currently
-#'   only `1` (1:1) is supported.  Default `1`.
+#'   only the number `1` (1:1) is supported.  Default `1`.
 #' @param seed           Seed for the random shuffling of treated-patient
 #'   order that reduces order-dependence. `NULL` (default) or one whole number. With a
 #'   seed, the random number stream is set to `abs(seed)` immediately before the draws,
@@ -152,7 +152,7 @@ ps_match <- function(data,
   }
 
   if (!is.null(caliper) &&
-      (!is.numeric(caliper) || length(caliper) != 1L || caliper <= 0)) {
+      (!is.numeric(caliper) || length(caliper) != 1L || is.na(caliper) || caliper <= 0)) {
     rlang::abort("`caliper` must be a positive number or NULL.", call. = FALSE)
   }
   if (!is.null(caliper_sd)) {
@@ -167,8 +167,9 @@ ps_match <- function(data,
                          stats::var(data[[score_col]][!is_t], na.rm = TRUE)) / 2)
     caliper <- caliper_sd * pooled_sd
   }
-  if (!identical(as.integer(ratio), 1L)) {
-    rlang::abort("Only 1:1 matching (`ratio = 1`) is currently supported.",
+  if (!is.numeric(ratio) || length(ratio) != 1L || is.na(ratio) || ratio != 1) {
+    rlang::abort(sprintf("Only 1:1 matching (`ratio = 1`) is currently supported, not `ratio = %s`.",
+                         paste(deparse(ratio), collapse = "")),
                  call. = FALSE)
   }
 

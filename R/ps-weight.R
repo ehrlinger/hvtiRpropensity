@@ -36,8 +36,12 @@
 #'     Treated weights = `1`; control weights = `ps/(1-ps)`.
 #'   - `"ATC"`: average treatment effect on the controls.
 #'     Treated weights = `(1-ps)/ps`; control weights = `1`.
-#' @param stabilise      Logical.  If `TRUE` (default), weights are
-#'   stabilised by multiplying by the marginal treatment probability.
+#' @param stabilise      Logical.  If `TRUE` (default) and `estimand = "ATE"`,
+#'   each weight is multiplied by the marginal probability of the patient's
+#'   own arm (`P(treated)` or `P(control)`).  Stabilisation is defined for the
+#'   ATE only: for `"ATT"` and `"ATC"` it has no effect, so the reference arm
+#'   keeps weights of exactly 1.  `$meta$stabilised` records whether it was
+#'   applied.
 #' @param trim           Optional numeric in (0, 0.5).  If supplied, weights
 #'   outside the (`trim`, `1 - trim`) quantile range are winsorised.
 #'   Default `NULL` (no trimming).
@@ -73,8 +77,8 @@
 #' print(obj)
 #' summary(obj)
 #'
-#' # 2. ATT weights, stabilised
-#' obj_att <- ps_weight(dta, estimand = "ATT", stabilise = TRUE)
+#' # 2. ATT weights: treated patients keep a weight of 1
+#' obj_att <- ps_weight(dta, estimand = "ATT")
 #' summary(obj_att)
 #'
 #' # 3. Extract data with weights appended
@@ -101,7 +105,7 @@ ps_weight <- function(data,
   .check_probability(data, score_col)
 
   if (!is.null(trim)) {
-    if (!is.numeric(trim) || length(trim) != 1L || trim <= 0 || trim >= 0.5) {
+    if (!is.numeric(trim) || length(trim) != 1L || is.na(trim) || trim <= 0 || trim >= 0.5) {
       rlang::abort("`trim` must be a number in (0, 0.5) or NULL.", call. = FALSE)
     }
   }
@@ -116,8 +120,11 @@ ps_weight <- function(data,
     ATC = ifelse(trt == 1L, (1 - ps) / ps, 1)
   )
 
-  # ---- Stabilise ----------------------------------------------------------
-  if (stabilise) {
+  # ---- Stabilise (ATE only) -----------------------------------------------
+  # Stabilising by the marginal treatment probability is defined for the ATE.
+  # For the ATT and ATC the reference arm's weights stay exactly 1.
+  stabilised <- isTRUE(stabilise) && estimand == "ATE"
+  if (stabilised) {
     p_trt <- mean(trt == 1L)
     p_ctl <- 1 - p_trt
     stab  <- ifelse(trt == 1L, p_trt, p_ctl)
@@ -182,7 +189,7 @@ ps_weight <- function(data,
       score_col     = score_col,
       weight_col    = weight_col,
       estimand      = estimand,
-      stabilised    = stabilise,
+      stabilised    = stabilised,
       trim          = trim,
       method        = paste0("IPTW-", estimand),
       n_total       = nrow(data)

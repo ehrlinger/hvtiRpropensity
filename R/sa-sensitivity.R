@@ -727,7 +727,8 @@ sa_overlap <- function(x,
 #'   estimand used to compute IPTW weights.  Taken from `x$meta$estimand`
 #'   when `x` is a `ps_weight` object; defaults to `"ATE"` otherwise.
 #' @param stabilise   Logical.  Whether to stabilise weights.  Taken from
-#'   `x$meta$stabilised` when available; defaults to `TRUE`.
+#'   `x$meta$stabilised` when available; defaults to `TRUE`.  As in
+#'   [ps_weight()], stabilisation applies to the ATE only.
 #' @param score_col   Name of the propensity score column.  Taken from
 #'   `x$meta$score_col` when `x` is a `ps_data` object.  Default `"prob_t"`.
 #'   The score of a [ps_match()] object built with `scale = "logit"` is a
@@ -831,7 +832,7 @@ sa_trim_sweep <- function(x,
     )
   }
 
-  if (stabilise) {
+  if (isTRUE(stabilise) && estimand_use == "ATE") {
     p_trt  <- mean(trt == 1L)
     raw_w  <- raw_w * ifelse(trt == 1L, p_trt, 1 - p_trt)
   }
