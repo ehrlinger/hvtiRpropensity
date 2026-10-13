@@ -56,7 +56,7 @@ test_that("ps_match() meta contains pair_id_col", {
 
 test_that("sa_evalue() returns list with expected names for RR", {
   res <- sa_evalue(2.5)
-  expect_named(res, c("evalue_estimate", "evalue_ci", "rr_estimate", "type"))
+  expect_named(res, c("evalue_estimate", "evalue_ci", "rr_estimate", "type", "rare"))
 })
 
 test_that("sa_evalue() E-value for RR = 1 is 1", {
@@ -94,15 +94,93 @@ test_that("sa_evalue() evalue_ci > 1 when CI does not cross null (RR > 1)", {
   expect_equal(res$evalue_ci, expected, tolerance = 1e-8)
 })
 
-test_that("sa_evalue() works for OR type with rare outcome approximation", {
-  res <- sa_evalue(4.0, type = "OR")
-  expect_equal(res$rr_estimate, sqrt(4), tolerance = 1e-8)
+# Hand-computed references: E(RR) = RR + sqrt(RR * (RR - 1)) for RR >= 1.
+.ev_ref <- function(rr) {
+  if (rr < 1) rr <- 1 / rr
+  rr + sqrt(rr * (rr - 1))
+}
+
+test_that("sa_evalue() uses the OR directly for a rare outcome", {
+  res <- sa_evalue(2.5, type = "OR", rare = TRUE)
+  expect_equal(res$rr_estimate, 2.5)
+  expect_equal(res$evalue_estimate, 2.5 + sqrt(2.5 * 1.5), tolerance = 1e-8)
+  expect_equal(res$evalue_estimate, 4.4365, tolerance = 1e-4)
+  expect_true(res$rare)
   expect_equal(res$type, "OR")
 })
 
-test_that("sa_evalue() works for HR type", {
-  res <- sa_evalue(3.0, type = "HR")
-  expect_equal(res$rr_estimate, sqrt(3), tolerance = 1e-8)
+test_that("sa_evalue() takes sqrt(OR) for a common outcome", {
+  res <- sa_evalue(2.5, type = "OR", rare = FALSE)
+  expect_equal(res$rr_estimate, sqrt(2.5), tolerance = 1e-8)
+  expect_equal(res$evalue_estimate, .ev_ref(sqrt(2.5)), tolerance = 1e-8)
+  expect_false(res$rare)
+})
+
+test_that("sa_evalue() uses the HR directly for a rare outcome", {
+  res <- sa_evalue(2.5, type = "HR", rare = TRUE)
+  expect_equal(res$rr_estimate, 2.5)
+  expect_equal(res$evalue_estimate, 4.4365, tolerance = 1e-4)
+})
+
+test_that("sa_evalue() applies the common-outcome HR conversion", {
+  rr <- (1 - 0.5^sqrt(2.5)) / (1 - 0.5^sqrt(1 / 2.5))
+  res <- sa_evalue(2.5, type = "HR", rare = FALSE)
+  expect_equal(res$rr_estimate, rr, tolerance = 1e-8)
+  expect_equal(res$rr_estimate, 1.8759, tolerance = 1e-4)
+  expect_equal(res$evalue_estimate, .ev_ref(rr), tolerance = 1e-8)
+  expect_equal(res$evalue_estimate, 3.1576, tolerance = 1e-4)
+})
+
+test_that("sa_evalue() handles protective OR and HR estimates", {
+  expect_equal(sa_evalue(0.4, type = "OR", rare = TRUE)$evalue_estimate,
+               .ev_ref(1 / 0.4), tolerance = 1e-8)
+  expect_equal(sa_evalue(0.4, type = "OR", rare = FALSE)$evalue_estimate,
+               .ev_ref(sqrt(0.4)), tolerance = 1e-8)
+  rr <- (1 - 0.5^sqrt(0.4)) / (1 - 0.5^sqrt(1 / 0.4))
+  res <- sa_evalue(0.4, type = "HR", rare = FALSE)
+  expect_lt(res$rr_estimate, 1)
+  expect_equal(res$evalue_estimate, .ev_ref(rr), tolerance = 1e-8)
+  # The common-outcome HR conversion is symmetric under HR -> 1/HR
+  expect_equal(res$evalue_estimate,
+               sa_evalue(2.5, type = "HR", rare = FALSE)$evalue_estimate,
+               tolerance = 1e-8)
+})
+
+test_that("sa_evalue() converts the CI bound on the same scale", {
+  res <- sa_evalue(2.5, ci_lo = 1.6, ci_hi = 3.9, type = "OR", rare = FALSE)
+  expect_equal(res$evalue_ci, .ev_ref(sqrt(1.6)), tolerance = 1e-8)
+  res <- sa_evalue(0.5, ci_lo = 0.3, ci_hi = 0.8, type = "HR", rare = FALSE)
+  rr_hi <- (1 - 0.5^sqrt(0.8)) / (1 - 0.5^sqrt(1 / 0.8))
+  expect_equal(res$evalue_ci, .ev_ref(rr_hi), tolerance = 1e-8)
+})
+
+test_that("sa_evalue() does not infer rare from p0", {
+  # Reviewer case: OR = 4, p0 = 0.10 gives exposed risk ~0.31; an equal-arm
+  # cohort has ~20% prevalence, so p0 alone cannot establish rarity.
+  expect_error(sa_evalue(4, type = "OR", p0 = 0.10), "rare = TRUE")
+  expect_error(sa_evalue(2.5, type = "HR", p0 = 0.05), "cannot be inferred")
+  # With rare given, p0 has no effect on OR or HR
+  expect_equal(sa_evalue(4, type = "OR", p0 = 0.10, rare = FALSE)$rr_estimate, 2)
+  expect_equal(sa_evalue(4, type = "OR", p0 = 0.30, rare = TRUE)$rr_estimate, 4)
+  expect_no_warning(sa_evalue(4, type = "OR", p0 = 0.30, rare = TRUE))
+})
+
+test_that("sa_evalue() aborts for OR and HR when rarity is unknown", {
+  expect_error(sa_evalue(2.5, type = "OR"), "rare")
+  expect_error(sa_evalue(2.5, type = "HR"), "rare")
+  expect_error(sa_evalue(2.5, type = "OR", rare = NA), "rare")
+})
+
+test_that("sa_evalue() ignores rare for RR, IRR and RD", {
+  expect_true(is.na(sa_evalue(2.5)$rare))
+  expect_equal(sa_evalue(2.5, rare = FALSE)$rr_estimate, 2.5)
+})
+
+test_that("sa_evalue() aborts on an inverted or excluding CI", {
+  expect_error(sa_evalue(2, ci_lo = 3, ci_hi = 1.5), "ci_lo <= estimate <= ci_hi")
+  expect_error(sa_evalue(2, ci_lo = 2.5, ci_hi = 3), "ci_lo <= estimate <= ci_hi")
+  expect_error(sa_evalue(0.1, ci_lo = 0.12, ci_hi = 0.2, type = "RD", p0 = 0.2),
+               "ci_lo <= estimate <= ci_hi")
 })
 
 test_that("sa_evalue() works for RD type with p0", {
@@ -411,13 +489,9 @@ test_that("sa_evalue() errors on non-positive CI bound for RR", {
                regexp = "positive")
 })
 
-test_that("sa_evalue() warns on OR with high prevalence outcome (p0 > 0.15)", {
-  expect_warning(sa_evalue(2.0, type = "OR", p0 = 0.30),
-                 regexp = "rare-outcome")
-})
-
-test_that("sa_evalue() does NOT warn for OR when p0 <= 0.15", {
-  expect_no_warning(sa_evalue(2.0, type = "OR", p0 = 0.10))
+test_that("sa_evalue() does NOT warn for OR with rare given", {
+  expect_no_warning(sa_evalue(2.0, type = "OR", rare = FALSE))
+  expect_no_warning(sa_evalue(2.0, type = "OR", rare = TRUE))
 })
 
 test_that("sa_evalue() supports type = 'IRR' with the same formula as RR", {
