@@ -112,9 +112,9 @@ test_that("validate_logistic computes standard binary performance measures", {
   result <- validate_logistic(model, d, groups = 6L)
   y <- as.integer(d$binary == 1L)
   p <- result$data$predicted
-  ranks <- rank(p, ties.method = "average")
-  auc <- (sum(ranks[y == 1L]) - sum(y) * (sum(y) + 1) / 2) /
-    (sum(y) * sum(y == 0L))
+  # Independent oracle: the Mann-Whitney U statistic over n1 * n0 pairs.
+  u   <- stats::wilcox.test(p[y == 1L], p[y == 0L], exact = FALSE)$statistic
+  auc <- unname(u) / (sum(y) * sum(y == 0L))
 
   expect_equal(result$tables$performance$n, nrow(d))
   expect_equal(result$tables$performance$observed, sum(y))

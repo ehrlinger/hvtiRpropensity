@@ -5,7 +5,7 @@
 ###############################################################################
 
 # ---------------------------------------------------------------------------
-# bs_continuous — single dataset
+# bs_continuous: single dataset
 # ---------------------------------------------------------------------------
 
 test_that("bs_continuous() returns correct class and slots", {
@@ -76,7 +76,7 @@ test_that("bs_continuous() errors on bad n_strata", {
 })
 
 # ---------------------------------------------------------------------------
-# bs_continuous — stacked MI data
+# bs_continuous: stacked MI data
 # ---------------------------------------------------------------------------
 
 test_that("bs_continuous() works with stacked MI data", {
@@ -101,7 +101,7 @@ test_that("bs_continuous() works with stacked MI data", {
 })
 
 # ---------------------------------------------------------------------------
-# bs_continuous — print
+# bs_continuous: print
 # ---------------------------------------------------------------------------
 
 test_that("print.bs_continuous() produces output and returns invisibly", {
@@ -112,7 +112,7 @@ test_that("print.bs_continuous() produces output and returns invisibly", {
 })
 
 # ---------------------------------------------------------------------------
-# bs_count — single dataset (Poisson, no MASS required)
+# bs_count: single dataset (Poisson, no MASS required)
 # ---------------------------------------------------------------------------
 
 test_that("bs_count() with dist='poisson' returns correct class", {
@@ -181,7 +181,7 @@ test_that("bs_count() strata_counts sums to n", {
 })
 
 # ---------------------------------------------------------------------------
-# bs_count — negbin (requires MASS)
+# bs_count: negbin (requires MASS)
 # ---------------------------------------------------------------------------
 
 test_that("bs_count() with dist='negbin' returns correct method string", {
@@ -203,7 +203,7 @@ test_that("bs_count() with dist='negbin' returns correct method string", {
 })
 
 # ---------------------------------------------------------------------------
-# bs_count — stacked MI data
+# bs_count: stacked MI data
 # ---------------------------------------------------------------------------
 
 test_that("bs_count() works with stacked MI data", {
@@ -249,7 +249,7 @@ test_that("bs_count() rejects an unknown distribution", {
 })
 
 # ---------------------------------------------------------------------------
-# bs_count — print
+# bs_count: print
 # ---------------------------------------------------------------------------
 
 test_that("print.bs_count() produces output and returns invisibly", {
