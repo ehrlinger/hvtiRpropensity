@@ -80,7 +80,9 @@ the <code>%grp</code> macro for binary stratum indicators).</p>
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A formula with the continuous outcome / exposure
 on the LHS, e.g.
-<code>hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb</code>.</p></dd>
+<code>hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb</code>. A <code>.</code> on the
+right-hand side expands to the data's other columns, excluding the
+response, <code>id_col</code> and <code>imputation_col</code>.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -139,11 +141,13 @@ through <code>stra_&lt;n_strata&gt;</code> appended.</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>formula</code>, <code>outcome_col</code>, <code>id_col</code>,
-<code>imputation_col</code>, <code>score_col</code>, <code>n_strata</code>, <code>strata_col</code>, <code>method</code>,
+<code>imputation_col</code>, <code>score_col</code>, <code>n_strata</code>, <code>strata_col</code>,
+<code>bundle_version</code>, <code>model_family</code>, <code>package_versions</code>, <code>method</code>,
 <code>n_imputations</code>, <code>n_total</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>strata_counts</code>.</p></dd>
+<dd><p>Named list: <code>strata_counts</code>, <code>estimates</code> (Rubin-pooled
+coefficients), <code>covariance</code>, <code>by_imputation</code> and <code>fit_status</code>.</p></dd>
 
 
 </dl></div>
@@ -153,10 +157,13 @@ through <code>stra_&lt;n_strata&gt;</code> appended.</p></dd>
 (e.g. nadir haematocrit) given the full covariate set.  Patients in the
 same stratum have similar expected exposure values, making within-stratum
 comparisons less confounded.</p>
+<p>A formula with an aliased term, such as a covariate that duplicates another,
+is an error naming the imputation, rather than a score from a rank-deficient
+fit.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="bs_count.html">bs_count()</a></code>, <code><a href="ps_logistic.html">ps_logistic()</a></code>, <code><a href="sample_ps_data.html">sample_ps_data()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="bs_count.html">bs_count()</a></code>, <code><a href="fit_linear.html">fit_linear()</a></code>, <code><a href="ps_logistic.html">ps_logistic()</a></code>, <code><a href="sample_ps_data.html">sample_ps_data()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -175,7 +182,7 @@ comparisons less confounded.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Score col   : bs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Strata      : 10 clusters (cluster)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method      : balancing-linear</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : strata_counts </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1  2  3  4  5  6  7  8  9 10 </span>

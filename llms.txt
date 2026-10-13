@@ -222,6 +222,8 @@ Logistic outcome-model bundles and validation without refitting.
 
 - [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
   : Fit a general logistic model bundle
+- [`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md)
+  : Fit an ordinary least-squares model bundle
 - [`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)
   : Validate a saved binary logistic model
 

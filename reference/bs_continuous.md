@@ -29,7 +29,9 @@ bs_continuous(
 - formula:
 
   A formula with the continuous outcome / exposure on the LHS, e.g.
-  `hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb`.
+  `hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb`. A `.` on the
+  right-hand side expands to the data's other columns, excluding the
+  response, `id_col` and `imputation_col`.
 
 - data:
 
@@ -89,12 +91,14 @@ An object of class `c("bs_continuous", "ps_data")` with:
 - `$meta`:
 
   Named list: `formula`, `outcome_col`, `id_col`, `imputation_col`,
-  `score_col`, `n_strata`, `strata_col`, `method`, `n_imputations`,
+  `score_col`, `n_strata`, `strata_col`, `bundle_version`,
+  `model_family`, `package_versions`, `method`, `n_imputations`,
   `n_total`.
 
 - `$tables`:
 
-  Named list: `strata_counts`.
+  Named list: `strata_counts`, `estimates` (Rubin-pooled coefficients),
+  `covariance`, `by_imputation` and `fit_status`.
 
 ## Details
 
@@ -103,9 +107,14 @@ The balancing score is the expected value of the continuous exposure
 same stratum have similar expected exposure values, making
 within-stratum comparisons less confounded.
 
+A formula with an aliased term, such as a covariate that duplicates
+another, is an error naming the imputation, rather than a score from a
+rank-deficient fit.
+
 ## See also
 
 [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md),
+[`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md),
 [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
 [`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md)
 
@@ -126,7 +135,7 @@ print(obj)
 #>   Score col   : bs
 #>   Strata      : 10 clusters (cluster)
 #>   Method      : balancing-linear
-#>   Tables      : strata_counts 
+#>   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status 
 table(obj$data$cluster)
 #> 
 #>  1  2  3  4  5  6  7  8  9 10 

@@ -16,7 +16,7 @@ Compute normalized inference for a model bundle
 
 - family:
 
-  One of `"binary"`, `"ordinal"`, `"nominal"`, or `"count"`.
+  One of `"binary"`, `"ordinal"`, `"nominal"`, `"count"`, or `"linear"`.
 
 - conf_level:
 

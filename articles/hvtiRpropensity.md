@@ -427,7 +427,7 @@ print(obj_bs)
 #>   Score col   : bs
 #>   Strata      : 10 clusters (cluster)
 #>   Method      : balancing-linear
-#>   Tables      : strata_counts
+#>   Tables      : strata_counts, estimates, covariance, by_imputation, fit_status
 
 # Balancing score and decile-based strata
 head(obj_bs$data[, c("id", "ef", "bs", "quintile", "decile", "cluster")])

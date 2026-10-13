@@ -14,6 +14,7 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-assign_bs_strata.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-assign_ps_strata.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-binary_group_labels.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_aliased.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_binary.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_cols.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_conf_level.html</loc></url>
@@ -21,8 +22,10 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_inference_input.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_model_predictions.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_outcome_levels.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_outcome_response.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_probability.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-effective_n.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-expand_dot_formula.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-fit_imputations.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-inference_table.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-model_components.html</loc></url>
@@ -37,6 +40,7 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-smd_table_levels.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-temporary_prediction_prefix.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-treatment_indicator.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/hvtiRpropensity-package.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/index.html</loc></url>
