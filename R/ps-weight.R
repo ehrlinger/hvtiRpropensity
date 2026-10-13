@@ -42,8 +42,10 @@
 #'   outside the (`trim`, `1 - trim`) quantile range are winsorised.
 #'   Default `NULL` (no trimming).
 #' @param covariates     Character vector of covariate columns for SMD
-#'   diagnostics.  If `NULL` (default), all numeric columns other than
-#'   `treatment_col` and `score_col` are used.
+#'   diagnostics, used as given.  If `NULL` (default), every numeric column
+#'   that varies is used, except `treatment_col`, `score_col`, `weight_col`,
+#'   `id_col` and the columns this package appends (`prob_t`, `logit_t`,
+#'   `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile` and the like).
 #' @param weight_col     Name of the output weight column appended to `$data`.
 #'   Default `"iptw"`.  If the column already exists it is overwritten.
 #'
@@ -51,6 +53,8 @@
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
 #'   value, for example `"transcatheter"`, to use a column holding any two
 #'   values.
+#' @param id_col The patient identifier column, left out of the default
+#'   covariates. Default `"id"`; it need not exist in `data`.
 #' @return An object of class `c("ps_weight", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame with `weight_col` appended.}
@@ -89,7 +93,8 @@ ps_weight <- function(data,
                       trim          = NULL,
                       covariates    = NULL,
                       weight_col    = "iptw",
-                      treated_level = NULL) {
+                      treated_level = NULL,
+                      id_col        = "id") {
 
   # ---- Input validation ---------------------------------------------------
   estimand <- match.arg(estimand)
@@ -145,10 +150,7 @@ ps_weight <- function(data,
 
   # ---- SMD diagnostics ---------------------------------------------------
   if (is.null(covariates)) {
-    covariates <- setdiff(
-      names(data)[vapply(data, is.numeric, logical(1L))],
-      c(treatment_col, score_col, weight_col)
-    )
+    covariates <- .default_covariates(data, c(treatment_col, score_col, weight_col, id_col))
   }
 
   smd_unweighted <- .smd_table(data, treatment_col, covariates)

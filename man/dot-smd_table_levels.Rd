@@ -22,8 +22,8 @@
 
 \item{scheme}{Any of \code{"reference"}, \code{"adjacent"}, \code{"all"}.}
 
-\item{covariates}{Covariate columns. \code{NULL} uses every numeric column other
-than those in \code{reserved}.}
+\item{covariates}{Covariate columns. \code{NULL} uses \code{.default_covariates()},
+excluding \code{treatment} and \code{reserved}.}
 
 \item{reserved}{Columns never treated as covariates.}
 }

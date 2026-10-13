@@ -160,3 +160,30 @@ test_that("group tables name groups by their treatment value", {
   logical_dta$tavr <- logical_dta$tavr == 1
   expect_identical(ps_weight(logical_dta)$tables$group_counts$group, c("FALSE", "TRUE"))
 })
+
+test_that("default balance covariates leave out identifiers and package outputs", {
+  d <- sample_ps_data(300, seed = 1)
+  obj <- ps_weight(d)
+  for (tbl in obj$tables[c("smd_unweighted", "smd_weighted")]) {
+    expect_false(any(c("id", "match", "tavr", "prob_t", "iptw") %in% tbl$variable))
+    expect_true(all(c("age", "female", "ef", "diabetes", "hypertension") %in% tbl$variable))
+  }
+
+  fit <- ps_logistic(tavr ~ age + female + ef + diabetes + hypertension,
+                     d[setdiff(names(d), c("prob_t", "match"))])
+  vars <- ps_weight(fit$data)$tables$smd_weighted$variable
+  expect_false(any(c("id", "logit_t", "mt_wt", "quintile", "decile", "prob_t") %in% vars))
+
+  d$site <- 7L
+  expect_false("site" %in% ps_weight(d)$tables$smd_weighted$variable)
+
+  d$patient <- d$id
+  d$id <- NULL
+  expect_false("patient" %in% ps_weight(d, id_col = "patient")$tables$smd_weighted$variable)
+})
+
+test_that("explicit covariates are used as given", {
+  d <- sample_ps_data(300, seed = 1)
+  obj <- ps_weight(d, covariates = c("id", "age"))
+  expect_identical(obj$tables$smd_weighted$variable, c("id", "age"))
+})

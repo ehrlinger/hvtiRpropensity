@@ -146,9 +146,10 @@
 #' @param weight_col     Output column name for the Li-Greene matching
 #'   weight (ATM). Default `"mt_wt"`.
 #' @param covariates     Character vector of covariate column names for SMD
-#'   balance diagnostics.  If `NULL` (default), all numeric columns other
-#'   than `treatment_col`, `score_col`, `logit_col`, `weight_col`,
-#'   `id_col`, `"quintile"`, and `"decile"` are used.
+#'   balance diagnostics, used as given.  If `NULL` (default), every numeric
+#'   column that varies is used, except `treatment_col`, `score_col`,
+#'   `logit_col`, `weight_col`, `id_col` and the columns this package appends
+#'   (`quintile`, `decile`, `iptw`, `match`, `pair_id` and the like).
 #' @param treatment_levels Complete binary treatment levels. `NULL` takes them
 #'   from the data: the two values present when `treated_level` is given,
 #'   otherwise 0/1 or `FALSE`/`TRUE`.
@@ -301,10 +302,7 @@ ps_logistic <- function(formula,
   reserved <- c(treatment_col, score_col, logit_col, weight_col,
                 id_col, "quintile", "decile")
   if (is.null(covariates)) {
-    covariates <- setdiff(
-      names(base_data)[vapply(base_data, is.numeric, logical(1L))],
-      reserved
-    )
+    covariates <- .default_covariates(base_data, reserved)
   }
   diagnostic_data <- base_data
   diagnostic_data[[treatment_col]] <- trt
