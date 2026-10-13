@@ -236,18 +236,21 @@ test_that("sa_overlap() and sa_trim_sweep() back-transform a logit-scale ps_matc
   expect_equal(sa_trim_sweep(mp$logit), sa_trim_sweep(mp$prob))
 })
 
-test_that("ps_rmst() weights from a logit-scale ps_match object equal those from prob_t", {
+test_that("ps_rmst() gives the same matched-pair analysis from a logit-scale ps_match object as from prob_t", {
   skip_if_not_installed("survival")
   mp <- logit_pair()
   for (k in names(mp)) {
     withr::with_seed(7, mp[[k]]$data$t <- stats::rexp(nrow(mp[[k]]$data), 0.2))
     mp[[k]]$data$e <- as.integer(mp[[k]]$data$t < 5)
   }
-  w <- c("ato", "att", "ate")
-  r_logit <- ps_rmst(mp$logit, "t", "e", tau = 4, weights = w, n_boot = 2, seed = 1)
-  r_prob  <- ps_rmst(mp$prob, "t", "e", tau = 4, weights = w, n_boot = 2, seed = 1)
-  for (col in paste0("w_", w)) expect_equal(r_logit$data[[col]], r_prob$data[[col]])
-  expect_lt(max(r_logit$data$w_ate), 1 / 1e-3)
+  r_logit <- ps_rmst(mp$logit, "t", "e", tau = 4, n_boot = 5, seed = 1)
+  r_prob  <- ps_rmst(mp$prob, "t", "e", tau = 4, n_boot = 5, seed = 1)
+  expect_identical(r_logit$meta$scale, "logit")
+  expect_identical(r_logit$meta$resampling, "pair")
+  expect_equal(r_logit$tables, r_prob$tables)
+  # Score weights on a matched set are refused on either scale; ps_support() output, which is not a match,
+  # carries the score-weight comparison in the next test.
+  expect_error(ps_rmst(mp$logit, "t", "e", tau = 4, weights = "ate", n_boot = 2), "unweighted")
 })
 
 test_that("ps_support() and ps_rmst() carry the score scale forward when chained", {
@@ -268,6 +271,8 @@ test_that("ps_support() and ps_rmst() carry the score scale forward when chained
   expect_identical(r_logit$meta$scale, "logit")
   expect_equal(r_logit$tables, r_prob$tables)
   expect_equal(r_logit$data$w_ate, r_prob$data$w_ate)
+  expect_equal(r_logit$data$w_ato, r_prob$data$w_ato)
+  expect_lt(max(r_logit$data$w_ate), 1 / 1e-3)
   expect_equal(ps_support(r_logit)$tables, ps_support(r_prob)$tables)
   expect_equal(sa_overlap(s_logit), sa_overlap(s_prob))
 })

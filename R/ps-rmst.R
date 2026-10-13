@@ -5,21 +5,29 @@
 #' Kaplan-Meier curves (weights from the propensity score) integrated to
 #' `tau`, differenced, with a stratified bootstrap interval.
 #'
-#' @param x A `ps_data` object with a score and treatment column. The score of
-#'   a [ps_match()] object built with `scale = "logit"` is a logit, and is
-#'   back-transformed with [stats::plogis()] before the weights are built.
+#' @param x A `ps_data` object with a score and treatment column. A
+#'   [ps_match()] object is analysed on its matched pairs only, and a
+#'   [ps_weight()] object contributes its stored weight column; see Details.
+#'   A score on the logit scale (`scale = "logit"`, as a [ps_match()] object
+#'   can carry) is back-transformed with [stats::plogis()] before any weights
+#'   are built.
 #' @param time_col,event_col Follow-up time and event indicator (0/1) columns
 #'   of `x$data`.
-#' @param tau Horizon, in the units of `time_col`.
+#' @param tau Horizon, in the units of `time_col`. It must not exceed the
+#'   largest observed time among the rows that enter either arm's curve, for
+#'   any analysed subset and weighting.
 #' @param weights Weighting schemes to run: any of `"unweighted"`, `"ato"`
-#'   (overlap), `"att"`, `"ate"`.
+#'   (overlap), `"att"`, `"ate"`. For a [ps_match()] input the default is
+#'   `"unweighted"` alone, and no other scheme is accepted.
 #' @param subsets Optional named list of logical vectors (one value per row);
 #'   each is run as a restricted analysis (for example a common-support
 #'   subset). The full data is always included as `"all"`.
-#' @param n_boot Bootstrap draws. Resampling is stratified by arm.
+#' @param n_boot Bootstrap draws. Resampling is by matched pair for a
+#'   [ps_match()] input and by row, stratified by arm, otherwise.
 #' @param refit If `FALSE` (default) the score is held fixed in the bootstrap,
-#'   which understates uncertainty. If `TRUE` the score model is refit on each
-#'   draw (supported for `ps_logistic` and `ps_forest` inputs).
+#'   so the intervals ignore the uncertainty in estimating the propensity
+#'   score and understate the total uncertainty. If `TRUE` the score model is
+#'   refit on each draw (supported for `ps_logistic` and `ps_forest` inputs).
 #' @param seed Bootstrap seed: `NULL` (default) or one whole number. With a seed, the
 #'   random number stream is set to `abs(seed)` immediately before the draws,
 #'   the result is reproducible whatever ran earlier in the session, the
@@ -30,16 +38,57 @@
 #'   column. Default `365.2425` (time in years).
 #' @param clip Scores are clipped to `[clip, 1 - clip]` before weighting.
 #'
+#' @details
+#' **Weights.** `"unweighted"` gives every row weight 1. `"ato"` weights
+#' treated rows by `1 - p` and controls by `p`, targeting the overlap
+#' population; `"att"` weights controls by `p / (1 - p)`, targeting the
+#' treated; `"ate"` weights by `1 / p` and `1 / (1 - p)`, targeting the whole
+#' cohort. Here `p` is the score clipped to `[clip, 1 - clip]`.
+#'
+#' **Matched input.** For a [ps_match()] object only the rows with
+#' `match_col == 1` are analysed, so `n` is twice the number of matched pairs,
+#' and the estimand is the one the match targets. Weighting a matched set by
+#' the score adjusts twice for the same confounders, so only `"unweighted"`
+#' is accepted. The bootstrap resamples whole pairs: it draws `pair_id`
+#' values with replacement, as many as there are pairs, and takes both members
+#' of each drawn pair, so a pair drawn twice enters twice. This keeps the
+#' within-pair correlation that a row bootstrap ignores. A subset that splits
+#' a pair keeps the member it contains, which is then resampled alone.
+#'
+#' **Weighted input.** For a [ps_weight()] object, the scheme that matches its
+#' estimand (`"ate"` for `estimand = "ATE"`, `"att"` for `"ATT"`) uses the
+#' stored column `x$meta$weight_col` instead of recomputing weights from the
+#' score, so any trimming is kept. Stabilisation multiplies each arm by a
+#' constant, which leaves each arm's Kaplan-Meier curve and effective sample
+#' size unchanged. The other schemes are computed from the score, and an
+#' `estimand = "ATC"` object has no matching scheme. In the bootstrap each row
+#' keeps its stored weight.
+#'
+#' **Horizon.** The weighted Kaplan-Meier curve is not defined past the last
+#' observed time in an arm, counting only the rows that enter the curve (time
+#' and event present, weight above zero), so a `tau` beyond it stops with an error rather
+#' than carrying the last survival value forward. A bootstrap draw can still
+#' end short of `tau`, and its curve is then carried flat to `tau`.
+#'
+#' **Failures.** A bootstrap draw that errors, or that leaves an arm empty,
+#' gives `NA`; the interval is taken over the other draws and the number of
+#' `NA` draws is reported as `n_failed`.
+#'
 #' @return A `ps_rmst` / `ps_data` object. `$tables$estimates` has one row
 #'   per subset-and-weighting estimator: `estimator`, `subset`, `weighting`,
-#'   `n`, `ess_treated`, `ess_control`, `rmst_treated`, `rmst_control`, `diff`
+#'   `n` (rows analysed; for a matched input, twice the matched pairs),
+#'   `ess_treated`, `ess_control`, `rmst_treated`, `rmst_control`, `diff`
 #'   (treated minus control, positive favours treated), `diff_days`,
-#'   `lo_days`, `hi_days` (2.5 and 97.5 percent bootstrap) and `n_failed`.
+#'   `lo_days`, `hi_days` (2.5 and 97.5 percent bootstrap) and `n_failed`
+#'   (bootstrap draws that gave no estimate).
 #'   `$tables$curves` has the weighted Kaplan-Meier steps (`estimator`, `arm`,
 #'   `time`, `surv`) for plotting; `$data` is `x$data` plus one weight column
 #'   `w_<weighting>` per scheme. `$meta$seed` is the seed used (`NA` when none
 #'   was given). `$meta$scale` is the scale of `score_col`, carried from `x`
-#'   (`"probability"` when `x` records none).
+#'   (`"probability"` when `x` records none). `$meta$resampling` is `"pair"`
+#'   for a matched input and `"row"` (stratified by arm) otherwise, and
+#'   `$meta$stored_weighting` names the scheme that used a [ps_weight()]
+#'   object's stored weights (`NA` when none did).
 #'
 #' @examples
 #' if (requireNamespace("survival", quietly = TRUE)) {
@@ -59,7 +108,14 @@ ps_rmst <- function(x, time_col, event_col, tau,
                     time_unit_days = 365.2425, clip = 1e-3) {
   rlang::check_installed("survival", reason = "to fit Kaplan-Meier curves.")
   if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
+  matched <- inherits(x, "ps_match")
+  if (matched && missing(weights)) weights <- "unweighted"
   weights <- match.arg(weights, c("unweighted", "ato", "att", "ate"), several.ok = TRUE)
+  if (matched && any(weights != "unweighted")) {
+    rlang::abort(paste0("A ps_match object is analysed unweighted on its matched pairs; ",
+                        "weighting the matched set by the score adjusts twice. Use `weights = \"unweighted\"`."),
+                 call. = FALSE)
+  }
   .check_cols(x$data, c(time_col, event_col))
   seed <- .seed_value(seed)
   if (!is.numeric(tau) || length(tau) != 1L || !is.finite(tau) || tau <= 0) {
@@ -79,6 +135,16 @@ ps_rmst <- function(x, time_col, event_col, tau,
   event <- as.numeric(d[[event_col]])
   score <- .probability_score(x)
 
+  stored_type <- NA_character_
+  stored_w <- NULL
+  if (inherits(x, "ps_weight")) {
+    stored_w <- d[[x$meta$weight_col]]  # read before any w_<type> column can overwrite it
+    stored_type <- unname(c(ATE = "ate", ATT = "att")[x$meta$estimand])
+    if (is.na(stored_type) || !stored_type %in% weights) stored_type <- NA_character_
+  }
+  in_match <- if (matched) d[[x$meta$match_col]] %in% 1L else rep(TRUE, nrow(d))
+  pair <- if (matched) d[[x$meta$pair_id_col]] else NULL
+
   wts <- function(sc, a, type) {
     p <- pmin(pmax(sc, clip), 1 - clip)
     switch(type,
@@ -88,14 +154,34 @@ ps_rmst <- function(x, time_col, event_col, tau,
       ate = ifelse(a, 1 / p, 1 / (1 - p))
     )
   }
-  for (type in weights) d[[paste0("w_", type)]] <- wts(score, arm, type)
+  # Weights for rows `idx`: the stored ps_weight column for its own scheme, else from the score.
+  wts_rows <- function(idx, type, sc = score) {
+    if (identical(type, stored_type)) stored_w[idx] else wts(sc[idx], arm[idx], type)
+  }
+  for (type in weights) d[[paste0("w_", type)]] <- wts_rows(seq_len(nrow(d)), type)
 
   subsets <- c(list(all = rep(TRUE, nrow(d))), lapply(subsets, function(s) as.logical(s) & !is.na(s)))
+  subsets <- lapply(subsets, function(s) s & in_match)
   grid <- expand.grid(subset = names(subsets), weighting = weights, stringsAsFactors = FALSE)
+  # Horizon guard over the rows that enter each weighted curve, as .weighted_km() keeps them.
+  for (i in seq_len(nrow(grid))) {
+    idx <- which(subsets[[grid$subset[i]]])
+    w <- wts_rows(idx, grid$weighting[i])
+    used <- !is.na(time[idx]) & !is.na(event[idx]) & !is.na(w) & w > 0
+    for (g in c(TRUE, FALSE)) {
+      tg <- time[idx][used & arm[idx] == g]
+      if (length(tg) && tau > max(tg)) {
+        rlang::abort(sprintf(paste0("`tau` = %g is past the last observed time (%g) in the %s arm of ",
+                                    "estimator \"%s/%s\". Choose a `tau` within follow-up."),
+                             tau, max(tg), if (g) "treated" else "control", grid$subset[i], grid$weighting[i]),
+                     call. = FALSE)
+      }
+    }
+  }
 
   est_one <- function(idx, type, sc = score) {
     a <- arm[idx]
-    w <- wts(sc[idx], a, type)
+    w <- wts_rows(idx, type, sc)
     ra <- .weighted_km(time[idx][a], event[idx][a], w[a], tau)
     rb <- .weighted_km(time[idx][!a], event[idx][!a], w[!a], tau)
     list(ra = ra, rb = rb)
@@ -116,6 +202,16 @@ ps_rmst <- function(x, time_col, event_col, tau,
   }
 
   if (!is.null(seed)) withr::local_seed(seed)
+  # One bootstrap draw of row indices from `idx`: whole pairs for a matched input, else rows within each arm.
+  resample <- function(idx) {
+    draw <- function(v) v[sample.int(length(v), length(v), replace = TRUE)]
+    if (matched) {
+      members <- split(idx, pair[idx])
+      unlist(members[draw(names(members))], use.names = FALSE)
+    } else {
+      c(draw(idx[arm[idx]]), draw(idx[!arm[idx]]))
+    }
+  }
   rows <- vector("list", nrow(grid))
   curves <- list()
   for (i in seq_len(nrow(grid))) {
@@ -124,15 +220,13 @@ ps_rmst <- function(x, time_col, event_col, tau,
     label <- paste(grid$subset[i], type, sep = "/")
     pt <- est_one(idx, type)
     a <- arm[idx]
-    w <- wts(score[idx], a, type)
+    w <- wts_rows(idx, type)
     ess <- function(g) if (any(g)) sum(w[g])^2 / sum(w[g]^2) else 0
     diff_pt <- (pt$ra$rmst - pt$rb$rmst)
 
-    idx_a <- idx[arm[idx]]
-    idx_b <- idx[!arm[idx]]
     draws <- rep(NA_real_, n_boot)
     for (b in seq_len(n_boot)) {
-      bi <- c(sample(idx_a, length(idx_a), replace = TRUE), sample(idx_b, length(idx_b), replace = TRUE))
+      bi <- resample(idx)
       draws[b] <- tryCatch({
         sc <- if (refit) {
           tmp <- score
@@ -168,7 +262,8 @@ ps_rmst <- function(x, time_col, event_col, tau,
     meta = c(x$meta[c("treatment_col", "score_col", "treated_level")],
              list(scale = rlang::`%||%`(x$meta$scale, "probability"),
                   time_col = time_col, event_col = event_col, tau = tau, n_boot = n_boot, refit = refit,
-                  seed = if (is.null(seed)) NA_integer_ else seed, time_unit_days = time_unit_days, n_total = nrow(d))),
+                  seed = if (is.null(seed)) NA_integer_ else seed, time_unit_days = time_unit_days, n_total = nrow(d),
+                  resampling = if (matched) "pair" else "row", stored_weighting = stored_type)),
     tables = list(estimates = do.call(rbind, rows), curves = do.call(rbind, curves)),
     subclass = "ps_rmst"
   )

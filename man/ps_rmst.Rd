@@ -19,27 +19,35 @@ ps_rmst(
 )
 }
 \arguments{
-\item{x}{A \code{ps_data} object with a score and treatment column. The score of
-a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a logit, and is
-back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before the weights are built.}
+\item{x}{A \code{ps_data} object with a score and treatment column. A
+\code{\link[=ps_match]{ps_match()}} object is analysed on its matched pairs only, and a
+\code{\link[=ps_weight]{ps_weight()}} object contributes its stored weight column; see Details.
+A score on the logit scale (\code{scale = "logit"}, as a \code{\link[=ps_match]{ps_match()}} object
+can carry) is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before any weights
+are built.}
 
 \item{time_col, event_col}{Follow-up time and event indicator (0/1) columns
 of \code{x$data}.}
 
-\item{tau}{Horizon, in the units of \code{time_col}.}
+\item{tau}{Horizon, in the units of \code{time_col}. It must not exceed the
+largest observed time among the rows that enter either arm's curve, for
+any analysed subset and weighting.}
 
 \item{weights}{Weighting schemes to run: any of \code{"unweighted"}, \code{"ato"}
-(overlap), \code{"att"}, \code{"ate"}.}
+(overlap), \code{"att"}, \code{"ate"}. For a \code{\link[=ps_match]{ps_match()}} input the default is
+\code{"unweighted"} alone, and no other scheme is accepted.}
 
 \item{subsets}{Optional named list of logical vectors (one value per row);
 each is run as a restricted analysis (for example a common-support
 subset). The full data is always included as \code{"all"}.}
 
-\item{n_boot}{Bootstrap draws. Resampling is stratified by arm.}
+\item{n_boot}{Bootstrap draws. Resampling is by matched pair for a
+\code{\link[=ps_match]{ps_match()}} input and by row, stratified by arm, otherwise.}
 
 \item{refit}{If \code{FALSE} (default) the score is held fixed in the bootstrap,
-which understates uncertainty. If \code{TRUE} the score model is refit on each
-draw (supported for \code{ps_logistic} and \code{ps_forest} inputs).}
+so the intervals ignore the uncertainty in estimating the propensity
+score and understate the total uncertainty. If \code{TRUE} the score model is
+refit on each draw (supported for \code{ps_logistic} and \code{ps_forest} inputs).}
 
 \item{seed}{Bootstrap seed: \code{NULL} (default) or one whole number. With a seed, the
 random number stream is set to \code{abs(seed)} immediately before the draws,
@@ -56,20 +64,61 @@ column. Default \code{365.2425} (time in years).}
 \value{
 A \code{ps_rmst} / \code{ps_data} object. \verb{$tables$estimates} has one row
 per subset-and-weighting estimator: \code{estimator}, \code{subset}, \code{weighting},
-\code{n}, \code{ess_treated}, \code{ess_control}, \code{rmst_treated}, \code{rmst_control}, \code{diff}
+\code{n} (rows analysed; for a matched input, twice the matched pairs),
+\code{ess_treated}, \code{ess_control}, \code{rmst_treated}, \code{rmst_control}, \code{diff}
 (treated minus control, positive favours treated), \code{diff_days},
-\code{lo_days}, \code{hi_days} (2.5 and 97.5 percent bootstrap) and \code{n_failed}.
+\code{lo_days}, \code{hi_days} (2.5 and 97.5 percent bootstrap) and \code{n_failed}
+(bootstrap draws that gave no estimate).
 \verb{$tables$curves} has the weighted Kaplan-Meier steps (\code{estimator}, \code{arm},
 \code{time}, \code{surv}) for plotting; \verb{$data} is \code{x$data} plus one weight column
 \verb{w_<weighting>} per scheme. \verb{$meta$seed} is the seed used (\code{NA} when none
 was given). \verb{$meta$scale} is the scale of \code{score_col}, carried from \code{x}
-(\code{"probability"} when \code{x} records none).
+(\code{"probability"} when \code{x} records none). \verb{$meta$resampling} is \code{"pair"}
+for a matched input and \code{"row"} (stratified by arm) otherwise, and
+\verb{$meta$stored_weighting} names the scheme that used a \code{\link[=ps_weight]{ps_weight()}}
+object's stored weights (\code{NA} when none did).
 }
 \description{
 Design-based comparison of restricted mean survival time (RMST) between
 treated and control patients using only the observed follow-up: weighted
 Kaplan-Meier curves (weights from the propensity score) integrated to
 \code{tau}, differenced, with a stratified bootstrap interval.
+}
+\details{
+\strong{Weights.} \code{"unweighted"} gives every row weight 1. \code{"ato"} weights
+treated rows by \code{1 - p} and controls by \code{p}, targeting the overlap
+population; \code{"att"} weights controls by \code{p / (1 - p)}, targeting the
+treated; \code{"ate"} weights by \code{1 / p} and \code{1 / (1 - p)}, targeting the whole
+cohort. Here \code{p} is the score clipped to \verb{[clip, 1 - clip]}.
+
+\strong{Matched input.} For a \code{\link[=ps_match]{ps_match()}} object only the rows with
+\code{match_col == 1} are analysed, so \code{n} is twice the number of matched pairs,
+and the estimand is the one the match targets. Weighting a matched set by
+the score adjusts twice for the same confounders, so only \code{"unweighted"}
+is accepted. The bootstrap resamples whole pairs: it draws \code{pair_id}
+values with replacement, as many as there are pairs, and takes both members
+of each drawn pair, so a pair drawn twice enters twice. This keeps the
+within-pair correlation that a row bootstrap ignores. A subset that splits
+a pair keeps the member it contains, which is then resampled alone.
+
+\strong{Weighted input.} For a \code{\link[=ps_weight]{ps_weight()}} object, the scheme that matches its
+estimand (\code{"ate"} for \code{estimand = "ATE"}, \code{"att"} for \code{"ATT"}) uses the
+stored column \code{x$meta$weight_col} instead of recomputing weights from the
+score, so any trimming is kept. Stabilisation multiplies each arm by a
+constant, which leaves each arm's Kaplan-Meier curve and effective sample
+size unchanged. The other schemes are computed from the score, and an
+\code{estimand = "ATC"} object has no matching scheme. In the bootstrap each row
+keeps its stored weight.
+
+\strong{Horizon.} The weighted Kaplan-Meier curve is not defined past the last
+observed time in an arm, counting only the rows that enter the curve (time
+and event present, weight above zero), so a \code{tau} beyond it stops with an error rather
+than carrying the last survival value forward. A bootstrap draw can still
+end short of \code{tau}, and its curve is then carried flat to \code{tau}.
+
+\strong{Failures.} A bootstrap draw that errors, or that leaves an arm empty,
+gives \code{NA}; the interval is taken over the other draws and the number of
+\code{NA} draws is reported as \code{n_failed}.
 }
 \examples{
 if (requireNamespace("survival", quietly = TRUE)) {
