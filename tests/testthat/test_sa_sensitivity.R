@@ -154,18 +154,15 @@ test_that("sa_evalue() converts the CI bound on the same scale", {
   expect_equal(res$evalue_ci, .ev_ref(rr_hi), tolerance = 1e-8)
 })
 
-test_that("sa_evalue() derives rare from p0", {
-  expect_true(sa_evalue(2.5, type = "OR", p0 = 0.05)$rare)
-  expect_equal(sa_evalue(2.5, type = "OR", p0 = 0.05)$evalue_estimate, 4.4365, tolerance = 1e-4)
-  expect_true(sa_evalue(2.5, type = "OR", p0 = 0.15)$rare)
-  expect_false(sa_evalue(2.5, type = "OR", p0 = 0.30)$rare)
-  expect_equal(sa_evalue(2.5, type = "OR", p0 = 0.30)$rr_estimate, sqrt(2.5), tolerance = 1e-8)
-})
-
-test_that("sa_evalue() warns when rare and p0 disagree, and keeps rare", {
-  expect_warning(res <- sa_evalue(2.5, type = "OR", p0 = 0.30, rare = TRUE), "disagrees")
-  expect_equal(res$rr_estimate, 2.5)
-  expect_no_warning(sa_evalue(2.5, type = "OR", p0 = 0.30, rare = FALSE))
+test_that("sa_evalue() does not infer rare from p0", {
+  # Reviewer case: OR = 4, p0 = 0.10 gives exposed risk ~0.31; an equal-arm
+  # cohort has ~20% prevalence, so p0 alone cannot establish rarity.
+  expect_error(sa_evalue(4, type = "OR", p0 = 0.10), "rare = TRUE")
+  expect_error(sa_evalue(2.5, type = "HR", p0 = 0.05), "cannot be inferred")
+  # With rare given, p0 has no effect on OR or HR
+  expect_equal(sa_evalue(4, type = "OR", p0 = 0.10, rare = FALSE)$rr_estimate, 2)
+  expect_equal(sa_evalue(4, type = "OR", p0 = 0.30, rare = TRUE)$rr_estimate, 4)
+  expect_no_warning(sa_evalue(4, type = "OR", p0 = 0.30, rare = TRUE))
 })
 
 test_that("sa_evalue() aborts for OR and HR when rarity is unknown", {
@@ -492,12 +489,9 @@ test_that("sa_evalue() errors on non-positive CI bound for RR", {
                regexp = "positive")
 })
 
-test_that("sa_evalue() does NOT warn for OR when p0 > 0.15 (common-outcome conversion)", {
-  expect_no_warning(sa_evalue(2.0, type = "OR", p0 = 0.30))
-})
-
-test_that("sa_evalue() does NOT warn for OR when p0 <= 0.15", {
-  expect_no_warning(sa_evalue(2.0, type = "OR", p0 = 0.10))
+test_that("sa_evalue() does NOT warn for OR with rare given", {
+  expect_no_warning(sa_evalue(2.0, type = "OR", rare = FALSE))
+  expect_no_warning(sa_evalue(2.0, type = "OR", rare = TRUE))
 })
 
 test_that("sa_evalue() supports type = 'IRR' with the same formula as RR", {

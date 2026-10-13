@@ -266,9 +266,12 @@ sa_rosenbaum <- function(x,
 #' * **Common outcome**: `RR = sqrt(OR)` for an odds ratio, and
 #'   `RR = (1 - 0.5^sqrt(HR)) / (1 - 0.5^sqrt(1 / HR))` for a hazard ratio.
 #'
-#' There is no default for this choice.  For `type = "OR"` or `"HR"` the
-#' caller states it through `rare`, or supplies `p0`, in which case `rare` is
-#' taken as `p0 <= 0.15`.  The same conversion is applied to the confidence
+#' There is no default for this choice: for `type = "OR"` or `"HR"` the
+#' caller must set `rare`.  Rarity refers to the outcome's prevalence in the
+#' study population (under about 15% at the end of follow-up), and it cannot
+#' be inferred from the baseline risk `p0` alone: with OR = 4 and p0 = 0.10 the
+#' exposed risk is about 0.31, and reversing the exposure coding would flip
+#' any rule based on `p0`.  The same conversion is applied to the confidence
 #' interval bounds.
 #'
 #' For risk differences a baseline outcome probability `p0` must be supplied,
@@ -285,13 +288,12 @@ sa_rosenbaum <- function(x,
 #'   `"RD"`.  `"IRR"` (incidence rate ratio) uses the same formula as `"RR"`;
 #'   it is provided as a distinct value for clarity in count-outcome studies.
 #' @param p0        Baseline outcome probability in the unexposed group.
-#'   Required when `type = "RD"`.  Must be in (0, 1).  For `type = "OR"` or
-#'   `"HR"` it sets `rare` when `rare` is not given.
-#' @param rare      Logical or `NULL`.  For `type = "OR"` or `"HR"`, whether
-#'   the outcome is rare (prevalence at most about 15%).  `TRUE` uses the OR or
-#'   HR as the RR; `FALSE` applies the common-outcome conversion.  When `NULL`
-#'   (default) it is derived from `p0`; if `p0` is also `NULL`, the call
-#'   aborts.  Ignored for other types.
+#'   Required when `type = "RD"`, and used only then.  Must be in (0, 1).
+#' @param rare      `TRUE` or `FALSE`; required when `type = "OR"` or `"HR"`.
+#'   Whether the outcome is rare in the study population (prevalence under
+#'   about 15% at the end of follow-up).  `TRUE` uses the OR or HR as the RR;
+#'   `FALSE` applies the common-outcome conversion.  The default `NULL` aborts
+#'   for OR and HR.  Ignored for other types.
 #'
 #' @return A list with:
 #' \describe{
@@ -324,8 +326,8 @@ sa_rosenbaum <- function(x,
 #' # Odds ratio of 0.6 (protective effect) for a common outcome
 #' sa_evalue(0.6, ci_lo = 0.4, ci_hi = 0.9, type = "OR", rare = FALSE)
 #'
-#' # Hazard ratio of 1.8 with a baseline risk of 5%: rare, used directly
-#' sa_evalue(1.8, ci_lo = 1.2, ci_hi = 2.7, type = "HR", p0 = 0.05)
+#' # Hazard ratio of 1.8 for an outcome under 15% at end of follow-up
+#' sa_evalue(1.8, ci_lo = 1.2, ci_hi = 2.7, type = "HR", rare = TRUE)
 #'
 #' # Risk difference of 0.10 with baseline probability 0.20
 #' sa_evalue(0.10, ci_lo = 0.02, ci_hi = 0.18, type = "RD", p0 = 0.20)
@@ -404,22 +406,13 @@ sa_evalue <- function(estimate,
     rlang::abort("`rare` must be TRUE, FALSE or NULL.", call. = FALSE)
   }
   if (type %in% c("OR", "HR")) {
-    if (is.null(rare) && !is.null(p0)) {
-      rare <- p0 <= 0.15
-    } else if (!is.null(rare) && !is.null(p0) && rare != (p0 <= 0.15)) {
-      rlang::warn(
-        sprintf(
-          "`rare = %s` disagrees with `p0 = %.3f` (rare means p0 <= 0.15); using `rare = %s`.",
-          rare, p0, rare
-        )
-      )
-    }
     if (is.null(rare)) {
       rlang::abort(
         sprintf(
           paste0(
-            "For type = '%s', state whether the outcome is rare (prevalence <= ~0.15): ",
-            "set `rare = TRUE` or `rare = FALSE`, or supply the baseline probability `p0`."
+            "For type = '%s', set `rare = TRUE` or `rare = FALSE`. Rarity refers to the outcome's ",
+            "prevalence in the study population (under about 15%% at the end of follow-up; ",
+            "VanderWeele & Ding 2017). It cannot be inferred from `p0`, which is used only for type = 'RD'."
           ),
           type
         ),

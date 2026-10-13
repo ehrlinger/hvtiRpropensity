@@ -5,7 +5,8 @@
   Earlier versions always took the square root, which understated the E-value
   for a rare outcome (an OR of 2.5 gave 2.54 instead of 4.44).
 * Behaviour change: `sa_evalue()` gains a `rare` argument, and a call with
-  `type = "OR"` or `"HR"` now aborts unless it sets `rare` or supplies `p0`
-  (from which `rare` is taken as `p0 <= 0.15`). The returned list records the
-  choice as `$rare`. The function also aborts unless
-  `ci_lo <= estimate <= ci_hi`.
+  `type = "OR"` or `"HR"` now aborts unless it sets `rare = TRUE` or
+  `rare = FALSE`. Rarity is the outcome's prevalence in the study population
+  (under about 15% at the end of follow-up) and is not inferred from `p0`,
+  which is used only for `type = "RD"`. The returned list records the choice
+  as `$rare`. The function also aborts unless `ci_lo <= estimate <= ci_hi`.
