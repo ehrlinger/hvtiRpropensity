@@ -165,6 +165,18 @@ test_that("caliper_sd is pooled SD units of score_col on the chosen scale", {
   expect_identical(obj_sd$meta$scale, "logit")
 })
 
+test_that("matching on logit_t leaves prob_t and identifiers out of the default balance table", {
+  d <- sample_ps_data(n = 300, seed = 42)
+  d$logit_t <- stats::qlogis(d$prob_t)
+  obj <- ps_match(d, score_col = "logit_t", scale = "logit", caliper_sd = 0.2, seed = 101)
+  for (tbl in obj$tables[c("smd_before", "smd_after")]) {
+    expect_false(any(c("prob_t", "logit_t", "id", "match", "pair_id") %in% tbl$variable))
+  }
+  explicit <- ps_match(d, score_col = "logit_t", scale = "logit", caliper_sd = 0.2, seed = 101,
+                       covariates = c("prob_t", "age"))
+  expect_identical(explicit$tables$smd_before$variable, c("prob_t", "age"))
+})
+
 test_that("scale defaults to probability and still rejects values outside [0, 1]", {
   d <- dta
   d$logit_t <- stats::qlogis(d$prob_t)

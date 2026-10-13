@@ -149,6 +149,35 @@
 # SMD table for a data frame
 # ---------------------------------------------------------------------------
 
+#' Default covariates for a balance table
+#'
+#' Every numeric column except those in `reserved`, the fixed output columns
+#' this package appends (`prob_t`, `logit_t`, `mt_wt`, `iptw`, `match`,
+#' `pair_id`, `quintile`, `decile`, `bs`, `cluster`), and constant columns. A
+#' column is constant when its non-missing values take at most one value. A
+#' function that generates columns under other names, such as the
+#' `prob_<level>` scores of [ps_nominal()], passes those exact names in
+#' `reserved`.
+#'
+#' Columns in `keep`, the predictors a model formula declares, are never
+#' dropped by the fixed output names or the constant rule; only `reserved` can
+#' drop them.
+#'
+#' @param data     A data frame.
+#' @param reserved Columns never used as covariates, such as the treatment,
+#'   score and id columns.
+#' @param keep     Columns protected from the fixed output names and the
+#'   constant rule, typically `all.vars()` of a formula's right-hand side.
+#' @return A character vector of column names.
+#' @keywords internal
+.default_covariates <- function(data, reserved = character(), keep = character()) {
+  outputs <- c("prob_t", "logit_t", "mt_wt", "iptw", "match", "pair_id", "quintile", "decile", "bs", "cluster")
+  cols <- setdiff(names(data)[vapply(data, is.numeric, logical(1L))], reserved)
+  varies <- vapply(cols, function(col) length(unique(stats::na.omit(data[[col]]))) > 1L, logical(1L))
+  cols[cols %in% keep | (varies & !cols %in% outputs)]
+}
+
+
 #' Build a tidy SMD table across covariates, through ps_stddiff()
 #'
 #' Every covariate is treated as Gaussian, so the denominator is
@@ -161,17 +190,19 @@
 #'
 #' @param data       A data frame.
 #' @param treatment  Name of the binary treatment column.
-#' @param covariates Character vector of covariate column names.  If `NULL`,
-#'   all numeric columns other than `treatment` are used.
+#' @param covariates Character vector of covariate column names, used as
+#'   given.  If `NULL`, the default set from `.default_covariates()` is used,
+#'   excluding `treatment`, `weight_col` and `reserved`.
 #' @param weight_col Optional name of a weight column.
+#' @param reserved   Further columns never used as default covariates.
+#' @param keep       Model predictors protected in the default set; see
+#'   `.default_covariates()`.
 #' @return A data frame with columns `variable` and `smd`, rounded to 4 places.
 #' @keywords internal
-.smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL) {
+.smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL, reserved = character(),
+                       keep = character()) {
   if (is.null(covariates)) {
-    covariates <- setdiff(
-      names(data)[vapply(data, is.numeric, logical(1))],
-      c(treatment, weight_col)
-    )
+    covariates <- .default_covariates(data, c(treatment, weight_col, reserved), keep)
   }
   grp <- data[[treatment]]
   smds <- if (length(covariates) == 0L || !all(c(0, 1) %in% grp)) {
@@ -223,17 +254,17 @@
 #' @param treatment Name of the treatment column.
 #' @param levels Treatment levels, reference first.
 #' @param scheme Any of `"reference"`, `"adjacent"`, `"all"`.
-#' @param covariates Covariate columns. `NULL` uses every numeric column other
-#'   than those in `reserved`.
+#' @param covariates Covariate columns. `NULL` uses `.default_covariates()`,
+#'   excluding `treatment` and `reserved`.
 #' @param reserved Columns never treated as covariates.
+#' @param keep Model predictors protected in the default set; see
+#'   `.default_covariates()`.
 #' @return A data frame with columns `variable`, `level`, `versus`, `smd`.
 #' @keywords internal
-.smd_table_levels <- function(data, treatment, levels, scheme, covariates = NULL, reserved = character()) {
+.smd_table_levels <- function(data, treatment, levels, scheme, covariates = NULL, reserved = character(),
+                              keep = character()) {
   if (is.null(covariates)) {
-    covariates <- setdiff(
-      names(data)[vapply(data, is.numeric, logical(1L))],
-      c(treatment, reserved)
-    )
+    covariates <- .default_covariates(data, c(treatment, reserved), keep)
   }
   pairs <- .smd_level_pairs(levels, scheme)
   group <- as.character(data[[treatment]])

@@ -41,8 +41,11 @@
 #'   caliper unless `caliper_sd` is given.  Give at most one of `caliper` and
 #'   `caliper_sd`.
 #' @param covariates     Character vector of covariate columns for SMD
-#'   diagnostics.  If `NULL` (default), all numeric columns other than
-#'   `treatment_col` and `score_col` are used.
+#'   diagnostics, used as given.  If `NULL` (default), every numeric column
+#'   that varies is used, except `treatment_col`, `score_col`, `id_col`,
+#'   `match_col` and the fixed columns this package appends (`prob_t`,
+#'   `logit_t`, `mt_wt`, `iptw`, `pair_id`, `quintile`, `decile`, `bs`,
+#'   `cluster`).
 #' @param match_col      Name of the output match-indicator column appended
 #'   to `$data`.  Default `"match"`.  If the column already exists it is
 #'   overwritten.
@@ -243,10 +246,7 @@ ps_match <- function(data,
 
   # ---- SMD diagnostics ---------------------------------------------------
   if (is.null(covariates)) {
-    covariates <- setdiff(
-      names(data)[vapply(data, is.numeric, logical(1L))],
-      c(treatment_col, score_col, id_col, match_col)
-    )
+    covariates <- .default_covariates(data, c(treatment_col, score_col, id_col, match_col))
   }
 
   smd_before <- .smd_table(data, treatment_col, covariates)

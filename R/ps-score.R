@@ -146,9 +146,11 @@
 #' @param weight_col     Output column name for the Li-Greene matching
 #'   weight (ATM). Default `"mt_wt"`.
 #' @param covariates     Character vector of covariate column names for SMD
-#'   balance diagnostics.  If `NULL` (default), all numeric columns other
-#'   than `treatment_col`, `score_col`, `logit_col`, `weight_col`,
-#'   `id_col`, `"quintile"`, and `"decile"` are used.
+#'   balance diagnostics, used as given.  If `NULL` (default), every numeric
+#'   column that varies is used, except `treatment_col`, `score_col`,
+#'   `logit_col`, `weight_col`, `id_col` and the fixed columns this package
+#'   appends (`quintile`, `decile`, `iptw`, `match`, `pair_id` and the like).
+#'   A predictor named in `formula` is always kept.
 #' @param treatment_levels Complete binary treatment levels. `NULL` takes them
 #'   from the data: the two values present when `treated_level` is given,
 #'   otherwise 0/1 or `FALSE`/`TRUE`.
@@ -301,10 +303,7 @@ ps_logistic <- function(formula,
   reserved <- c(treatment_col, score_col, logit_col, weight_col,
                 id_col, "quintile", "decile")
   if (is.null(covariates)) {
-    covariates <- setdiff(
-      names(base_data)[vapply(base_data, is.numeric, logical(1L))],
-      reserved
-    )
+    covariates <- .default_covariates(base_data, reserved, keep = all.vars(formula[[3L]]))
   }
   diagnostic_data <- base_data
   diagnostic_data[[treatment_col]] <- trt
@@ -532,7 +531,8 @@ ps_ordinal <- function(formula,
   # ---- SMD diagnostics ----------------------------------------------------
   smd_tbl <- .smd_table_levels(
     base_data, treatment_col, lvls, smd_pairs, covariates,
-    reserved = c(score_cols, id_col, imputation_col, "quintile", "decile")
+    reserved = c(score_cols, id_col, imputation_col, "quintile", "decile"),
+    keep = all.vars(formula[[3L]])
   )
 
   # ---- Group counts -------------------------------------------------------
@@ -750,7 +750,8 @@ ps_nominal <- function(formula,
   # ---- SMD diagnostics ----------------------------------------------------
   smd_tbl <- .smd_table_levels(
     base_data, treatment_col, lvls, smd_pairs, covariates,
-    reserved = c(score_cols, id_col, imputation_col, "quintile", "decile")
+    reserved = c(score_cols, id_col, imputation_col, "quintile", "decile"),
+    keep = all.vars(formula[[3L]])
   )
 
   # ---- Group counts -------------------------------------------------------

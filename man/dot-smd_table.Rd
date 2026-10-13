@@ -4,17 +4,30 @@
 \alias{.smd_table}
 \title{Build a tidy SMD table across covariates, through ps_stddiff()}
 \usage{
-.smd_table(data, treatment, covariates = NULL, weight_col = NULL)
+.smd_table(
+  data,
+  treatment,
+  covariates = NULL,
+  weight_col = NULL,
+  reserved = character(),
+  keep = character()
+)
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{treatment}{Name of the binary treatment column.}
 
-\item{covariates}{Character vector of covariate column names.  If \code{NULL},
-all numeric columns other than \code{treatment} are used.}
+\item{covariates}{Character vector of covariate column names, used as
+given.  If \code{NULL}, the default set from \code{.default_covariates()} is used,
+excluding \code{treatment}, \code{weight_col} and \code{reserved}.}
 
 \item{weight_col}{Optional name of a weight column.}
+
+\item{reserved}{Further columns never used as default covariates.}
+
+\item{keep}{Model predictors protected in the default set; see
+\code{.default_covariates()}.}
 }
 \value{
 A data frame with columns \code{variable} and \code{smd}, rounded to 4 places.

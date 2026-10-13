@@ -10,7 +10,8 @@
   levels,
   scheme,
   covariates = NULL,
-  reserved = character()
+  reserved = character(),
+  keep = character()
 )
 }
 \arguments{
@@ -22,10 +23,13 @@
 
 \item{scheme}{Any of \code{"reference"}, \code{"adjacent"}, \code{"all"}.}
 
-\item{covariates}{Covariate columns. \code{NULL} uses every numeric column other
-than those in \code{reserved}.}
+\item{covariates}{Covariate columns. \code{NULL} uses \code{.default_covariates()},
+excluding \code{treatment} and \code{reserved}.}
 
 \item{reserved}{Columns never treated as covariates.}
+
+\item{keep}{Model predictors protected in the default set; see
+\code{.default_covariates()}.}
 }
 \value{
 A data frame with columns \code{variable}, \code{level}, \code{versus}, \code{smd}.

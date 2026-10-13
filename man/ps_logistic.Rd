@@ -47,9 +47,11 @@ score, \code{log(p / (1 - p))}.  Default \code{"logit_t"}.}
 weight (ATM). Default \code{"mt_wt"}.}
 
 \item{covariates}{Character vector of covariate column names for SMD
-balance diagnostics.  If \code{NULL} (default), all numeric columns other
-than \code{treatment_col}, \code{score_col}, \code{logit_col}, \code{weight_col},
-\code{id_col}, \code{"quintile"}, and \code{"decile"} are used.}
+balance diagnostics, used as given.  If \code{NULL} (default), every numeric
+column that varies is used, except \code{treatment_col}, \code{score_col},
+\code{logit_col}, \code{weight_col}, \code{id_col} and the fixed columns this package
+appends (\code{quintile}, \code{decile}, \code{iptw}, \code{match}, \code{pair_id} and the like).
+A predictor named in \code{formula} is always kept.}
 
 \item{treatment_levels}{Complete binary treatment levels. \code{NULL} takes them
 from the data: the two values present when \code{treated_level} is given,

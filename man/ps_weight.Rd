@@ -13,7 +13,8 @@ ps_weight(
   trim = NULL,
   covariates = NULL,
   weight_col = "iptw",
-  treated_level = NULL
+  treated_level = NULL,
+  id_col = "id"
 )
 }
 \arguments{
@@ -44,8 +45,11 @@ outside the (\code{trim}, \code{1 - trim}) quantile range are winsorised.
 Default \code{NULL} (no trimming).}
 
 \item{covariates}{Character vector of covariate columns for SMD
-diagnostics.  If \code{NULL} (default), all numeric columns other than
-\code{treatment_col} and \code{score_col} are used.}
+diagnostics, used as given.  If \code{NULL} (default), every numeric column
+that varies is used, except \code{treatment_col}, \code{score_col}, \code{weight_col},
+\code{id_col} and the fixed columns this package appends (\code{prob_t},
+\code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile}, \code{decile},
+\code{bs}, \code{cluster}).}
 
 \item{weight_col}{Name of the output weight column appended to \verb{$data}.
 Default \code{"iptw"}.  If the column already exists it is overwritten.}
@@ -54,6 +58,9 @@ Default \code{"iptw"}.  If the column already exists it is overwritten.}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
 value, for example \code{"transcatheter"}, to use a column holding any two
 values.}
+
+\item{id_col}{The patient identifier column, left out of the default
+covariates. Default \code{"id"}; it need not exist in \code{data}.}
 }
 \value{
 An object of class \code{c("ps_weight", "ps_data")} with:
