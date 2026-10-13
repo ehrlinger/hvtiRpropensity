@@ -1,4 +1,4 @@
-# hvtiRpropensity (unreleased)
+# hvtiRpropensity 0.1.12
 
 * `DESCRIPTION` now declares the Quarto command line tool in
   `SystemRequirements`. The vignettes have always needed it to build; the
@@ -8,6 +8,43 @@
   the full width of the window, through `pkgdown/extra.css`. The installed
   vignettes are unchanged: the Quarto vignette engine renders them in its own
   minimal format, which has no sidebar layout.
+
+* `ps_match()` gains `scale = c("probability", "logit")` and `caliper_sd`, so
+  pairs can be matched on the logit of the propensity score with a caliper in
+  pooled standard-deviation units, `sqrt((var_t + var_c) / 2)`. `scale = "logit", caliper_sd = 0.2` is the
+  Austin (2011) recommendation. The default stays `"probability"`, which keeps
+  the \[0, 1\] check on `score_col`. `$meta` now records `scale` and
+  `caliper_sd`, and `$meta$caliper` is the absolute caliper applied.
+
+* The SAS templates in `inst/sas-templates/` no longer carry the study they
+  were taken from: each study path is now `/studies/<study>`, and the study
+  title and cohort line read `<study description>` and
+  `CCF, 19xx to 20xx, n=xxxx`, as the `%let STUDYDESC` and `%let STUDYPOP`
+  lines already did. The analysis code is unchanged.
+
+* `fit_linear()` fits an ordinary least-squares model to one dataset or to
+  stacked imputations, with Rubin-pooled inference verified against
+  `PROC MIANALYZE`. It returns the same data, models, meta and tables shape
+  as `fit_logistic()`, and its `$tables$fit_quality` gives each fit's
+  residual standard error and R-squared. A single fit, here and in
+  `bs_continuous()`'s new estimates, is inferred on the t distribution with
+  residual degrees of freedom, as `PROC REG` reports it. A dot formula such
+  as `ef ~ .` expands over the data's columns excluding the identifier and
+  imputation columns, here and in `bs_continuous()`, so the patient ID is
+  never fitted as a covariate.
+* `bs_continuous()` now carries fit status, coefficient estimates, covariance
+  and per-imputation estimates, as `bs_count()` does. Its balancing score is
+  unchanged. A transformed exposure, such as `log(hct_nadr) ~ ...`, now works.
+* `bs_continuous()` now stops, naming the imputation, when a term is aliased
+  (for example a covariate that duplicates another), where it used to return
+  a score from a rank-deficient fit.
+
+* The pooled-covariance check against `PROC MIANALYZE` in
+  `test_lm_sas_oracle.R` now compares like with like. SAS's `TCov` is the
+  multivariate total covariance, `(1 + rbar) * Ubar`, not the elementwise Rubin
+  total that `fit_logistic()` reports, so the test checks the diagonal against
+  the SAS standard errors and rebuilds `TCov` from the per-imputation fits, at
+  `1e-5` rather than `1e-4`. No package code changed.
 
 # hvtiRpropensity 0.1.11
 
