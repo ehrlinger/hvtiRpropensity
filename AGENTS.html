@@ -88,8 +88,12 @@
 <code>$meta</code> — column names used, method parameters, formula, computed statistics</li>
 <li>
 <code>$tables</code> — diagnostic tables (SMD before/after, group counts, effective N); may be an empty list, but the element exists</li>
+<li>
+<code>$models</code>: fitted model objects; may be an empty list, but the element exists</li>
 </ul>
-Adding a <code>ps_*()</code> function means returning that shape through the constructor, not inventing a parallel one. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods are defined once on the base class and inherited.</li>
+Adding a <code>ps_*()</code> function means returning that shape through the constructor, not inventing a parallel one. The four <code>sa_*()</code> functions comply: each returns a subclass of its own name (<code><a href="reference/sa_evalue.html">sa_evalue()</a></code> has no input data, so its <code>$data</code> is an empty data frame). <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> are defined on the base class; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> is inherited by every subclass, and a subclass that has a headline result gets its own <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method (<code>ps_logistic</code>, <code>ps_forest</code>, <code>ps_support</code>, <code>ps_rmst</code>, the four <code>sa_*</code> classes and others). Read <code>NAMESPACE</code> for the current list.</li>
+<li>
+<strong>One precedence rule for arguments a <code>ps_data</code> input already records.</strong> An argument the caller supplies wins over <code>$meta</code>, and if it disagrees with <code>$meta</code> the call aborts naming both values; an argument not supplied takes <code>$meta</code>, then its default. Detect “supplied” with <code><a href="https://rdrr.io/r/base/missing.html" class="external-link">missing()</a></code>. The <code>sa_*()</code> functions apply it through <code><a href="reference/dot-resolve_meta_arg.html">.resolve_meta_arg()</a></code>.</li>
 <li>
 <strong>Lines are 120 characters here</strong>, because the <code>ps_*()</code> and <code>bs_*()</code> constructors take many named arguments and read better whole than wrapped. ⚠️ The family runs 80, 100, 120 and 135. Read <code>.lintr</code>.</li>
 <li>

@@ -93,7 +93,7 @@
 <strong>Assess sensitivity to unmeasured confounding</strong> — <code><a href="../reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="../reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="../reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>
 </li>
 </ol>
-<p>All score, balance, fit, and validation objects share a common <code>ps_data</code> S3 base class with four slots: <code>$data</code> carries patient-level outputs, <code>$meta</code> records the declared contract and row accounting, <code>$tables</code> carries inference and diagnostics, and <code>$models</code> retains every fitted model used to create the result.</p>
+<p>All score, balance, sensitivity, fit, and validation objects share a common <code>ps_data</code> S3 base class with four slots: <code>$data</code> carries patient-level outputs, <code>$meta</code> records the declared contract and row accounting, <code>$tables</code> carries inference and diagnostics, and <code>$models</code> retains every fitted model used to create the result.</p>
 <hr></section><section class="level2" data-number="2"><h2 data-number="2" id="sample-data">
 <span class="header-section-number">2</span> Sample data<a class="anchor" aria-label="anchor" href="#sample-data"></a>
 </h2>
@@ -228,9 +228,9 @@
 <span><span class="co">#&gt;           term    estimate   std.error statistic           df      p.value</span></span>
 <span><span class="co">#&gt; 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08</span></span>
 <span><span class="co">#&gt; 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23</span></span>
-<span><span class="co">#&gt; 3       female  0.23341073 0.141967346  1.644116 4.928167e+60 1.001523e-01</span></span>
-<span><span class="co">#&gt; 4           ef  0.04999120 0.006963766  7.178759          Inf 7.034695e-13</span></span>
-<span><span class="co">#&gt; 5     diabetes -0.32463972 0.158007358 -2.054586 1.181574e+61 3.991900e-02</span></span>
+<span><span class="co">#&gt; 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01</span></span>
+<span><span class="co">#&gt; 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13</span></span>
+<span><span class="co">#&gt; 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02</span></span>
 <span><span class="co">#&gt; 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01</span></span>
 <span><span class="co">#&gt;      conf.low   conf.high odds_ratio pooled</span></span>
 <span><span class="co">#&gt; 1  2.78243495  5.89694637 76.6838145   TRUE</span></span>
@@ -738,14 +738,14 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ov</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_overlap.html">sa_overlap</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
-<span><span class="va">ov</span><span class="op">$</span><span class="va">overlap_region</span></span>
+<span><span class="va">ov</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">overlap_region</span></span>
 <span><span class="co">#&gt;  lower  upper </span></span>
 <span><span class="co">#&gt; 0.0483 0.9015</span></span>
-<span><span class="va">ov</span><span class="op">$</span><span class="va">outside_overlap</span></span>
+<span><span class="va">ov</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">outside_overlap</span></span>
 <span><span class="co">#&gt;   group treated n_outside pct_outside</span></span>
 <span><span class="co">#&gt; 1     0   FALSE         2         0.4</span></span>
 <span><span class="co">#&gt; 2     1    TRUE        16         3.2</span></span>
-<span><span class="va">ov</span><span class="op">$</span><span class="va">positivity_flags</span></span>
+<span><span class="va">ov</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">positivity_flags</span></span>
 <span><span class="co">#&gt;   group treated n_near_zero n_near_one pct_near_zero pct_near_one</span></span>
 <span><span class="co">#&gt; 1     0   FALSE           3          0           0.6          0.0</span></span>
 <span><span class="co">#&gt; 2     1    TRUE           1          2           0.2          0.4</span></span></code></pre></div>
@@ -757,7 +757,7 @@
 <p>Extreme IPTW weights inflate variance and can dominate estimates. <code><a href="../reference/sa_trim_sweep.html">sa_trim_sweep()</a></code> sweeps a range of winsorisation thresholds and reports how ESS and the weight distribution change. Use this to choose a trimming level that controls extreme weights without unacceptable loss of sample size.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sweep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_trim_sweep.html">sa_trim_sweep</a></span><span class="op">(</span><span class="va">w</span>, trim_seq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.10</span>, by <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">sweep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_trim_sweep.html">sa_trim_sweep</a></span><span class="op">(</span><span class="va">w</span>, trim_seq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.10</span>, by <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">sweep</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   trim ess_control ess_treated max_weight sd_weight pct_trimmed</span></span>
 <span><span class="co">#&gt; 1 0.00       398.7       341.9    10.3568    0.6014           0</span></span>
@@ -783,9 +783,9 @@
 <div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Suppose a matched analysis yields RR = 1.8 (95% CI 1.3 to 2.5)</span></span>
 <span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_evalue.html">sa_evalue</a></span><span class="op">(</span><span class="fl">1.8</span>, ci_lo <span class="op">=</span> <span class="fl">1.3</span>, ci_hi <span class="op">=</span> <span class="fl">2.5</span>, type <span class="op">=</span> <span class="st">"RR"</span><span class="op">)</span></span>
-<span><span class="va">ev</span><span class="op">$</span><span class="va">evalue_estimate</span>   <span class="co"># confounder must be this strong to explain the RR</span></span>
+<span><span class="va">ev</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">evalue_estimate</span>   <span class="co"># confounder must be this strong to explain the RR</span></span>
 <span><span class="co">#&gt; [1] 3</span></span>
-<span><span class="va">ev</span><span class="op">$</span><span class="va">evalue_ci</span>         <span class="co"># must be this strong to explain even the CI lower bound</span></span>
+<span><span class="va">ev</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">evalue_ci</span>         <span class="co"># must be this strong to explain even the CI lower bound</span></span>
 <span><span class="co">#&gt; [1] 1.9245</span></span></code></pre></div>
 </div>
 <div class="cell">
@@ -793,7 +793,7 @@
 <code class="sourceCode R"><span><span class="co"># Risk difference of 0.08 with baseline outcome probability 0.15</span></span>
 <span><span class="va">ev_rd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_evalue.html">sa_evalue</a></span><span class="op">(</span><span class="fl">0.08</span>, ci_lo <span class="op">=</span> <span class="fl">0.02</span>, ci_hi <span class="op">=</span> <span class="fl">0.14</span>,</span>
 <span>                   type <span class="op">=</span> <span class="st">"RD"</span>, p0 <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span></span>
-<span><span class="va">ev_rd</span><span class="op">$</span><span class="va">evalue_estimate</span></span>
+<span><span class="va">ev_rd</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">evalue_estimate</span></span>
 <span><span class="co">#&gt; [1] 2.437644</span></span></code></pre></div>
 </div>
 </section><section class="level3" data-number="8.4"><h3 data-number="8.4" id="rosenbaum-sensitivity-bounds-sa_rosenbaum">
@@ -806,13 +806,13 @@
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sa_rosenbaum.html">sa_rosenbaum</a></span><span class="op">(</span><span class="va">m</span>, outcome_col <span class="op">=</span> <span class="st">"ef"</span>, gamma_max <span class="op">=</span> <span class="fl">3</span>, gamma_inc <span class="op">=</span> <span class="fl">0.25</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Summary: how sensitive is the result?</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">sensitivity_value</span>   <span class="co"># largest Gamma where upper p-value &lt; 0.05</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">sensitivity_value</span>   <span class="co"># largest Gamma where upper p-value &lt; 0.05</span></span>
 <span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">n_pairs</span></span>
+<span><span class="va">res</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">n_pairs</span></span>
 <span><span class="co">#&gt; [1] 500</span></span>
 <span></span>
 <span><span class="co"># Full bounds table</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">bounds</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">bounds</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   gamma      p_upper      p_lower reject_upper</span></span>
 <span><span class="co">#&gt; 1  1.00 1.110223e-16 1.110223e-16         TRUE</span></span>
 <span><span class="co">#&gt; 2  1.25 4.388009e-10 0.000000e+00         TRUE</span></span>

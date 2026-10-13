@@ -112,24 +112,35 @@ for OR and HR.  Ignored for other types.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with:</p><dl><dt><code>$evalue_estimate</code></dt>
+    <p>An object of class <code>c("sa_evalue", "ps_data")</code>. There is no input
+data, so <code>$data</code> is an empty data frame and <code>$models</code> an empty list.</p><dl><dt><code>$meta$evalue_estimate</code></dt>
 <dd><p>E-value for the point estimate.</p></dd>
 
-<dt><code>$evalue_ci</code></dt>
-<dd><p>E-value for the confidence interval bound closest to
-the null.  <code>NA</code> if <code>ci_lo</code>/<code>ci_hi</code> are not supplied.  Returns <code>1</code> if
+<dt><code>$meta$evalue_ci</code></dt>
+<dd><p>E-value for the confidence interval bound
+closest to the null.  <code>NA</code> if <code>ci_lo</code>/<code>ci_hi</code> are not supplied.  <code>1</code> if
 the CI already crosses the null.</p></dd>
 
-<dt><code>$rr_estimate</code></dt>
-<dd><p>The point estimate converted to the risk-ratio
-scale (same as <code>estimate</code> when <code>type = "RR"</code>).</p></dd>
+<dt><code>$meta$rr_estimate</code></dt>
+<dd><p>The point estimate converted to the
+risk-ratio scale (same as <code>estimate</code> when <code>type = "RR"</code>).</p></dd>
 
-<dt><code>$type</code></dt>
+<dt><code>$meta$type</code></dt>
 <dd><p>The measure type supplied.</p></dd>
 
-<dt><code>$rare</code></dt>
+<dt><code>$meta$rare</code></dt>
 <dd><p>For <code>type = "OR"</code> or <code>"HR"</code>, the rare-outcome choice
 used for the conversion; <code>NA</code> for other types.</p></dd>
+
+<dt><code>$meta$estimate</code>, <code>$meta$ci_lo</code>, <code>$meta$ci_hi</code>, <code>$meta$p0</code></dt>
+<dd><p>The
+inputs, <code>NA</code> where not supplied.</p></dd>
+
+<dt><code>$tables$evalue</code></dt>
+<dd><p>Data frame with one row for the estimate and one
+for the CI bound closest to the null: <code>quantity</code>, <code>value</code> on the
+original scale, <code>rr</code> on the risk-ratio scale (<code>NA</code> when the CI crosses
+the null) and <code>evalue</code>.</p></dd>
 
 
 </dl></div>
@@ -170,75 +181,35 @@ ratio for a common outcome.  <em>Epidemiology</em>, 28(6), e58-e60.
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Risk ratio of 2.5 -- how robust is the result?</span></span></span>
 <span class="r-in"><span><span class="fu">sa_evalue</span><span class="op">(</span><span class="fl">2.5</span>, ci_lo <span class="op">=</span> <span class="fl">1.8</span>, ci_hi <span class="op">=</span> <span class="fl">3.5</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4.436492</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_ci</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rr_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RR"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rare</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;sa_evalue&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimate    : RR = 2.5 (CI 1.8 to 3.5)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RR scale    : 2.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   E-value     : 4.43649 (estimate), 3 (CI)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Odds ratio of 0.6 (protective effect) for a common outcome</span></span></span>
 <span class="r-in"><span><span class="fu">sa_evalue</span><span class="op">(</span><span class="fl">0.6</span>, ci_lo <span class="op">=</span> <span class="fl">0.4</span>, ci_hi <span class="op">=</span> <span class="fl">0.9</span>, type <span class="op">=</span> <span class="st">"OR"</span>, rare <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.903916</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_ci</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.292878</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rr_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7745967</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "OR"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rare</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;sa_evalue&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimate    : OR = 0.6 (CI 0.4 to 0.9)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rare outcome: FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RR scale    : 0.774597</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   E-value     : 1.90392 (estimate), 1.292878 (CI)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Hazard ratio of 1.8 for an outcome under 15% at end of follow-up</span></span></span>
 <span class="r-in"><span><span class="fu">sa_evalue</span><span class="op">(</span><span class="fl">1.8</span>, ci_lo <span class="op">=</span> <span class="fl">1.2</span>, ci_hi <span class="op">=</span> <span class="fl">2.7</span>, type <span class="op">=</span> <span class="st">"HR"</span>, rare <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_ci</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.689898</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rr_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "HR"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rare</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;sa_evalue&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Estimate    : HR = 1.8 (CI 1.2 to 2.7)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Rare outcome: TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RR scale    : 1.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   E-value     : 3 (estimate), 1.689898 (CI)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Risk difference of 0.10 with baseline probability 0.20</span></span></span>
-<span class="r-in"><span><span class="fu">sa_evalue</span><span class="op">(</span><span class="fl">0.10</span>, ci_lo <span class="op">=</span> <span class="fl">0.02</span>, ci_hi <span class="op">=</span> <span class="fl">0.18</span>, type <span class="op">=</span> <span class="st">"RD"</span>, p0 <span class="op">=</span> <span class="fl">0.20</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_estimate</span>
+<span class="r-in"><span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu">sa_evalue</span><span class="op">(</span><span class="fl">0.10</span>, ci_lo <span class="op">=</span> <span class="fl">0.02</span>, ci_hi <span class="op">=</span> <span class="fl">0.18</span>, type <span class="op">=</span> <span class="st">"RD"</span>, p0 <span class="op">=</span> <span class="fl">0.20</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ev</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">evalue_estimate</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.366025</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $evalue_ci</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.431662</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rr_estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "RD"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $rare</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="va">ev</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">evalue</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   quantity value  rr   evalue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 estimate  0.10 1.5 2.366025</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       ci  0.02 1.1 1.431662</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

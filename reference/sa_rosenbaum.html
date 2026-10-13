@@ -67,7 +67,8 @@ the upper and lower bounds on the p-value of the Wilcoxon signed-rank test.</p>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  treatment_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pair_id_col <span class="op">=</span> <span class="st">"pair_id"</span>,</span>
-<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  alternative <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"greater"</span>, <span class="st">"less"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -104,7 +105,7 @@ plain data frame whose rows are matched patients.</p></dd>
 
 <dt id="arg-pair-id-col">pair_id_col<a class="anchor" aria-label="anchor" href="#arg-pair-id-col"></a></dt>
 <dd><p>Name of the pair-ID column created by <code><a href="ps_match.html">ps_match()</a></code>.
-Default <code>"pair_id"</code>.</p></dd>
+Taken from <code>x$meta$pair_id_col</code> when recorded.  Default <code>"pair_id"</code>.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
@@ -112,20 +113,37 @@ Default <code>"pair_id"</code>.</p></dd>
 from the metadata of a <code>ps_data</code> object when it records one. <code>NULL</code>
 (default) requires a 0/1 or logical column and takes 1 or <code>TRUE</code>.</p></dd>
 
+
+<dt id="arg-alternative">alternative<a class="anchor" aria-label="anchor" href="#arg-alternative"></a></dt>
+<dd><p>Direction of the test: <code>"auto"</code> (default; chosen from
+the sign of the median difference, see Details), <code>"greater"</code> (treated
+outcome above control) or <code>"less"</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with three elements:</p><dl><dt><code>$bounds</code></dt>
-<dd><p>Data frame with columns <code>gamma</code>, <code>p_upper</code>, <code>p_lower</code>,
-<code>reject_upper</code> (logical – is the upper bound &lt; <code>alpha</code>?).</p></dd>
+    <p>An object of class <code>c("sa_rosenbaum", "ps_data")</code>:</p><dl><dt><code>$data</code></dt>
+<dd><p>The input data frame (<code>x$data</code> for a <code>ps_match</code> object).</p></dd>
 
-<dt><code>$sensitivity_value</code></dt>
-<dd><p>Largest Gamma for which the analysis remains
-significant (upper p-value &lt; <code>alpha</code>), or <code>NA</code> if the initial analysis
-is not significant.</p></dd>
+<dt><code>$meta</code></dt>
+<dd><p>Column names, <code>treated_level</code>, the settings (<code>gamma</code>, the
+grid tested, <code>gamma_max</code>, <code>gamma_inc</code>, <code>alpha</code>, <code>alternative</code>, the
+direction tested, and <code>direction_from_data</code>), and the results:
+<code>sensitivity_value</code>, the largest Gamma for which the upper p-value is
+below <code>alpha</code> (<code>NA</code> if the analysis is not significant at Gamma = 1),
+<code>n_pairs</code>, the complete matched pairs used, <code>n_dropped</code>, <code>n_nonzero</code>
+and the statistic <code>t_plus</code>.</p></dd>
 
-<dt><code>$n_pairs</code></dt>
-<dd><p>Number of complete matched pairs used.</p></dd>
+<dt><code>$tables$bounds</code></dt>
+<dd><p>Data frame with columns <code>gamma</code>, <code>p_upper</code>,
+<code>p_lower</code>, <code>reject_upper</code> (logical – is the upper bound &lt; <code>alpha</code>?).</p></dd>
+
+<dt><code>$tables$pairs</code></dt>
+<dd><p>One row per complete pair: <code>pair_id</code>, <code>treated</code>
+and <code>control</code> outcomes, and <code>difference</code>.</p></dd>
+
+<dt><code>$models</code></dt>
+<dd><p>An empty list.</p></dd>
 
 
 </dl></div>
@@ -135,6 +153,28 @@ is not significant.</p></dd>
 randomisation within pairs).  The <em>sensitivity value</em> is the largest Gamma
 at which the upper p-value bound remains below <code>alpha</code>; a larger sensitivity
 value indicates a more robust result.</p>
+<p>The statistic is the Wilcoxon signed-rank sum \(T^+\) of the ranks of
+\(|d_i|\) over pairs with \(d_i &gt; 0\), where \(d_i\) is the treated
+minus the control outcome and zero differences are dropped. Tied
+\(|d_i|\) take their average rank. Under hidden bias Gamma each pair is
+positive with probability at most \(p^+ = \Gamma / (1 + \Gamma)\), so the
+worst-case null distribution has mean \(p^+ \sum r_i\) and variance
+\(p^+ (1 - p^+) \sum r_i^2\), and the best case uses
+\(p^- = 1 / (1 + \Gamma)\). Using \(\sum r_i^2\) rather than
+\(n(n+1)(2n+1)/6\) corrects the variance for ties; without ties the two
+agree. The p-values use the normal approximation with a continuity
+correction of 0.5, so at Gamma = 1 they equal the one-sided
+<code><a href="https://rdrr.io/r/stats/wilcox.test.html" class="external-link">stats::wilcox.test()</a></code> p-value with <code>exact = FALSE</code> and <code>correct = TRUE</code>.</p>
+<p>Rosenbaum's method assumes the direction of the test is fixed before the
+outcome is seen. Set <code>alternative</code> to <code>"greater"</code> (treated above control)
+or <code>"less"</code> to state it. The default <code>"auto"</code> keeps the earlier behaviour
+and picks the direction from the data: it tests the lower tail, with a
+warning, when the median nonzero difference is negative. A direction
+chosen from the data makes the bounds slightly optimistic, so prefer an
+explicit <code>alternative</code> in a pre-specified analysis.</p>
+<p>Column names and the treated level are read from a <code><a href="ps_match.html">ps_match()</a></code> object's
+metadata. A supplied <code>treatment_col</code>, <code>pair_id_col</code> or <code>treated_level</code>
+must agree with that metadata; a conflict aborts.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -149,15 +189,25 @@ value indicates a more robust result.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">m</span>   <span class="op">&lt;-</span> <span class="fu"><a href="ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">sa_rosenbaum</span><span class="op">(</span><span class="va">m</span>, outcome_col <span class="op">=</span> <span class="st">"ef"</span>, gamma_max <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">bounds</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">sa_rosenbaum</span><span class="op">(</span><span class="va">m</span>, outcome_col <span class="op">=</span> <span class="st">"ef"</span>, gamma_max <span class="op">=</span> <span class="fl">2</span>, alternative <span class="op">=</span> <span class="st">"greater"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;sa_rosenbaum&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Outcome     : ef (greater, 300 pairs)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sensitivity : Gamma = 1.75 at alpha = 0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  gamma      p_upper      p_lower reject_upper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.00 5.990619e-11 5.990619e-11         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.25 7.884045e-07 2.220446e-16         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.50 2.257868e-04 0.000000e+00         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1.75 7.391183e-03 0.000000e+00         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2.00 6.394389e-02 0.000000e+00        FALSE</span>
+<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">bounds</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   gamma      p_upper      p_lower reject_upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.00 5.990619e-11 5.990619e-11         TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  1.25 7.884045e-07 2.220446e-16         TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3  1.50 2.257868e-04 0.000000e+00         TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  1.75 7.391183e-03 0.000000e+00         TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5  2.00 6.394389e-02 0.000000e+00        FALSE</span>
-<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">sensitivity_value</span></span></span>
+<span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">sensitivity_value</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.75</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

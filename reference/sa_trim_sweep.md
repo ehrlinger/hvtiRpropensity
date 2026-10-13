@@ -70,31 +70,37 @@ sa_trim_sweep(
 
 ## Value
 
-A data frame with one row per trim value and columns:
+An object of class `c("sa_trim_sweep", "ps_data")`:
 
-- `trim`:
+- `$data`:
 
-  The winsorisation threshold.
+  The input data frame (`x$data` for a `ps_data` object), unchanged.
 
-- `ess_control`:
+- `$meta`:
 
-  Effective sample size for the control group.
+  `score_col`, `treatment_col`, `treated_level`, `scale`, `estimand`,
+  `stabilised` (whether stabilisation was applied, so `FALSE` for the
+  ATT and ATC), `trim_seq` (sorted), `n_total` and `n_used`, the
+  patients with a non-missing treatment and score.
 
-- `ess_treated`:
+- `$tables$sweep`:
 
-  Effective sample size for the treated group.
+  Data frame with one row per trim value and columns `trim` (the
+  winsorisation threshold), `ess_control` and `ess_treated` (effective
+  sample sizes), `max_weight` (maximum weight after trimming),
+  `sd_weight` (standard deviation of the weights after trimming) and
+  `pct_trimmed` (percentage of patients whose weight was winsorised).
 
-- `max_weight`:
+- `$models`:
 
-  Maximum weight across all patients after trimming.
+  An empty list.
 
-- `sd_weight`:
+## Details
 
-  Standard deviation of weights after trimming.
-
-- `pct_trimmed`:
-
-  Percentage of patients whose weight was winsorised.
+For a `ps_data` input, a supplied `estimand`, `stabilise`, `score_col`,
+`treatment_col` or `treated_level` must agree with the object's
+metadata; a conflict aborts. Arguments not supplied are read from the
+metadata, then take their defaults.
 
 ## See also
 
@@ -109,7 +115,7 @@ A data frame with one row per trim value and columns:
 dta    <- sample_ps_data(n = 400, seed = 3)
 w_obj  <- ps_weight(dta, estimand = "ATE")
 sweep  <- sa_trim_sweep(w_obj)
-head(sweep)
+head(sweep$tables$sweep)
 #>   trim ess_control ess_treated max_weight sd_weight pct_trimmed
 #> 1 0.00       303.1       305.0     4.4440    0.5578           0
 #> 2 0.01       312.6       312.7     3.1193    0.5209           2

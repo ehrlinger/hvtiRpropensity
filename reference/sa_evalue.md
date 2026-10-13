@@ -58,31 +58,43 @@ sa_evalue(
 
 ## Value
 
-A list with:
+An object of class `c("sa_evalue", "ps_data")`. There is no input data,
+so `$data` is an empty data frame and `$models` an empty list.
 
-- `$evalue_estimate`:
+- `$meta$evalue_estimate`:
 
   E-value for the point estimate.
 
-- `$evalue_ci`:
+- `$meta$evalue_ci`:
 
   E-value for the confidence interval bound closest to the null. `NA` if
-  `ci_lo`/`ci_hi` are not supplied. Returns `1` if the CI already
-  crosses the null.
+  `ci_lo`/`ci_hi` are not supplied. `1` if the CI already crosses the
+  null.
 
-- `$rr_estimate`:
+- `$meta$rr_estimate`:
 
   The point estimate converted to the risk-ratio scale (same as
   `estimate` when `type = "RR"`).
 
-- `$type`:
+- `$meta$type`:
 
   The measure type supplied.
 
-- `$rare`:
+- `$meta$rare`:
 
   For `type = "OR"` or `"HR"`, the rare-outcome choice used for the
   conversion; `NA` for other types.
+
+- `$meta$estimate`, `$meta$ci_lo`, `$meta$ci_hi`, `$meta$p0`:
+
+  The inputs, `NA` where not supplied.
+
+- `$tables$evalue`:
+
+  Data frame with one row for the estimate and one for the CI bound
+  closest to the null: `quantity`, `value` on the original scale, `rr`
+  on the risk-ratio scale (`NA` when the CI crosses the null) and
+  `evalue`.
 
 ## Details
 
@@ -130,73 +142,33 @@ ratio for a common outcome. *Epidemiology*, 28(6), e58-e60.
 ``` r
 # Risk ratio of 2.5 -- how robust is the result?
 sa_evalue(2.5, ci_lo = 1.8, ci_hi = 3.5)
-#> $evalue_estimate
-#> [1] 4.436492
-#> 
-#> $evalue_ci
-#> [1] 3
-#> 
-#> $rr_estimate
-#> [1] 2.5
-#> 
-#> $type
-#> [1] "RR"
-#> 
-#> $rare
-#> [1] NA
-#> 
+#> <sa_evalue>
+#>   Estimate    : RR = 2.5 (CI 1.8 to 3.5)
+#>   RR scale    : 2.5
+#>   E-value     : 4.43649 (estimate), 3 (CI)
 
 # Odds ratio of 0.6 (protective effect) for a common outcome
 sa_evalue(0.6, ci_lo = 0.4, ci_hi = 0.9, type = "OR", rare = FALSE)
-#> $evalue_estimate
-#> [1] 1.903916
-#> 
-#> $evalue_ci
-#> [1] 1.292878
-#> 
-#> $rr_estimate
-#> [1] 0.7745967
-#> 
-#> $type
-#> [1] "OR"
-#> 
-#> $rare
-#> [1] FALSE
-#> 
+#> <sa_evalue>
+#>   Estimate    : OR = 0.6 (CI 0.4 to 0.9)
+#>   Rare outcome: FALSE
+#>   RR scale    : 0.774597
+#>   E-value     : 1.90392 (estimate), 1.292878 (CI)
 
 # Hazard ratio of 1.8 for an outcome under 15% at end of follow-up
 sa_evalue(1.8, ci_lo = 1.2, ci_hi = 2.7, type = "HR", rare = TRUE)
-#> $evalue_estimate
-#> [1] 3
-#> 
-#> $evalue_ci
-#> [1] 1.689898
-#> 
-#> $rr_estimate
-#> [1] 1.8
-#> 
-#> $type
-#> [1] "HR"
-#> 
-#> $rare
-#> [1] TRUE
-#> 
+#> <sa_evalue>
+#>   Estimate    : HR = 1.8 (CI 1.2 to 2.7)
+#>   Rare outcome: TRUE
+#>   RR scale    : 1.8
+#>   E-value     : 3 (estimate), 1.689898 (CI)
 
 # Risk difference of 0.10 with baseline probability 0.20
-sa_evalue(0.10, ci_lo = 0.02, ci_hi = 0.18, type = "RD", p0 = 0.20)
-#> $evalue_estimate
+ev <- sa_evalue(0.10, ci_lo = 0.02, ci_hi = 0.18, type = "RD", p0 = 0.20)
+ev$meta$evalue_estimate
 #> [1] 2.366025
-#> 
-#> $evalue_ci
-#> [1] 1.431662
-#> 
-#> $rr_estimate
-#> [1] 1.5
-#> 
-#> $type
-#> [1] "RD"
-#> 
-#> $rare
-#> [1] NA
-#> 
+ev$tables$evalue
+#>   quantity value  rr   evalue
+#> 1 estimate  0.10 1.5 2.366025
+#> 2       ci  0.02 1.1 1.431662
 ```

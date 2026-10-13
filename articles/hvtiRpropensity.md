@@ -30,11 +30,11 @@ analysis:
     [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
     [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
 
-All score, balance, fit, and validation objects share a common `ps_data`
-S3 base class with four slots: `$data` carries patient-level outputs,
-`$meta` records the declared contract and row accounting, `$tables`
-carries inference and diagnostics, and `$models` retains every fitted
-model used to create the result.
+All score, balance, sensitivity, fit, and validation objects share a
+common `ps_data` S3 base class with four slots: `$data` carries
+patient-level outputs, `$meta` records the declared contract and row
+accounting, `$tables` carries inference and diagnostics, and `$models`
+retains every fitted model used to create the result.
 
 ------------------------------------------------------------------------
 
@@ -169,9 +169,9 @@ outcome_model_mi$tables$estimates
 #>           term    estimate   std.error statistic           df      p.value
 #> 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08
 #> 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23
-#> 3       female  0.23341073 0.141967346  1.644116 4.928167e+60 1.001523e-01
-#> 4           ef  0.04999120 0.006963766  7.178759          Inf 7.034695e-13
-#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.181574e+61 3.991900e-02
+#> 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01
+#> 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13
+#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02
 #> 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01
 #>      conf.low   conf.high odds_ratio pooled
 #> 1  2.78243495  5.89694637 76.6838145   TRUE
@@ -730,14 +730,14 @@ it, and near-positivity-violation flags.
 ``` r
 
 ov <- sa_overlap(m)
-ov$overlap_region
+ov$meta$overlap_region
 #>  lower  upper 
 #> 0.0483 0.9015
-ov$outside_overlap
+ov$tables$outside_overlap
 #>   group treated n_outside pct_outside
 #> 1     0   FALSE         2         0.4
 #> 2     1    TRUE        16         3.2
-ov$positivity_flags
+ov$tables$positivity_flags
 #>   group treated n_near_zero n_near_one pct_near_zero pct_near_one
 #> 1     0   FALSE           3          0           0.6          0.0
 #> 2     1    TRUE           1          2           0.2          0.4
@@ -753,7 +753,7 @@ controls extreme weights without unacceptable loss of sample size.
 
 ``` r
 
-sweep <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))
+sweep <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))$tables$sweep
 head(sweep)
 #>   trim ess_control ess_treated max_weight sd_weight pct_trimmed
 #> 1 0.00       398.7       341.9    10.3568    0.6014           0
@@ -782,9 +782,9 @@ indicates a more robust finding.
 
 # Suppose a matched analysis yields RR = 1.8 (95% CI 1.3 to 2.5)
 ev <- sa_evalue(1.8, ci_lo = 1.3, ci_hi = 2.5, type = "RR")
-ev$evalue_estimate   # confounder must be this strong to explain the RR
+ev$meta$evalue_estimate   # confounder must be this strong to explain the RR
 #> [1] 3
-ev$evalue_ci         # must be this strong to explain even the CI lower bound
+ev$meta$evalue_ci         # must be this strong to explain even the CI lower bound
 #> [1] 1.9245
 ```
 
@@ -793,7 +793,7 @@ ev$evalue_ci         # must be this strong to explain even the CI lower bound
 # Risk difference of 0.08 with baseline outcome probability 0.15
 ev_rd <- sa_evalue(0.08, ci_lo = 0.02, ci_hi = 0.14,
                    type = "RD", p0 = 0.15)
-ev_rd$evalue_estimate
+ev_rd$meta$evalue_estimate
 #> [1] 2.437644
 ```
 
@@ -811,13 +811,13 @@ which the analysis remains significant.
 res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 3, gamma_inc = 0.25)
 
 # Summary: how sensitive is the result?
-res$sensitivity_value   # largest Gamma where upper p-value < 0.05
+res$meta$sensitivity_value   # largest Gamma where upper p-value < 0.05
 #> [1] 2
-res$n_pairs
+res$meta$n_pairs
 #> [1] 500
 
 # Full bounds table
-head(res$bounds)
+head(res$tables$bounds)
 #>   gamma      p_upper      p_lower reject_upper
 #> 1  1.00 1.110223e-16 1.110223e-16         TRUE
 #> 2  1.25 4.388009e-10 0.000000e+00         TRUE

@@ -52,29 +52,40 @@ sa_overlap(
 
 ## Value
 
-A list with:
+An object of class `c("sa_overlap", "ps_data")`:
 
-- `$summary`:
+- `$data`:
+
+  The input data frame (`x$data` for a `ps_data` object), unchanged.
+
+- `$meta`:
+
+  `score_col`, `treatment_col`, `treated_level`, `scale`,
+  `trim_threshold`, `n_total`, `n_score_missing`, `n_used` (patients
+  with a score and a treatment), and `overlap_region`: a named numeric
+  vector of the `lower` and `upper` bounds of the empirical common
+  support region.
+
+- `$tables$summary`:
 
   Data frame: one row per treatment group with `group` (the value in
   `treatment_col`), a logical `treated`, `n`, `ps_min`, `ps_q25`,
   `ps_median`, `ps_mean`, `ps_q75`, `ps_max`.
 
-- `$overlap_region`:
-
-  Named numeric vector: `lower` and `upper` bounds of the empirical
-  common support region.
-
-- `$outside_overlap`:
+- `$tables$outside_overlap`:
 
   Data frame: `group`, `treated`, `n_outside`, `pct_outside` – patients
   whose PS is outside the overlap region.
 
-- `$positivity_flags`:
+- `$tables$positivity_flags`:
 
   Data frame: `group`, `treated`, `n_near_zero` (PS \<
   `trim_threshold`), `n_near_one` (PS \> `1 - trim_threshold`),
   `pct_near_zero`, `pct_near_one`.
+
+- `$models`:
+
+  An empty list.
 
 ## Details
 
@@ -90,6 +101,10 @@ The function reports:
 - The number and proportion of patients with PS below `trim_threshold`
   or above `1 - trim_threshold` (near-positivity-violation flags).
 
+For a `ps_data` input, a supplied `score_col`, `treatment_col` or
+`treated_level` must agree with the object's metadata; a conflict
+aborts. Arguments not supplied are read from the metadata.
+
 ## See also
 
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
@@ -103,10 +118,10 @@ The function reports:
 ``` r
 dta <- sample_ps_data(n = 400, seed = 7)
 res <- sa_overlap(dta, score_col = "prob_t", treatment_col = "tavr")
-res$overlap_region
+res$meta$overlap_region
 #>  lower  upper 
 #> 0.0856 0.9082 
-res$positivity_flags
+res$tables$positivity_flags
 #>   group treated n_near_zero n_near_one pct_near_zero pct_near_one
 #> 1     0   FALSE           1          0           0.2          0.0
 #> 2     1    TRUE           0          2           0.0          0.5
@@ -114,7 +129,7 @@ res$positivity_flags
 # From a ps_match object
 m   <- ps_match(dta)
 res <- sa_overlap(m)
-res$outside_overlap
+res$tables$outside_overlap
 #>   group treated n_outside pct_outside
 #> 1     0   FALSE        11         2.8
 #> 2     1    TRUE        19         4.8
