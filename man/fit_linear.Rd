@@ -15,12 +15,14 @@ fit_linear(
 }
 \arguments{
 \item{formula}{Model formula. The response may be transformed, e.g.
-\code{log(los) ~ age}.}
+\code{log(los) ~ age}. A \code{.} on the right-hand side expands to the data's other
+columns, excluding the response, \code{id_col} and \code{imputation_col}.}
 
 \item{data}{A data frame, or stacked imputations when \code{imputation_col} is set.}
 
 \item{outcome_col}{Outcome column. By default the one variable in the
-formula's response.}
+formula's response; if supplied, it must be one of the variables in the
+response.}
 
 \item{id_col}{Patient identifier column.}
 

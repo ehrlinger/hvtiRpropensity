@@ -4,7 +4,10 @@
   as `fit_logistic()`, and its `$tables$fit_quality` gives each fit's
   residual standard error and R-squared. A single fit, here and in
   `bs_continuous()`'s new estimates, is inferred on the t distribution with
-  residual degrees of freedom, as `PROC REG` reports it.
+  residual degrees of freedom, as `PROC REG` reports it. A dot formula such
+  as `ef ~ .` expands over the data's columns excluding the identifier and
+  imputation columns, here and in `bs_continuous()`, so the patient ID is
+  never fitted as a covariate.
 * `bs_continuous()` now carries fit status, coefficient estimates, covariance
   and per-imputation estimates, as `bs_count()` does. Its balancing score is
   unchanged. A transformed exposure, such as `log(hct_nadr) ~ ...`, now works.

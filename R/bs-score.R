@@ -75,7 +75,9 @@
 #'
 #' @param formula             A formula with the continuous outcome / exposure
 #'   on the LHS, e.g.
-#'   `hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb`.
+#'   `hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb`. A `.` on the
+#'   right-hand side expands to the data's other columns, excluding the
+#'   response, `id_col` and `imputation_col`.
 #' @param data                A data frame, or a stacked MI data frame when
 #'   `imputation_col` is set.
 #' @param outcome_col         Name of the continuous outcome column.  `NULL`
@@ -151,6 +153,8 @@ bs_continuous <- function(formula,
       rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
                    call. = FALSE)
     }
+  } else {
+    .check_outcome_response(formula, outcome_col)
   }
   .check_cols(data, outcome_col)
   if (!is.null(id_col))         .check_cols(data, id_col)
@@ -159,6 +163,7 @@ bs_continuous <- function(formula,
     rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
   }
   n_strata <- as.integer(n_strata)
+  formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
 
   # ---- Fit model(s) -------------------------------------------------------
   fit_fn <- function(df) {

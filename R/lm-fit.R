@@ -327,6 +327,53 @@ fit_logistic <- function(formula, data,
 }
 
 
+#' Stop when `outcome_col` is not the formula's response
+#'
+#' A mismatched `outcome_col` would fit one column but run the stable-response
+#' check, and record the metadata, against another. A transformed response such
+#' as `log(ef)` is matched by the column it reads, `ef`.
+#'
+#' @param formula Two-sided model formula.
+#' @param outcome_col Supplied outcome column name.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.check_outcome_response <- function(formula, outcome_col) {
+  response <- all.vars(formula[[2L]])
+  if (!is.character(outcome_col) || length(outcome_col) != 1L ||
+        !outcome_col %in% response) {
+    rlang::abort(
+      sprintf("`outcome_col` (\"%s\") is not the formula's response (%s).",
+              paste(outcome_col, collapse = ", "), paste(response, collapse = ", ")),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
+
+#' Expand a dot formula over the model columns only
+#'
+#' `stats::terms()` expands `.` to every other column, which would fit the
+#' patient identifier and imputation index as covariates. The expansion is done
+#' once, against `data` without those columns and without the response
+#' variables, and the explicit formula is returned.
+#'
+#' @param formula Two-sided model formula.
+#' @param data Model data.
+#' @param exclude Column names that `.` must not expand to, such as the
+#'   identifier and imputation columns. `NULL` entries are ignored.
+#' @return `formula` unchanged when its right-hand side has no `.`, otherwise
+#'   the expanded formula, in the original formula's environment.
+#' @keywords internal
+.expand_dot_formula <- function(formula, data, exclude = NULL) {
+  if (!"." %in% all.vars(formula[[3L]])) return(formula)
+  keep <- setdiff(names(data), c(exclude, all.vars(formula[[2L]])))
+  expanded <- stats::formula(stats::terms(formula, data = data[keep]))
+  environment(expanded) <- environment(formula)
+  expanded
+}
+
+
 #' Fit an ordinary least-squares model bundle
 #'
 #' Fits `stats::lm()` to one dataset, or once per imputation of stacked
@@ -335,10 +382,12 @@ fit_logistic <- function(formula, data,
 #' `PROC REG` reports it.
 #'
 #' @param formula Model formula. The response may be transformed, e.g.
-#'   `log(los) ~ age`.
+#'   `log(los) ~ age`. A `.` on the right-hand side expands to the data's other
+#'   columns, excluding the response, `id_col` and `imputation_col`.
 #' @param data A data frame, or stacked imputations when `imputation_col` is set.
 #' @param outcome_col Outcome column. By default the one variable in the
-#'   formula's response.
+#'   formula's response; if supplied, it must be one of the variables in the
+#'   response.
 #' @param id_col Patient identifier column.
 #' @param imputation_col Imputation-index column, or `NULL` for one dataset.
 #' @param prediction_col Name of the fitted-value column added to `$data`,
@@ -368,6 +417,8 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
       rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
                    call. = FALSE)
     }
+  } else {
+    .check_outcome_response(formula, outcome_col)
   }
   .check_cols(data, outcome_col)
   if (!is.numeric(data[[outcome_col]])) {
@@ -375,9 +426,14 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
                  call. = FALSE)
   }
 
+  if (!is.character(prediction_col) || length(prediction_col) != 1L ||
+        is.na(prediction_col) || !nzchar(prediction_col)) {
+    rlang::abort("`prediction_col` must be one non-empty string.", call. = FALSE)
+  }
   if (prediction_col %in% names(data)) {
     rlang::abort(sprintf("Column `%s` already exists in `data`.", prediction_col), call. = FALSE)
   }
+  formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
 
   fitted <- .fit_imputations(
     data = data,

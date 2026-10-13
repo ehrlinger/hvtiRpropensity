@@ -316,3 +316,31 @@ test_that("bs_continuous reads the exposure inside a transformed response", {
   obj <- bs_continuous(log(ef) ~ age, d)
   expect_identical(obj$meta$outcome_col, "ef")
 })
+
+test_that("bs_continuous requires outcome_col to name the formula's response", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  expect_error(
+    bs_continuous(ef ~ female, d, outcome_col = "age"),
+    "`outcome_col` (\"age\") is not the formula's response (ef)",
+    fixed = TRUE
+  )
+  expect_identical(bs_continuous(ef ~ age, d, outcome_col = "ef")$meta$outcome_col, "ef")
+  expect_identical(bs_continuous(log(ef) ~ age, d, outcome_col = "ef")$meta$outcome_col, "ef")
+})
+
+test_that("bs_continuous expands a dot formula without the id or imputation column", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  small <- d[c("ef", "age", "female", "id")]
+  obj <- bs_continuous(ef ~ ., small)
+  expect_identical(names(stats::coef(obj$models[[1L]])), c("(Intercept)", "age", "female"))
+  expect_identical(deparse(obj$meta$formula), "ef ~ age + female")
+
+  second <- small
+  second$age <- second$age + 1
+  stacked <- rbind(transform(small, imp = 1L), transform(second, imp = 2L))
+  pooled <- bs_continuous(ef ~ ., stacked, imputation_col = "imp")
+  expect_setequal(pooled$tables$estimates$term, c("(Intercept)", "age", "female"))
+  for (m in pooled$models) {
+    expect_identical(names(stats::coef(m)), c("(Intercept)", "age", "female"))
+  }
+})

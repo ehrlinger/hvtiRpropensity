@@ -20,7 +20,9 @@ bs_continuous(
 \arguments{
 \item{formula}{A formula with the continuous outcome / exposure
 on the LHS, e.g.
-\code{hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb}.}
+\code{hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb}. A \code{.} on the
+right-hand side expands to the data's other columns, excluding the
+response, \code{id_col} and \code{imputation_col}.}
 
 \item{data}{A data frame, or a stacked MI data frame when
 \code{imputation_col} is set.}
