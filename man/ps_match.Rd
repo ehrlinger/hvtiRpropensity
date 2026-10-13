@@ -43,8 +43,9 @@ caliper unless \code{caliper_sd} is given.  Give at most one of \code{caliper} a
 \item{covariates}{Character vector of covariate columns for SMD
 diagnostics, used as given.  If \code{NULL} (default), every numeric column
 that varies is used, except \code{treatment_col}, \code{score_col}, \code{id_col},
-\code{match_col} and the columns this package appends (\code{prob_t}, \code{logit_t},
-\code{mt_wt}, \code{iptw}, \code{pair_id}, \code{quintile}, \code{decile} and the like).}
+\code{match_col} and the fixed columns this package appends (\code{prob_t},
+\code{logit_t}, \code{mt_wt}, \code{iptw}, \code{pair_id}, \code{quintile}, \code{decile}, \code{bs},
+\code{cluster}).}
 
 \item{match_col}{Name of the output match-indicator column appended
 to \verb{$data}.  Default \code{"match"}.  If the column already exists it is

@@ -4,24 +4,32 @@
 \alias{.default_covariates}
 \title{Default covariates for a balance table}
 \usage{
-.default_covariates(data, reserved = character())
+.default_covariates(data, reserved = character(), keep = character())
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{reserved}{Columns never used as covariates, such as the treatment,
 score and id columns.}
+
+\item{keep}{Columns protected from the fixed output names and the
+constant rule, typically \code{all.vars()} of a formula's right-hand side.}
 }
 \value{
 A character vector of column names.
 }
 \description{
-Every numeric column except those in \code{reserved}, the columns this package
-appends to its output, and constant columns. The package's output columns
-are \code{prob_t}, \code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile},
-\code{decile}, \code{bs}, \code{cluster}, the \verb{prob_<level>} scores of \code{\link[=ps_nominal]{ps_nominal()}} and
-\code{\link[=ps_ordinal]{ps_ordinal()}}, and the \verb{stra_<k>} indicators of \code{\link[=bs_continuous]{bs_continuous()}} and
-\code{\link[=bs_count]{bs_count()}}. A column is constant when its non-missing values take at most
-one value; it has no standardized difference to report.
+Every numeric column except those in \code{reserved}, the fixed output columns
+this package appends (\code{prob_t}, \code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match},
+\code{pair_id}, \code{quintile}, \code{decile}, \code{bs}, \code{cluster}), and constant columns. A
+column is constant when its non-missing values take at most one value. A
+function that generates columns under other names, such as the
+\verb{prob_<level>} scores of \code{\link[=ps_nominal]{ps_nominal()}}, passes those exact names in
+\code{reserved}.
+}
+\details{
+Columns in \code{keep}, the predictors a model formula declares, are never
+dropped by the fixed output names or the constant rule; only \code{reserved} can
+drop them.
 }
 \keyword{internal}

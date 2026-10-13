@@ -498,3 +498,19 @@ test_that("ps_nominal() reports each level against ref_level", {
   expect_equal(nrow(every), choose(nlevels(factor(dta$rtyp)), 2L))
   expect_error(ps_nominal(rtyp ~ age + ef, data = dta, smd_pairs = "adjacent"), "should be one of")
 })
+
+test_that("default balance tables leave out generated score columns and keep declared predictors", {
+  skip_if_not_installed("nnet")
+  skip_if_not_installed("MASS")
+  nom <- ps_nominal(rtyp ~ age + ef, data = sample_ps_data_nominal(n = 300, seed = 42))
+  expect_false(any(nom$meta$score_cols %in% nom$tables$smd$variable))
+  ord <- ps_ordinal(nyha_grp ~ age + female + ef, data = sample_ps_data_ordinal(n = 300, seed = 42))
+  expect_false(any(ord$meta$score_cols %in% ord$tables$smd$variable))
+
+  d <- sample_ps_data(300, seed = 1)
+  d <- d[setdiff(names(d), c("prob_t", "match"))]
+  d$bs <- d$ef / 10
+  fit <- ps_logistic(tavr ~ age + bs, d)
+  expect_true("bs" %in% fit$tables$smd$variable)
+  expect_false(any(c("id", "logit_t", "quintile") %in% fit$tables$smd$variable))
+})

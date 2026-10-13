@@ -47,8 +47,9 @@ Default \code{NULL} (no trimming).}
 \item{covariates}{Character vector of covariate columns for SMD
 diagnostics, used as given.  If \code{NULL} (default), every numeric column
 that varies is used, except \code{treatment_col}, \code{score_col}, \code{weight_col},
-\code{id_col} and the columns this package appends (\code{prob_t}, \code{logit_t},
-\code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile}, \code{decile} and the like).}
+\code{id_col} and the fixed columns this package appends (\code{prob_t},
+\code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile}, \code{decile},
+\code{bs}, \code{cluster}).}
 
 \item{weight_col}{Name of the output weight column appended to \verb{$data}.
 Default \code{"iptw"}.  If the column already exists it is overwritten.}

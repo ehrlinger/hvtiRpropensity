@@ -187,3 +187,12 @@ test_that("explicit covariates are used as given", {
   obj <- ps_weight(d, covariates = c("id", "age"))
   expect_identical(obj$tables$smd_weighted$variable, c("id", "age"))
 })
+
+test_that("a covariate that only looks like a score column stays in the default set", {
+  d <- sample_ps_data(300, seed = 1)
+  d <- d[setdiff(names(d), c("prob_t", "match"))]
+  d$prob_baseline_risk <- d$age / 100
+  fit <- ps_logistic(tavr ~ prob_baseline_risk, d)
+  expect_identical(fit$tables$smd$variable[fit$tables$smd$variable == "prob_baseline_risk"], "prob_baseline_risk")
+  expect_true("prob_baseline_risk" %in% ps_weight(fit$data)$tables$smd_weighted$variable)
+})

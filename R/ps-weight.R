@@ -44,8 +44,9 @@
 #' @param covariates     Character vector of covariate columns for SMD
 #'   diagnostics, used as given.  If `NULL` (default), every numeric column
 #'   that varies is used, except `treatment_col`, `score_col`, `weight_col`,
-#'   `id_col` and the columns this package appends (`prob_t`, `logit_t`,
-#'   `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile` and the like).
+#'   `id_col` and the fixed columns this package appends (`prob_t`,
+#'   `logit_t`, `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile`,
+#'   `bs`, `cluster`).
 #' @param weight_col     Name of the output weight column appended to `$data`.
 #'   Default `"iptw"`.  If the column already exists it is overwritten.
 #'

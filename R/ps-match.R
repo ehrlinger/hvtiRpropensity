@@ -43,8 +43,9 @@
 #' @param covariates     Character vector of covariate columns for SMD
 #'   diagnostics, used as given.  If `NULL` (default), every numeric column
 #'   that varies is used, except `treatment_col`, `score_col`, `id_col`,
-#'   `match_col` and the columns this package appends (`prob_t`, `logit_t`,
-#'   `mt_wt`, `iptw`, `pair_id`, `quintile`, `decile` and the like).
+#'   `match_col` and the fixed columns this package appends (`prob_t`,
+#'   `logit_t`, `mt_wt`, `iptw`, `pair_id`, `quintile`, `decile`, `bs`,
+#'   `cluster`).
 #' @param match_col      Name of the output match-indicator column appended
 #'   to `$data`.  Default `"match"`.  If the column already exists it is
 #'   overwritten.

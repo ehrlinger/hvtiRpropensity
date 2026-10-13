@@ -129,26 +129,30 @@
 
 #' Default covariates for a balance table
 #'
-#' Every numeric column except those in `reserved`, the columns this package
-#' appends to its output, and constant columns. The package's output columns
-#' are `prob_t`, `logit_t`, `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`,
-#' `decile`, `bs`, `cluster`, the `prob_<level>` scores of [ps_nominal()] and
-#' [ps_ordinal()], and the `stra_<k>` indicators of [bs_continuous()] and
-#' [bs_count()]. A column is constant when its non-missing values take at most
-#' one value; it has no standardized difference to report.
+#' Every numeric column except those in `reserved`, the fixed output columns
+#' this package appends (`prob_t`, `logit_t`, `mt_wt`, `iptw`, `match`,
+#' `pair_id`, `quintile`, `decile`, `bs`, `cluster`), and constant columns. A
+#' column is constant when its non-missing values take at most one value. A
+#' function that generates columns under other names, such as the
+#' `prob_<level>` scores of [ps_nominal()], passes those exact names in
+#' `reserved`.
+#'
+#' Columns in `keep`, the predictors a model formula declares, are never
+#' dropped by the fixed output names or the constant rule; only `reserved` can
+#' drop them.
 #'
 #' @param data     A data frame.
 #' @param reserved Columns never used as covariates, such as the treatment,
 #'   score and id columns.
+#' @param keep     Columns protected from the fixed output names and the
+#'   constant rule, typically `all.vars()` of a formula's right-hand side.
 #' @return A character vector of column names.
 #' @keywords internal
-.default_covariates <- function(data, reserved = character()) {
+.default_covariates <- function(data, reserved = character(), keep = character()) {
   outputs <- c("prob_t", "logit_t", "mt_wt", "iptw", "match", "pair_id", "quintile", "decile", "bs", "cluster")
-  cols <- names(data)[vapply(data, is.numeric, logical(1L))]
-  cols <- setdiff(cols, c(reserved, outputs))
-  cols <- cols[!grepl("^(prob_|stra_[0-9]+$)", cols)]
+  cols <- setdiff(names(data)[vapply(data, is.numeric, logical(1L))], reserved)
   varies <- vapply(cols, function(col) length(unique(stats::na.omit(data[[col]]))) > 1L, logical(1L))
-  cols[varies]
+  cols[cols %in% keep | (varies & !cols %in% outputs)]
 }
 
 
@@ -169,11 +173,14 @@
 #'   excluding `treatment`, `weight_col` and `reserved`.
 #' @param weight_col Optional name of a weight column.
 #' @param reserved   Further columns never used as default covariates.
+#' @param keep       Model predictors protected in the default set; see
+#'   `.default_covariates()`.
 #' @return A data frame with columns `variable` and `smd`, rounded to 4 places.
 #' @keywords internal
-.smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL, reserved = character()) {
+.smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL, reserved = character(),
+                       keep = character()) {
   if (is.null(covariates)) {
-    covariates <- .default_covariates(data, c(treatment, weight_col, reserved))
+    covariates <- .default_covariates(data, c(treatment, weight_col, reserved), keep)
   }
   grp <- data[[treatment]]
   smds <- if (length(covariates) == 0L || !all(c(0, 1) %in% grp)) {
@@ -228,11 +235,14 @@
 #' @param covariates Covariate columns. `NULL` uses `.default_covariates()`,
 #'   excluding `treatment` and `reserved`.
 #' @param reserved Columns never treated as covariates.
+#' @param keep Model predictors protected in the default set; see
+#'   `.default_covariates()`.
 #' @return A data frame with columns `variable`, `level`, `versus`, `smd`.
 #' @keywords internal
-.smd_table_levels <- function(data, treatment, levels, scheme, covariates = NULL, reserved = character()) {
+.smd_table_levels <- function(data, treatment, levels, scheme, covariates = NULL, reserved = character(),
+                              keep = character()) {
   if (is.null(covariates)) {
-    covariates <- .default_covariates(data, c(treatment, reserved))
+    covariates <- .default_covariates(data, c(treatment, reserved), keep)
   }
   pairs <- .smd_level_pairs(levels, scheme)
   group <- as.character(data[[treatment]])

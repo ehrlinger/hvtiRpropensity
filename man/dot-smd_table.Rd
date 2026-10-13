@@ -9,7 +9,8 @@
   treatment,
   covariates = NULL,
   weight_col = NULL,
-  reserved = character()
+  reserved = character(),
+  keep = character()
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ excluding \code{treatment}, \code{weight_col} and \code{reserved}.}
 \item{weight_col}{Optional name of a weight column.}
 
 \item{reserved}{Further columns never used as default covariates.}
+
+\item{keep}{Model predictors protected in the default set; see
+\code{.default_covariates()}.}
 }
 \value{
 A data frame with columns \code{variable} and \code{smd}, rounded to 4 places.
