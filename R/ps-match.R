@@ -29,13 +29,17 @@
 #'   `score_col`, and `id_col`.
 #' @param treatment_col  Name of the binary treatment column (0/1 or
 #'   logical).  Default `"tavr"`.
-#' @param score_col      Name of the numeric propensity score column
-#'   (values in \[0, 1\]).  Default `"prob_t"`.
+#' @param score_col      Name of the numeric propensity score column, on the
+#'   scale named by `scale`: probabilities in \[0, 1\] for
+#'   `scale = "probability"`, or logits (any finite value, such as the
+#'   `logit_t` column [ps_logistic()] appends) for `scale = "logit"`.
+#'   Default `"prob_t"`.
 #' @param id_col         Name of the patient identifier column.
 #'   Default `"id"`.
-#' @param caliper        Maximum allowable difference in propensity score
-#'   for a match to be accepted.  `NULL` (default) imposes no caliper.
-#'   Typical values: `0.1 * sd(score)` (20% of SD rule) or `0.2`.
+#' @param caliper        Maximum allowable difference in `score_col`, on its
+#'   own scale, for a match to be accepted.  `NULL` (default) imposes no
+#'   caliper unless `caliper_sd` is given.  Give at most one of `caliper` and
+#'   `caliper_sd`.
 #' @param covariates     Character vector of covariate columns for SMD
 #'   diagnostics.  If `NULL` (default), all numeric columns other than
 #'   `treatment_col` and `score_col` are used.
@@ -56,6 +60,20 @@
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
 #'   value, for example `"transcatheter"`, to use a column holding any two
 #'   values.
+#' @param scale          The scale `score_col` is on, and so the scale distances
+#'   and the caliper are measured on: `"probability"` (default) or `"logit"`.
+#'   The recommended caliper, 0.2 standard deviations of the logit of the
+#'   propensity score (Austin 2011), needs `scale = "logit"`.
+#' @param caliper_sd     Caliper in pooled standard-deviation units of
+#'   `score_col`: the caliper applied is `caliper_sd * sqrt((var_t + var_c) / 2)`,
+#'   where `var_t` and `var_c` are the variances of `score_col` among treated
+#'   and control patients (missing values dropped).  `NULL` (default) uses
+#'   `caliper` instead.  `scale = "logit", caliper_sd = 0.2`
+#'   is the Austin (2011) recommendation.
+#' @references Austin PC (2011). Optimal caliper widths for propensity-score
+#'   matching when estimating differences in means and differences in
+#'   proportions in observational studies. *Pharmaceutical Statistics*,
+#'   10(2), 150--161.  \doi{10.1002/pst.433}
 #' @return An object of class `c("ps_match", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The full input data frame with `match_col` and `pair_id`
@@ -64,7 +82,8 @@
 #'     belongs to (`NA` for unmatched patients).  Filter to `match == 1` to
 #'     obtain the matched subset.}
 #'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `id_col`,
-#'     `match_col`, `pair_id_col`, `caliper`, `method`, `seed`, `n_total`,
+#'     `match_col`, `pair_id_col`, `scale`, `caliper` (the absolute caliper
+#'     applied, on `scale`), `caliper_sd`, `method`, `seed`, `n_total`,
 #'     `n_matched`, `n_unmatched`.}
 #'   \item{`$tables`}{Named list: `smd_before`, `smd_after`,
 #'     `group_counts_before`, `group_counts_after`. Group tables name each
@@ -93,6 +112,11 @@
 #' matched <- obj$data[obj$data$match == 1L, ]
 #' nrow(matched)
 #'
+#' # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
+#' dta$logit_t <- stats::qlogis(dta$prob_t)
+#' obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+#' obj_logit$meta$caliper
+#'
 #' @export
 ps_match <- function(data,
                      treatment_col = "tavr",
@@ -103,7 +127,9 @@ ps_match <- function(data,
                      match_col     = "match",
                      ratio         = 1L,
                      seed          = NULL,
-                     treated_level = NULL) {
+                     treated_level = NULL,
+                     scale         = c("probability", "logit"),
+                     caliper_sd    = NULL) {
 
   # ---- Input validation ---------------------------------------------------
   .check_df(data)
@@ -112,11 +138,28 @@ ps_match <- function(data,
   treatment <- .treatment_indicator(data, treatment_col, treated_level)
   original_treatment <- data[[treatment_col]]
   data[[treatment_col]] <- treatment$trt
-  .check_probability(data, score_col)
+  scale <- match.arg(scale)
+  if (scale == "probability") {
+    .check_probability(data, score_col)
+  } else if (!is.numeric(data[[score_col]]) || any(is.infinite(data[[score_col]]))) {
+    rlang::abort(sprintf("Column `%s` must contain finite numeric logits.", score_col), call. = FALSE)
+  }
 
   if (!is.null(caliper) &&
       (!is.numeric(caliper) || length(caliper) != 1L || caliper <= 0)) {
     rlang::abort("`caliper` must be a positive number or NULL.", call. = FALSE)
+  }
+  if (!is.null(caliper_sd)) {
+    if (!is.numeric(caliper_sd) || length(caliper_sd) != 1L || is.na(caliper_sd) || caliper_sd <= 0) {
+      rlang::abort("`caliper_sd` must be a positive number or NULL.", call. = FALSE)
+    }
+    if (!is.null(caliper)) {
+      rlang::abort("Give at most one of `caliper` and `caliper_sd`.", call. = FALSE)
+    }
+    is_t <- as.integer(data[[treatment_col]]) == 1L
+    pooled_sd <- sqrt((stats::var(data[[score_col]][is_t], na.rm = TRUE) +
+                         stats::var(data[[score_col]][!is_t], na.rm = TRUE)) / 2)
+    caliper <- caliper_sd * pooled_sd
   }
   if (!identical(as.integer(ratio), 1L)) {
     rlang::abort("Only 1:1 matching (`ratio = 1`) is currently supported.",
@@ -231,7 +274,9 @@ ps_match <- function(data,
       id_col        = id_col,
       match_col     = match_col,
       pair_id_col   = "pair_id",
+      scale         = scale,
       caliper       = caliper,
+      caliper_sd    = caliper_sd,
       method        = "nearest-neighbour 1:1",
       seed          = if (is.null(seed)) NA_integer_ else seed,
       n_total       = nrow(data),
