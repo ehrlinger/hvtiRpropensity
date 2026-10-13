@@ -10,9 +10,11 @@ or
 [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
 instead. Returns a `ps_weight` object whose `$tables` slot contains SMD
 tables (unweighted and weighted) and effective-N diagnostics. Its
-`$data` feeds `hvtiPlotR::hv_mirror_hist()` in weighted mode;
-`hvtiPlotR::hv_balance()` needs the SMD tables stacked into long form
-(see the vignette).
+`$data` feeds
+[`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html)
+in weighted mode;
+[`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
+needs the SMD tables stacked into long form (see the vignette).
 
 ## Usage
 
@@ -135,7 +137,8 @@ many there are. `$meta$n_excluded` keeps the count.
 
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
 [`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md),
-`hvtiPlotR::hv_mirror_hist()`, `hvtiPlotR::hv_balance()`
+[`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html),
+[`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
 
 ## Examples
 

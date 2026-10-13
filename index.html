@@ -67,8 +67,8 @@
 <p><a href="https://github.com/ehrlinger/hvtiRpropensity" class="external-link"><img src="https://img.shields.io/github/r-package/v/ehrlinger/hvtiRpropensity" alt="R package version"></a></p>
 <p><a href="https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml" class="external-link"><img src="https://github.com/ehrlinger/hvtiRpropensity/actions/workflows/lint.yaml/badge.svg" alt="lint"></a> <!-- badges: end --></p>
 <p>Propensity score methods for cardiac surgery comparative-effectiveness research. Ports the balancing logic from SAS programs into a tidy R API whose outputs are compatible with <a href="https://ehrlinger.github.io/hvtiPlotR/" class="external-link">hvtiPlotR</a> and <a href="https://github.com/ehrlinger/hvtiRutilities" class="external-link">hvtiRutilities</a>.</p>
-<p><strong>Status: the methods are implemented, the SAS acceptance check is not.</strong> Score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>), both balancing methods (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>) and four sensitivity analyses (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>) are exported and tested.</p>
-<p>What is not yet done is parity. Every test in this package runs against the synthetic generators; no test reproduces a real run of the SAS programs whose balancing logic this ports. Until one does, treat agreement with SAS as unverified rather than assumed.</p>
+<p><strong>Status: the methods are implemented, and SAS parity is checked for the model fits and the CCF macros.</strong> Score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_forest.html">ps_forest()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>), the outcome-model bundles (<code><a href="reference/fit_logistic.html">fit_logistic()</a></code>, <code><a href="reference/fit_linear.html">fit_linear()</a></code>, <code><a href="reference/validate_logistic.html">validate_logistic()</a></code>), matching and weighting (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>), balance statistics (<code><a href="reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code>, <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>), the support and survival summaries (<code><a href="reference/ps_support.html">ps_support()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>) and four sensitivity analyses (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>) are exported and tested.</p>
+<p>Since 0.1.10, tests compare the package against SAS 9.4 runs on synthetic fixtures (<code>tests/testthat/fixtures/</code>): the binary, ordinal and nominal logistic fits, the Poisson balancing score, <code><a href="reference/fit_linear.html">fit_linear()</a></code>, <code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, Rubin pooling against <code>PROC MIANALYZE</code>, and the CCF macros <code>%stddiff</code>, <code>%stddiffci</code> and <code>%mw_var</code>. Matching, weighting, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>, <code><a href="reference/ps_forest.html">ps_forest()</a></code> and the <code>sa_*()</code> functions have no SAS oracle yet, so treat their agreement with SAS as unverified.</p>
 <p><strong>Full documentation:</strong> <a href="https://ehrlinger.github.io/hvtiRpropensity/" class="uri">https://ehrlinger.github.io/hvtiRpropensity/</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -84,23 +84,26 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ehrlinger/hvtiRpropensity" class="external-link">hvtiRpropensity</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Reproducible synthetic dataset</span></span>
+<span><span class="co"># Reproducible synthetic dataset. Drop the generator's true score so the</span></span>
+<span><span class="co"># example estimates its own.</span></span>
 <span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">dta</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>  <span class="co"># Preserve the generator's true score only when it is an input.</span></span>
+<span><span class="va">dta</span><span class="op">$</span><span class="va">prob_t</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span></span>
 <span><span class="co"># --- Propensity score estimation ---</span></span>
 <span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_logistic.html">ps_logistic</a></span><span class="op">(</span><span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>, data <span class="op">=</span> <span class="va">dta</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Nearest-neighbour 1:1 matching ---</span></span>
-<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
+<span><span class="co"># --- 1:1 nearest-neighbour matching on the logit, caliper 0.2 SD ---</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span>, score_col <span class="op">=</span> <span class="st">"logit_t"</span>, scale <span class="op">=</span> <span class="st">"logit"</span>,</span>
+<span>              caliper_sd <span class="op">=</span> <span class="fl">0.2</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="va">matched</span> <span class="op">&lt;-</span> <span class="va">m</span><span class="op">$</span><span class="va">data</span><span class="op">[</span><span class="va">m</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">match</span> <span class="op">==</span> <span class="fl">1L</span>, <span class="op">]</span></span>
 <span></span>
-<span><span class="co"># --- IPTW weighting (ATE) ---</span></span>
-<span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span>
+<span><span class="co"># --- IPTW weighting (ATE) from the estimated score ---</span></span>
+<span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span></span></code></pre></div>
+<p>The caliper of 0.2 standard deviations of the logit of the propensity score is the Austin (2011) recommendation. Give <code>seed</code> on every <code><a href="reference/ps_match.html">ps_match()</a></code> call. Matching shuffles the order of the treated patients, and the seed makes the pairs reproducible.</p>
 </div>
 <div class="section level2">
 <h2 id="logistic-model-bundles">Logistic model bundles<a class="anchor" aria-label="anchor" href="#logistic-model-bundles"></a>
@@ -144,24 +147,20 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code><a href="reference/fit_logistic.html">fit_logistic()</a></code></td>
-<td>Binary, ordinal, or nominal outcome-model bundle, with optional MI</td>
-</tr>
-<tr>
-<td><code><a href="reference/validate_logistic.html">validate_logistic()</a></code></td>
-<td>No-refit validation of a saved binary model bundle</td>
-</tr>
-<tr>
 <td><code><a href="reference/ps_logistic.html">ps_logistic()</a></code></td>
 <td>Binary propensity score via logistic regression (with optional MI)</td>
 </tr>
 <tr>
+<td><code><a href="reference/ps_forest.html">ps_forest()</a></code></td>
+<td>Binary propensity score from a random forest, out-of-bag (<code>randomForestSRC</code>)</td>
+</tr>
+<tr>
 <td><code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code></td>
-<td>Ordered treatment propensity via cumulative logit (MASS::polr)</td>
+<td>Ordered treatment propensity via cumulative logit (<code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr</a></code>)</td>
 </tr>
 <tr>
 <td><code><a href="reference/ps_nominal.html">ps_nominal()</a></code></td>
-<td>Nominal treatment propensity via generalised logit (nnet::multinom)</td>
+<td>Nominal treatment propensity via generalised logit (<code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom</a></code>)</td>
 </tr>
 <tr>
 <td><code><a href="reference/bs_continuous.html">bs_continuous()</a></code></td>
@@ -169,7 +168,32 @@
 </tr>
 <tr>
 <td><code><a href="reference/bs_count.html">bs_count()</a></code></td>
-<td>Balancing score for count exposures via negative-binomial / Poisson</td>
+<td>Balancing score for count exposures via negative-binomial or Poisson</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Outcome models</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code><a href="reference/fit_logistic.html">fit_logistic()</a></code></td>
+<td>Binary, ordinal, or nominal outcome-model bundle, with optional MI</td>
+</tr>
+<tr>
+<td><code><a href="reference/fit_linear.html">fit_linear()</a></code></td>
+<td>Linear outcome-model bundle, with optional MI and Rubin pooling</td>
+</tr>
+<tr>
+<td><code><a href="reference/validate_logistic.html">validate_logistic()</a></code></td>
+<td>No-refit validation of a saved binary model bundle</td>
 </tr>
 </tbody>
 </table>
@@ -186,11 +210,44 @@
 <tbody>
 <tr>
 <td><code><a href="reference/ps_match.html">ps_match()</a></code></td>
-<td>Greedy nearest-neighbour 1:1 matching with optional caliper</td>
+<td>Greedy 1:1 nearest-neighbour matching, on the probability or logit scale, with an optional caliper (absolute or <code>caliper_sd</code>)</td>
 </tr>
 <tr>
 <td><code><a href="reference/ps_weight.html">ps_weight()</a></code></td>
-<td>IPTW weighting — ATE, ATT, or ATC estimand</td>
+<td>IPTW weighting for the ATE, ATT, or ATC estimand, optionally trimmed</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Balance and treatment effects</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Function</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code><a href="reference/ps_stddiff.html">ps_stddiff()</a></code></td>
+<td>Standardized differences by variable type, optionally weighted (CCF <code>%stddiff</code>)</td>
+</tr>
+<tr>
+<td><code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code></td>
+<td>Permutation reference for those differences (CCF <code>%stddiffci</code>)</td>
+</tr>
+<tr>
+<td><code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code></td>
+<td>Matching-weight difference in means with a bootstrap SD (CCF <code>%mw_var</code>)</td>
+</tr>
+<tr>
+<td><code><a href="reference/ps_rmst.html">ps_rmst()</a></code></td>
+<td>Restricted mean survival contrast, weighted or on matched pairs</td>
+</tr>
+<tr>
+<td><code><a href="reference/ps_support.html">ps_support()</a></code></td>
+<td>Compares common-support and trimming rules and how well they agree</td>
 </tr>
 </tbody>
 </table>
@@ -207,7 +264,7 @@
 <tbody>
 <tr>
 <td><code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code></td>
-<td>Rosenbaum gamma bounds for matched analyses</td>
+<td>Rosenbaum gamma bounds for matched analyses (unmeasured confounding)</td>
 </tr>
 <tr>
 <td><code><a href="reference/sa_evalue.html">sa_evalue()</a></code></td>
@@ -215,11 +272,11 @@
 </tr>
 <tr>
 <td><code><a href="reference/sa_overlap.html">sa_overlap()</a></code></td>
-<td>PS overlap / positivity diagnostics</td>
+<td>Overlap and positivity diagnostics on the score distribution</td>
 </tr>
 <tr>
 <td><code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code></td>
-<td>IPTW trim-threshold sensitivity sweep</td>
+<td>How effective sample size and weights move across IPTW trim thresholds</td>
 </tr>
 </tbody>
 </table>
@@ -256,15 +313,22 @@
 </tr>
 </tbody>
 </table>
+<p>The four generators return plain data frames and <code><a href="reference/is_ps_data.html">is_ps_data()</a></code> returns <code>TRUE</code> or <code>FALSE</code>. Every other export returns a <code>ps_data</code> object with <code>$data</code>, <code>$meta</code> and <code>$tables</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<p>The <a href="https://ehrlinger.github.io/hvtiRpropensity/articles/hvtiRpropensity.html">Get started</a> vignette walks the workflow from score to sensitivity analysis, including a worked example that reshapes the balance tables for <code><a href="https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html" class="external-link">hvtiPlotR::hv_balance()</a></code>.</p>
+<p>The SAS programs this package ports ship with it: <code>system.file("sas-templates", package = "hvtiRpropensity")</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="related-packages">Related packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
 </h2>
 <ul>
 <li>
-<strong>hvtiPlotR</strong> — mirror histograms, balance plots, survival and hazard curves</li>
+<strong>hvtiPlotR</strong>: mirror histograms, balance plots, survival and hazard curves. <code>hv_mirror_hist()</code> reads the <code>$data</code> of a <code><a href="reference/ps_match.html">ps_match()</a></code> or <code><a href="reference/ps_weight.html">ps_weight()</a></code> object directly. <code>hv_balance()</code> needs the SMD tables reshaped to long form in percent; the vignette shows how.</li>
 <li>
-<strong>hvtiRutilities</strong> — data wrangling utilities for cardiac surgery datasets</li>
+<strong>hvtiRutilities</strong>: data wrangling utilities for cardiac surgery datasets.</li>
 </ul>
 </div>
 </div>

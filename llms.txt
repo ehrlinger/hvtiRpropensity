@@ -11,16 +11,28 @@ whose outputs are compatible with
 [hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/) and
 [hvtiRutilities](https://github.com/ehrlinger/hvtiRutilities).
 
-**Status: the methods are implemented, the SAS acceptance check is
-not.** Score estimation
+**Status: the methods are implemented, and SAS parity is checked for the
+model fits and the CCF macros.** Score estimation
 ([`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md),
 [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
 [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
 [`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
 [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md)),
-both balancing methods
+the outcome-model bundles
+([`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md),
+[`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md),
+[`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)),
+matching and weighting
 ([`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
-[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md))
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)),
+balance statistics
+([`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md),
+[`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md),
+[`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)),
+the support and survival summaries
+([`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md),
+[`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md))
 and four sensitivity analyses
 ([`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
 [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
@@ -28,10 +40,17 @@ and four sensitivity analyses
 [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md))
 are exported and tested.
 
-What is not yet done is parity. Every test in this package runs against
-the synthetic generators; no test reproduces a real run of the SAS
-programs whose balancing logic this ports. Until one does, treat
-agreement with SAS as unverified rather than assumed.
+Since 0.1.10, tests compare the package against SAS 9.4 runs on
+synthetic fixtures (`tests/testthat/fixtures/`): the binary, ordinal and
+nominal logistic fits, the Poisson balancing score,
+[`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md),
+[`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
+Rubin pooling against `PROC MIANALYZE`, and the CCF macros `%stddiff`,
+`%stddiffci` and `%mw_var`. Matching, weighting,
+[`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md),
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+and the `sa_*()` functions have no SAS oracle yet, so treat their
+agreement with SAS as unverified.
 
 **Full documentation:** <https://ehrlinger.github.io/hvtiRpropensity/>
 
@@ -50,24 +69,32 @@ pak::pak("ehrlinger/hvtiRpropensity")
 
 library(hvtiRpropensity)
 
-# Reproducible synthetic dataset
+# Reproducible synthetic dataset. Drop the generator's true score so the
+# example estimates its own.
 dta <- sample_ps_data(n = 500, seed = 42)
-dta$prob_t <- NULL  # Preserve the generator's true score only when it is an input.
+dta$prob_t <- NULL
 
 # --- Propensity score estimation ---
 obj <- ps_logistic(tavr ~ age + female + ef + diabetes + hypertension, data = dta)
 
-# --- Nearest-neighbour 1:1 matching ---
-m <- ps_match(obj$data)
+# --- 1:1 nearest-neighbour matching on the logit, caliper 0.2 SD ---
+m <- ps_match(obj$data, score_col = "logit_t", scale = "logit",
+              caliper_sd = 0.2, seed = 42)
 print(m)
 summary(m)
 matched <- m$data[m$data$match == 1L, ]
 
-# --- IPTW weighting (ATE) ---
-w <- ps_weight(dta, estimand = "ATE")
+# --- IPTW weighting (ATE) from the estimated score ---
+w <- ps_weight(obj$data, estimand = "ATE")
 print(w)
 summary(w)
 ```
+
+The caliper of 0.2 standard deviations of the logit of the propensity
+score is the Austin (2011) recommendation. Give `seed` on every
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+call. Matching shuffles the order of the treated patients, and the seed
+makes the pairs reproducible.
 
 ## Logistic model bundles
 
@@ -124,29 +151,46 @@ part of this first interface.
 
 | Function | Description |
 |----|----|
-| [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md) | Binary, ordinal, or nominal outcome-model bundle, with optional MI |
-| [`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md) | No-refit validation of a saved binary model bundle |
 | [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md) | Binary propensity score via logistic regression (with optional MI) |
-| [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md) | Ordered treatment propensity via cumulative logit (MASS::polr) |
-| [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md) | Nominal treatment propensity via generalised logit (nnet::multinom) |
+| [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md) | Binary propensity score from a random forest, out-of-bag (`randomForestSRC`) |
+| [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md) | Ordered treatment propensity via cumulative logit ([`MASS::polr`](https://rdrr.io/pkg/MASS/man/polr.html)) |
+| [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md) | Nominal treatment propensity via generalised logit ([`nnet::multinom`](https://rdrr.io/pkg/nnet/man/multinom.html)) |
 | [`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md) | Balancing score for continuous exposures via linear regression |
-| [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md) | Balancing score for count exposures via negative-binomial / Poisson |
+| [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md) | Balancing score for count exposures via negative-binomial or Poisson |
+
+**Outcome models**
+
+| Function | Description |
+|----|----|
+| [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md) | Binary, ordinal, or nominal outcome-model bundle, with optional MI |
+| [`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md) | Linear outcome-model bundle, with optional MI and Rubin pooling |
+| [`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md) | No-refit validation of a saved binary model bundle |
 
 **Balancing methods**
 
 | Function | Description |
 |----|----|
-| [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md) | Greedy nearest-neighbour 1:1 matching with optional caliper |
-| [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md) | IPTW weighting — ATE, ATT, or ATC estimand |
+| [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md) | Greedy 1:1 nearest-neighbour matching, on the probability or logit scale, with an optional caliper (absolute or `caliper_sd`) |
+| [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md) | IPTW weighting for the ATE, ATT, or ATC estimand, optionally trimmed |
+
+**Balance and treatment effects**
+
+| Function | Description |
+|----|----|
+| [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md) | Standardized differences by variable type, optionally weighted (CCF `%stddiff`) |
+| [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md) | Permutation reference for those differences (CCF `%stddiffci`) |
+| [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md) | Matching-weight difference in means with a bootstrap SD (CCF `%mw_var`) |
+| [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md) | Restricted mean survival contrast, weighted or on matched pairs |
+| [`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md) | Compares common-support and trimming rules and how well they agree |
 
 **Sensitivity analysis**
 
 | Function | Description |
 |----|----|
-| [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md) | Rosenbaum gamma bounds for matched analyses |
+| [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md) | Rosenbaum gamma bounds for matched analyses (unmeasured confounding) |
 | [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md) | E-values (VanderWeele & Ding 2017) for unmeasured confounding |
-| [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md) | PS overlap / positivity diagnostics |
-| [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md) | IPTW trim-threshold sensitivity sweep |
+| [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md) | Overlap and positivity diagnostics on the score distribution |
+| [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md) | How effective sample size and weights move across IPTW trim thresholds |
 
 **Utilities**
 
@@ -158,12 +202,33 @@ part of this first interface.
 | [`sample_ps_data_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_count.md) | Synthetic dataset with count exposure |
 | [`is_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.md) | Predicate for `ps_data` objects |
 
+The four generators return plain data frames and
+[`is_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.md)
+returns `TRUE` or `FALSE`. Every other export returns a `ps_data` object
+with `$data`, `$meta` and `$tables`.
+
+## Documentation
+
+The [Get
+started](https://ehrlinger.github.io/hvtiRpropensity/articles/hvtiRpropensity.html)
+vignette walks the workflow from score to sensitivity analysis,
+including a worked example that reshapes the balance tables for
+[`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html).
+
+The SAS programs this package ports ship with it:
+`system.file("sas-templates", package = "hvtiRpropensity")`.
+
 ## Related packages
 
-- **hvtiPlotR** — mirror histograms, balance plots, survival and hazard
-  curves
-- **hvtiRutilities** — data wrangling utilities for cardiac surgery
-  datasets
+- **hvtiPlotR**: mirror histograms, balance plots, survival and hazard
+  curves. `hv_mirror_hist()` reads the `$data` of a
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+  or
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+  object directly. `hv_balance()` needs the SMD tables reshaped to long
+  form in percent; the vignette shows how.
+- **hvtiRutilities**: data wrangling utilities for cardiac surgery
+  datasets.
 
 # Package index
 
@@ -197,8 +262,9 @@ Synthetic datasets for examples and unit tests.
 ## Propensity Score Estimation
 
 Functions for estimating propensity scores and balancing scores from raw
-patient data. Supports binary, ordinal, nominal, continuous, and count
-outcomes, with optional multiple-imputation averaging.
+patient data. Supports binary, ordinal and nominal treatments and
+continuous and count exposures, with optional multiple-imputation
+averaging.
 
 - [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
   : Estimate propensity scores via binary logistic regression
@@ -218,7 +284,8 @@ outcomes, with optional multiple-imputation averaging.
 
 ## Outcome Models
 
-Logistic outcome-model bundles and validation without refitting.
+Logistic and linear outcome-model bundles, and validation of a saved
+logistic bundle without refitting.
 
 - [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
   : Fit a general logistic model bundle
@@ -249,7 +316,8 @@ type and optionally weighted.
 
 ## Treatment Effects
 
-Weighted treatment-effect estimates with bootstrap variance.
+Matching-weight differences in means and restricted mean survival
+contrasts, with bootstrap intervals.
 
 - [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
   : Bootstrap variance of a matching-weight treatment effect
@@ -258,8 +326,8 @@ Weighted treatment-effect estimates with bootstrap variance.
 
 ## Sensitivity Analysis
 
-Functions for assessing robustness of propensity score analyses to
-unmeasured confounding and model assumptions.
+Rosenbaum bounds and E-values for unmeasured confounding; overlap,
+support and trimming diagnostics for positivity.
 
 - [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
   : Rosenbaum Sensitivity Bounds for Matched Analyses

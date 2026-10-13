@@ -30,8 +30,9 @@ Synthetic datasets for examples and unit tests.
 ## Propensity Score Estimation
 
 Functions for estimating propensity scores and balancing scores from raw
-patient data. Supports binary, ordinal, nominal, continuous, and count
-outcomes, with optional multiple-imputation averaging.
+patient data. Supports binary, ordinal and nominal treatments and
+continuous and count exposures, with optional multiple-imputation
+averaging.
 
 - [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
   : Estimate propensity scores via binary logistic regression
@@ -51,7 +52,8 @@ outcomes, with optional multiple-imputation averaging.
 
 ## Outcome Models
 
-Logistic outcome-model bundles and validation without refitting.
+Logistic and linear outcome-model bundles, and validation of a saved
+logistic bundle without refitting.
 
 - [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
   : Fit a general logistic model bundle
@@ -82,7 +84,8 @@ type and optionally weighted.
 
 ## Treatment Effects
 
-Weighted treatment-effect estimates with bootstrap variance.
+Matching-weight differences in means and restricted mean survival
+contrasts, with bootstrap intervals.
 
 - [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
   : Bootstrap variance of a matching-weight treatment effect
@@ -91,8 +94,8 @@ Weighted treatment-effect estimates with bootstrap variance.
 
 ## Sensitivity Analysis
 
-Functions for assessing robustness of propensity score analyses to
-unmeasured confounding and model assumptions.
+Rosenbaum bounds and E-values for unmeasured confounding; overlap,
+support and trimming diagnostics for positivity.
 
 - [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
   : Rosenbaum Sensitivity Bounds for Matched Analyses

@@ -146,10 +146,11 @@ population the estimate describes.
 
 The `$tables` slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts.
-`hvtiPlotR::hv_mirror_hist()` reads `$data` directly.
-`hvtiPlotR::hv_balance()` needs the two SMD tables stacked into long
-form with `variable`, `group` and `std_diff` (in percent); the vignette
-shows the reshape.
+[`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html)
+reads `$data` directly.
+[`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
+needs the two SMD tables stacked into long form with `variable`, `group`
+and `std_diff` (in percent); the vignette shows the reshape.
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in `$data` with `match_col` set to `0`, are left out of
@@ -168,7 +169,8 @@ observational studies. *Pharmaceutical Statistics*, 10(2), 150–161.
 
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
 [`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md),
-`hvtiPlotR::hv_mirror_hist()`, `hvtiPlotR::hv_balance()`
+[`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html),
+[`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
 
 ## Examples
 

@@ -4,31 +4,48 @@
 
 `hvtiRpropensity` provides propensity score methods for cardiac surgery
 comparative-effectiveness research. It ports the balancing logic from
-six SAS templates into a tidy R API compatible with
-[hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/).
+six SAS templates into a tidy R API whose outputs feed
+[hvtiPlotR](https://ehrlinger.github.io/hvtiPlotR/). The six templates
+ship with the package, in
+`system.file("sas-templates", package = "hvtiRpropensity")`.
 
 The package covers the full workflow from raw covariates to sensitivity
 analysis:
 
-1.  **Estimate a balancing score** —
+1.  **Estimate a balancing score**:
     [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+    [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md),
     [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
     [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
     [`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
-    [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md)
-2.  **Balance treatment groups** —
+    [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md).
+2.  **Balance treatment groups**:
     [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
     (nearest-neighbour matching) or
     [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
-    (IPTW)
-3.  **Diagnose balance** — SMD tables, group counts, and overlap
-    diagnostics in `$tables`,
+    (IPTW).
+3.  **Diagnose balance and support**: the SMD tables, group counts and
+    effective sample sizes in `$tables`,
+    [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+    and
+    [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md),
+    and
+    [`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md)
+    for the common-support rules.
+4.  **Estimate the effect**:
+    [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+    for a matching-weight difference in means,
+    [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+    for restricted mean survival.
+5.  **Check the assumptions**:
     [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md)
-4.  **Assess sensitivity to unmeasured confounding** —
-    [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
-    [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
-    [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+    and
     [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
+    for positivity and overlap,
+    [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
+    and
+    [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md)
+    for unmeasured confounding.
 
 All score, balance, sensitivity, fit, and validation objects share a
 common `ps_data` S3 base class with four slots: `$data` carries
@@ -70,10 +87,9 @@ summary(dta$prob_t)
 #> 0.03556 0.34004 0.49508 0.50000 0.67026 0.95645
 ```
 
-The two treatment groups differ on all covariates — younger patients
-with higher ejection fraction were more likely to receive TF-TAVR — so
-the raw SMDs are non-trivial and the propensity scores have good
-overlap.
+The two treatment groups differ on all covariates (younger patients with
+higher ejection fraction were more likely to receive TF-TAVR), so the
+raw SMDs are non-trivial and the propensity scores have good overlap.
 
 ``` r
 
@@ -169,9 +185,9 @@ outcome_model_mi$tables$estimates
 #>           term    estimate   std.error statistic           df      p.value
 #> 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08
 #> 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23
-#> 3       female  0.23341073 0.141967346  1.644116 4.928167e+60 1.001523e-01
-#> 4           ef  0.04999120 0.006963766  7.178759          Inf 7.034695e-13
-#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.181574e+61 3.991900e-02
+#> 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01
+#> 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13
+#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02
 #> 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01
 #>      conf.low   conf.high odds_ratio pooled
 #> 1  2.78243495  5.89694637 76.6838145   TRUE
@@ -206,7 +222,7 @@ validation$tables$performance
 
 ## 4 Propensity score estimation
 
-### 4.1 Binary treatment — `ps_logistic()`
+### 4.1 Binary treatment: `ps_logistic()`
 
 In practice a propensity score is estimated from covariates before
 matching or weighting.
@@ -309,7 +325,41 @@ summary(obj_mi$data$prob_t)
 #> 0.02227 0.30987 0.48499 0.50000 0.68398 0.94193
 ```
 
-### 4.3 Ordinal treatment — `ps_ordinal()`
+### 4.3 Random-forest score: `ps_forest()`
+
+When you would rather not commit to a main-effects logistic model,
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+grows a classification forest with `randomForestSRC` and scores each
+patient **out-of-bag**, using only the trees that did not see that
+patient. It appends the same `prob_t`, `logit_t`, `mt_wt`, `quintile`
+and `decile` columns as
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+so everything below takes either. `mt_wt` is the Li and Greene (2013)
+matching weight. Give a `seed`; the forest is random.
+
+``` r
+
+op <- options(rf.cores = 2L)
+obj_rf <- ps_forest(
+  tavr ~ age + female + ef + diabetes + hypertension,
+  data  = dta_ps,
+  ntree = 200,
+  seed  = 42
+)
+options(op)
+summary(obj_rf$data$prob_t)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>  0.0010  0.3023  0.4940  0.5005  0.7028  0.9990
+obj_rf$tables$smd
+#>                  variable     smd
+#> age                   age -0.7559
+#> female             female  0.1582
+#> ef                     ef  0.5509
+#> diabetes         diabetes -0.1257
+#> hypertension hypertension -0.0696
+```
+
+### 4.4 Ordinal treatment: `ps_ordinal()`
 
 For ordered treatment variables (e.g. NYHA functional class I / II /
 III–IV),
@@ -357,7 +407,7 @@ table(obj_ord$data$quintile)
 #> 240 240 240 240 240
 ```
 
-### 4.4 Nominal treatment — `ps_nominal()`
+### 4.5 Nominal treatment: `ps_nominal()`
 
 For unordered multi-level treatments (e.g. repair type: CE / COS / PER /
 DEV),
@@ -406,7 +456,7 @@ predictor from a saturated model. Patients with similar balancing scores
 have similar expected exposure values, enabling within-stratum
 comparisons analogous to PS stratification.
 
-### 5.1 Continuous exposure — `bs_continuous()`
+### 5.1 Continuous exposure: `bs_continuous()`
 
 Mirrors `tp.rm.continuous.balncing_score.sas` (PROC REG balancing score
 on nadir HCT). The fitted value from
@@ -446,11 +496,11 @@ table(obj_bs$data$cluster)
 #> 80 80 80 80 80 80 80 80 80 80
 ```
 
-### 5.2 Count exposure — `bs_count()`
+### 5.2 Count exposure: `bs_count()`
 
 Mirrors `tp.pm.count.balncing_score.sas` (PROC GENMOD dist=nb link=log).
 The **linear predictor on the log scale** (`xbeta`) is used as the
-balancing score, not the fitted count — the log scale is continuous and
+balancing score, not the fitted count. The log scale is continuous and
 unbounded, making it more suitable for rank-based stratification.
 
 ``` r
@@ -493,9 +543,13 @@ head(obj_cnt$data[, c("id", "rbc_tot", "bs", "cluster",
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 performs greedy 1:1 nearest-neighbour matching without replacement.
 
+Treated patients are matched in a shuffled order, so the pairs depend on
+the random-number stream. Give `seed` on every call and the match is
+reproducible whatever ran earlier in the session.
+
 ``` r
 
-m <- ps_match(dta)
+m <- ps_match(dta, seed = 42)
 print(m)
 #> <ps_match>
 #>   N total     : 800
@@ -586,7 +640,7 @@ pairs in exchange for tighter balance.
 
 ``` r
 
-m_cal <- ps_match(dta, caliper = 0.05)
+m_cal <- ps_match(dta, caliper = 0.05, seed = 42)
 print(m_cal)
 #> <ps_match>
 #>   N total     : 800
@@ -595,6 +649,59 @@ print(m_cal)
 #>   Method      : nearest-neighbour 1:1
 #>   Tables      : smd_before, smd_after, group_counts_before, group_counts_after
 ```
+
+### 6.5 Matching on the logit with a caliper in SD units
+
+A caliper of 0.05 on the probability scale means different things near
+0.5 and near the tails. Austin (2011) recommends matching on the
+**logit** of the propensity score with a caliper of 0.2 pooled standard
+deviations of that logit. Pass the `logit_t` column that
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+appends, set `scale = "logit"`, and give the caliper as `caliper_sd`.
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+turns it into an absolute caliper,
+`caliper_sd * sqrt((var_t + var_c) / 2)`, and records that value in
+`$meta$caliper`.
+
+``` r
+
+m_logit <- ps_match(obj_ps$data,
+                    score_col  = "logit_t",
+                    scale      = "logit",
+                    caliper_sd = 0.2,
+                    seed       = 42)
+m_logit$meta[c("scale", "caliper_sd", "caliper", "n_matched", "n_unmatched")]
+#> $scale
+#> [1] "logit"
+#> 
+#> $caliper_sd
+#> [1] 0.2
+#> 
+#> $caliper
+#> [1] 0.1893455
+#> 
+#> $n_matched
+#> [1] 322
+#> 
+#> $n_unmatched
+#> [1] 178
+m_logit$tables$smd_after
+#>                  variable     smd
+#> age                   age -0.0345
+#> female             female -0.0750
+#> ef                     ef -0.0207
+#> diabetes         diabetes -0.0343
+#> hypertension hypertension  0.0000
+```
+
+The object records `scale = "logit"`, and the functions that read it
+downstream
+([`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+[`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md),
+[`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md))
+back-transform the score with
+[`plogis()`](https://rdrr.io/r/stats/Logistic.html) before they work on
+the probability scale.
 
 ------------------------------------------------------------------------
 
@@ -706,11 +813,139 @@ summary(w_trim$data$iptw)
 
 ------------------------------------------------------------------------
 
-## 8 Sensitivity analysis
+## 8 Balance statistics and effect estimates
 
-Every observational study rests on the assumption of no unmeasured
-confounding. The four `sa_*` functions quantify how strong an unmeasured
-confounder would need to be to change the study’s conclusions.
+The `$tables` of a match or a weight give a quick SMD per covariate.
+Three functions port the CCF SAS macros for the fuller analysis, and
+tests compare each with the macro’s output.
+
+### 8.1 Standardized differences: `ps_stddiff()`
+
+[`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+reproduces `%stddiff`. You say which formula each variable gets
+(Gaussian, non-Gaussian ordinal, binary, categorical) instead of letting
+the storage type decide. With `weight_col`, each group’s weights are
+first scaled to average 1, so stabilised and unstabilised weights give
+the same answer. The result is a proportion of a standard deviation, not
+a percent.
+
+``` r
+
+sd_mw <- ps_stddiff(obj_ps$data,
+                    gaussian   = c("age", "ef"),
+                    binary     = c("female", "diabetes", "hypertension"),
+                    weight_col = "mt_wt")
+sd_mw$tables$stddiff
+#>       variable label     type      stddiff
+#> 1          age  <NA> gaussian -0.001631655
+#> 2           ef  <NA> gaussian -0.012089771
+#> 3       female  <NA>   binary -0.006380083
+#> 4     diabetes  <NA>   binary  0.005529868
+#> 5 hypertension  <NA>   binary -0.018231400
+```
+
+### 8.2 A permutation reference: `ps_stddiff_perm()`
+
+[`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
+reproduces `%stddiffci`. It shuffles the group labels and reports where
+the observed difference falls among the shuffled ones. The percentiles
+are not a confidence interval; they show what label shuffling alone
+produces. A weighted run needs a `reweight` function that recomputes the
+weights for each permutation, so this example is unweighted.
+
+``` r
+
+perm <- ps_stddiff_perm(obj_ps$data,
+                        gaussian = c("age", "ef"),
+                        binary   = "female",
+                        n_perm   = 200,
+                        seed     = 1)
+perm$tables$stddiff_perm
+#>   variable label     type   observed       p2_5         p16           p50
+#> 1      age  <NA> gaussian -0.7559064 -0.1160061 -0.06172352 -0.0029306953
+#> 2       ef  <NA> gaussian  0.5508756 -0.1209992 -0.06409435 -0.0006059003
+#> 3   female  <NA>   binary  0.1583777 -0.1420472 -0.06075240  0.0040483010
+#>          p84     p97_5
+#> 1 0.06793955 0.1132619
+#> 2 0.04527265 0.1316804
+#> 3 0.06886176 0.1257449
+```
+
+### 8.3 Matching-weight difference in means: `ps_mw_var()`
+
+[`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md)
+reproduces `%mw_var`: the weighted difference in means between groups,
+with a bootstrap standard deviation and percentiles. The weights are
+held fixed in the bootstrap, as in the macro, so the SD ignores the
+uncertainty in estimating the score. Here `ef` stands in for an outcome.
+
+``` r
+
+mw <- ps_mw_var(obj_ps$data,
+                outcomes   = "ef",
+                weight_col = "mt_wt",
+                n_rep      = 200,
+                seed       = 1)
+mw$tables$mw_var[, c("outcome", "mean_0", "mean_1", "estimate", "sd",
+                     "p2_5", "p97_5")]
+#>   outcome   mean_0   mean_1  estimate        sd      p2_5    p97_5
+#> 1      ef 54.74937 54.63124 -0.118138 0.6530133 -1.468202 1.174239
+```
+
+### 8.4 Restricted mean survival: `ps_rmst()`
+
+For a time-to-event outcome,
+[`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md)
+integrates weighted Kaplan-Meier curves to a horizon `tau` and reports
+the treated-minus-control difference with a bootstrap interval. On a
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+object it analyses the matched pairs only, unweighted, and resamples
+whole pairs. It refuses score weights on a matched set, which would
+adjust for the same confounders twice. On a scored or weighted object it
+runs the weighting schemes you name.
+
+``` r
+
+# Synthetic follow-up in years, censored at 5
+dta_s <- obj_ps$data
+dta_s$t <- withr::with_seed(7, stats::rexp(nrow(dta_s), 0.2))
+dta_s$e <- as.integer(dta_s$t < 5)
+dta_s$t <- pmin(dta_s$t, 5)
+
+m_s <- ps_match(dta_s,
+                score_col  = "logit_t",
+                scale      = "logit",
+                caliper_sd = 0.2,
+                covariates = c("age", "female", "ef", "diabetes", "hypertension"),
+                seed       = 42)
+rm_match <- ps_rmst(m_s, time_col = "t", event_col = "e", tau = 4,
+                    n_boot = 100, seed = 1)
+rm_match$meta$resampling
+#> [1] "pair"
+rm_match$tables$estimates[, c("estimator", "n", "diff_days",
+                              "lo_days", "hi_days")]
+#>        estimator   n diff_days   lo_days  hi_days
+#> 1 all/unweighted 644 -20.69227 -119.8038 44.88649
+```
+
+------------------------------------------------------------------------
+
+## 9 Sensitivity analysis
+
+A propensity analysis rests on two assumptions the data cannot prove.
+The first is positivity: every patient could have received either
+treatment, so the two score distributions overlap.
+[`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+[`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
+and
+[`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md)
+check it. The second is no unmeasured confounding.
+[`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
+and
+[`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md)
+ask how strong an unmeasured confounder would need to be to change the
+conclusion. Each `sa_*()` function returns a `ps_data` object, with its
+results in `$tables` and `$meta`.
 
 ``` r
 
@@ -719,7 +954,7 @@ m    <- ps_match(dta, seed = 42)
 w    <- ps_weight(dta, estimand = "ATE")
 ```
 
-### 8.1 Overlap and positivity — `sa_overlap()`
+### 9.1 Overlap and positivity: `sa_overlap()`
 
 Before any analysis, check that the PS distributions overlap
 sufficiently.
@@ -743,7 +978,28 @@ ov$tables$positivity_flags
 #> 2     1    TRUE           1          2           0.2          0.4
 ```
 
-### 8.2 Weight-trimming sensitivity sweep — `sa_trim_sweep()`
+### 9.2 Comparing support rules: `ps_support()`
+
+There is more than one way to call a patient “off support”.
+[`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md)
+flags patients under several rules (outside a fixed trimming range,
+outside the range both groups occupy, or any logical flag you supply)
+and measures how well the rules agree, with Cohen’s kappa and the
+Jaccard overlap of the patients each rule drops.
+
+``` r
+
+sup <- ps_support(obj_ps, trim = c(0.1, 0.9))
+sup$tables$counts
+#>     rule n_weak    n n_excluded
+#> 1 common     18 1000          0
+#> 2   trim     37 1000          0
+sup$tables$agreement
+#>   rule_a rule_b    n n_a n_b n_both n_neither pct_agree     kappa   jaccard
+#> 1 common   trim 1000  18  37     18       963      98.1 0.6459715 0.4864865
+```
+
+### 9.3 Weight-trimming sensitivity sweep: `sa_trim_sweep()`
 
 Extreme IPTW weights inflate variance and can dominate estimates.
 [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)
@@ -771,12 +1027,14 @@ sweep[sweep$trim %in% c(0, 0.05), c("trim", "ess_control",
 #> 6 0.05       434.6       428.6     1.9526
 ```
 
-### 8.3 E-values — `sa_evalue()`
+### 9.4 E-values: `sa_evalue()`
 
 The E-value (VanderWeele & Ding 2017) is the minimum risk-ratio that an
 unmeasured confounder would need with *both* the treatment and the
 outcome to fully explain away the observed association. A large E-value
-indicates a more robust finding.
+indicates a more robust finding. For an odds ratio or hazard ratio you
+must say whether the outcome is rare (under about 15 percent by the end
+of follow-up) with `rare`; the conversion to a risk ratio depends on it.
 
 ``` r
 
@@ -797,7 +1055,17 @@ ev_rd$meta$evalue_estimate
 #> [1] 2.437644
 ```
 
-### 8.4 Rosenbaum sensitivity bounds — `sa_rosenbaum()`
+``` r
+
+# Odds ratio 1.6 (1.1 to 2.3) for a common outcome
+ev_or <- sa_evalue(1.6, ci_lo = 1.1, ci_hi = 2.3, type = "OR", rare = FALSE)
+ev_or$tables$evalue
+#>   quantity value       rr   evalue
+#> 1 estimate   1.6 1.264911 1.843780
+#> 2       ci   1.1 1.048809 1.275063
+```
+
+### 9.5 Rosenbaum sensitivity bounds: `sa_rosenbaum()`
 
 For matched analyses,
 [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md)
@@ -829,51 +1097,99 @@ head(res$tables$bounds)
 
 ------------------------------------------------------------------------
 
-## 9 Downstream use with hvtiPlotR
+## 10 Downstream use with hvtiPlotR
 
-The `$data` and `$tables` slots are designed for direct consumption by
-`hvtiPlotR::hv_mirror_hist()` (weighted mode) and
-`hvtiPlotR::hv_balance()`.
+`hvtiPlotR` draws the two standard figures. Both of its constructors
+return a data object, and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) turns that into
+a bare `ggplot2` figure you then decorate. The chunks below run when
+`hvtiPlotR` is installed.
 
-### 9.1 Mirror histogram (matched)
+### 10.1 Mirror histogram
 
-``` r
-
-library(hvtiPlotR)
-
-mh <- hv_mirror_hist(
-  data          = m$data,
-  x             = prob_t,
-  treatment     = tavr,
-  match_col     = match,
-  group_labels  = c("SAVR", "TF-TAVR")
-)
-plot(mh) +
-  ggplot2::scale_y_continuous(labels = abs) +
-  ggplot2::labs(x = "Propensity Score", y = "Number of Patients") +
-  hv_theme("manuscript")
-```
-
-### 9.2 Mirror histogram (weighted)
+`hv_mirror_hist()` reads the `$data` of a match directly. Its defaults
+are the column names this package uses (`prob_t`, `tavr`, `match`). It
+plots on the probability scale, so give it `prob_t` even for the
+logit-scale match from earlier;
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+left both columns in `$data`. The treated group plots above the axis,
+controls below, with matched patients shaded.
 
 ``` r
 
-mh_wt <- hv_mirror_hist(
-  data          = w_ate$data,
-  x             = prob_t,
-  treatment     = tavr,
-  weight_col    = iptw,
-  group_labels  = c("SAVR", "TF-TAVR")
-)
-plot(mh_wt) +
-  ggplot2::scale_y_continuous(labels = abs) +
-  ggplot2::labs(x = "Propensity Score", y = "Weighted Count") +
-  hv_theme("manuscript")
+mh <- hvtiPlotR::hv_mirror_hist(m_logit$data,
+                                score_col = "prob_t",
+                                group_col = "tavr",
+                                match_col = "match")
+#> mirror_histogram diagnostics: n=1000  dropped=0  [see $tables$diagnostics]
+plot(mh)
 ```
+
+![](hvtiRpropensity_files/figure-html/mirror-hist-match-1.png)
+
+For a weighted analysis, pass the weight column and the bars become
+weighted counts.
+
+``` r
+
+mh_wt <- hvtiPlotR::hv_mirror_hist(w_ate$data,
+                                   score_col  = "prob_t",
+                                   group_col  = "tavr",
+                                   weight_col = "iptw")
+#> mirror_histogram diagnostics: n=800  dropped=0  [see $tables$diagnostics]
+plot(mh_wt)
+```
+
+![](hvtiRpropensity_files/figure-html/mirror-hist-weight-1.png)
+
+### 10.2 Covariate balance plot
+
+`hv_balance()` does **not** read `$tables` as they come. It wants one
+long data frame, one row per covariate and comparison, with columns
+`variable`, `group` and `std_diff`, and the difference in **percent**
+(its reference lines sit at plus and minus 10). The SMD tables here are
+proportions of a standard deviation, one table per comparison, so stack
+them and multiply by 100. Here is the logit-scale match from earlier.
+
+``` r
+
+balance_long <- rbind(
+  data.frame(variable = m_logit$tables$smd_before$variable,
+             group    = "Before match",
+             std_diff = 100 * m_logit$tables$smd_before$smd),
+  data.frame(variable = m_logit$tables$smd_after$variable,
+             group    = "After match",
+             std_diff = 100 * m_logit$tables$smd_after$smd)
+)
+balance_long
+#>        variable        group std_diff
+#> 1           age Before match   -75.59
+#> 2        female Before match    15.82
+#> 3            ef Before match    55.09
+#> 4      diabetes Before match   -12.57
+#> 5  hypertension Before match    -6.96
+#> 6           age  After match    -3.45
+#> 7        female  After match    -7.50
+#> 8            ef  After match    -2.07
+#> 9      diabetes  After match    -3.43
+#> 10 hypertension  After match     0.00
+```
+
+For a
+[`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+object the two tables are `smd_unweighted` and `smd_weighted`.
+
+``` r
+
+cb <- hvtiPlotR::hv_balance(balance_long)
+plot(cb)
+```
+
+![](hvtiRpropensity_files/figure-html/balance-plot-1.png)
 
 ------------------------------------------------------------------------
 
-## 10 Session info
+## 11 Session info
 
 ``` r
 
@@ -902,9 +1218,27 @@ sessionInfo()
 #> [1] hvtiRpropensity_0.1.11
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] digest_0.6.39   fastmap_1.2.0   xfun_0.61       nnet_7.3-20    
-#>  [5] knitr_1.52      htmltools_0.5.9 rmarkdown_2.32  cli_3.6.6      
-#>  [9] withr_3.0.3     compiler_4.6.1  tools_4.6.1     evaluate_1.0.5 
-#> [13] yaml_2.3.12     otel_0.2.0      rlang_1.3.0     jsonlite_2.0.0 
-#> [17] MASS_7.3-65
+#>  [1] gtable_0.3.6            xfun_0.61               ggplot2_4.0.3          
+#>  [4] hvtiPlotR_2.8.9         htmlwidgets_1.6.4       visNetwork_2.1.4       
+#>  [7] lattice_0.22-9          vctrs_0.7.3             tools_4.6.1            
+#> [10] generics_0.1.4          parallel_4.6.1          tibble_3.3.1           
+#> [13] pkgconfig_2.0.3         Matrix_1.7-5            RColorBrewer_1.1-3     
+#> [16] S7_0.2.2                rvg_0.4.2               randomForestSRC_3.9.0  
+#> [19] uuid_1.2-2              ggupset_0.4.1           lifecycle_1.0.5        
+#> [22] compiler_4.6.1          farver_2.1.2            textshaping_1.0.5      
+#> [25] data.tree_1.2.0         fontquiver_0.2.1        fontLiberation_0.1.0   
+#> [28] htmltools_0.5.9         yaml_2.3.12             pillar_1.11.1          
+#> [31] tidyr_1.3.2             MASS_7.3-65             openssl_2.4.2          
+#> [34] fontBitstreamVera_0.1.1 tidyselect_1.2.1        zip_3.0.2              
+#> [37] digest_0.6.39           stringi_1.8.9           dplyr_1.2.1            
+#> [40] purrr_1.2.2             labeling_0.4.3          splines_4.6.1          
+#> [43] fastmap_1.2.0           grid_4.6.1              cli_3.6.6              
+#> [46] magrittr_2.0.5          DiagrammeR_1.0.12       patchwork_1.3.2        
+#> [49] survival_3.8-6          withr_3.0.3             gdtools_0.5.1          
+#> [52] scales_1.4.0            consort_1.2.4           rmarkdown_2.32         
+#> [55] officer_0.7.6           otel_0.2.0              nnet_7.3-20            
+#> [58] askpass_1.2.1           ragg_1.5.2              ggalluvial_0.12.6      
+#> [61] evaluate_1.0.5          knitr_1.52              rlang_1.3.0            
+#> [64] Rcpp_1.1.2              glue_1.8.1              xml2_1.6.0             
+#> [67] jsonlite_2.0.0          R6_2.6.1                systemfonts_1.3.2
 ```

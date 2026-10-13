@@ -42,7 +42,7 @@
 
 <div id="hvtirpropensity" class="section level1">
 
-<p>Propensity-score analysis for the HVTI CORR group: score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="reference/ps_forest.html">ps_forest()</a></code>), the general model bundle behind them (<code><a href="reference/fit_logistic.html">fit_logistic()</a></code>, <code><a href="reference/validate_logistic.html">validate_logistic()</a></code>), application (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>, <code><a href="reference/ps_support.html">ps_support()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>), balance statistics (<code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>, <code><a href="reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code>, <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>) and four sensitivity methods (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>), plus <code><a href="reference/is_ps_data.html">is_ps_data()</a></code> and four synthetic data generators. Twenty-four exports; <code>NAMESPACE</code> is the authority.</p>
+<p>Propensity-score analysis for the HVTI CORR group: score estimation (<code><a href="reference/ps_logistic.html">ps_logistic()</a></code>, <code><a href="reference/ps_nominal.html">ps_nominal()</a></code>, <code><a href="reference/ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="reference/ps_forest.html">ps_forest()</a></code>), the general model bundles (<code><a href="reference/fit_logistic.html">fit_logistic()</a></code>, <code><a href="reference/fit_linear.html">fit_linear()</a></code>, <code><a href="reference/validate_logistic.html">validate_logistic()</a></code>), application (<code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_weight.html">ps_weight()</a></code>, <code><a href="reference/ps_support.html">ps_support()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>), balance statistics (<code><a href="reference/bs_continuous.html">bs_continuous()</a></code>, <code><a href="reference/bs_count.html">bs_count()</a></code>, <code><a href="reference/ps_stddiff.html">ps_stddiff()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code>, <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>) and four sensitivity methods (<code><a href="reference/sa_rosenbaum.html">sa_rosenbaum()</a></code>, <code><a href="reference/sa_evalue.html">sa_evalue()</a></code>, <code><a href="reference/sa_overlap.html">sa_overlap()</a></code>, <code><a href="reference/sa_trim_sweep.html">sa_trim_sweep()</a></code>), plus <code><a href="reference/is_ps_data.html">is_ps_data()</a></code> and four synthetic data generators. Twenty-five exports; <code>NAMESPACE</code> is the authority.</p>
 <p>This file is the operational contract and applies in full. It is tool neutral, so Codex and any other agent read the same rules. Claude Code affordances live in <code>CLAUDE.md</code>, which imports this file.</p>
 <div class="section level2">
 <h2 id="definition-of-done">Definition of done<a class="anchor" aria-label="anchor" href="#definition-of-done"></a></h2>
@@ -81,13 +81,13 @@
 <div class="section level2">
 <h2 id="rules-for-this-repo">Rules for this repo<a class="anchor" aria-label="anchor" href="#rules-for-this-repo"></a></h2>
 <ul><li>
-<strong>Every public function returns a <code>ps_data</code> subclass, built by <code><a href="reference/new_ps_data.html">new_ps_data()</a></code>.</strong> The object structure is guaranteed across every subclass and code depends on it:
+<strong>Every public function returns a <code>ps_data</code> subclass, built by <code><a href="reference/new_ps_data.html">new_ps_data()</a></code>,</strong> except the four data generators, which return data frames, and <code><a href="reference/is_ps_data.html">is_ps_data()</a></code>. The object structure is guaranteed across every subclass and code depends on it:
 <ul><li>
-<code>$data</code> — the original data frame with scores or weights appended</li>
+<code>$data</code>: the original data frame with scores or weights appended</li>
 <li>
-<code>$meta</code> — column names used, method parameters, formula, computed statistics</li>
+<code>$meta</code>: column names used, method parameters, formula, computed statistics</li>
 <li>
-<code>$tables</code> — diagnostic tables (SMD before/after, group counts, effective N); may be an empty list, but the element exists</li>
+<code>$tables</code>: diagnostic tables (SMD before/after, group counts, effective N); may be an empty list, but the element exists</li>
 <li>
 <code>$models</code>: fitted model objects; may be an empty list, but the element exists</li>
 </ul>
@@ -97,7 +97,7 @@ Adding a <code>ps_*()</code> function means returning that shape through the con
 <li>
 <strong>Lines are 120 characters here</strong>, because the <code>ps_*()</code> and <code>bs_*()</code> constructors take many named arguments and read better whole than wrapped. ⚠️ The family runs 80, 100, 120 and 135. Read <code>.lintr</code>.</li>
 <li>
-<strong><code>indentation_linter</code> and <code>commented_code_linter</code> are OFF</strong>, deliberately — both fire heavily on the aligned-argument style and catch no defect here. Everything else is lintr’s default and <strong>is</strong> enforced.</li>
+<strong><code>indentation_linter</code> and <code>commented_code_linter</code> are OFF</strong>, deliberately: both fire heavily on the aligned-argument style and catch no defect here. Everything else is lintr’s default and <strong>is</strong> enforced.</li>
 <li>
 <strong>Test files are <code>test_*.R</code> with an underscore, and the runner is <code>tests/test-all.R</code>.</strong> ⚠️ This matches <code>hvtiPlotR</code> and differs from <code>hvtiRutilities</code>, <code>hvtiRdatabuild</code>, <code>hvtiRtables</code> and <code>hvtiRbootstrap</code>, which use <code>test-*.R</code> and <code>tests/testthat.R</code>.</li>
 <li>
@@ -113,7 +113,7 @@ Adding a <code>ps_*()</code> function means returning that shape through the con
 <strong><code>DESCRIPTION</code>’s <code>Date:</code> moves with <code>Version:</code>.</strong> Update both in the same version-bump commit.</li>
 <li>The package is <strong>0.x</strong>: the API is not frozen, but the <code>ps_data</code> structure above is what every subclass and both base methods rely on, so changing it is a breaking change in practice.</li>
 <li>
-<strong>Every function that draws random numbers restores the caller’s stream</strong>, through <code><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">withr::local_seed()</a></code>: the sample-data generators, <code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>. Qualify RNG calls (<code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">stats::rnorm()</a></code>) rather than adding a <code><a href="https://rdrr.io/r/utils/globalVariables.html" class="external-link">utils::globalVariables()</a></code> suppression.</li>
+<strong>Every function that draws random numbers restores the caller’s stream when given a seed</strong>, through <code><a href="https://withr.r-lib.org/reference/with_seed.html" class="external-link">withr::local_seed()</a></code>: the sample-data generators, <code><a href="reference/ps_forest.html">ps_forest()</a></code>, <code><a href="reference/ps_match.html">ps_match()</a></code>, <code><a href="reference/ps_rmst.html">ps_rmst()</a></code>, <code><a href="reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> and <code><a href="reference/ps_mw_var.html">ps_mw_var()</a></code>. With <code>seed = NULL</code> they draw from the caller’s stream and advance it. Qualify RNG calls (<code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">stats::rnorm()</a></code>) rather than adding a <code><a href="https://rdrr.io/r/utils/globalVariables.html" class="external-link">utils::globalVariables()</a></code> suppression.</li>
 </ul></div>
 <div class="section level2">
 <h2 id="git-and-versioning">Git and versioning<a class="anchor" aria-label="anchor" href="#git-and-versioning"></a></h2>
@@ -152,7 +152,7 @@ Adding a <code>ps_*()</code> function means returning that shape through the con
 </ol></div>
 <div class="section level2">
 <h2 id="prose">Prose<a class="anchor" aria-label="anchor" href="#prose"></a></h2>
-<p>Documentation prose follows the house voice, composed into <code>.claude/house-style.md</code> and checked by <code>house-style.yaml</code>. A propensity-score reader needs to know which estimand a function targets and what balance it achieved — say both.</p>
+<p>Documentation prose follows the house voice, composed into <code>.claude/house-style.md</code> and checked by <code>house-style.yaml</code>. A propensity-score reader needs to know which estimand a function targets and what balance it achieved. Say both.</p>
 </div>
 </div>
 

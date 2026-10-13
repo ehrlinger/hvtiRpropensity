@@ -5,8 +5,9 @@ Propensity-score analysis for the HVTI CORR group: score estimation
 [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
 [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
 [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)),
-the general model bundle behind them
+the general model bundles
 ([`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md),
+[`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md),
 [`validate_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/validate_logistic.md)),
 application
 ([`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
@@ -26,7 +27,7 @@ and four sensitivity methods
 [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md)),
 plus
 [`is_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.md)
-and four synthetic data generators. Twenty-four exports; `NAMESPACE` is
+and four synthetic data generators. Twenty-five exports; `NAMESPACE` is
 the authority.
 
 This file is the operational contract and applies in full. It is tool
@@ -74,13 +75,15 @@ feedback faster than a public release allows, not to lower the bar.
 ## Rules for this repo
 
 - **Every public function returns a `ps_data` subclass, built by
-  [`new_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/new_ps_data.md).**
+  [`new_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/new_ps_data.md),**
+  except the four data generators, which return data frames, and
+  [`is_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.md).
   The object structure is guaranteed across every subclass and code
   depends on it:
-  - `$data` — the original data frame with scores or weights appended
-  - `$meta` — column names used, method parameters, formula, computed
+  - `$data`: the original data frame with scores or weights appended
+  - `$meta`: column names used, method parameters, formula, computed
     statistics
-  - `$tables` — diagnostic tables (SMD before/after, group counts,
+  - `$tables`: diagnostic tables (SMD before/after, group counts,
     effective N); may be an empty list, but the element exists
   - `$models`: fitted model objects; may be an empty list, but the
     element exists
@@ -108,7 +111,7 @@ feedback faster than a public release allows, not to lower the bar.
   constructors take many named arguments and read better whole than
   wrapped. ⚠️ The family runs 80, 100, 120 and 135. Read `.lintr`.
 - **`indentation_linter` and `commented_code_linter` are OFF**,
-  deliberately — both fire heavily on the aligned-argument style and
+  deliberately: both fire heavily on the aligned-argument style and
   catch no defect here. Everything else is lintr’s default and **is**
   enforced.
 - **Test files are `test_*.R` with an underscore, and the runner is
@@ -134,14 +137,16 @@ feedback faster than a public release allows, not to lower the bar.
   structure above is what every subclass and both base methods rely on,
   so changing it is a breaking change in practice.
 - **Every function that draws random numbers restores the caller’s
-  stream**, through
+  stream when given a seed**, through
   [`withr::local_seed()`](https://withr.r-lib.org/reference/with_seed.html):
   the sample-data generators,
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md),
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
   [`ps_rmst()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_rmst.md),
   [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
   and
   [`ps_mw_var()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_mw_var.md).
+  With `seed = NULL` they draw from the caller’s stream and advance it.
   Qualify RNG calls
   ([`stats::rnorm()`](https://rdrr.io/r/stats/Normal.html)) rather than
   adding a
@@ -227,4 +232,4 @@ guess.
 Documentation prose follows the house voice, composed into
 `.claude/house-style.md` and checked by `house-style.yaml`. A
 propensity-score reader needs to know which estimand a function targets
-and what balance it achieved — say both.
+and what balance it achieved. Say both.

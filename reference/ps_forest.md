@@ -11,7 +11,8 @@ so it feeds
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 and
 [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md)
-unchanged, and its `$data` feeds `hvtiPlotR::hv_mirror_hist()`.
+unchanged, and its `$data` feeds
+[`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html).
 
 ## Usage
 
