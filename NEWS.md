@@ -18,8 +18,10 @@
   `ps_forest()` now does this as well as passing `seed = -abs(seed)` to
   `randomForestSRC::rfsrc()`; before, it set no R seed. The default stays
   `seed = NULL`, which draws from the caller's stream as before. A positive
-  seed gives the same result as in 0.1.10; a negative one now gives the same
-  result as its absolute value.
+  seed gives the same result as in 0.1.10, except in `ps_forest()`, whose
+  0.1.10 result depended on the session's earlier draws; a negative one now
+  gives the same result as its absolute value. (Corrected 2026-10-13: the
+  original entry did not exempt `ps_forest()`.)
 * Each of those five functions records the seed it used in `$meta$seed`, `NA`
   when none was given. `ps_stddiff_perm()` and `ps_mw_var()` used to store
   `NULL` there. A seed that is not one whole number is an error.
@@ -109,14 +111,18 @@
   ratio. Binary, ordinal and nominal models keep `odds_ratio` (#46).
 * `ps_logistic()`'s `$tables$group_counts` names each row by the declared
   treatment level instead of `control`/`treated`, and adds a logical
-  `treated` column, so it reads the same as `ps_ordinal()` and `ps_nominal()`.
+  `treated` column. (Corrected 2026-10-13: the original entry said this made
+  it read the same as `ps_ordinal()` and `ps_nominal()`, whose
+  `group_counts` have `group` and `n` only.)
   Without `treatment_levels` the groups are `0`/`1` (or `FALSE`/`TRUE`) (#47).
 
 # hvtiRpropensity 0.1.8
 
-* New `ps_forest()`: out-of-bag random-forest propensity score with the same
-  `ps_data` contract as `ps_logistic()` (needs the suggested
-  `randomForestSRC`).
+* New `ps_forest()`: out-of-bag random-forest propensity score in a
+  `ps_data` object (needs the suggested `randomForestSRC`). (Corrected
+  2026-10-13: the original entry said it had the same contract as
+  `ps_logistic()`, but its `mt_wt` held overlap weights rather than matching
+  weights, and its `$meta` and `$tables` lack the model-bundle fields.)
 * New `ps_support()`: flags weak-support patients under common-support,
   score-trimming and user-supplied rules (e.g. isolation-forest tails) and
   tabulates pairwise agreement (kappa, Jaccard).
@@ -227,8 +233,8 @@
 
 * Removed the explicit `Maintainer:` field from `DESCRIPTION` and moved the
   maintainer address to `john.ehrlinger@gmail.com` in `Authors@R`, matching the
-  rest of the `hvtiR*` family. The two fields had disagreed — `Authors@R` named
-  the `ehrlinj@ccf.org` address while `Maintainer:` named the gmail one — which
+  rest of the `hvtiR*` family. The two fields had disagreed: `Authors@R` named
+  the `ehrlinj@ccf.org` address while `Maintainer:` named the gmail one, which
   `R CMD check --as-cran` reported as a note. `Maintainer:` is now derived from
   the `cre` role at build time, so the two cannot drift apart again.
 
@@ -237,7 +243,7 @@
 * Qualified the `rnorm()` calls in the `sample_ps_data*()` generators as
   `stats::rnorm()`, matching every other statistics call in the package, and
   declared `stats` under `Imports`. This clears the `R CMD check` note about
-  an undefined global function. Generated data is unchanged — the seeds and
+  an undefined global function. Generated data is unchanged: the seeds and
   the RNG draw order are identical.
 
 # hvtiRpropensity 0.1.1
@@ -249,10 +255,15 @@
 # hvtiRpropensity 0.1.0
 
 * Initial development scaffold.
-* Added `sample_ps_data()` — reproducible synthetic cardiac-surgery dataset.
-* Added `ps_match()` — greedy nearest-neighbour 1:1 propensity score matching
+* (Added 2026-10-13: the original 0.1.0 entry listed four exports. These were
+  exported too: `ps_logistic()`, `ps_ordinal()`, `ps_nominal()`,
+  `bs_continuous()`, `bs_count()`, `sa_rosenbaum()`, `sa_evalue()`,
+  `sa_overlap()`, `sa_trim_sweep()`, `sample_ps_data_ordinal()`,
+  `sample_ps_data_nominal()` and `sample_ps_data_count()`.)
+* Added `sample_ps_data()`: reproducible synthetic cardiac-surgery dataset.
+* Added `ps_match()`: greedy nearest-neighbour 1:1 propensity score matching
   without replacement, with optional caliper.
-* Added `ps_weight()` — IPTW weighting supporting ATE, ATT, and ATC estimands,
+* Added `ps_weight()`: IPTW weighting supporting ATE, ATT, and ATC estimands,
   with optional stabilisation and weight winsorisation.
 * Added `is_ps_data()` predicate and `print` / `summary` S3 methods for the
   common `ps_data` base class.
