@@ -72,7 +72,9 @@ one treatment is near zero – and quantifies the common support region.</p>
 
 <dt id="arg-score-col">score_col<a class="anchor" aria-label="anchor" href="#arg-score-col"></a></dt>
 <dd><p>Name of the propensity score column.  Taken from
-<code>x$meta$score_col</code> when <code>x</code> is a <code>ps_data</code> object.  Default <code>"prob_t"</code>.</p></dd>
+<code>x$meta$score_col</code> when <code>x</code> is a <code>ps_data</code> object.  Default <code>"prob_t"</code>.
+The score of a <code><a href="ps_match.html">ps_match()</a></code> object built with <code>scale = "logit"</code> is a
+logit, and is back-transformed with <code><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">stats::plogis()</a></code> before use.</p></dd>
 
 
 <dt id="arg-treatment-col">treatment_col<a class="anchor" aria-label="anchor" href="#arg-treatment-col"></a></dt>

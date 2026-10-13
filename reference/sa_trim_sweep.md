@@ -49,7 +49,11 @@ sa_trim_sweep(
 - score_col:
 
   Name of the propensity score column. Taken from `x$meta$score_col`
-  when `x` is a `ps_data` object. Default `"prob_t"`.
+  when `x` is a `ps_data` object. Default `"prob_t"`. The score of a
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+  object built with `scale = "logit"` is a logit, and is
+  back-transformed with
+  [`stats::plogis()`](https://rdrr.io/r/stats/Logistic.html) before use.
 
 - treatment_col:
 

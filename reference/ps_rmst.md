@@ -27,7 +27,12 @@ ps_rmst(
 
 - x:
 
-  A `ps_data` object with a score and treatment column.
+  A `ps_data` object with a score and treatment column. The score of a
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+  object built with `scale = "logit"` is a logit, and is
+  back-transformed with
+  [`stats::plogis()`](https://rdrr.io/r/stats/Logistic.html) before the
+  weights are built.
 
 - time_col, event_col:
 
@@ -86,7 +91,8 @@ subset-and-weighting estimator: `estimator`, `subset`, `weighting`, `n`,
 `$tables$curves` has the weighted Kaplan-Meier steps (`estimator`,
 `arm`, `time`, `surv`) for plotting; `$data` is `x$data` plus one weight
 column `w_<weighting>` per scheme. `$meta$seed` is the seed used (`NA`
-when none was given).
+when none was given). `$meta$scale` is the scale of `score_col`, carried
+from `x` (`"probability"` when `x` records none).
 
 ## Examples
 

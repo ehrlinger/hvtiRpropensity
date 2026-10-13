@@ -15,7 +15,12 @@ ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
 
 - x:
 
-  A `ps_data` object with a score and treatment column.
+  A `ps_data` object with a score and treatment column. The score of a
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+  object built with `scale = "logit"` is a logit, and is
+  back-transformed with
+  [`stats::plogis()`](https://rdrr.io/r/stats/Logistic.html), so `trim`
+  and the common-support interval are on the probability scale.
 
 - flags:
 
@@ -38,7 +43,9 @@ A `ps_support` / `ps_data` object. `$data` is `x$data` plus one logical
 column `weak_<rule>` per rule. `$tables$counts` gives the number flagged
 per rule; `$tables$agreement` gives, for every pair of rules, `n_both`,
 `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap of the
-two dropped sets). `$meta$common_support` is the interval used.
+two dropped sets). `$meta$common_support` is the interval used, on the
+probability scale. `$meta$scale` is the scale of `score_col`, carried
+from `x` (`"probability"` when `x` records none).
 
 ## Examples
 
