@@ -17,8 +17,12 @@
   [`randomForestSRC::rfsrc()`](https://www.randomforestsrc.org//reference/rfsrc.html);
   before, it set no R seed. The default stays `seed = NULL`, which draws
   from the caller’s stream as before. A positive seed gives the same
-  result as in 0.1.10; a negative one now gives the same result as its
-  absolute value.
+  result as in 0.1.10, except in
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md),
+  whose 0.1.10 result depended on the session’s earlier draws; a
+  negative one now gives the same result as its absolute value.
+  (Corrected 2026-10-13: the original entry did not exempt
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md).)
 - Each of those five functions records the seed it used in `$meta$seed`,
   `NA` when none was given.
   [`ps_stddiff_perm()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff_perm.md)
@@ -183,22 +187,26 @@
   ([\#46](https://github.com/ehrlinger/hvtiRpropensity/issues/46)).
 - [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)’s
   `$tables$group_counts` names each row by the declared treatment level
-  instead of `control`/`treated`, and adds a logical `treated` column,
-  so it reads the same as
+  instead of `control`/`treated`, and adds a logical `treated` column.
+  (Corrected 2026-10-13: the original entry said this made it read the
+  same as
   [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md)
   and
-  [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md).
-  Without `treatment_levels` the groups are `0`/`1` (or `FALSE`/`TRUE`)
+  [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
+  whose `group_counts` have `group` and `n` only.) Without
+  `treatment_levels` the groups are `0`/`1` (or `FALSE`/`TRUE`)
   ([\#47](https://github.com/ehrlinger/hvtiRpropensity/issues/47)).
 
 ## hvtiRpropensity 0.1.8
 
 - New
   [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md):
-  out-of-bag random-forest propensity score with the same `ps_data`
-  contract as
-  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
-  (needs the suggested `randomForestSRC`).
+  out-of-bag random-forest propensity score in a `ps_data` object (needs
+  the suggested `randomForestSRC`). (Corrected 2026-10-13: the original
+  entry said it had the same contract as
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+  but its `mt_wt` held overlap weights rather than matching weights, and
+  its `$meta` and `$tables` lack the model-bundle fields.)
 - New
   [`ps_support()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_support.md):
   flags weak-support patients under common-support, score-trimming and
@@ -338,11 +346,11 @@
 
 - Removed the explicit `Maintainer:` field from `DESCRIPTION` and moved
   the maintainer address to `john.ehrlinger@gmail.com` in `Authors@R`,
-  matching the rest of the `hvtiR*` family. The two fields had disagreed
-  — `Authors@R` named the `ehrlinj@ccf.org` address while `Maintainer:`
-  named the gmail one — which `R CMD check --as-cran` reported as a
-  note. `Maintainer:` is now derived from the `cre` role at build time,
-  so the two cannot drift apart again.
+  matching the rest of the `hvtiR*` family. The two fields had
+  disagreed: `Authors@R` named the `ehrlinj@ccf.org` address while
+  `Maintainer:` named the gmail one, which `R CMD check --as-cran`
+  reported as a note. `Maintainer:` is now derived from the `cre` role
+  at build time, so the two cannot drift apart again.
 
 ## hvtiRpropensity 0.1.2
 
@@ -351,7 +359,7 @@
   [`stats::rnorm()`](https://rdrr.io/r/stats/Normal.html), matching
   every other statistics call in the package, and declared `stats` under
   `Imports`. This clears the `R CMD check` note about an undefined
-  global function. Generated data is unchanged — the seeds and the RNG
+  global function. Generated data is unchanged: the seeds and the RNG
   draw order are identical.
 
 ## hvtiRpropensity 0.1.1
@@ -363,16 +371,31 @@
 ## hvtiRpropensity 0.1.0
 
 - Initial development scaffold.
+- (Added 2026-10-13: the original 0.1.0 entry listed four exports. These
+  were exported too:
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+  [`ps_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_ordinal.md),
+  [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
+  [`bs_continuous()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_continuous.md),
+  [`bs_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/bs_count.md),
+  [`sa_rosenbaum()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_rosenbaum.md),
+  [`sa_evalue()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_evalue.md),
+  [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md),
+  [`sa_trim_sweep()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_trim_sweep.md),
+  [`sample_ps_data_ordinal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_ordinal.md),
+  [`sample_ps_data_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_nominal.md)
+  and
+  [`sample_ps_data_count()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data_count.md).)
 - Added
-  [`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md)
-  — reproducible synthetic cardiac-surgery dataset.
+  [`sample_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sample_ps_data.md):
+  reproducible synthetic cardiac-surgery dataset.
 - Added
-  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
-  — greedy nearest-neighbour 1:1 propensity score matching without
+  [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md):
+  greedy nearest-neighbour 1:1 propensity score matching without
   replacement, with optional caliper.
 - Added
-  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
-  — IPTW weighting supporting ATE, ATT, and ATC estimands, with optional
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md):
+  IPTW weighting supporting ATE, ATT, and ATC estimands, with optional
   stabilisation and weight winsorisation.
 - Added
   [`is_ps_data()`](https://ehrlinger.github.io/hvtiRpropensity/reference/is_ps_data.md)
