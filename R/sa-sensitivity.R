@@ -972,8 +972,9 @@ print.sa_overlap <- function(x, ...) {
 #'   \item{`$data`}{The input data frame (`x$data` for a `ps_data` object),
 #'     unchanged.}
 #'   \item{`$meta`}{`score_col`, `treatment_col`, `treated_level`, `scale`,
-#'     `estimand`, `stabilised`, `trim_seq` (sorted), `n_total` and `n_used`,
-#'     the patients with a non-missing treatment and score.}
+#'     `estimand`, `stabilised` (whether stabilisation was applied, so `FALSE`
+#'     for the ATT and ATC), `trim_seq` (sorted), `n_total` and `n_used`, the
+#'     patients with a non-missing treatment and score.}
 #'   \item{`$tables$sweep`}{Data frame with one row per trim value and
 #'     columns `trim` (the winsorisation threshold), `ess_control` and
 #'     `ess_treated` (effective sample sizes), `max_weight` (maximum weight
@@ -1085,7 +1086,8 @@ sa_trim_sweep <- function(x,
     )
   }
 
-  if (isTRUE(stabilise) && estimand_use == "ATE") {
+  stabilised <- isTRUE(stabilise) && estimand_use == "ATE"
+  if (stabilised) {
     p_trt  <- mean(trt == 1L)
     raw_w  <- raw_w * ifelse(trt == 1L, p_trt, 1 - p_trt)
   }
@@ -1123,7 +1125,7 @@ sa_trim_sweep <- function(x,
       treated_level = treatment$labels[[2L]],
       scale         = scale,
       estimand      = estimand_use,
-      stabilised    = stabilise,
+      stabilised    = stabilised,
       trim_seq      = sort(trim_seq),
       method        = paste0("IPTW-", estimand_use, " trim sweep"),
       n_total       = nrow(input),

@@ -50,8 +50,9 @@ An object of class \code{c("sa_trim_sweep", "ps_data")}:
 \item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_data} object),
 unchanged.}
 \item{\verb{$meta}}{\code{score_col}, \code{treatment_col}, \code{treated_level}, \code{scale},
-\code{estimand}, \code{stabilised}, \code{trim_seq} (sorted), \code{n_total} and \code{n_used},
-the patients with a non-missing treatment and score.}
+\code{estimand}, \code{stabilised} (whether stabilisation was applied, so \code{FALSE}
+for the ATT and ATC), \code{trim_seq} (sorted), \code{n_total} and \code{n_used}, the
+patients with a non-missing treatment and score.}
 \item{\verb{$tables$sweep}}{Data frame with one row per trim value and
 columns \code{trim} (the winsorisation threshold), \code{ess_control} and
 \code{ess_treated} (effective sample sizes), \code{max_weight} (maximum weight
