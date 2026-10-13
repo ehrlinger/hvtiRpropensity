@@ -1,1 +1,0 @@
-* `NEWS.md` corrections: the 0.1.0 entry now lists all sixteen initial exports, and the 0.1.8 `ps_forest()`, 0.1.9 `group_counts` and 0.1.11 seed entries no longer claim more than the code did. Each correction is dated in place (#92).
