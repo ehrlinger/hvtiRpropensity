@@ -17,13 +17,16 @@ pooling. Do not substitute R-generated values.
 The last log marker must be:
 
 ```text
-NOTE: RM_ORACLE_COMPLETE expected_outputs=7.
+NOTE: RM_ORACLE_COMPLETE expected_outputs=8.
 ```
 
-The seven CSVs are `single-estimates`, `single-covariance`, `single-scores`,
+The eight CSVs are `single-estimates`, `single-covariance`, `single-anova`
+(whose `Error` row carries the residual degrees of freedom), `single-scores`,
 `pooled-estimates`, `pooled-covariance`, `mi-scores` and `sas-environment`.
 Before acceptance, confirm that the log has no `ERROR:` and no `WARNING:`, and
-that the ODS tables `ParameterEstimates`, `CovB` and `TCov` were all created. A
+that the ODS tables `ParameterEstimates`, `CovB`, `ANOVA` and `TCov` were all
+created. Values are exported unformatted, so a CSV holding `<.0001` or a
+five-decimal estimate means the format strip did not run. A
 missing ODS table is a NOTE, not an error, so read for it. The raw log stays
 outside Git because its header carries licensing metadata;
 `sas-run-summary.txt` records its SHA-256, its diagnostic counts and the
