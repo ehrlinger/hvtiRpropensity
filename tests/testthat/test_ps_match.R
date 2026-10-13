@@ -135,3 +135,49 @@ test_that("group count tables name groups by their treatment value", {
   }
   expect_equal(obj$tables$group_counts_before$n, c(sum(dta$tavr == 0), sum(dta$tavr == 1)))
 })
+
+# ---- Logit scale ------------------------------------------------------------
+
+test_that("scale = 'logit' gives the same pairs as the linear-rescale workaround", {
+  d <- sample_ps_data(n = 300, seed = 42)
+  d$logit_t <- stats::qlogis(d$prob_t)
+  rng <- diff(range(d$logit_t))
+  d$logit_01 <- (d$logit_t - min(d$logit_t)) / rng
+  cal <- 0.2 * stats::sd(d$logit_t)
+
+  obj_logit  <- ps_match(d, score_col = "logit_t", scale = "logit", caliper = cal, seed = 101)
+  obj_manual <- ps_match(d, score_col = "logit_01", caliper = cal / rng, seed = 101)
+
+  expect_identical(obj_logit$data$match, obj_manual$data$match)
+  expect_identical(obj_logit$data$pair_id, obj_manual$data$pair_id)
+  expect_lt(sum(obj_logit$data$match), nrow(d))  # the caliper actually binds
+})
+
+test_that("caliper_sd is SD units of score_col on the chosen scale", {
+  d <- sample_ps_data(n = 300, seed = 42)
+  d$logit_t <- stats::qlogis(d$prob_t)
+  obj_sd  <- ps_match(d, score_col = "logit_t", scale = "logit", caliper_sd = 0.2, seed = 101)
+  obj_abs <- ps_match(d, score_col = "logit_t", scale = "logit", caliper = 0.2 * stats::sd(d$logit_t), seed = 101)
+  expect_identical(obj_sd$data$pair_id, obj_abs$data$pair_id)
+  expect_equal(obj_sd$meta$caliper, 0.2 * stats::sd(d$logit_t))
+  expect_identical(obj_sd$meta$caliper_sd, 0.2)
+  expect_identical(obj_sd$meta$scale, "logit")
+})
+
+test_that("scale defaults to probability and still rejects values outside [0, 1]", {
+  d <- dta
+  d$logit_t <- stats::qlogis(d$prob_t)
+  expect_identical(ps_match(d, seed = 1)$meta$scale, "probability")
+  expect_error(ps_match(d, score_col = "logit_t"), "\\[0, 1\\]")
+  expect_no_error(ps_match(d, score_col = "logit_t", scale = "logit"))
+})
+
+test_that("logit scale and caliper_sd reject bad input", {
+  d <- dta
+  d$logit_t <- stats::qlogis(d$prob_t)
+  d$logit_t[1] <- Inf
+  expect_error(ps_match(d, score_col = "logit_t", scale = "logit"), "finite")
+  expect_error(ps_match(dta, scale = "odds"))
+  expect_error(ps_match(dta, caliper_sd = -1), "caliper_sd")
+  expect_error(ps_match(dta, caliper_sd = 0.2, caliper = 0.01), "at most one")
+})

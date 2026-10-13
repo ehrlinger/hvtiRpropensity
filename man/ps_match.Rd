@@ -14,7 +14,9 @@ ps_match(
   match_col = "match",
   ratio = 1L,
   seed = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  scale = c("probability", "logit"),
+  caliper_sd = NULL
 )
 }
 \arguments{
@@ -24,15 +26,19 @@ ps_match(
 \item{treatment_col}{Name of the binary treatment column (0/1 or
 logical).  Default \code{"tavr"}.}
 
-\item{score_col}{Name of the numeric propensity score column
-(values in [0, 1]).  Default \code{"prob_t"}.}
+\item{score_col}{Name of the numeric propensity score column, on the
+scale named by \code{scale}: probabilities in [0, 1] for
+\code{scale = "probability"}, or logits (any finite value, such as the
+\code{logit_t} column \code{\link[=ps_logistic]{ps_logistic()}} appends) for \code{scale = "logit"}.
+Default \code{"prob_t"}.}
 
 \item{id_col}{Name of the patient identifier column.
 Default \code{"id"}.}
 
-\item{caliper}{Maximum allowable difference in propensity score
-for a match to be accepted.  \code{NULL} (default) imposes no caliper.
-Typical values: \code{0.1 * sd(score)} (20\% of SD rule) or \code{0.2}.}
+\item{caliper}{Maximum allowable difference in \code{score_col}, on its
+own scale, for a match to be accepted.  \code{NULL} (default) imposes no
+caliper unless \code{caliper_sd} is given.  Give at most one of \code{caliper} and
+\code{caliper_sd}.}
 
 \item{covariates}{Character vector of covariate columns for SMD
 diagnostics.  If \code{NULL} (default), all numeric columns other than
@@ -57,6 +63,17 @@ advance it, and \verb{$meta$seed} is \code{NA}.}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
 value, for example \code{"transcatheter"}, to use a column holding any two
 values.}
+
+\item{scale}{The scale \code{score_col} is on, and so the scale distances
+and the caliper are measured on: \code{"probability"} (default) or \code{"logit"}.
+The recommended caliper, 0.2 standard deviations of the logit of the
+propensity score (Austin 2011), needs \code{scale = "logit"}.}
+
+\item{caliper_sd}{Caliper in standard-deviation units of \code{score_col}:
+the caliper applied is \code{caliper_sd * sd(score_col)}, the standard
+deviation taken over all non-missing rows of both groups.  \code{NULL}
+(default) uses \code{caliper} instead.  \verb{scale = "logit", caliper_sd = 0.2}
+is the Austin (2011) recommendation.}
 }
 \value{
 An object of class \code{c("ps_match", "ps_data")} with:
@@ -67,7 +84,8 @@ appended.  \code{match_col} is \code{1} for matched patients and \code{0} otherw
 belongs to (\code{NA} for unmatched patients).  Filter to \code{match == 1} to
 obtain the matched subset.}
 \item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{id_col},
-\code{match_col}, \code{pair_id_col}, \code{caliper}, \code{method}, \code{seed}, \code{n_total},
+\code{match_col}, \code{pair_id_col}, \code{scale}, \code{caliper} (the absolute caliper
+applied, on \code{scale}), \code{caliper_sd}, \code{method}, \code{seed}, \code{n_total},
 \code{n_matched}, \code{n_unmatched}.}
 \item{\verb{$tables}}{Named list: \code{smd_before}, \code{smd_after},
 \code{group_counts_before}, \code{group_counts_after}. Group tables name each
@@ -104,6 +122,17 @@ table(obj$data$match)
 matched <- obj$data[obj$data$match == 1L, ]
 nrow(matched)
 
+# 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
+dta$logit_t <- stats::qlogis(dta$prob_t)
+obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+obj_logit$meta$caliper
+
+}
+\references{
+Austin PC (2011). Optimal caliper widths for propensity-score
+matching when estimating differences in means and differences in
+proportions in observational studies. \emph{Pharmaceutical Statistics},
+10(2), 150--161.  \doi{10.1002/pst.433}
 }
 \seealso{
 \code{\link[=ps_weight]{ps_weight()}}, \code{\link[=sample_ps_data]{sample_ps_data()}},
