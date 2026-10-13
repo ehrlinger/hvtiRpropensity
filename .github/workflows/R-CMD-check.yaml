@@ -85,6 +85,13 @@ jobs:
           use-public-rspm: true
           rtools-version: '42'
 
+      # The macOS gdtools binary (a dependency of the suggested hvtiPlotR) links
+      # /opt/X11/lib/libXrender, and the macos-latest image no longer ships
+      # XQuartz. Same step as hvtiPlotR's own workflow.
+      - name: Install XQuartz (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --cask xquartz
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck, github::ehrlinger/hvtiPlotR
