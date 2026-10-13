@@ -42,11 +42,12 @@
 #'
 #' @param score    Numeric vector of balancing scores.
 #' @param n_strata Integer number of clusters (default 10 = deciles).
-#' @return A named list: `quintile`, `decile`, `cluster`.
+#' @return A named list: `quintile`, `decile`, `cluster`. A missing score gets
+#'   missing strata, and the strata divide the scored patients only.
 #' @keywords internal
 .assign_bs_strata <- function(score, n_strata = 10L) {
-  n   <- length(score)
-  rnk <- rank(score, ties.method = "first")
+  n   <- sum(!is.na(score))
+  rnk <- rank(score, ties.method = "first", na.last = "keep")
   list(
     quintile = pmin(ceiling(rnk * 5L  / n), 5L),
     decile   = pmin(ceiling(rnk * 10L / n), 10L),
@@ -82,8 +83,8 @@
 #'   `imputation_col` is set.
 #' @param outcome_col         Name of the continuous outcome column.  `NULL`
 #'   (default) extracts from `formula`.
-#' @param id_col              Patient identifier column.  Required when
-#'   `imputation_col` is set.  Default `"id"`.
+#' @param id_col              Patient identifier column.  Required, and checked,
+#'   only when `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col      Imputation-index column for stacked MI data.
 #'   `NULL` (default) assumes a single complete dataset.
 #' @param score_col           Name of the output balancing score column
@@ -157,8 +158,7 @@ bs_continuous <- function(formula,
     .check_outcome_response(formula, outcome_col)
   }
   .check_cols(data, outcome_col)
-  if (!is.null(id_col))         .check_cols(data, id_col)
-  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+  if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
     rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
   }
@@ -292,8 +292,8 @@ print.bs_continuous <- function(x, ...) {
 #'   `imputation_col` is set.
 #' @param outcome_col         Name of the count outcome column.  `NULL`
 #'   (default) extracts from `formula`.
-#' @param id_col              Patient identifier column.  Required when
-#'   `imputation_col` is set.  Default `"id"`.
+#' @param id_col              Patient identifier column.  Required, and checked,
+#'   only when `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col      Imputation-index column.  `NULL` (default)
 #'   means a single complete dataset.
 #' @param dist                Distribution for the GLM.  `"negbin"` (default)
@@ -394,8 +394,7 @@ bs_count <- function(formula,
   .check_df(data)
   if (is.null(outcome_col)) outcome_col <- as.character(formula[[2L]])
   .check_cols(data, outcome_col)
-  if (!is.null(id_col))         .check_cols(data, id_col)
-  if (!is.null(imputation_col)) .check_cols(data, imputation_col)
+  if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
     rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
   }

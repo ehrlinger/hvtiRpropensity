@@ -68,9 +68,12 @@
 #' @param data      A data frame.
 #' @param col       Name of the column to check.
 #' @param call_env  Environment for the error call.
+#' @param warn_na   Whether to warn about missing values. A caller that counts
+#'   missing treatment and missing score together, and states the total in one
+#'   warning, sets this to `FALSE`.
 #' @return Invisible NULL.
 #' @keywords internal
-.check_binary <- function(data, col, call_env = rlang::caller_env()) {
+.check_binary <- function(data, col, call_env = rlang::caller_env(), warn_na = TRUE) {
   x    <- data[[col]]
   vals <- x[!is.na(x)]
   ok   <- is.logical(x) ||
@@ -82,7 +85,7 @@
     )
   }
   n_na <- sum(is.na(x))
-  if (n_na > 0L) {
+  if (warn_na && n_na > 0L) {
     rlang::warn(
       sprintf(
         "Column `%s` contains %d NA value(s). Those patients will be silently excluded from analysis.",
@@ -91,6 +94,24 @@
     )
   }
   invisible(NULL)
+}
+
+
+#' Warn once about rows excluded for a missing treatment or score
+#'
+#' @param excluded Logical vector, `TRUE` for a row left out of the
+#'   computation.
+#' @param treatment_col,score_col Column names, for the message.
+#' @param what What the excluded rows are left out of, for the message.
+#' @return `excluded`, invisibly.
+#' @keywords internal
+.warn_excluded <- function(excluded, treatment_col, score_col, what) {
+  n <- sum(excluded)
+  if (n > 0L) {
+    rlang::warn(sprintf("%d row(s) have a missing `%s` or `%s` and are excluded from %s.",
+                        n, treatment_col, score_col, what))
+  }
+  invisible(excluded)
 }
 
 
@@ -309,13 +330,16 @@
 #' @param col Name of the treatment column.
 #' @param treated_level The treated value, or `NULL`.
 #' @param call_env Environment for the error call.
+#' @param warn_na Whether to warn about missing treatment values; see
+#'   `.check_binary()`.
 #' @return A list: `trt`, an integer 0/1 vector (`NA` where the column is
 #'   missing), and `labels`, the reference then the treated value as character.
 #' @keywords internal
-.treatment_indicator <- function(data, col, treated_level = NULL, call_env = rlang::caller_env()) {
+.treatment_indicator <- function(data, col, treated_level = NULL, call_env = rlang::caller_env(),
+                                 warn_na = TRUE) {
   x <- data[[col]]
   if (is.null(treated_level)) {
-    .check_binary(data, col, call_env)
+    .check_binary(data, col, call_env, warn_na)
     return(list(trt = as.integer(x), labels = .binary_group_labels(x)))
   }
   if (length(treated_level) != 1L || is.na(treated_level)) {
@@ -336,7 +360,7 @@
     )
   }
   n_na <- sum(is.na(x))
-  if (n_na > 0L) {
+  if (warn_na && n_na > 0L) {
     rlang::warn(
       sprintf(
         "Column `%s` contains %d NA value(s). Those patients will be silently excluded from analysis.",

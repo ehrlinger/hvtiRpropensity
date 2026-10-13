@@ -4,7 +4,7 @@
 \alias{.check_binary}
 \title{Assert that a column contains only 0/1 (or logical) values}
 \usage{
-.check_binary(data, col, call_env = rlang::caller_env())
+.check_binary(data, col, call_env = rlang::caller_env(), warn_na = TRUE)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -12,6 +12,10 @@
 \item{col}{Name of the column to check.}
 
 \item{call_env}{Environment for the error call.}
+
+\item{warn_na}{Whether to warn about missing values. A caller that counts
+missing treatment and missing score together, and states the total in one
+warning, sets this to \code{FALSE}.}
 }
 \value{
 Invisible NULL.

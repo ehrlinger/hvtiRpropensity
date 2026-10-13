@@ -90,7 +90,8 @@ obtain the matched subset.}
 \item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{id_col},
 \code{match_col}, \code{pair_id_col}, \code{scale}, \code{caliper} (the absolute caliper
 applied, on \code{scale}), \code{caliper_sd}, \code{method}, \code{seed}, \code{n_total},
-\code{n_matched}, \code{n_unmatched}.}
+\code{n_excluded} (rows with a missing treatment or score), \code{n_matched},
+\code{n_unmatched}.}
 \item{\verb{$tables}}{Named list: \code{smd_before}, \code{smd_after},
 \code{group_counts_before}, \code{group_counts_after}. Group tables name each
 group by its value in \code{treatment_col} (\code{0}/\code{1} or \code{FALSE}/\code{TRUE}) and
@@ -107,6 +108,11 @@ pre-computed propensity score column.  Returns a \code{ps_match} object whose
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. These are the diagnostics
 that \code{hvtiPlotR::hv_mirror_hist()} and \code{hvtiPlotR::hv_balance()} expect.
+
+A patient with a missing treatment or a missing score cannot be matched.
+Those rows stay in \verb{$data} with \code{match_col} set to \code{0}, are left out of the
+treated and control pools, the SMD tables and the group counts, and one
+warning states how many there are. \verb{$meta$n_excluded} keeps the count.
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)

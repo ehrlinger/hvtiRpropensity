@@ -5,6 +5,10 @@
 #' object; any other rule (for example an isolation-forest tail flag) can be
 #' supplied as a logical vector.
 #'
+#' A patient with a missing treatment or a missing score cannot be judged.
+#' Those rows are left out of the common-support interval and every rule, get
+#' a missing `weak_<rule>` flag, and one warning states how many there are.
+#'
 #' @param x A `ps_data` object with a score and treatment column. The score of
 #'   a [ps_match()] object built with `scale = "logit"` is a logit, and is
 #'   back-transformed with [stats::plogis()], so `trim` and the common-support
@@ -20,7 +24,11 @@
 #'
 #' @return A `ps_support` / `ps_data` object. `$data` is `x$data` plus one
 #'   logical column `weak_<rule>` per rule. `$tables$counts` gives the number
-#'   flagged per rule; `$tables$agreement` gives, for every pair of rules,
+#'   flagged per rule (`n_weak`), the number of rows that rule judged (`n`)
+#'   and the number it did not (`n_excluded`): rows with a missing treatment
+#'   or score, plus any missing values in a rule supplied through `flags`.
+#'   `$meta$n_excluded` counts the rows with a missing treatment or score;
+#'   `$tables$agreement` gives, for every pair of rules,
 #'   `n_both`, `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap
 #'   of the two dropped sets). `$meta$common_support` is the interval used,
 #'   on the probability scale. `$meta$scale` is the scale of `score_col`,
@@ -36,12 +44,15 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   score <- .probability_score(x)
   trt <- as.integer(as.character(x$data[[x$meta$treatment_col]]) == as.character(x$meta$treated_level))
   n <- nrow(x$data)
+  excluded <- .warn_excluded(is.na(trt) | is.na(score), x$meta$treatment_col, x$meta$score_col,
+                             "the support rules and get missing flags")
+  kept <- !excluded
 
   rules <- list()
   bounds <- NULL
   if (isTRUE(common)) {
-    bounds <- c(max(min(score[trt == 1L]), min(score[trt == 0L])),
-                min(max(score[trt == 1L]), max(score[trt == 0L])))
+    bounds <- c(max(min(score[kept & trt == 1L]), min(score[kept & trt == 0L])),
+                min(max(score[kept & trt == 1L]), max(score[kept & trt == 0L])))
     rules$common <- score < bounds[1L] | score > bounds[2L]
   }
   if (!is.null(trim)) {
@@ -67,11 +78,12 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
     rules <- c(rules, lapply(flags, as.logical))
   }
   if (length(rules) < 1L) rlang::abort("No support rules requested.", call. = FALSE)
+  rules <- lapply(rules, function(flag) replace(flag, excluded, NA))
 
   out <- x$data
   for (nm in names(rules)) out[[paste0("weak_", nm)]] <- rules[[nm]]
 
-  pairs <- utils::combn(names(rules), 2L, simplify = FALSE)
+  pairs <- if (length(rules) > 1L) utils::combn(names(rules), 2L, simplify = FALSE) else list()
   agreement <- if (length(pairs)) {
     do.call(rbind, lapply(pairs, function(p) {
       cbind(data.frame(rule_a = p[1L], rule_b = p[2L]),
@@ -81,13 +93,16 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
     data.frame()
   }
   counts <- data.frame(rule = names(rules), n_weak = vapply(rules, sum, numeric(1L), na.rm = TRUE),
-                       n = n, row.names = NULL)
+                       n = vapply(rules, function(flag) sum(!is.na(flag)), integer(1L)),
+                       row.names = NULL)
+  counts$n_excluded <- n - counts$n
 
   new_ps_data(
     data = out,
     meta = c(x$meta[c("treatment_col", "score_col", "treated_level")],
              list(scale = rlang::`%||%`(x$meta$scale, "probability"),
-                  rules = names(rules), common_support = bounds, trim = trim, n_total = n)),
+                  rules = names(rules), common_support = bounds, trim = trim, n_total = n,
+                  n_excluded = sum(excluded))),
     tables = list(counts = counts, agreement = agreement),
     subclass = "ps_support"
   )

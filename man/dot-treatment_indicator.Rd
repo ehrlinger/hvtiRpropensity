@@ -8,7 +8,8 @@
   data,
   col,
   treated_level = NULL,
-  call_env = rlang::caller_env()
+  call_env = rlang::caller_env(),
+  warn_na = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,9 @@
 \item{treated_level}{The treated value, or \code{NULL}.}
 
 \item{call_env}{Environment for the error call.}
+
+\item{warn_na}{Whether to warn about missing treatment values; see
+\code{.check_binary()}.}
 }
 \value{
 A list: \code{trt}, an integer 0/1 vector (\code{NA} where the column is

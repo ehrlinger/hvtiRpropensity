@@ -25,6 +25,11 @@
 #' before and after matching, and group counts. These are the diagnostics
 #' that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
 #'
+#' A patient with a missing treatment or a missing score cannot be matched.
+#' Those rows stay in `$data` with `match_col` set to `0`, are left out of the
+#' treated and control pools, the SMD tables and the group counts, and one
+#' warning states how many there are. `$meta$n_excluded` keeps the count.
+#'
 #' @param data           A data frame.  Must contain `treatment_col`,
 #'   `score_col`, and `id_col`.
 #' @param treatment_col  Name of the binary treatment column (0/1 or
@@ -87,7 +92,8 @@
 #'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `id_col`,
 #'     `match_col`, `pair_id_col`, `scale`, `caliper` (the absolute caliper
 #'     applied, on `scale`), `caliper_sd`, `method`, `seed`, `n_total`,
-#'     `n_matched`, `n_unmatched`.}
+#'     `n_excluded` (rows with a missing treatment or score), `n_matched`,
+#'     `n_unmatched`.}
 #'   \item{`$tables`}{Named list: `smd_before`, `smd_after`,
 #'     `group_counts_before`, `group_counts_after`. Group tables name each
 #'     group by its value in `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and
@@ -138,7 +144,7 @@ ps_match <- function(data,
   .check_df(data)
   seed <- .seed_value(seed)
   .check_cols(data, c(treatment_col, score_col, id_col))
-  treatment <- .treatment_indicator(data, treatment_col, treated_level)
+  treatment <- .treatment_indicator(data, treatment_col, treated_level, warn_na = FALSE)
   original_treatment <- data[[treatment_col]]
   data[[treatment_col]] <- treatment$trt
   scale <- match.arg(scale)
@@ -186,9 +192,10 @@ ps_match <- function(data,
   # ---- Split treated / control -------------------------------------------
   trt <- as.integer(data[[treatment_col]])
   ps  <- data[[score_col]]
+  excluded <- .warn_excluded(is.na(trt) | is.na(ps), treatment_col, score_col, "matching")
 
-  idx_t <- which(trt == 1L)   # treated rows
-  idx_c <- which(trt == 0L)   # control rows
+  idx_t <- which(trt == 1L & !excluded)   # treated rows
+  idx_c <- which(trt == 0L & !excluded)   # control rows
 
   ps_t <- ps[idx_t]
   ps_c <- ps[idx_c]
@@ -212,6 +219,7 @@ ps_match <- function(data,
 
     dists     <- abs(ps_t[i] - ps_c[remaining_idx])
     best_pos  <- which.min(dists)           # position within remaining_idx
+    if (!length(best_pos)) next
     best      <- remaining_idx[best_pos]    # index into idx_c
     best_dist <- dists[best_pos]
 
@@ -250,7 +258,7 @@ ps_match <- function(data,
     covariates <- .default_covariates(data, c(treatment_col, score_col, id_col, match_col))
   }
 
-  smd_before <- .smd_table(data, treatment_col, covariates)
+  smd_before <- .smd_table(data[!excluded, , drop = FALSE], treatment_col, covariates)
 
   matched_rows <- out[[match_col]] == 1L
   smd_after    <- .smd_table(out[matched_rows, ], treatment_col, covariates)
@@ -287,6 +295,7 @@ ps_match <- function(data,
       method        = "nearest-neighbour 1:1",
       seed          = if (is.null(seed)) NA_integer_ else seed,
       n_total       = nrow(data),
+      n_excluded    = sum(excluded),
       n_matched     = n_matched_t,   # matched pairs (each arm)
       n_unmatched   = length(idx_t) - n_matched_t
     ),

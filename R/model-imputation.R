@@ -19,13 +19,17 @@
 
 #' Count rows used by a fitted model
 #'
+#' Every model this package fits uses `na.action = na.exclude`, so the rows
+#' dropped for a missing value are recorded in the fit whatever the family.
+#' `nnet::multinom()` has no `nobs()` method, so counting from `nobs()` would
+#' report every input row as analysed.
+#'
 #' @param fit A fitted model object.
-#' @param fallback Count to return when the model has no `nobs()` method.
+#' @param n_input Number of rows the model was given.
 #' @return A single integer.
 #' @keywords internal
-.model_nobs <- function(fit, fallback) {
-  out <- tryCatch(stats::nobs(fit), error = function(e) fallback)
-  as.integer(out)
+.model_nobs <- function(fit, n_input) {
+  as.integer(n_input - length(stats::na.action(fit)))
 }
 
 

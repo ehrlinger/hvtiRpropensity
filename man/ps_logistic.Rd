@@ -73,7 +73,7 @@ ATM estimand (average treatment effect among the matched; Li & Greene,
 2013, \doi{10.1515/ijb-2012-0030}).}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
 \code{imputation_col}, \code{score_col}, \code{logit_col}, \code{weight_col}, \code{method},
-\code{n_imputations}, \code{n_total}.}
+\code{n_imputations}, \code{n_total}, \code{n_missing_treatment}.}
 \item{\verb{$tables}}{Named list: \code{smd}, \code{group_counts}. \code{group_counts} has one
 row per treatment level, named as declared, with a logical \code{treated}
 flag and the count \code{n}.}
@@ -98,6 +98,14 @@ which equals the \code{mt_wt} column produced in the SAS templates (Li &
 Greene, 2013).  It is the ATM (average treatment effect among the
 matched) estimand weight and is used as input to \code{\link[=ps_match]{ps_match()}} or
 \code{\link[=ps_weight]{ps_weight()}}.
+
+A patient with a missing treatment is left out of the model fit, as
+\code{\link[stats:glm]{stats::glm()}} drops the row, and out of the strata, the balance tables and
+the group counts. The model needs no treatment to predict, so that patient
+still gets \code{score_col} and \code{logit_col}; \code{weight_col}, \code{quintile} and
+\code{decile} are missing. One warning states how many such patients there are,
+and \verb{$meta$n_missing_treatment} keeps the count. A patient missing a
+predictor gets no score; \verb{$tables$fit_status} counts those rows.
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)

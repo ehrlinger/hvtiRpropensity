@@ -30,8 +30,8 @@ response, \code{id_col} and \code{imputation_col}.}
 \item{outcome_col}{Name of the continuous outcome column.  \code{NULL}
 (default) extracts from \code{formula}.}
 
-\item{id_col}{Patient identifier column.  Required when
-\code{imputation_col} is set.  Default \code{"id"}.}
+\item{id_col}{Patient identifier column.  Required, and checked,
+only when \code{imputation_col} is set.  Default \code{"id"}.}
 
 \item{imputation_col}{Imputation-index column for stacked MI data.
 \code{NULL} (default) assumes a single complete dataset.}

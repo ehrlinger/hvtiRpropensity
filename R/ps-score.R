@@ -126,6 +126,14 @@
 #' matched) estimand weight and is used as input to [ps_match()] or
 #' [ps_weight()].
 #'
+#' A patient with a missing treatment is left out of the model fit, as
+#' [stats::glm()] drops the row, and out of the strata, the balance tables and
+#' the group counts. The model needs no treatment to predict, so that patient
+#' still gets `score_col` and `logit_col`; `weight_col`, `quintile` and
+#' `decile` are missing. One warning states how many such patients there are,
+#' and `$meta$n_missing_treatment` keeps the count. A patient missing a
+#' predictor gets no score; `$tables$fit_status` counts those rows.
+#'
 #' @param formula        A formula with the binary treatment on the
 #'   left-hand side, e.g. `tavr ~ age + female + ef + diabetes`.
 #' @param data           A data frame.  If `imputation_col` is set, `data`
@@ -169,7 +177,7 @@
 #'     2013, \doi{10.1515/ijb-2012-0030}).}
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
 #'     `imputation_col`, `score_col`, `logit_col`, `weight_col`, `method`,
-#'     `n_imputations`, `n_total`.}
+#'     `n_imputations`, `n_total`, `n_missing_treatment`.}
 #'   \item{`$tables`}{Named list: `smd`, `group_counts`. `group_counts` has one
 #'     row per treatment level, named as declared, with a logical `treated`
 #'     flag and the count `n`.}
@@ -252,10 +260,10 @@ ps_logistic <- function(formula,
   }
   .check_cols(data, treatment_col)
   if (is.null(treatment_levels) && !is.null(treated_level)) {
-    treatment_levels <- .treatment_indicator(data, treatment_col, treated_level)$labels
+    treatment_levels <- .treatment_indicator(data, treatment_col, treated_level, warn_na = FALSE)$labels
   }
   if (is.null(treatment_levels)) {
-    .check_binary(data, treatment_col)
+    .check_binary(data, treatment_col, warn_na = FALSE)
     treatment_levels <- if (is.logical(data[[treatment_col]])) {
       c(FALSE, TRUE)
     } else {
@@ -289,13 +297,20 @@ ps_logistic <- function(formula,
 
   # ---- Append score columns -----------------------------------------------
   trt <- as.integer(as.character(base_data[[treatment_col]]) == treated_level)
+  missing_trt <- is.na(trt)
+  if (any(missing_trt)) {
+    rlang::warn(sprintf(paste(
+      "Column `%s` is missing for %d patient(s). They are left out of the model fit, the strata,",
+      "the balance tables and the group counts; they keep a predicted `%s`."
+    ), treatment_col, sum(missing_trt), score_col))
+  }
 
   base_data[[score_col]]  <- probs
   base_data[[logit_col]]  <- log(probs / (1 - probs))
   base_data[[weight_col]] <- .matching_weight(probs, trt)
 
   # ---- Quintile / decile strata -------------------------------------------
-  strata <- .assign_ps_strata(probs)
+  strata <- .assign_ps_strata(replace(probs, missing_trt, NA))
   base_data[["quintile"]] <- strata$quintile
   base_data[["decile"]]   <- strata$decile
 
@@ -307,12 +322,12 @@ ps_logistic <- function(formula,
   }
   diagnostic_data <- base_data
   diagnostic_data[[treatment_col]] <- trt
-  smd_tbl <- .smd_table(diagnostic_data, treatment_col, covariates)
+  smd_tbl <- .smd_table(diagnostic_data[!missing_trt, , drop = FALSE], treatment_col, covariates)
 
   group_counts <- data.frame(
     group   = c(setdiff(treatment_levels, treated_level), treated_level),
     treated = c(FALSE, TRUE),
-    n       = c(sum(trt == 0L), sum(trt == 1L))
+    n       = c(sum(trt == 0L, na.rm = TRUE), sum(trt == 1L, na.rm = TRUE))
   )
 
   # ---- Assemble object ----------------------------------------------------
@@ -334,7 +349,8 @@ ps_logistic <- function(formula,
       method         = if (is.null(imputation_col)) "logistic"
                        else "logistic-MI",
       n_imputations  = model$meta$n_imputations,
-      n_total        = nrow(base_data)
+      n_total        = nrow(base_data),
+      n_missing_treatment = sum(missing_trt)
     ),
     tables   = c(
       list(smd = smd_tbl, group_counts = group_counts),
