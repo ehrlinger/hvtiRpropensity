@@ -89,9 +89,9 @@ treatment effect in the whole sample (ATE, the default), in the treated
 (ATT) or in the controls (ATC). For the matched population (ATM), use the
 \code{mt_wt} column from \code{\link[=ps_logistic]{ps_logistic()}} or \code{\link[=ps_forest]{ps_forest()}} instead.
 Returns a \code{ps_weight} object whose \verb{$tables} slot contains SMD tables
-(unweighted and weighted) and effective-N diagnostics compatible with
-\code{hvtiPlotR::hv_mirror_hist()} (weighted mode) and
-\code{hvtiPlotR::hv_balance()}.
+(unweighted and weighted) and effective-N diagnostics. Its \verb{$data} feeds
+\code{hvtiPlotR::hv_mirror_hist()} in weighted mode; \code{hvtiPlotR::hv_balance()}
+needs the SMD tables stacked into long form (see the vignette).
 }
 \details{
 A patient with a missing treatment or a missing score cannot be weighted.

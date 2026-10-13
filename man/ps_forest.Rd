@@ -68,9 +68,9 @@ used, \code{NA} when none was given) and \code{n_total}; \verb{$tables} holds
 Estimates P(treated) with a random-forest classifier
 (\code{\link[randomForestSRC:rfsrc]{randomForestSRC::rfsrc()}}) and returns the \strong{out-of-bag} class
 probability as the score, so no patient is scored by trees that saw them.
-The result has the same contract as \code{\link[=ps_logistic]{ps_logistic()}}, so it feeds
-\code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_match]{ps_match()}}, \code{\link[=sa_overlap]{sa_overlap()}} and
-\code{hvtiPlotR::hv_balance()} / \code{hvtiPlotR::hv_mirror_hist()} unchanged.
+The result appends the same score columns as \code{\link[=ps_logistic]{ps_logistic()}}, so it feeds
+\code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_match]{ps_match()}} and \code{\link[=sa_overlap]{sa_overlap()}} unchanged, and its \verb{$data}
+feeds \code{hvtiPlotR::hv_mirror_hist()}.
 }
 \section{Threads and reproducibility}{
 

@@ -4,8 +4,8 @@
 ## Inverse-probability-of-treatment weighting (IPTW).
 ##
 ## Computes the IPTW column (`iptw` by default) that
-## `hvtiPlotR::hv_mirror_hist()` (weighted mode) and `hvtiPlotR::hv_balance()`
-## read. The Li-Greene matching weight `mt_wt` comes from ps_logistic() and
+## `hvtiPlotR::hv_mirror_hist()` reads in weighted mode. The Li-Greene matching
+## weight `mt_wt` comes from ps_logistic() and
 ## ps_forest(), not from here.
 ##
 ## Workflow:
@@ -24,9 +24,9 @@
 #' (ATT) or in the controls (ATC). For the matched population (ATM), use the
 #' `mt_wt` column from [ps_logistic()] or [ps_forest()] instead.
 #' Returns a `ps_weight` object whose `$tables` slot contains SMD tables
-#' (unweighted and weighted) and effective-N diagnostics compatible with
-#' `hvtiPlotR::hv_mirror_hist()` (weighted mode) and
-#' `hvtiPlotR::hv_balance()`.
+#' (unweighted and weighted) and effective-N diagnostics. Its `$data` feeds
+#' `hvtiPlotR::hv_mirror_hist()` in weighted mode; `hvtiPlotR::hv_balance()`
+#' needs the SMD tables stacked into long form (see the vignette).
 #'
 #' A patient with a missing treatment or a missing score cannot be weighted.
 #' Those rows stay in `$data` with a missing `weight_col`, are left out of the

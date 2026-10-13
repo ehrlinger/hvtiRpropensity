@@ -118,8 +118,10 @@ patients who could be matched, in practice those inside common support.
 the estimate describes.
 
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
-before and after matching, and group counts. These are the diagnostics
-that \code{hvtiPlotR::hv_mirror_hist()} and \code{hvtiPlotR::hv_balance()} expect.
+before and after matching, and group counts. \code{hvtiPlotR::hv_mirror_hist()}
+reads \verb{$data} directly. \code{hvtiPlotR::hv_balance()} needs the two SMD tables
+stacked into long form with \code{variable}, \code{group} and \code{std_diff} (in percent);
+the vignette shows the reshape.
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in \verb{$data} with \code{match_col} set to \code{0}, are left out of the

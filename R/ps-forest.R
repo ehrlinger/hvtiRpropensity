@@ -3,9 +3,9 @@
 #' Estimates P(treated) with a random-forest classifier
 #' ([randomForestSRC::rfsrc()]) and returns the **out-of-bag** class
 #' probability as the score, so no patient is scored by trees that saw them.
-#' The result has the same contract as [ps_logistic()], so it feeds
-#' [ps_weight()], [ps_match()], [sa_overlap()] and
-#' `hvtiPlotR::hv_balance()` / `hvtiPlotR::hv_mirror_hist()` unchanged.
+#' The result appends the same score columns as [ps_logistic()], so it feeds
+#' [ps_weight()], [ps_match()] and [sa_overlap()] unchanged, and its `$data`
+#' feeds `hvtiPlotR::hv_mirror_hist()`.
 #'
 #' @param formula Two-sided formula, `treatment ~ x1 + x2 + ...`.
 #' @param data Data frame with no missing values in the formula variables.
