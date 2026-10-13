@@ -77,6 +77,10 @@ The balancing score is the expected value of the continuous exposure
 (e.g. nadir haematocrit) given the full covariate set.  Patients in the
 same stratum have similar expected exposure values, making within-stratum
 comparisons less confounded.
+
+A formula with an aliased term, such as a covariate that duplicates another,
+is an error naming the imputation, rather than a score from a rank-deficient
+fit.
 }
 \examples{
 # Use ef (ejection fraction) as a stand-in for a continuous exposure

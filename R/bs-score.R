@@ -97,6 +97,11 @@
 #' @param covariates          Covariate columns for diagnostics (not used in
 #'   computation; reserved for future balance-checking helpers).
 #'
+#' @details
+#' A formula with an aliased term, such as a covariate that duplicates another,
+#' is an error naming the imputation, rather than a score from a rank-deficient
+#' fit.
+#'
 #' @return An object of class `c("bs_continuous", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{Base data frame with `score_col`, `"quintile"`,
