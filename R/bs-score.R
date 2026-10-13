@@ -103,12 +103,14 @@
 #'     `"decile"`, `strata_col`, and (if `create_binary_strata`) `stra_1`
 #'     through `stra_<n_strata>` appended.}
 #'   \item{`$meta`}{Named list: `formula`, `outcome_col`, `id_col`,
-#'     `imputation_col`, `score_col`, `n_strata`, `strata_col`, `method`,
+#'     `imputation_col`, `score_col`, `n_strata`, `strata_col`,
+#'     `bundle_version`, `model_family`, `package_versions`, `method`,
 #'     `n_imputations`, `n_total`.}
-#'   \item{`$tables`}{Named list: `strata_counts`.}
+#'   \item{`$tables`}{Named list: `strata_counts`, `estimates` (Rubin-pooled
+#'     coefficients), `covariance`, `by_imputation` and `fit_status`.}
 #' }
 #'
-#' @seealso [bs_count()], [ps_logistic()], [sample_ps_data()]
+#' @seealso [bs_count()], [fit_linear()], [ps_logistic()], [sample_ps_data()]
 #'
 #' @examples
 #' # Use ef (ejection fraction) as a stand-in for a continuous exposure
@@ -138,7 +140,13 @@ bs_continuous <- function(formula,
     rlang::abort("`formula` must be an R formula.", call. = FALSE)
   }
   .check_df(data)
-  if (is.null(outcome_col)) outcome_col <- as.character(formula[[2L]])
+  if (is.null(outcome_col)) {
+    outcome_col <- all.vars(formula[[2L]])
+    if (length(outcome_col) != 1L) {
+      rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
+                   call. = FALSE)
+    }
+  }
   .check_cols(data, outcome_col)
   if (!is.null(id_col))         .check_cols(data, id_col)
   if (!is.null(imputation_col)) .check_cols(data, imputation_col)
@@ -164,6 +172,8 @@ bs_continuous <- function(formula,
     predictor_cols = all.vars(stats::delete.response(stats::terms(formula))),
     require_stable_response = FALSE
   )
+  .check_aliased(fitted$models)
+  inference <- .model_inference(fitted$models, "linear")
   preds <- fitted$predictions
   base_data <- fitted$data
 
@@ -199,13 +209,24 @@ bs_continuous <- function(formula,
       score_col      = score_col,
       n_strata       = n_strata,
       strata_col     = strata_col,
+      bundle_version = 1L,
+      model_family   = "continuous",
+      package_versions = c(
+        R = as.character(getRversion()),
+        hvtiRpropensity = as.character(utils::packageVersion("hvtiRpropensity")),
+        stats = as.character(utils::packageVersion("stats"))
+      ),
       method         = if (is.null(imputation_col)) "balancing-linear"
                        else "balancing-linear-MI",
       n_imputations  = length(fitted$imputations),
       n_total        = nrow(base_data)
     ),
     tables   = list(
-      strata_counts = strata_counts
+      strata_counts = strata_counts,
+      estimates = inference$estimates,
+      covariance = inference$covariance,
+      by_imputation = inference$by_imputation,
+      fit_status = fitted$status
     ),
     models = fitted$models,
     subclass = "bs_continuous"

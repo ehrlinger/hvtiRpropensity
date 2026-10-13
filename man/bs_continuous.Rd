@@ -58,9 +58,11 @@ An object of class \code{c("bs_continuous", "ps_data")} with:
 \code{"decile"}, \code{strata_col}, and (if \code{create_binary_strata}) \code{stra_1}
 through \verb{stra_<n_strata>} appended.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{outcome_col}, \code{id_col},
-\code{imputation_col}, \code{score_col}, \code{n_strata}, \code{strata_col}, \code{method},
+\code{imputation_col}, \code{score_col}, \code{n_strata}, \code{strata_col},
+\code{bundle_version}, \code{model_family}, \code{package_versions}, \code{method},
 \code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{strata_counts}.}
+\item{\verb{$tables}}{Named list: \code{strata_counts}, \code{estimates} (Rubin-pooled
+coefficients), \code{covariance}, \code{by_imputation} and \code{fit_status}.}
 }
 }
 \description{
@@ -89,5 +91,5 @@ table(obj$data$cluster)
 
 }
 \seealso{
-\code{\link[=bs_count]{bs_count()}}, \code{\link[=ps_logistic]{ps_logistic()}}, \code{\link[=sample_ps_data]{sample_ps_data()}}
+\code{\link[=bs_count]{bs_count()}}, \code{\link[=fit_linear]{fit_linear()}}, \code{\link[=ps_logistic]{ps_logistic()}}, \code{\link[=sample_ps_data]{sample_ps_data()}}
 }
