@@ -191,6 +191,29 @@ test_that("Rubin pooled inference agrees with PROC MIANALYZE", {
                    tolerance = 1e-4)
   expect_sas_close(fit$tables$estimates$conf.high, estimates$UCLMean,
                    tolerance = 1e-4)
-  expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-4)
   expect_sas_close(fit$data$prob, averaged$probability, tolerance = 5e-5)
+
+  # SAS's TCov is the multivariate total covariance under MIANALYZE's
+  # proportionality assumption, (1 + rbar) * Ubar, not the elementwise Rubin
+  # total T = Ubar + (1 + 1/m) * B that R reports. So compare R's diagonal to
+  # the SAS standard errors, and rebuild TCov from the per-imputation fits.
+  # The 1e-5 floor is the per-imputation fits, not the pooling: R's vcov()
+  # already differs from SAS's mi-covariance.csv by up to about 8e-6. The
+  # direct comparison of T to TCov is off by about 3e-5 and fails here.
+  pooled_terms <- sub("^Intercept$", "(Intercept)", estimates$Parm)
+  expect_identical(fit$tables$estimates$term, pooled_terms)
+  expect_identical(dimnames(fit$tables$covariance), list(pooled_terms, pooled_terms))
+  expect_identical(sub("^Intercept$", "(Intercept)", rownames(covariance)), pooled_terms)
+  expect_identical(sub("^Intercept$", "(Intercept)", colnames(covariance)), pooled_terms)
+  expect_sas_close(diag(fit$tables$covariance), estimates$StdErr^2, tolerance = 1e-5)
+
+  vcovs <- lapply(fit$models, stats::vcov)
+  coefs <- do.call(rbind, lapply(fit$models, stats::coef))
+  m <- length(vcovs)
+  k <- ncol(coefs)
+  expect_identical(colnames(coefs), pooled_terms)
+  ubar <- Reduce(`+`, vcovs) / m
+  between <- stats::cov(coefs)
+  rbar <- (1 + 1 / m) * sum(diag(between %*% solve(ubar))) / k
+  expect_sas_close((1 + rbar) * ubar, covariance, tolerance = 1e-5)
 })
