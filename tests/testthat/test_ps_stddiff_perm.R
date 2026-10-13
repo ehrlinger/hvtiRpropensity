@@ -133,13 +133,15 @@ test_that("a seed also covers randomness inside reweight, including for the obse
 test_that("warnings from reweight on a permuted data set are not hidden", {
   # Warn only after the first (observed) call, so the warning must come from a permutation.
   calls <- 0L
-  expect_warning(
+  # One warning per permutation, each surfaced rather than swallowed.
+  warns <- capture_warnings(
     ps_stddiff_perm(dta, gaussian = "age", weight_col = "w", n_perm = 3, seed = 1,
                     reweight = function(p) {
                       calls <<- calls + 1L
                       if (calls > 1L) warning("model did not converge")
                       rep(1, nrow(p))
-                    }),
-    "did not converge"
+                    })
   )
+  expect_length(warns, 3L)
+  expect_match(warns, "did not converge")
 })

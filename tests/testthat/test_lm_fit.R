@@ -134,6 +134,7 @@ test_that("fit_logistic pools stacked binary imputations", {
 })
 
 test_that("fit_logistic fits the declared ordinal outcome", {
+  skip_if_not_installed("MASS")
   d <- lm_fixture()
   d <- d[d$imputation == 1L, ]
   obj <- fit_logistic(
@@ -171,6 +172,7 @@ test_that("fit_logistic fits the declared ordinal outcome", {
 })
 
 test_that("ordinal fitting ignores the input factor order", {
+  skip_if_not_installed("MASS")
   d <- lm_fixture()
   d <- d[d$imputation == 1L, ]
   d$ordinal <- ordered(d$ordinal, levels = c("high", "mid", "low"))
@@ -210,6 +212,7 @@ test_that("multicategory fitting refuses to overwrite a probability column", {
 })
 
 test_that("fit_logistic fits the declared nominal outcome and reference", {
+  skip_if_not_installed("nnet")
   d <- lm_fixture()
   d <- d[d$imputation == 1L, ]
   obj <- fit_logistic(
@@ -267,6 +270,8 @@ test_that("nominal fitting reports a level missing from one imputation", {
 })
 
 test_that("multicategory fits pool stacked imputations", {
+  skip_if_not_installed("MASS")
+  skip_if_not_installed("nnet")
   d <- lm_fixture()
   ordinal <- fit_logistic(
     ordinal ~ x1_imp + x2,

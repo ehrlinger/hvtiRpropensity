@@ -372,6 +372,8 @@ test_that("ps_nominal() preserves its two-level interface", {
 })
 
 test_that("propensity functions refuse to overwrite output columns", {
+  skip_if_not_installed("MASS")
+  skip_if_not_installed("nnet")
   binary <- sample_ps_data(n = 80, seed = 36)
   binary$prob_t <- 999
   expect_error(ps_logistic(tavr ~ age + ef, binary), "already exist.*prob_t")

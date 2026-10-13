@@ -68,6 +68,7 @@ test_that("validate_logistic averages every stored imputation model", {
 })
 
 test_that("validate_logistic checks bundle and cohort compatibility", {
+  skip_if_not_installed("MASS")
   model <- validation_model()
   d <- validation_fixture()
 

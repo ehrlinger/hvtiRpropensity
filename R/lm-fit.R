@@ -176,6 +176,12 @@ fit_logistic <- function(formula, data,
     )
   }
   .check_outcome_levels(data, outcome_col, declared_levels, imputation_col)
+  if (identical(family, "ordinal") && !two_level) {
+    rlang::check_installed("MASS", reason = "to fit an ordinal logistic model.")
+  }
+  if (identical(family, "nominal")) {
+    rlang::check_installed("nnet", reason = "to fit a nominal logistic model.")
+  }
 
   fit_fn <- function(partition) {
     model_data <- partition

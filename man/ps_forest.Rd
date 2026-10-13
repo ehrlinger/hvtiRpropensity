@@ -81,9 +81,11 @@ alone.
 \examples{
 \donttest{
 if (requireNamespace("randomForestSRC", quietly = TRUE)) {
+  op <- options(rf.cores = 2L)
   dta <- sample_ps_data(n = 150, seed = 1)[, c("id", "tavr", "age", "ef")]
   obj <- ps_forest(tavr ~ age + ef, dta, ntree = 100, seed = 1)
   summary(obj$data$prob_t)
+  options(op)
 }
 }
 }
