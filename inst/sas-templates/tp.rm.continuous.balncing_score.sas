@@ -2,7 +2,7 @@
 // JOB rm.hct_nadr.balncing_score.sas
 sas9.2 rm.hct_nadr.balncing_score.sas
 //cp rm.hct_nadr.balncing_score.l*\
-//  /studies/cardiac/support/cpb/hematocrit/transfusion/analyses/.
+//  /studies/<study>/analyses/.
 //spool cont printer 'lptxt -l110 -s6 -f LetterGothic-Bold'
 spool cont to email
 splfile rm.hct_nadr.balncing_score.l*
@@ -14,13 +14,13 @@ splfile rm.hct_nadr.balncing_score.l*
 * /analyses/rm.hct_nadr.balncing_score.sas
 *______________________________________________________________________________;
 *                                                                              ;
-  %let STUDY=/studies/cardiac/support/cpb/hematocrit/transfusion;
+  %let STUDY=/studies/<study>;
   %let STUDYDESC = xxxxxxxxxxxxxxxxxxxxxxxx;
   %let STUDYPOP  = CCF, 19xx to 20xx, n=xxxx;   
 *______________________________________________________________________________;
 *
-* Transfusion and Severe Anemia during CPB
-* (CCF, 11/2004 to10/2009, n=15282) 
+* <study description>
+* (CCF, 19xx to 20xx, n=xxxx) 
 *
 * Multivariable analysis of nadir HCT
 * Linear regression on  nadir HCT

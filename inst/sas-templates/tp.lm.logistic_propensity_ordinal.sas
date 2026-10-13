@@ -2,7 +2,7 @@
 // JOB lm.nyha_grp.sas
 sas8.2 lm.nyha_grp.sas
 //cp lm.nyha_grp.l*\
-//   /studies/cardiac/valves/mitral/degeneration/nyha12/analyses/.
+//   /studies/<study>/analyses/.
 //spool cont printer 'lptxt -l110 -s6 -f LetterGothic-Bold'
 spool cont to email
 splfile lm.nyha_grp.l*
@@ -13,14 +13,13 @@ splfile lm.nyha_grp.l*
 * /analyses/lm.nyha_grp.sas
 *______________________________________________________________________________;
 *                                                                              ;
-  %let STUDY=/studies/cardiac/valves/mitral/degeneration/nyha12;
+  %let STUDY=/studies/<study>;
   %let STUDYDESC = xxxxxxxxxxxxxxxxxxxxxxxx;
   %let STUDYPOP  = CCF, 19xx to 20xx, n=xxxx; 
 *______________________________________________________________________________;
 *                                                                              ;
-* Repair of degenerated MV;
-* Asymptomatic or minimally symptomatic patients only (NYHA I and II)
-* (CCF, 1985 to 2005, n=3286)
+* <study description>
+* (CCF, 19xx to 20xx, n=xxxx)
 *
 * Multivariable logistic regression analysis of NYHA I vs. II vs. III/IV
 * Parsimoneous and propensity models for ordinal response;
