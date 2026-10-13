@@ -133,11 +133,13 @@
 #' values are the ones the `smd` balance table measures. That table reports
 #' balance in one imputed dataset, not across all of them.
 #'
-#' Leyrat et al. found that the "across" approach can leave bias in the
-#' treatment effect, and recommend the "within" approach. To follow it, call
-#' `ps_logistic()` once per imputed dataset, without `imputation_col`; match or
-#' weight within each dataset; estimate the treatment effect in each; then
-#' pool those estimates and their variances with Rubin's rules.
+#' In Leyrat et al.'s simulations of inverse probability of treatment
+#' weighting, only the "within" approach was unbiased in every scenario they
+#' studied, and they recommend it with the outcome included in the imputation
+#' model. To follow it, call `ps_logistic()` once per imputed dataset, without
+#' `imputation_col`; match or weight within each dataset; estimate the
+#' treatment effect in each; then pool those estimates and their variances
+#' with Rubin's rules.
 #'
 #' **The matching weight** appended as `weight_col` is
 #' `min(p, 1-p) / (p * trt + (1-p) * (1-trt))`,
