@@ -107,7 +107,7 @@ An object of class `c("ps_logistic", "ps_data")` with:
 
   Named list: `formula`, `treatment_col`, `id_col`, `imputation_col`,
   `score_col`, `logit_col`, `weight_col`, `method`, `n_imputations`,
-  `n_total`.
+  `n_total`, `n_missing_treatment`.
 
 - `$tables`:
 
@@ -132,6 +132,15 @@ as input to
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 or
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md).
+
+A patient with a missing treatment is left out of the model fit, as
+[`stats::glm()`](https://rdrr.io/r/stats/glm.html) drops the row, and
+out of the strata, the balance tables and the group counts. The model
+needs no treatment to predict, so that patient still gets `score_col`
+and `logit_col`; `weight_col`, `quintile` and `decile` are missing. One
+warning states how many such patients there are, and
+`$meta$n_missing_treatment` keeps the count. A patient missing a
+predictor gets no score; `$tables$fit_status` counts those rows.
 
 ## See also
 

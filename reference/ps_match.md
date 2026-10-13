@@ -119,8 +119,8 @@ An object of class `c("ps_match", "ps_data")` with:
 
   Named list: `treatment_col`, `score_col`, `id_col`, `match_col`,
   `pair_id_col`, `scale`, `caliper` (the absolute caliper applied, on
-  `scale`), `caliper_sd`, `method`, `seed`, `n_total`, `n_matched`,
-  `n_unmatched`.
+  `scale`), `caliper_sd`, `method`, `seed`, `n_total`, `n_excluded`
+  (rows with a missing treatment or score), `n_matched`, `n_unmatched`.
 
 - `$tables`:
 
@@ -134,6 +134,12 @@ An object of class `c("ps_match", "ps_data")` with:
 The `$tables` slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. These are the diagnostics
 that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
+
+A patient with a missing treatment or a missing score cannot be matched.
+Those rows stay in `$data` with `match_col` set to `0`, are left out of
+the treated and control pools, the SMD tables and the group counts, and
+one warning states how many there are. `$meta$n_excluded` keeps the
+count.
 
 ## References
 

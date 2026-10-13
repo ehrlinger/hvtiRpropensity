@@ -12,7 +12,8 @@ must be present.
   data,
   col,
   treated_level = NULL,
-  call_env = rlang::caller_env()
+  call_env = rlang::caller_env(),
+  warn_na = TRUE
 )
 ```
 
@@ -33,6 +34,11 @@ must be present.
 - call_env:
 
   Environment for the error call.
+
+- warn_na:
+
+  Whether to warn about missing treatment values; see
+  [`.check_binary()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_binary.md).
 
 ## Value
 

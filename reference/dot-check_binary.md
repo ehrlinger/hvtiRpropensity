@@ -7,7 +7,7 @@ and weighting steps.
 ## Usage
 
 ``` r
-.check_binary(data, col, call_env = rlang::caller_env())
+.check_binary(data, col, call_env = rlang::caller_env(), warn_na = TRUE)
 ```
 
 ## Arguments
@@ -23,6 +23,12 @@ and weighting steps.
 - call_env:
 
   Environment for the error call.
+
+- warn_na:
+
+  Whether to warn about missing values. A caller that counts missing
+  treatment and missing score together, and states the total in one
+  warning, sets this to `FALSE`.
 
 ## Value
 

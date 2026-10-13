@@ -46,8 +46,8 @@ bs_count(
 
 - id_col:
 
-  Patient identifier column. Required when `imputation_col` is set.
-  Default `"id"`.
+  Patient identifier column. Required, and checked, only when
+  `imputation_col` is set. Default `"id"`.
 
 - imputation_col:
 

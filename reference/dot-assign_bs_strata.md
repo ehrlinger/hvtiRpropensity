@@ -22,4 +22,5 @@ decile;
 
 ## Value
 
-A named list: `quintile`, `decile`, `cluster`.
+A named list: `quintile`, `decile`, `cluster`. A missing score gets
+missing strata, and the strata divide the scored patients only.

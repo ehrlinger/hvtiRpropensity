@@ -153,7 +153,8 @@ covariates. Default <code>"id"</code>; it need not exist in <code>data</code>.</
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>treatment_col</code>, <code>score_col</code>, <code>weight_col</code>,
-<code>estimand</code>, <code>stabilised</code>, <code>trim</code>, <code>method</code>, <code>n_total</code>.</p></dd>
+<code>estimand</code>, <code>stabilised</code>, <code>trim</code>, <code>method</code>, <code>n_total</code>, <code>n_excluded</code>
+(rows with a missing treatment or score).</p></dd>
 
 <dt><code>$tables</code></dt>
 <dd><p>Named list: <code>smd_unweighted</code>, <code>smd_weighted</code>,
@@ -163,6 +164,14 @@ carry a logical <code>treated</code> column.</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A patient with a missing treatment or a missing score cannot be weighted.
+Those rows stay in <code>$data</code> with a missing <code>weight_col</code>, are left out of the
+stabilising treatment proportion, the SMD tables, the group counts and the
+effective sample sizes, and one warning states how many there are.
+<code>$meta$n_excluded</code> keeps the count.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="ps_match.html">ps_match()</a></code>, <code><a href="sample_ps_data.html">sample_ps_data()</a></code>,

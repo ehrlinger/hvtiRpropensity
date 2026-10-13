@@ -151,7 +151,7 @@ ATM estimand (average treatment effect among the matched; Li &amp; Greene,
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>formula</code>, <code>treatment_col</code>, <code>id_col</code>,
 <code>imputation_col</code>, <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code>, <code>method</code>,
-<code>n_imputations</code>, <code>n_total</code>.</p></dd>
+<code>n_imputations</code>, <code>n_total</code>, <code>n_missing_treatment</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
 <dd><p>Named list: <code>smd</code>, <code>group_counts</code>. <code>group_counts</code> has one
@@ -174,6 +174,13 @@ which equals the <code>mt_wt</code> column produced in the SAS templates (Li &am
 Greene, 2013).  It is the ATM (average treatment effect among the
 matched) estimand weight and is used as input to <code><a href="ps_match.html">ps_match()</a></code> or
 <code><a href="ps_weight.html">ps_weight()</a></code>.</p>
+<p>A patient with a missing treatment is left out of the model fit, as
+<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> drops the row, and out of the strata, the balance tables and
+the group counts. The model needs no treatment to predict, so that patient
+still gets <code>score_col</code> and <code>logit_col</code>; <code>weight_col</code>, <code>quintile</code> and
+<code>decile</code> are missing. One warning states how many such patients there are,
+and <code>$meta$n_missing_treatment</code> keeps the count. A patient missing a
+predictor gets no score; <code>$tables$fit_status</code> counts those rows.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

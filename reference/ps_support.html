@@ -91,11 +91,21 @@ both groups" (common support).</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ps_support</code> / <code>ps_data</code> object. <code>$data</code> is <code>x$data</code> plus one
 logical column <code>weak_&lt;rule&gt;</code> per rule. <code>$tables$counts</code> gives the number
-flagged per rule; <code>$tables$agreement</code> gives, for every pair of rules,
+flagged per rule (<code>n_weak</code>), the number of rows that rule judged (<code>n</code>)
+and the number it did not (<code>n_excluded</code>): rows with a missing treatment
+or score, plus any missing values in a rule supplied through <code>flags</code>.
+<code>$meta$n_excluded</code> counts the rows with a missing treatment or score;
+<code>$tables$agreement</code> gives, for every pair of rules,
 <code>n_both</code>, <code>n_neither</code>, <code>pct_agree</code>, Cohen <code>kappa</code> and <code>jaccard</code> (overlap
 of the two dropped sets). <code>$meta$common_support</code> is the interval used,
 on the probability scale. <code>$meta$scale</code> is the scale of <code>score_col</code>,
 carried from <code>x</code> (<code>"probability"</code> when <code>x</code> records none).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A patient with a missing treatment or a missing score cannot be judged.
+Those rows are left out of the common-support interval and every rule, get
+a missing <code>weak_&lt;rule&gt;</code> flag, and one warning states how many there are.</p>
     </div>
 
     <div class="section level2">

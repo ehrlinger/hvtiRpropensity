@@ -43,11 +43,22 @@ ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
 
 A `ps_support` / `ps_data` object. `$data` is `x$data` plus one logical
 column `weak_<rule>` per rule. `$tables$counts` gives the number flagged
-per rule; `$tables$agreement` gives, for every pair of rules, `n_both`,
+per rule (`n_weak`), the number of rows that rule judged (`n`) and the
+number it did not (`n_excluded`): rows with a missing treatment or
+score, plus any missing values in a rule supplied through `flags`.
+`$meta$n_excluded` counts the rows with a missing treatment or score;
+`$tables$agreement` gives, for every pair of rules, `n_both`,
 `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap of the
 two dropped sets). `$meta$common_support` is the interval used, on the
 probability scale. `$meta$scale` is the scale of `score_col`, carried
 from `x` (`"probability"` when `x` records none).
+
+## Details
+
+A patient with a missing treatment or a missing score cannot be judged.
+Those rows are left out of the common-support interval and every rule,
+get a missing `weak_<rule>` flag, and one warning states how many there
+are.
 
 ## Examples
 

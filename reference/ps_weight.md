@@ -103,7 +103,8 @@ An object of class `c("ps_weight", "ps_data")` with:
 - `$meta`:
 
   Named list: `treatment_col`, `score_col`, `weight_col`, `estimand`,
-  `stabilised`, `trim`, `method`, `n_total`.
+  `stabilised`, `trim`, `method`, `n_total`, `n_excluded` (rows with a
+  missing treatment or score).
 
 - `$tables`:
 
@@ -111,6 +112,14 @@ An object of class `c("ps_weight", "ps_data")` with:
   `effective_n`. Group tables name each group by its value in
   `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and carry a logical
   `treated` column.
+
+## Details
+
+A patient with a missing treatment or a missing score cannot be
+weighted. Those rows stay in `$data` with a missing `weight_col`, are
+left out of the stabilising treatment proportion, the SMD tables, the
+group counts and the effective sample sizes, and one warning states how
+many there are. `$meta$n_excluded` keeps the count.
 
 ## See also
 

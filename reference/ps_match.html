@@ -172,7 +172,8 @@ obtain the matched subset.</p></dd>
 <dd><p>Named list: <code>treatment_col</code>, <code>score_col</code>, <code>id_col</code>,
 <code>match_col</code>, <code>pair_id_col</code>, <code>scale</code>, <code>caliper</code> (the absolute caliper
 applied, on <code>scale</code>), <code>caliper_sd</code>, <code>method</code>, <code>seed</code>, <code>n_total</code>,
-<code>n_matched</code>, <code>n_unmatched</code>.</p></dd>
+<code>n_excluded</code> (rows with a missing treatment or score), <code>n_matched</code>,
+<code>n_unmatched</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
 <dd><p>Named list: <code>smd_before</code>, <code>smd_after</code>,
@@ -187,6 +188,10 @@ carry a logical <code>treated</code> column.</p></dd>
     <p>The <code>$tables</code> slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. These are the diagnostics
 that <code>hvtiPlotR::hv_mirror_hist()</code> and <code>hvtiPlotR::hv_balance()</code> expect.</p>
+<p>A patient with a missing treatment or a missing score cannot be matched.
+Those rows stay in <code>$data</code> with <code>match_col</code> set to <code>0</code>, are left out of the
+treated and control pools, the SMD tables and the group counts, and one
+warning states how many there are. <code>$meta$n_excluded</code> keeps the count.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

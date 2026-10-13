@@ -60,7 +60,8 @@ present.</p>
 <span>  <span class="va">data</span>,</span>
 <span>  <span class="va">col</span>,</span>
 <span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  call_env <span class="op">=</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/stack.html" class="external-link">caller_env</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  call_env <span class="op">=</span> <span class="fu">rlang</span><span class="fu">::</span><span class="fu"><a href="https://rlang.r-lib.org/reference/stack.html" class="external-link">caller_env</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  warn_na <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -82,6 +83,11 @@ present.</p>
 
 <dt id="arg-call-env">call_env<a class="anchor" aria-label="anchor" href="#arg-call-env"></a></dt>
 <dd><p>Environment for the error call.</p></dd>
+
+
+<dt id="arg-warn-na">warn_na<a class="anchor" aria-label="anchor" href="#arg-warn-na"></a></dt>
+<dd><p>Whether to warn about missing treatment values; see
+<code><a href="dot-check_binary.html">.check_binary()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
