@@ -81,28 +81,59 @@ An object of class `c("ps_ordinal", "ps_data")` with:
 
 - `$data`:
 
-  Base data frame with one `prob_<level>` column per treatment level.
+  `data` (the lowest-numbered imputation when `imputation_col` is set,
+  without that column) with one `<score_col_prefix>_<level>` column per
+  treatment level, the marginal probability of that level, and
+  `quintile` and `decile`, which rank the probability of the highest
+  level. The treatment column is returned as an ordered factor.
 
 - `$meta`:
 
   Named list: `formula`, `treatment_col`, `id_col`, `imputation_col`,
-  `score_cols`, `levels`, `method`, `n_imputations`, `n_total`.
+  `score_cols`, `score_col_prefix`, `levels`, `smd_pairs`,
+  `treatment_levels`, `bundle_version`, `model_family` (`"ordinal"`),
+  `package_versions`, `cumulative_direction`, `method`
+  (`"ordinal-logistic"` or `"ordinal-logistic-MI"`), `n_imputations`,
+  `n_total`.
 
 - `$tables`:
 
-  Named list: `smd`, `group_counts`. `smd` has one row per covariate and
-  pair of levels: `variable`, `level`, `versus`, `smd`.
+  Named list: `smd`, `group_counts` (`group`, `n`), and the model tables
+  of
+  [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md):
+  `estimates`, `covariance`, `by_imputation` and `fit_status`. `smd` has
+  one row per covariate and pair of levels: `variable`, `level`,
+  `versus`, `smd`.
+
+- `$models`:
+
+  The fitted models, one per imputation, named by imputation index:
+  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) fits, or
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html) fits for a
+  two-level treatment.
 
 ## Details
 
 When `imputation_col` is supplied, models are fit on each imputed
 dataset separately and per-level probabilities are averaged per patient
-across imputations.
+across imputations, on the probability scale. This is the "across"
+approach of Leyrat et al. (2019), not Rubin's rules;
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+describes it and the "within" alternative. `$data` and the `smd` table
+use the lowest-numbered imputation's covariates.
 
 ## Package dependency
 
 Requires the MASS package (a recommended package shipped with base R).
 Install with `install.packages("MASS")` if missing.
+
+## References
+
+Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J, Resche-Rigon
+M, Carpenter JR, Williamson EJ (2019). Propensity score analysis with
+partially observed covariates: how should multiple imputation be used?
+*Statistical Methods in Medical Research*, 28(1), 3–19.
+[doi:10.1177/0962280217713032](https://doi.org/10.1177/0962280217713032)
 
 ## See also
 

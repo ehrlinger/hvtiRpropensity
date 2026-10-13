@@ -135,24 +135,40 @@ compares. <code>"reference"</code> (default) compares each level with <code>ref_
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("ps_nominal", "ps_data")</code> with:</p><dl><dt><code>$data</code></dt>
-<dd><p>Base data frame with one <code>prob_&lt;level&gt;</code> column per
-treatment level appended.</p></dd>
+<dd><p><code>data</code> (the lowest-numbered imputation when
+<code>imputation_col</code> is set, without that column) with one
+<code>&lt;score_col_prefix&gt;_&lt;level&gt;</code> column per treatment level appended,
+<code>ref_level</code> first. The treatment column is returned as a factor with
+<code>ref_level</code> as its first level.</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>formula</code>, <code>treatment_col</code>, <code>id_col</code>,
-<code>imputation_col</code>, <code>score_cols</code>, <code>levels</code>, <code>ref_level</code>, <code>method</code>,
-<code>n_imputations</code>, <code>n_total</code>.</p></dd>
+<code>imputation_col</code>, <code>score_cols</code>, <code>score_col_prefix</code>, <code>levels</code> (in model
+order, <code>ref_level</code> first), <code>smd_pairs</code>, <code>ref_level</code>,
+<code>treatment_levels</code> (as declared), <code>bundle_version</code>, <code>model_family</code>
+(<code>"nominal"</code>), <code>package_versions</code>, <code>method</code> (<code>"nominal-logistic"</code> or
+<code>"nominal-logistic-MI"</code>), <code>n_imputations</code>, <code>n_total</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>smd</code>, <code>group_counts</code>. <code>smd</code> has one row per
-covariate and pair of levels: <code>variable</code>, <code>level</code>, <code>versus</code>, <code>smd</code>.</p></dd>
+<dd><p>Named list: <code>smd</code>, <code>group_counts</code> (<code>group</code>, <code>n</code>), and
+the model tables of <code><a href="fit_logistic.html">fit_logistic()</a></code>: <code>estimates</code>, <code>covariance</code>,
+<code>by_imputation</code> and <code>fit_status</code>. <code>smd</code> has one row per covariate and
+pair of levels: <code>variable</code>, <code>level</code>, <code>versus</code>, <code>smd</code>.</p></dd>
+
+<dt><code>$models</code></dt>
+<dd><p>The fitted <code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom()</a></code> models, one per
+imputation, named by imputation index.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>When <code>imputation_col</code> is supplied, models are fit on each imputed dataset
-and per-level probabilities are averaged per patient across imputations.</p>
+and per-level probabilities are averaged per patient across imputations, on
+the probability scale. This is the "across" approach of Leyrat et al.
+(2019), not Rubin's rules; <code><a href="ps_logistic.html">ps_logistic()</a></code> describes it and the "within"
+alternative. <code>$data</code> and the <code>smd</code> table use the lowest-numbered
+imputation's covariates.</p>
     </div>
     <div class="section level2">
     <h2 id="package-dependency">Package dependency<a class="anchor" aria-label="anchor" href="#package-dependency"></a></h2>
@@ -160,6 +176,14 @@ and per-level probabilities are averaged per patient across imputations.</p>
 
 <p>Requires <span class="pkg">nnet</span> (a recommended R package, usually pre-installed).
 Install with <code>install.packages("nnet")</code> if missing.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+analysis with partially observed covariates: how should multiple
+imputation be used? <em>Statistical Methods in Medical Research</em>, 28(1),
+3–19. <a href="https://doi.org/10.1177/0962280217713032" class="external-link">doi:10.1177/0962280217713032</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

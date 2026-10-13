@@ -60,7 +60,7 @@ sa_trim_sweep(
 - treatment_col:
 
   Name of the binary treatment column. Taken from `x$meta$treatment_col`
-  when `x` is a `ps_data` object`. Default `"tavr"\`.
+  when `x` is a `ps_data` object. Default `"tavr"`.
 
 - treated_level:
 

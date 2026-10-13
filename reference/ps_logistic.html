@@ -140,8 +140,11 @@ Given alone, the treatment may hold any two values (a factor such as
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("ps_logistic", "ps_data")</code> with:</p><dl><dt><code>$data</code></dt>
-<dd><p>The base data frame with <code>score_col</code>, <code>logit_col</code>,
-<code>weight_col</code>, <code>quintile</code>, and <code>decile</code> columns appended. <code>weight_col</code>
+<dd><p><code>data</code> (the lowest-numbered imputation when
+<code>imputation_col</code> is set, without that column) with <code>score_col</code>,
+<code>logit_col</code>, <code>weight_col</code>, <code>quintile</code>, and <code>decile</code> columns appended.
+<code>score_col</code> is the probability of <code>treated_level</code>. <code>quintile</code> and
+<code>decile</code> rank <code>score_col</code> among patients with a treatment. <code>weight_col</code>
 holds the Li-Greene matching weight, <code>min(p, 1 - p) / p</code> for treated
 patients and <code>min(p, 1 - p) / (1 - p)</code> for controls, which targets the
 ATM estimand (average treatment effect among the matched; Li &amp; Greene,
@@ -150,30 +153,52 @@ ATM estimand (average treatment effect among the matched; Li &amp; Greene,
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>formula</code>, <code>treatment_col</code>, <code>id_col</code>,
-<code>imputation_col</code>, <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code>, <code>method</code>,
-<code>n_imputations</code>, <code>n_total</code>, <code>n_missing_treatment</code>.</p></dd>
+<code>imputation_col</code>, <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code>,
+<code>treatment_levels</code>, <code>treated_level</code>, <code>bundle_version</code>, <code>model_family</code>
+(<code>"binary"</code>), <code>package_versions</code>, <code>method</code> (<code>"logistic"</code> or
+<code>"logistic-MI"</code>), <code>n_imputations</code>, <code>n_total</code>, <code>n_missing_treatment</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>smd</code>, <code>group_counts</code>. <code>group_counts</code> has one
-row per treatment level, named as declared, with a logical <code>treated</code>
-flag and the count <code>n</code>.</p></dd>
+<dd><p>Named list: <code>smd</code> (<code>variable</code>, <code>smd</code>), <code>group_counts</code>,
+and the model tables of <code><a href="fit_logistic.html">fit_logistic()</a></code>: <code>estimates</code>, <code>covariance</code>,
+<code>by_imputation</code> and <code>fit_status</code>. <code>group_counts</code> has one row per
+treatment level, named as declared, with a logical <code>treated</code> flag and
+the count <code>n</code>.</p></dd>
+
+<dt><code>$models</code></dt>
+<dd><p>The fitted <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> models, one per imputation,
+named by imputation index.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>When <code>imputation_col</code> is supplied, the model is fit separately on each
-imputed dataset; predicted probabilities are averaged per patient across
-imputations (Rubin's combination rule for predictions), and the first
-imputed dataset's covariate values form the base output data frame.
-This mirrors the SAS template workflow of
-<code>PROC LOGISTIC ... BY _IMPUTATION_</code> followed by <code>PROC SUMMARY mean=</code>.</p>
-<p>The <strong>matching weight</strong> appended as <code>weight_col</code> is
+    <p><strong>Multiple imputation.</strong> When <code>imputation_col</code> is supplied, the model is
+fit separately on each imputed dataset, and each patient's predicted
+probabilities are averaged across the imputations on the probability scale,
+not the logit scale. <code>logit_col</code> is the logit of that average. Leyrat et
+al. (2019) call this the "across" approach. It is not Rubin's rules, which
+pool coefficients and their variances; <code>$tables$estimates</code> holds the
+coefficients pooled that way. The averaging mirrors the SAS template
+workflow of <code>PROC LOGISTIC ... BY _IMPUTATION_</code> followed by
+<code>PROC SUMMARY mean=</code>.</p>
+<p><code>$data</code> is built from the lowest-numbered imputation, and its covariate
+values are the ones the <code>smd</code> balance table measures. That table reports
+balance in one imputed dataset, not across all of them.</p>
+<p>In Leyrat et al.'s simulations of inverse probability of treatment
+weighting, only the "within" approach was unbiased in every scenario they
+studied, and they recommend it with the outcome included in the imputation
+model. To follow it, call <code>ps_logistic()</code> once per imputed dataset, without
+<code>imputation_col</code>; match or weight within each dataset; estimate the
+treatment effect in each; then pool those estimates and their variances
+with Rubin's rules.</p>
+<p><strong>The matching weight</strong> appended as <code>weight_col</code> is
 <code>min(p, 1-p) / (p * trt + (1-p) * (1-trt))</code>,
 which equals the <code>mt_wt</code> column produced in the SAS templates (Li &amp;
-Greene, 2013).  It is the ATM (average treatment effect among the
-matched) estimand weight and is used as input to <code><a href="ps_match.html">ps_match()</a></code> or
-<code><a href="ps_weight.html">ps_weight()</a></code>.</p>
+Greene, 2013). It targets the ATM estimand (average treatment effect among
+the matched). Neither <code><a href="ps_match.html">ps_match()</a></code> nor <code><a href="ps_weight.html">ps_weight()</a></code> reads it; both work
+from <code>score_col</code>. Pass it as <code>weight_col</code> to <code><a href="ps_stddiff.html">ps_stddiff()</a></code> or
+<code><a href="ps_mw_var.html">ps_mw_var()</a></code>, or use it as the weight in an outcome model.</p>
 <p>A patient with a missing treatment is left out of the model fit, as
 <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> drops the row, and out of the strata, the balance tables and
 the group counts. The model needs no treatment to predict, so that patient
@@ -183,9 +208,20 @@ and <code>$meta$n_missing_treatment</code> keeps the count. A patient missing a
 predictor gets no score; <code>$tables$fit_status</code> counts those rows.</p>
     </div>
     <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+analysis with partially observed covariates: how should multiple
+imputation be used? <em>Statistical Methods in Medical Research</em>, 28(1),
+3–19. <a href="https://doi.org/10.1177/0962280217713032" class="external-link">doi:10.1177/0962280217713032</a></p>
+<p>Li L, Greene T (2013). A weighting analogue to pair matching in
+propensity score analysis. <em>The International Journal of Biostatistics</em>,
+9(2), 215–234. <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="ps_match.html">ps_match()</a></code>, <code><a href="ps_weight.html">ps_weight()</a></code>, <code><a href="ps_ordinal.html">ps_ordinal()</a></code>, <code><a href="ps_nominal.html">ps_nominal()</a></code>,
-<code><a href="sample_ps_data.html">sample_ps_data()</a></code></p></div>
+<code><a href="fit_logistic.html">fit_logistic()</a></code>, <code><a href="sample_ps_data.html">sample_ps_data()</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -273,7 +309,7 @@ predictor gets no score; <code>$tables$fit_status</code> counts those rows.</p>
 <span class="r-in"><span><span class="co">#   prob_t   -- propensity score (p-hat; SAS _p_ / _propen_)</span></span></span>
 <span class="r-in"><span><span class="co">#   logit_t  -- log(p/(1-p))    (SAS _logit_)</span></span></span>
 <span class="r-in"><span><span class="co">#   mt_wt    -- matching weight  (SAS mt_wt = min(p,1-p)/(p*trt+(1-p)*(1-trt)))</span></span></span>
-<span class="r-in"><span><span class="co">#   quintile -- rank-based quintile (SAS int(_n_/(nobs/5))+1)</span></span></span>
+<span class="r-in"><span><span class="co">#   quintile -- rank-based quintile, ceiling(rank * 5 / n)</span></span></span>
 <span class="r-in"><span><span class="co">#   decile   -- rank-based decile</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">obj</span><span class="op">$</span><span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"tavr"</span>, <span class="st">"prob_t"</span>, <span class="st">"logit_t"</span>, <span class="st">"mt_wt"</span>,</span></span>
 <span class="r-in"><span>                  <span class="st">"quintile"</span>, <span class="st">"decile"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>

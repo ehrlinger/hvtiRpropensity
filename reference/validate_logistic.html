@@ -88,8 +88,30 @@ bundle.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>c("lm_validation", "ps_data")</code>.</p>
-    </div>
+    <p>An object of class <code>c("lm_validation", "ps_data")</code> with:</p><dl><dt><code>$data</code></dt>
+<dd><p><code>data</code> with <code>prediction_col</code> appended: the predicted
+probability of the bundle's <code>event_level</code>, averaged across the stored
+models on the probability scale. A row a model cannot score, such as
+one missing a predictor, gets <code>NA</code>.</p></dd>
+
+<dt><code>$meta</code></dt>
+<dd><p>Named list: <code>bundle_version</code>, <code>model_family</code>, <code>formula</code>,
+<code>outcome_col</code>, <code>outcome_levels</code>, <code>event_level</code>, <code>predictors</code> and
+<code>package_versions</code>, carried from <code>model</code>; <code>prediction_col</code>, <code>groups</code>,
+<code>n_input</code>, <code>n_analyzed</code> (rows with an outcome and a prediction) and
+<code>n_excluded</code>.</p></dd>
+
+<dt><code>$tables</code></dt>
+<dd><p>Named list: <code>calibration</code>, one row per equal-frequency
+group of the predicted probability (<code>group</code>, <code>n</code>, <code>observed</code> events,
+<code>expected</code> events); and <code>performance</code>, one row (<code>n</code>, <code>observed</code>,
+<code>expected</code>, <code>oe_ratio</code>, <code>auc</code> (the c-statistic) and <code>brier</code>).</p></dd>
+
+<dt><code>$models</code></dt>
+<dd><p>The stored models from <code>model</code>, unchanged.</p></dd>
+
+
+</dl></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

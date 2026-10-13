@@ -117,23 +117,39 @@ An object of class `c("ps_match", "ps_data")` with:
 
 - `$meta`:
 
-  Named list: `treatment_col`, `score_col`, `id_col`, `match_col`,
+  Named list: `treatment_col`, `treated_level` (the value of
+  `treatment_col` taken as treated), `score_col`, `id_col`, `match_col`,
   `pair_id_col`, `scale`, `caliper` (the absolute caliper applied, on
   `scale`), `caliper_sd`, `method`, `seed`, `n_total`, `n_excluded`
-  (rows with a missing treatment or score), `n_matched`, `n_unmatched`.
+  (rows with a missing treatment or score), `n_matched` (the number of
+  matched pairs, so the number of matched treated patients) and
+  `n_unmatched` (treated patients left without a match; unmatched
+  controls are not counted).
 
 - `$tables`:
 
-  Named list: `smd_before`, `smd_after`, `group_counts_before`,
-  `group_counts_after`. Group tables name each group by its value in
-  `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and carry a logical
-  `treated` column.
+  Named list: `smd_before`, `smd_after` (`variable`, `smd`),
+  `group_counts_before`, `group_counts_after` (`group`, `treated`, `n`).
+  Group tables name each group by its value in `treatment_col` (`0`/`1`,
+  `FALSE`/`TRUE`, or the two values when `treated_level` is given) and
+  carry a logical `treated` column.
 
 ## Details
 
+**Estimand.** Every treated patient looks for a control, so the matched
+sample targets the average treatment effect on the treated (ATT). A
+treated patient who finds no control within the caliper, or none at all
+once the controls run out, is dropped, and the estimand shifts to the
+treated patients who could be matched, in practice those inside common
+support. `$meta$n_unmatched` counts them; when it is not zero, say which
+population the estimate describes.
+
 The `$tables` slot contains standardised mean difference (SMD) tables
-before and after matching, and group counts. These are the diagnostics
-that `hvtiPlotR::hv_mirror_hist()` and `hvtiPlotR::hv_balance()` expect.
+before and after matching, and group counts.
+`hvtiPlotR::hv_mirror_hist()` reads `$data` directly.
+`hvtiPlotR::hv_balance()` needs the two SMD tables stacked into long
+form with `variable`, `group` and `std_diff` (in percent); the vignette
+shows the reshape.
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in `$data` with `match_col` set to `0`, are left out of

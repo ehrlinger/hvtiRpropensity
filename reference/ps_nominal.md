@@ -90,30 +90,57 @@ An object of class `c("ps_nominal", "ps_data")` with:
 
 - `$data`:
 
-  Base data frame with one `prob_<level>` column per treatment level
-  appended.
+  `data` (the lowest-numbered imputation when `imputation_col` is set,
+  without that column) with one `<score_col_prefix>_<level>` column per
+  treatment level appended, `ref_level` first. The treatment column is
+  returned as a factor with `ref_level` as its first level.
 
 - `$meta`:
 
   Named list: `formula`, `treatment_col`, `id_col`, `imputation_col`,
-  `score_cols`, `levels`, `ref_level`, `method`, `n_imputations`,
-  `n_total`.
+  `score_cols`, `score_col_prefix`, `levels` (in model order,
+  `ref_level` first), `smd_pairs`, `ref_level`, `treatment_levels` (as
+  declared), `bundle_version`, `model_family` (`"nominal"`),
+  `package_versions`, `method` (`"nominal-logistic"` or
+  `"nominal-logistic-MI"`), `n_imputations`, `n_total`.
 
 - `$tables`:
 
-  Named list: `smd`, `group_counts`. `smd` has one row per covariate and
-  pair of levels: `variable`, `level`, `versus`, `smd`.
+  Named list: `smd`, `group_counts` (`group`, `n`), and the model tables
+  of
+  [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md):
+  `estimates`, `covariance`, `by_imputation` and `fit_status`. `smd` has
+  one row per covariate and pair of levels: `variable`, `level`,
+  `versus`, `smd`.
+
+- `$models`:
+
+  The fitted
+  [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
+  models, one per imputation, named by imputation index.
 
 ## Details
 
 When `imputation_col` is supplied, models are fit on each imputed
 dataset and per-level probabilities are averaged per patient across
-imputations.
+imputations, on the probability scale. This is the "across" approach of
+Leyrat et al. (2019), not Rubin's rules;
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+describes it and the "within" alternative. `$data` and the `smd` table
+use the lowest-numbered imputation's covariates.
 
 ## Package dependency
 
 Requires nnet (a recommended R package, usually pre-installed). Install
 with `install.packages("nnet")` if missing.
+
+## References
+
+Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J, Resche-Rigon
+M, Carpenter JR, Williamson EJ (2019). Propensity score analysis with
+partially observed covariates: how should multiple imputation be used?
+*Statistical Methods in Medical Research*, 28(1), 3–19.
+[doi:10.1177/0962280217713032](https://doi.org/10.1177/0962280217713032)
 
 ## See also
 

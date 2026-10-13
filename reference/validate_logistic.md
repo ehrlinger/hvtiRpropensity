@@ -41,7 +41,33 @@ validate_logistic(
 
 ## Value
 
-An object of class `c("lm_validation", "ps_data")`.
+An object of class `c("lm_validation", "ps_data")` with:
+
+- `$data`:
+
+  `data` with `prediction_col` appended: the predicted probability of
+  the bundle's `event_level`, averaged across the stored models on the
+  probability scale. A row a model cannot score, such as one missing a
+  predictor, gets `NA`.
+
+- `$meta`:
+
+  Named list: `bundle_version`, `model_family`, `formula`,
+  `outcome_col`, `outcome_levels`, `event_level`, `predictors` and
+  `package_versions`, carried from `model`; `prediction_col`, `groups`,
+  `n_input`, `n_analyzed` (rows with an outcome and a prediction) and
+  `n_excluded`.
+
+- `$tables`:
+
+  Named list: `calibration`, one row per equal-frequency group of the
+  predicted probability (`group`, `n`, `observed` events, `expected`
+  events); and `performance`, one row (`n`, `observed`, `expected`,
+  `oe_ratio`, `auc` (the c-statistic) and `brier`).
+
+- `$models`:
+
+  The stored models from `model`, unchanged.
 
 ## Examples
 

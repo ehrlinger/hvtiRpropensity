@@ -40,9 +40,11 @@ ps_stddiff(
 
 - weight_col:
 
-  Optional name of a column of positive weights, for example matching
-  weights from
-  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md).
+  Optional name of a column of positive weights, for example the
+  inverse-probability weights from
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+  or the matching weight `mt_wt` from
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md).
   Weights must be finite.
 
 - treated_level:

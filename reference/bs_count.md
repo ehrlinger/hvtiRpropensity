@@ -90,20 +90,34 @@ An object of class `c("bs_count", "ps_data")` with:
 
 - `$data`:
 
-  Base data frame with `score_col`, `"quintile"`, `"decile"`,
-  `strata_col`, and (if `create_binary_strata`) `stra_1`...`stra_k`
-  appended.
+  `data` (the lowest-numbered imputation when `imputation_col` is set,
+  without that column) with `score_col`, `"quintile"`, `"decile"`,
+  `strata_col`, and (if `create_binary_strata`) `stra_1` through
+  `stra_<n_strata>` appended.
 
 - `$meta`:
 
   Named list: `formula`, `outcome_col`, `id_col`, `imputation_col`,
-  `score_col`, `dist`, `n_strata`, `strata_col`, `bundle_version`,
-  `model_family`, `package_versions`, `method`, `n_imputations`,
-  `n_total`.
+  `score_col`, `dist`, `theta` (the negative-binomial dispersion
+  estimate, one per imputation, named by imputation index; `NULL` for
+  `dist = "poisson"`), `n_strata`, `strata_col`, `bundle_version`,
+  `model_family` (`"count"`), `package_versions`, `method`,
+  `n_imputations`, `n_total`.
 
 - `$tables`:
 
-  Named list: `strata_counts`.
+  Named list: `strata_counts` (`stratum`, `n`), `estimates`,
+  `covariance`, `by_imputation` and `fit_status`, laid out as in
+  [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
+  except that `estimates` has `rate_ratio`, the exponentiated
+  coefficient, in place of `odds_ratio`. With `imputation_col`,
+  `estimates` and `covariance` are pooled with Rubin's rules.
+
+- `$models`:
+
+  The fitted models, one per imputation, named by imputation index:
+  [`MASS::glm.nb()`](https://rdrr.io/pkg/MASS/man/glm.nb.html) or
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html) fits.
 
 ## Details
 

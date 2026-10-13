@@ -81,6 +81,15 @@ An object of class `c("ps_mw_var", "ps_data")` with:
 
 ## Details
 
+With the Li-Greene matching weight (`mt_wt` from
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+or
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md))
+the estimate targets the ATM, the average treatment effect among the
+matched: the population that 1:1 matching on the propensity score would
+keep. With other weights it targets whatever estimand those weights
+define.
+
 **Estimate.** For each group, `PROC MEANS` weighted summaries: the mean
 `sum(w y) / sum(w)`, the SD with an `n - 1` denominator, and the sum of
 weights. The macro labels the sum of weights `N`; it is reported here as
@@ -111,6 +120,7 @@ caller's random number stream is restored afterwards.
 Li L, Greene T. A weighting analogue to pair matching in propensity
 score analysis. The International Journal of Biostatistics.
 2013;9(2):215-234.
+[doi:10.1515/ijb-2012-0030](https://doi.org/10.1515/ijb-2012-0030)
 
 ## See also
 

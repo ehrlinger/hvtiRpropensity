@@ -1,11 +1,18 @@
 # Inverse-Probability-of-Treatment Weighting (IPTW)
 
 Computes IPTW weights from a pre-computed propensity score column and
-appends them to the dataset. Supports ATE, ATT, and ATC estimands.
-Returns a `ps_weight` object whose `$tables` slot contains SMD tables
-(unweighted and weighted) and effective-N diagnostics compatible with
-`hvtiPlotR::hv_mirror_hist()` (weighted mode) and
-`hvtiPlotR::hv_balance()`.
+appends them to the dataset. `estimand` picks the target: the average
+treatment effect in the whole sample (ATE, the default), in the treated
+(ATT) or in the controls (ATC). For the matched population (ATM), use
+the `mt_wt` column from
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+or
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+instead. Returns a `ps_weight` object whose `$tables` slot contains SMD
+tables (unweighted and weighted) and effective-N diagnostics. Its
+`$data` feeds `hvtiPlotR::hv_mirror_hist()` in weighted mode;
+`hvtiPlotR::hv_balance()` needs the SMD tables stacked into long form
+(see the vignette).
 
 ## Usage
 
@@ -102,16 +109,19 @@ An object of class `c("ps_weight", "ps_data")` with:
 
 - `$meta`:
 
-  Named list: `treatment_col`, `score_col`, `weight_col`, `estimand`,
-  `stabilised`, `trim`, `method`, `n_total`, `n_excluded` (rows with a
-  missing treatment or score).
+  Named list: `treatment_col`, `treated_level` (the value of
+  `treatment_col` taken as treated), `score_col`, `weight_col`,
+  `estimand`, `stabilised`, `trim`, `method`, `n_total`, `n_excluded`
+  (rows with a missing treatment or score).
 
 - `$tables`:
 
-  Named list: `smd_unweighted`, `smd_weighted`, `group_counts`,
-  `effective_n`. Group tables name each group by its value in
-  `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and carry a logical
-  `treated` column.
+  Named list: `smd_unweighted`, `smd_weighted` (`variable`, `smd`),
+  `group_counts` (`group`, `treated`, `n`) and `effective_n` (`group`,
+  `treated`, `n_effective`, the Kish effective sample size). Group
+  tables name each group by its value in `treatment_col` (`0`/`1`,
+  `FALSE`/`TRUE`, or the two values when `treated_level` is given) and
+  carry a logical `treated` column.
 
 ## Details
 

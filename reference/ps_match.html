@@ -169,25 +169,38 @@ belongs to (<code>NA</code> for unmatched patients).  Filter to <code>match == 1
 obtain the matched subset.</p></dd>
 
 <dt><code>$meta</code></dt>
-<dd><p>Named list: <code>treatment_col</code>, <code>score_col</code>, <code>id_col</code>,
-<code>match_col</code>, <code>pair_id_col</code>, <code>scale</code>, <code>caliper</code> (the absolute caliper
-applied, on <code>scale</code>), <code>caliper_sd</code>, <code>method</code>, <code>seed</code>, <code>n_total</code>,
-<code>n_excluded</code> (rows with a missing treatment or score), <code>n_matched</code>,
-<code>n_unmatched</code>.</p></dd>
+<dd><p>Named list: <code>treatment_col</code>, <code>treated_level</code> (the value of
+<code>treatment_col</code> taken as treated), <code>score_col</code>, <code>id_col</code>, <code>match_col</code>,
+<code>pair_id_col</code>, <code>scale</code>, <code>caliper</code> (the absolute caliper applied, on
+<code>scale</code>), <code>caliper_sd</code>, <code>method</code>, <code>seed</code>, <code>n_total</code>, <code>n_excluded</code> (rows
+with a missing treatment or score), <code>n_matched</code> (the number of matched
+pairs, so the number of matched treated patients) and <code>n_unmatched</code>
+(treated patients left without a match; unmatched controls are not
+counted).</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>smd_before</code>, <code>smd_after</code>,
-<code>group_counts_before</code>, <code>group_counts_after</code>. Group tables name each
-group by its value in <code>treatment_col</code> (<code>0</code>/<code>1</code> or <code>FALSE</code>/<code>TRUE</code>) and
-carry a logical <code>treated</code> column.</p></dd>
+<dd><p>Named list: <code>smd_before</code>, <code>smd_after</code> (<code>variable</code>,
+<code>smd</code>), <code>group_counts_before</code>, <code>group_counts_after</code> (<code>group</code>,
+<code>treated</code>, <code>n</code>). Group tables name each group by its value in
+<code>treatment_col</code> (<code>0</code>/<code>1</code>, <code>FALSE</code>/<code>TRUE</code>, or the two values when
+<code>treated_level</code> is given) and carry a logical <code>treated</code> column.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The <code>$tables</code> slot contains standardised mean difference (SMD) tables
-before and after matching, and group counts. These are the diagnostics
-that <code>hvtiPlotR::hv_mirror_hist()</code> and <code>hvtiPlotR::hv_balance()</code> expect.</p>
+    <p><strong>Estimand.</strong> Every treated patient looks for a control, so the matched
+sample targets the average treatment effect on the treated (ATT). A treated
+patient who finds no control within the caliper, or none at all once the
+controls run out, is dropped, and the estimand shifts to the treated
+patients who could be matched, in practice those inside common support.
+<code>$meta$n_unmatched</code> counts them; when it is not zero, say which population
+the estimate describes.</p>
+<p>The <code>$tables</code> slot contains standardised mean difference (SMD) tables
+before and after matching, and group counts. <code>hvtiPlotR::hv_mirror_hist()</code>
+reads <code>$data</code> directly. <code>hvtiPlotR::hv_balance()</code> needs the two SMD tables
+stacked into long form with <code>variable</code>, <code>group</code> and <code>std_diff</code> (in percent);
+the vignette shows the reshape.</p>
 <p>A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in <code>$data</code> with <code>match_col</code> set to <code>0</code>, are left out of the
 treated and control pools, the SMD tables and the group counts, and one

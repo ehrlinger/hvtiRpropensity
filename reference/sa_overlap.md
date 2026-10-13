@@ -35,8 +35,8 @@ sa_overlap(
 - treatment_col:
 
   Name of the binary treatment column (0/1). Taken from
-  `x$meta$treatment_col` when `x` is a `ps_data`
-  object`. Default `"tavr"\`.
+  `x$meta$treatment_col` when `x` is a `ps_data` object. Default
+  `"tavr"`.
 
 - trim_threshold:
 

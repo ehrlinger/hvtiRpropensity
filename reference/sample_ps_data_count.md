@@ -30,10 +30,12 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
 
 - n_imputations:
 
-  If `> 1`, returns a stacked multiply-imputed data frame with an
-  `_IMPUTATION_` index column containing `n_imputations` replicates
-  (each with slightly jittered covariate values to mimic imputed
-  datasets). Default `1L` (single complete dataset).
+  If `> 1`, returns `n_imputations` datasets stacked in the long format,
+  with an `_IMPUTATION_` index column. Each is an independent draw of
+  `n` patients, covariates and outcome alike, that reuses the `id`
+  values `1` to `n`. They exercise the stacked format; they do not
+  resemble real imputations, in which one patient's observed values and
+  outcome agree across datasets. Default `1L` (single complete dataset).
 
 ## Value
 

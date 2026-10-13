@@ -97,8 +97,15 @@ An object of class `c("bs_continuous", "ps_data")` with:
 
 - `$tables`:
 
-  Named list: `strata_counts`, `estimates` (Rubin-pooled coefficients),
-  `covariance`, `by_imputation` and `fit_status`.
+  Named list: `strata_counts` (`stratum`, `n`), `estimates`
+  (Rubin-pooled coefficients when imputed), `covariance`,
+  `by_imputation` and `fit_status`, laid out as in
+  [`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md).
+
+- `$models`:
+
+  The fitted [`stats::lm()`](https://rdrr.io/r/stats/lm.html) models,
+  one per imputation, named by imputation index.
 
 ## Details
 

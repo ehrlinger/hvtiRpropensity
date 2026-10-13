@@ -146,8 +146,13 @@ through <code>stra_&lt;n_strata&gt;</code> appended.</p></dd>
 <code>n_imputations</code>, <code>n_total</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>strata_counts</code>, <code>estimates</code> (Rubin-pooled
-coefficients), <code>covariance</code>, <code>by_imputation</code> and <code>fit_status</code>.</p></dd>
+<dd><p>Named list: <code>strata_counts</code> (<code>stratum</code>, <code>n</code>),
+<code>estimates</code> (Rubin-pooled coefficients when imputed), <code>covariance</code>,
+<code>by_imputation</code> and <code>fit_status</code>, laid out as in <code><a href="fit_linear.html">fit_linear()</a></code>.</p></dd>
+
+<dt><code>$models</code></dt>
+<dd><p>The fitted <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code> models, one per imputation,
+named by imputation index.</p></dd>
 
 
 </dl></div>

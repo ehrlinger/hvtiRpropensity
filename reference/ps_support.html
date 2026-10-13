@@ -103,7 +103,13 @@ carried from <code>x</code> (<code>"probability"</code> when <code>x</code> reco
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>A patient with a missing treatment or a missing score cannot be judged.
+    <p><strong>Trimming changes the estimand.</strong> Dropping the patients a rule flags
+leaves a population defined by the rule: an effect estimated after trimming
+at <code>c(0.1, 0.9)</code>, or after restricting to common support, describes the
+patients with adequate overlap, not the full sample, the treated or the
+controls. Name that population when you report it. This function only
+flags patients; it drops nobody.</p>
+<p>A patient with a missing treatment or a missing score cannot be judged.
 Those rows are left out of the common-support interval and every rule, get
 a missing <code>weak_&lt;rule&gt;</code> flag, and one warning states how many there are.</p>
     </div>

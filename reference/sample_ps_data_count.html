@@ -75,10 +75,13 @@ reproduces them. A negative seed gives the same data as its absolute value.</p><
 
 
 <dt id="arg-n-imputations">n_imputations<a class="anchor" aria-label="anchor" href="#arg-n-imputations"></a></dt>
-<dd><p>If <code>&gt; 1</code>, returns a stacked multiply-imputed data
-frame with an <code>_IMPUTATION_</code> index column containing <code>n_imputations</code>
-replicates (each with slightly jittered covariate values to mimic
-imputed datasets).  Default <code>1L</code> (single complete dataset).</p></dd>
+<dd><p>If <code>&gt; 1</code>, returns <code>n_imputations</code> datasets stacked in
+the long format, with an <code>_IMPUTATION_</code> index column. Each is an
+independent draw of <code>n</code> patients, covariates and outcome alike, that
+reuses the <code>id</code> values <code>1</code> to <code>n</code>. They exercise the stacked format; they
+do not resemble real imputations, in which one patient's observed values
+and outcome agree across datasets. Default <code>1L</code> (single complete
+dataset).</p></dd>
 
 </dl></div>
     <div class="section level2">

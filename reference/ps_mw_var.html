@@ -129,7 +129,12 @@ values.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>Estimate.</strong> For each group, <code>PROC MEANS</code> weighted summaries: the mean
+    <p>With the Li-Greene matching weight (<code>mt_wt</code> from <code><a href="ps_logistic.html">ps_logistic()</a></code> or
+<code><a href="ps_forest.html">ps_forest()</a></code>) the estimate targets the ATM, the average treatment effect
+among the matched: the population that 1:1 matching on the propensity score
+would keep. With other weights it targets whatever estimand those weights
+define.</p>
+<p><strong>Estimate.</strong> For each group, <code>PROC MEANS</code> weighted summaries: the mean
 <code>sum(w y) / sum(w)</code>, the SD with an <code>n - 1</code> denominator, and the sum of
 weights. The macro labels the sum of weights <code>N</code>; it is reported here as
 <code>sumwgt_0</code> and <code>sumwgt_1</code> because it is not a count. For a 0/1 outcome the
@@ -154,7 +159,7 @@ caller's random number stream is restored afterwards.</p>
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Li L, Greene T. A weighting analogue to pair matching in
 propensity score analysis. The International Journal of Biostatistics.
-2013;9(2):215-234.</p>
+2013;9(2):215-234. <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

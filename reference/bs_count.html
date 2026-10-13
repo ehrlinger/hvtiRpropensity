@@ -141,18 +141,30 @@ indicator columns <code>stra_1</code> through <code>stra_&lt;n_strata&gt;</code>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("bs_count", "ps_data")</code> with:</p><dl><dt><code>$data</code></dt>
-<dd><p>Base data frame with <code>score_col</code>, <code>"quintile"</code>,
-<code>"decile"</code>, <code>strata_col</code>, and (if <code>create_binary_strata</code>)
-<code>stra_1</code>...<code>stra_k</code> appended.</p></dd>
+<dd><p><code>data</code> (the lowest-numbered imputation when
+<code>imputation_col</code> is set, without that column) with <code>score_col</code>,
+<code>"quintile"</code>, <code>"decile"</code>, <code>strata_col</code>, and (if
+<code>create_binary_strata</code>) <code>stra_1</code> through <code>stra_&lt;n_strata&gt;</code> appended.</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>formula</code>, <code>outcome_col</code>, <code>id_col</code>,
-<code>imputation_col</code>, <code>score_col</code>, <code>dist</code>, <code>n_strata</code>, <code>strata_col</code>,
-<code>bundle_version</code>, <code>model_family</code>, <code>package_versions</code>, <code>method</code>,
-<code>n_imputations</code>, <code>n_total</code>.</p></dd>
+<code>imputation_col</code>, <code>score_col</code>, <code>dist</code>, <code>theta</code> (the negative-binomial
+dispersion estimate, one per imputation, named by imputation index;
+<code>NULL</code> for <code>dist = "poisson"</code>), <code>n_strata</code>, <code>strata_col</code>,
+<code>bundle_version</code>, <code>model_family</code> (<code>"count"</code>), <code>package_versions</code>,
+<code>method</code>, <code>n_imputations</code>, <code>n_total</code>.</p></dd>
 
 <dt><code>$tables</code></dt>
-<dd><p>Named list: <code>strata_counts</code>.</p></dd>
+<dd><p>Named list: <code>strata_counts</code> (<code>stratum</code>, <code>n</code>),
+<code>estimates</code>, <code>covariance</code>, <code>by_imputation</code> and <code>fit_status</code>, laid out
+as in <code><a href="fit_logistic.html">fit_logistic()</a></code> except that <code>estimates</code> has <code>rate_ratio</code>, the
+exponentiated coefficient, in place of <code>odds_ratio</code>. With
+<code>imputation_col</code>, <code>estimates</code> and <code>covariance</code> are pooled with Rubin's
+rules.</p></dd>
+
+<dt><code>$models</code></dt>
+<dd><p>The fitted models, one per imputation, named by
+imputation index: <code><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">MASS::glm.nb()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> fits.</p></dd>
 
 
 </dl></div>

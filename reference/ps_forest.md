@@ -3,14 +3,15 @@
 Estimates P(treated) with a random-forest classifier
 ([`randomForestSRC::rfsrc()`](https://www.randomforestsrc.org//reference/rfsrc.html))
 and returns the **out-of-bag** class probability as the score, so no
-patient is scored by trees that saw them. The result has the same
-contract as
+patient is scored by trees that saw them. The result appends the same
+score columns as
 [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
 so it feeds
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
-[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+and
 [`sa_overlap()`](https://ehrlinger.github.io/hvtiRpropensity/reference/sa_overlap.md)
-and `hvtiPlotR::hv_balance()` / `hvtiPlotR::hv_mirror_hist()` unchanged.
+unchanged, and its `$data` feeds `hvtiPlotR::hv_mirror_hist()`.
 
 ## Usage
 
@@ -93,12 +94,12 @@ the Li-Greene matching weight computed as in
 for controls, which targets the ATM estimand (average treatment effect
 among the matched; Li & Greene, 2013,
 [doi:10.1515/ijb-2012-0030](https://doi.org/10.1515/ijb-2012-0030) );
-`$meta` follows
-[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
-with `method = "forest-oob"` and `seed`, the seed used (`NA` when none
-was given); `$tables` holds `smd` and `group_counts` (`group`, the value
-in `treatment_col`; a logical `treated`; `n`); `$models$forest` is the
-fitted forest.
+`$meta` holds `formula`, `treatment_col`, `id_col`, `score_col`,
+`logit_col`, `weight_col`, `treated_level`, `treatment_levels`, `method`
+(`"forest-oob"`), `ntree`, `seed` (the seed used, `NA` when none was
+given) and `n_total`; `$tables` holds `smd` and `group_counts` (`group`,
+the value in `treatment_col`; a logical `treated`; `n`);
+`$models$forest` is the fitted forest.
 
 ## Threads and reproducibility
 
