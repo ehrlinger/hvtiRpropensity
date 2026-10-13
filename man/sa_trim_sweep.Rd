@@ -45,14 +45,21 @@ from the metadata of a \code{ps_data} object when it records one. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
 }
 \value{
-A data frame with one row per trim value and columns:
+An object of class \code{c("sa_trim_sweep", "ps_data")}:
 \describe{
-\item{\code{trim}}{The winsorisation threshold.}
-\item{\code{ess_control}}{Effective sample size for the control group.}
-\item{\code{ess_treated}}{Effective sample size for the treated group.}
-\item{\code{max_weight}}{Maximum weight across all patients after trimming.}
-\item{\code{sd_weight}}{Standard deviation of weights after trimming.}
-\item{\code{pct_trimmed}}{Percentage of patients whose weight was winsorised.}
+\item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_data} object),
+unchanged.}
+\item{\verb{$meta}}{\code{score_col}, \code{treatment_col}, \code{treated_level}, \code{scale},
+\code{estimand}, \code{stabilised} (whether stabilisation was applied, so \code{FALSE}
+for the ATT and ATC), \code{trim_seq} (sorted), \code{n_total} and \code{n_used}, the
+patients with a non-missing treatment and score.}
+\item{\verb{$tables$sweep}}{Data frame with one row per trim value and
+columns \code{trim} (the winsorisation threshold), \code{ess_control} and
+\code{ess_treated} (effective sample sizes), \code{max_weight} (maximum weight
+after trimming), \code{sd_weight} (standard deviation of the weights after
+trimming) and \code{pct_trimmed} (percentage of patients whose weight was
+winsorised).}
+\item{\verb{$models}}{An empty list.}
 }
 }
 \description{
@@ -62,11 +69,17 @@ as trimming increases.  This helps identify a trimming threshold that
 adequately controls extreme weights without an unacceptable loss of effective
 sample size.
 }
+\details{
+For a \code{ps_data} input, a supplied \code{estimand}, \code{stabilise},
+\code{score_col}, \code{treatment_col} or \code{treated_level} must agree with the
+object's metadata; a conflict aborts. Arguments not supplied are read
+from the metadata, then take their defaults.
+}
 \examples{
 dta    <- sample_ps_data(n = 400, seed = 3)
 w_obj  <- ps_weight(dta, estimand = "ATE")
 sweep  <- sa_trim_sweep(w_obj)
-head(sweep)
+head(sweep$tables$sweep)
 
 # Directly from a data frame
 sweep2 <- sa_trim_sweep(dta, score_col = "prob_t", treatment_col = "tavr",

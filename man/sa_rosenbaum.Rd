@@ -12,7 +12,8 @@ sa_rosenbaum(
   alpha = 0.05,
   treatment_col = NULL,
   pair_id_col = "pair_id",
-  treated_level = NULL
+  treated_level = NULL,
+  alternative = c("auto", "greater", "less")
 )
 }
 \arguments{
@@ -32,21 +33,32 @@ plain data frame whose rows are matched patients.}
 \code{x} is a plain data frame.}
 
 \item{pair_id_col}{Name of the pair-ID column created by \code{\link[=ps_match]{ps_match()}}.
-Default \code{"pair_id"}.}
+Taken from \code{x$meta$pair_id_col} when recorded.  Default \code{"pair_id"}.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. Read
 from the metadata of a \code{ps_data} object when it records one. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
+
+\item{alternative}{Direction of the test: \code{"auto"} (default; chosen from
+the sign of the median difference, see Details), \code{"greater"} (treated
+outcome above control) or \code{"less"}.}
 }
 \value{
-A list with three elements:
+An object of class \code{c("sa_rosenbaum", "ps_data")}:
 \describe{
-\item{\verb{$bounds}}{Data frame with columns \code{gamma}, \code{p_upper}, \code{p_lower},
-\code{reject_upper} (logical -- is the upper bound < \code{alpha}?).}
-\item{\verb{$sensitivity_value}}{Largest Gamma for which the analysis remains
-significant (upper p-value < \code{alpha}), or \code{NA} if the initial analysis
-is not significant.}
-\item{\verb{$n_pairs}}{Number of complete matched pairs used.}
+\item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_match} object).}
+\item{\verb{$meta}}{Column names, \code{treated_level}, the settings (\code{gamma}, the
+grid tested, \code{gamma_max}, \code{gamma_inc}, \code{alpha}, \code{alternative}, the
+direction tested, and \code{direction_from_data}), and the results:
+\code{sensitivity_value}, the largest Gamma for which the upper p-value is
+below \code{alpha} (\code{NA} if the analysis is not significant at Gamma = 1),
+\code{n_pairs}, the complete matched pairs used, \code{n_dropped}, \code{n_nonzero}
+and the statistic \code{t_plus}.}
+\item{\verb{$tables$bounds}}{Data frame with columns \code{gamma}, \code{p_upper},
+\code{p_lower}, \code{reject_upper} (logical -- is the upper bound < \code{alpha}?).}
+\item{\verb{$tables$pairs}}{One row per complete pair: \code{pair_id}, \code{treated}
+and \code{control} outcomes, and \code{difference}.}
+\item{\verb{$models}}{An empty list.}
 }
 }
 \description{
@@ -61,13 +73,39 @@ A Gamma of 1 corresponds to no hidden bias (equivalent to perfect
 randomisation within pairs).  The \emph{sensitivity value} is the largest Gamma
 at which the upper p-value bound remains below \code{alpha}; a larger sensitivity
 value indicates a more robust result.
+
+The statistic is the Wilcoxon signed-rank sum \eqn{T^+} of the ranks of
+\eqn{|d_i|} over pairs with \eqn{d_i > 0}, where \eqn{d_i} is the treated
+minus the control outcome and zero differences are dropped. Tied
+\eqn{|d_i|} take their average rank. Under hidden bias Gamma each pair is
+positive with probability at most \eqn{p^+ = \Gamma / (1 + \Gamma)}, so the
+worst-case null distribution has mean \eqn{p^+ \sum r_i} and variance
+\eqn{p^+ (1 - p^+) \sum r_i^2}, and the best case uses
+\eqn{p^- = 1 / (1 + \Gamma)}. Using \eqn{\sum r_i^2} rather than
+\eqn{n(n+1)(2n+1)/6} corrects the variance for ties; without ties the two
+agree. The p-values use the normal approximation with a continuity
+correction of 0.5, so at Gamma = 1 they equal the one-sided
+\code{\link[stats:wilcox.test]{stats::wilcox.test()}} p-value with \code{exact = FALSE} and \code{correct = TRUE}.
+
+Rosenbaum's method assumes the direction of the test is fixed before the
+outcome is seen. Set \code{alternative} to \code{"greater"} (treated above control)
+or \code{"less"} to state it. The default \code{"auto"} keeps the earlier behaviour
+and picks the direction from the data: it tests the lower tail, with a
+warning, when the median nonzero difference is negative. A direction
+chosen from the data makes the bounds slightly optimistic, so prefer an
+explicit \code{alternative} in a pre-specified analysis.
+
+Column names and the treated level are read from a \code{\link[=ps_match]{ps_match()}} object's
+metadata. A supplied \code{treatment_col}, \code{pair_id_col} or \code{treated_level}
+must agree with that metadata; a conflict aborts.
 }
 \examples{
 dta <- sample_ps_data(n = 300, seed = 1)
 m   <- ps_match(dta)
-res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2)
-res$bounds
-res$sensitivity_value
+res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2, alternative = "greater")
+res
+res$tables$bounds
+res$meta$sensitivity_value
 
 }
 \references{
