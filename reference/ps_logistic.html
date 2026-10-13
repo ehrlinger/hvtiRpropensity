@@ -110,8 +110,8 @@ score, <code>log(p / (1 - p))</code>.  Default <code>"logit_t"</code>.</p></dd>
 
 
 <dt id="arg-weight-col">weight_col<a class="anchor" aria-label="anchor" href="#arg-weight-col"></a></dt>
-<dd><p>Output column name for the matching weight.
-Default <code>"mt_wt"</code>.</p></dd>
+<dd><p>Output column name for the Li-Greene matching
+weight (ATM). Default <code>"mt_wt"</code>.</p></dd>
 
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
@@ -135,7 +135,12 @@ the historical 0/1 or logical interface.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("ps_logistic", "ps_data")</code> with:</p><dl><dt><code>$data</code></dt>
 <dd><p>The base data frame with <code>score_col</code>, <code>logit_col</code>,
-<code>weight_col</code>, <code>quintile</code>, and <code>decile</code> columns appended.</p></dd>
+<code>weight_col</code>, <code>quintile</code>, and <code>decile</code> columns appended. <code>weight_col</code>
+holds the Li-Greene matching weight, <code>min(p, 1 - p) / p</code> for treated
+patients and <code>min(p, 1 - p) / (1 - p)</code> for controls, which targets the
+ATM estimand (average treatment effect among the matched; Li &amp; Greene,
+2013, <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a>
+).</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Named list: <code>formula</code>, <code>treatment_col</code>, <code>id_col</code>,

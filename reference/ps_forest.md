@@ -52,7 +52,7 @@ ps_forest(
 
 - score_col, logit_col, weight_col:
 
-  Names of the appended score, logit and overlap-weight columns.
+  Names of the appended score, logit and matching-weight columns.
 
 - treated_level:
 
@@ -86,7 +86,13 @@ ps_forest(
 ## Value
 
 A `ps_forest` / `ps_data` object. `$data` is `data` plus `score_col`,
-`logit_col`, `weight_col` (overlap weights), `quintile` and `decile`;
+`logit_col`, `weight_col`, `quintile` and `decile`. `weight_col` holds
+the Li-Greene matching weight computed as in
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md),
+`min(p, 1 - p) / p` for treated patients and `min(p, 1 - p) / (1 - p)`
+for controls, which targets the ATM estimand (average treatment effect
+among the matched; Li & Greene, 2013,
+[doi:10.1515/ijb-2012-0030](https://doi.org/10.1515/ijb-2012-0030) );
 `$meta` follows
 [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
 with `method = "forest-oob"` and `seed`, the seed used (`NA` when none

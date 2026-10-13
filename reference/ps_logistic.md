@@ -62,7 +62,8 @@ ps_logistic(
 
 - weight_col:
 
-  Output column name for the matching weight. Default `"mt_wt"`.
+  Output column name for the Li-Greene matching weight (ATM). Default
+  `"mt_wt"`.
 
 - covariates:
 
@@ -89,7 +90,12 @@ An object of class `c("ps_logistic", "ps_data")` with:
 - `$data`:
 
   The base data frame with `score_col`, `logit_col`, `weight_col`,
-  `quintile`, and `decile` columns appended.
+  `quintile`, and `decile` columns appended. `weight_col` holds the
+  Li-Greene matching weight, `min(p, 1 - p) / p` for treated patients
+  and `min(p, 1 - p) / (1 - p)` for controls, which targets the ATM
+  estimand (average treatment effect among the matched; Li & Greene,
+  2013,
+  [doi:10.1515/ijb-2012-0030](https://doi.org/10.1515/ijb-2012-0030) ).
 
 - `$meta`:
 

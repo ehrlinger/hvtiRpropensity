@@ -101,7 +101,7 @@ response. Binary, 0/1 or logical.</p></dd>
 
 <dt id="arg-score-col-logit-col-weight-col">score_col, logit_col, weight_col<a class="anchor" aria-label="anchor" href="#arg-score-col-logit-col-weight-col"></a></dt>
 <dd><p>Names of the appended score, logit and
-overlap-weight columns.</p></dd>
+matching-weight columns.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
@@ -135,8 +135,13 @@ weight are computed. Forest probabilities can be exactly 0 or 1.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ps_forest</code> / <code>ps_data</code> object. <code>$data</code> is <code>data</code> plus
-<code>score_col</code>, <code>logit_col</code>, <code>weight_col</code> (overlap weights), <code>quintile</code> and
-<code>decile</code>; <code>$meta</code> follows <code><a href="ps_logistic.html">ps_logistic()</a></code> with <code>method = "forest-oob"</code>
+<code>score_col</code>, <code>logit_col</code>, <code>weight_col</code>, <code>quintile</code> and <code>decile</code>.
+<code>weight_col</code> holds the Li-Greene matching weight computed as in
+<code><a href="ps_logistic.html">ps_logistic()</a></code>, <code>min(p, 1 - p) / p</code> for treated patients and
+<code>min(p, 1 - p) / (1 - p)</code> for controls, which targets the ATM estimand
+(average treatment effect among the matched; Li &amp; Greene, 2013,
+<a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a>
+); <code>$meta</code> follows <code><a href="ps_logistic.html">ps_logistic()</a></code> with <code>method = "forest-oob"</code>
 and <code>seed</code>, the seed used (<code>NA</code> when none was given); <code>$tables</code> holds
 <code>smd</code> and <code>group_counts</code> (<code>group</code>, the value in <code>treatment_col</code>; a logical
 <code>treated</code>; <code>n</code>); <code>$models$forest</code> is the fitted forest.</p>
