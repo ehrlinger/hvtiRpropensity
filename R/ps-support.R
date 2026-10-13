@@ -5,7 +5,10 @@
 #' object; any other rule (for example an isolation-forest tail flag) can be
 #' supplied as a logical vector.
 #'
-#' @param x A `ps_data` object with a score and treatment column.
+#' @param x A `ps_data` object with a score and treatment column. The score of
+#'   a [ps_match()] object built with `scale = "logit"` is a logit, and is
+#'   back-transformed with [stats::plogis()], so `trim` and the common-support
+#'   interval are on the probability scale.
 #' @param flags Optional named list of extra logical vectors, one element per
 #'   row of `x$data`, `TRUE` meaning the rule would drop that patient.
 #' @param trim Length-2 numeric, or `NULL`. Adds the rule "score outside
@@ -26,7 +29,7 @@
 #' @export
 ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
-  score <- x$data[[x$meta$score_col]]
+  score <- .probability_score(x)
   trt <- as.integer(as.character(x$data[[x$meta$treatment_col]]) == as.character(x$meta$treated_level))
   n <- nrow(x$data)
 

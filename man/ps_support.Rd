@@ -7,7 +7,10 @@
 ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
 }
 \arguments{
-\item{x}{A \code{ps_data} object with a score and treatment column.}
+\item{x}{A \code{ps_data} object with a score and treatment column. The score of
+a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a logit, and is
+back-transformed with \code{\link[stats:plogis]{stats::plogis()}}, so \code{trim} and the common-support
+interval are on the probability scale.}
 
 \item{flags}{Optional named list of extra logical vectors, one element per
 row of \code{x$data}, \code{TRUE} meaning the rule would drop that patient.}

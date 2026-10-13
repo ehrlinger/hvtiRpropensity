@@ -19,7 +19,9 @@ ps_rmst(
 )
 }
 \arguments{
-\item{x}{A \code{ps_data} object with a score and treatment column.}
+\item{x}{A \code{ps_data} object with a score and treatment column. The score of
+a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a logit, and is
+back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before the weights are built.}
 
 \item{time_col, event_col}{Follow-up time and event indicator (0/1) columns
 of \code{x$data}.}

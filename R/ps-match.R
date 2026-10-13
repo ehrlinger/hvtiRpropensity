@@ -140,9 +140,15 @@ ps_match <- function(data,
   data[[treatment_col]] <- treatment$trt
   scale <- match.arg(scale)
   if (scale == "probability") {
-    .check_probability(data, score_col)
+    .check_probability(data, score_col,
+                       hint = "For a score on the logit scale, such as `logit_t`, set `scale = \"logit\"`.")
   } else if (!is.numeric(data[[score_col]]) || any(is.infinite(data[[score_col]]))) {
     rlang::abort(sprintf("Column `%s` must contain finite numeric logits.", score_col), call. = FALSE)
+  } else if (all(data[[score_col]] >= 0 & data[[score_col]] <= 1, na.rm = TRUE)) {
+    rlang::warn(sprintf(paste(
+      "Every value of `%s` lies in [0, 1], so it looks like a probability, but `scale = \"logit\"`",
+      "expects logits, such as `score_col = \"logit_t\"`."
+    ), score_col))
   }
 
   if (!is.null(caliper) &&

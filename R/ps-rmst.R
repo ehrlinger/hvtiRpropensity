@@ -5,7 +5,9 @@
 #' Kaplan-Meier curves (weights from the propensity score) integrated to
 #' `tau`, differenced, with a stratified bootstrap interval.
 #'
-#' @param x A `ps_data` object with a score and treatment column.
+#' @param x A `ps_data` object with a score and treatment column. The score of
+#'   a [ps_match()] object built with `scale = "logit"` is a logit, and is
+#'   back-transformed with [stats::plogis()] before the weights are built.
 #' @param time_col,event_col Follow-up time and event indicator (0/1) columns
 #'   of `x$data`.
 #' @param tau Horizon, in the units of `time_col`.
@@ -74,7 +76,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
   arm <- as.character(d[[x$meta$treatment_col]]) == as.character(x$meta$treated_level)
   time <- d[[time_col]]
   event <- as.numeric(d[[event_col]])
-  score <- d[[x$meta$score_col]]
+  score <- .probability_score(x)
 
   wts <- function(sc, a, type) {
     p <- pmin(pmax(sc, clip), 1 - clip)

@@ -196,3 +196,56 @@ test_that("caliper_sd ignores patients with missing treatment", {
   )
   expect_equal(with_na$meta$caliper, base$meta$caliper)
 })
+
+test_that("scale = 'logit' warns when the score column looks like probabilities", {
+  expect_warning(ps_match(dta, scale = "logit", seed = 1), "expects logits")
+  d <- dta
+  d$logit_t <- stats::qlogis(d$prob_t)
+  expect_no_warning(ps_match(d, score_col = "logit_t", scale = "logit", seed = 1))
+})
+
+test_that("the probability-range error points at scale = 'logit'", {
+  d <- dta
+  d$logit_t <- stats::qlogis(d$prob_t)
+  expect_error(ps_match(d, score_col = "logit_t"), "scale = \"logit\"", fixed = TRUE)
+})
+
+# A logit-scale match, and the same pairs read as a probability-scale match.
+logit_pair <- function() {
+  d <- sample_ps_data(n = 200, seed = 42)
+  d$logit_t <- stats::qlogis(d$prob_t)
+  m <- ps_match(d, score_col = "logit_t", scale = "logit", caliper_sd = 0.2, seed = 1)
+  p <- m
+  p$meta$score_col <- "prob_t"
+  p$meta$scale <- "probability"
+  list(logit = m, prob = p)
+}
+
+test_that("ps_support() back-transforms a logit-scale ps_match object", {
+  mp <- logit_pair()
+  s_logit <- ps_support(mp$logit)
+  s_prob  <- ps_support(mp$prob)
+  expect_equal(s_logit$tables, s_prob$tables)
+  expect_equal(s_logit$meta$common_support, s_prob$meta$common_support)
+  expect_identical(s_logit$data$weak_trim, s_prob$data$weak_trim)
+})
+
+test_that("sa_overlap() and sa_trim_sweep() back-transform a logit-scale ps_match object", {
+  mp <- logit_pair()
+  expect_equal(sa_overlap(mp$logit), sa_overlap(mp$prob))
+  expect_equal(sa_trim_sweep(mp$logit), sa_trim_sweep(mp$prob))
+})
+
+test_that("ps_rmst() weights from a logit-scale ps_match object equal those from prob_t", {
+  skip_if_not_installed("survival")
+  mp <- logit_pair()
+  for (k in names(mp)) {
+    withr::with_seed(7, mp[[k]]$data$t <- stats::rexp(nrow(mp[[k]]$data), 0.2))
+    mp[[k]]$data$e <- as.integer(mp[[k]]$data$t < 5)
+  }
+  w <- c("ato", "att", "ate")
+  r_logit <- ps_rmst(mp$logit, "t", "e", tau = 4, weights = w, n_boot = 2, seed = 1)
+  r_prob  <- ps_rmst(mp$prob, "t", "e", tau = 4, weights = w, n_boot = 2, seed = 1)
+  for (col in paste0("w_", w)) expect_equal(r_logit$data[[col]], r_prob$data[[col]])
+  expect_lt(max(r_logit$data$w_ate), 1 / 1e-3)
+})
