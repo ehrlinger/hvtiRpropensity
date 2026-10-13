@@ -20,7 +20,9 @@ bs_continuous(
 \arguments{
 \item{formula}{A formula with the continuous outcome / exposure
 on the LHS, e.g.
-\code{hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb}.}
+\code{hct_nadr ~ female + agee + in_bmi + hct_pr + iv_cpb}. A \code{.} on the
+right-hand side expands to the data's other columns, excluding the
+response, \code{id_col} and \code{imputation_col}.}
 
 \item{data}{A data frame, or a stacked MI data frame when
 \code{imputation_col} is set.}
@@ -58,9 +60,11 @@ An object of class \code{c("bs_continuous", "ps_data")} with:
 \code{"decile"}, \code{strata_col}, and (if \code{create_binary_strata}) \code{stra_1}
 through \verb{stra_<n_strata>} appended.}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{outcome_col}, \code{id_col},
-\code{imputation_col}, \code{score_col}, \code{n_strata}, \code{strata_col}, \code{method},
+\code{imputation_col}, \code{score_col}, \code{n_strata}, \code{strata_col},
+\code{bundle_version}, \code{model_family}, \code{package_versions}, \code{method},
 \code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{strata_counts}.}
+\item{\verb{$tables}}{Named list: \code{strata_counts}, \code{estimates} (Rubin-pooled
+coefficients), \code{covariance}, \code{by_imputation} and \code{fit_status}.}
 }
 }
 \description{
@@ -75,6 +79,10 @@ The balancing score is the expected value of the continuous exposure
 (e.g. nadir haematocrit) given the full covariate set.  Patients in the
 same stratum have similar expected exposure values, making within-stratum
 comparisons less confounded.
+
+A formula with an aliased term, such as a covariate that duplicates another,
+is an error naming the imputation, rather than a score from a rank-deficient
+fit.
 }
 \examples{
 # Use ef (ejection fraction) as a stand-in for a continuous exposure
@@ -89,5 +97,5 @@ table(obj$data$cluster)
 
 }
 \seealso{
-\code{\link[=bs_count]{bs_count()}}, \code{\link[=ps_logistic]{ps_logistic()}}, \code{\link[=sample_ps_data]{sample_ps_data()}}
+\code{\link[=bs_count]{bs_count()}}, \code{\link[=fit_linear]{fit_linear()}}, \code{\link[=ps_logistic]{ps_logistic()}}, \code{\link[=sample_ps_data]{sample_ps_data()}}
 }

@@ -278,3 +278,69 @@ test_that("sample_ps_data_count() returns stacked MI format", {
   expect_true("_IMPUTATION_" %in% names(dta))
   expect_equal(sort(unique(dta[["_IMPUTATION_"]])), 1:4)
 })
+
+test_that("bs_continuous carries the model-bundle contract", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  second <- d
+  second$age <- second$age + 1
+  stacked <- rbind(transform(d, imp = 1L), transform(second, imp = 2L))
+  obj <- bs_continuous(ef ~ age + female, stacked, imputation_col = "imp")
+  expect_true(all(c("strata_counts", "estimates", "covariance", "by_imputation", "fit_status") %in%
+                    names(obj$tables)))
+  expect_gt(nrow(obj$tables$estimates), 0L)
+  expect_true(all(obj$tables$estimates$pooled))
+  expect_false("odds_ratio" %in% names(obj$tables$estimates))
+  expect_identical(obj$meta$model_family, "continuous")
+  expect_identical(obj$meta$bundle_version, 1L)
+  expect_true("hvtiRpropensity" %in% names(obj$meta$package_versions))
+})
+
+test_that("bs_continuous rejects a multi-column response", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  expect_error(bs_continuous(cbind(ef, age) ~ female, d), "exactly one column")
+})
+
+test_that("bs_continuous's score is still the averaged fitted value", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  second <- d
+  second$age <- second$age + 1
+  stacked <- rbind(transform(d, imp = 1L), transform(second, imp = 2L))
+  obj <- bs_continuous(ef ~ age + female, stacked, imputation_col = "imp")
+  by_hand <- (stats::fitted(stats::lm(ef ~ age + female, d)) +
+                stats::fitted(stats::lm(ef ~ age + female, second))) / 2
+  expect_equal(obj$data$bs, unname(by_hand))
+})
+
+test_that("bs_continuous reads the exposure inside a transformed response", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  obj <- bs_continuous(log(ef) ~ age, d)
+  expect_identical(obj$meta$outcome_col, "ef")
+})
+
+test_that("bs_continuous requires outcome_col to name the formula's response", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  expect_error(
+    bs_continuous(ef ~ female, d, outcome_col = "age"),
+    "`outcome_col` (\"age\") is not the formula's response (ef)",
+    fixed = TRUE
+  )
+  expect_identical(bs_continuous(ef ~ age, d, outcome_col = "ef")$meta$outcome_col, "ef")
+  expect_identical(bs_continuous(log(ef) ~ age, d, outcome_col = "ef")$meta$outcome_col, "ef")
+})
+
+test_that("bs_continuous expands a dot formula without the id or imputation column", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  small <- d[c("ef", "age", "female", "id")]
+  obj <- bs_continuous(ef ~ ., small)
+  expect_identical(names(stats::coef(obj$models[[1L]])), c("(Intercept)", "age", "female"))
+  expect_identical(deparse(obj$meta$formula), "ef ~ age + female")
+
+  second <- small
+  second$age <- second$age + 1
+  stacked <- rbind(transform(small, imp = 1L), transform(second, imp = 2L))
+  pooled <- bs_continuous(ef ~ ., stacked, imputation_col = "imp")
+  expect_setequal(pooled$tables$estimates$term, c("(Intercept)", "age", "female"))
+  for (m in pooled$models) {
+    expect_identical(names(stats::coef(m)), c("(Intercept)", "age", "female"))
+  }
+})

@@ -326,3 +326,99 @@ test_that("stacked fitting names an imputation with an aliased term", {
     "non-finite coefficient.*imputation 2"
   )
 })
+
+test_that("fit_linear matches lm() on one dataset and reports R-squared", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  fit <- fit_linear(ef ~ age + female, d)
+  ref <- stats::lm(ef ~ age + female, d)
+  expect_s3_class(fit, c("rm_fit", "ps_data"))
+  expect_equal(fit$tables$estimates$estimate, unname(stats::coef(ref)))
+  expect_equal(fit$tables$estimates$std.error, unname(sqrt(diag(stats::vcov(ref)))))
+  expect_equal(fit$data$fitted, unname(stats::fitted(ref)))
+  expect_identical(fit$meta$model_family, "linear")
+  expect_identical(fit$meta$method, "ols")
+  expect_equal(fit$tables$fit_quality$r_squared, summary(ref)$r.squared)
+  expect_equal(fit$tables$fit_quality$residual_se, stats::sigma(ref))
+  expect_true(all(c("R", "hvtiRpropensity", "stats") %in% names(fit$meta$package_versions)))
+})
+
+test_that("fit_linear pools imputations and withholds R-squared", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  second <- d
+  second$age <- second$age + stats::rnorm(nrow(d), 0, 0.5)
+  stacked <- rbind(transform(d, imp = 1L), transform(second, imp = 2L))
+  fit <- fit_linear(ef ~ age + female, stacked, imputation_col = "imp")
+  expect_identical(fit$meta$method, "ols-MI")
+  expect_identical(fit$meta$n_imputations, 2L)
+  expect_true(all(fit$tables$estimates$pooled))
+  expect_true(all(is.na(fit$tables$fit_quality$r_squared)))
+  expect_identical(nrow(fit$tables$fit_quality), 2L)
+  expect_identical(nrow(fit$data), nrow(d))
+})
+
+test_that("fit_linear reads the outcome inside a transformed response", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  fit <- fit_linear(log(ef) ~ age, d)
+  expect_identical(fit$meta$outcome_col, "ef")
+})
+
+test_that("fit_linear stops on a non-numeric outcome and on an aliased term", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  d$label <- as.character(d$female)
+  expect_error(fit_linear(label ~ age, d), "must be numeric")
+  d$age_copy <- d$age
+  expect_error(fit_linear(ef ~ age + age_copy, d), "aliased in imputation 1: age_copy")
+})
+
+test_that("fit_linear refuses to overwrite a data column with its predictions", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  d$fitted <- 1
+  expect_error(fit_linear(ef ~ age, d), "already exist")
+  d$fitted <- NULL
+  expect_error(fit_linear(ef ~ age, d, prediction_col = "ef"), "already exist")
+  expect_error(fit_linear(ef ~ age, d, prediction_col = "id"), "already exist")
+})
+
+test_that("fit_linear requires prediction_col to be one non-empty string", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  before <- d
+  expect_error(fit_linear(ef ~ age, d, prediction_col = 2), "`prediction_col` must be")
+  expect_error(fit_linear(ef ~ age, d, prediction_col = NA_character_), "`prediction_col` must be")
+  expect_error(fit_linear(ef ~ age, d, prediction_col = ""), "`prediction_col` must be")
+  expect_error(fit_linear(ef ~ age, d, prediction_col = c("a", "b")), "`prediction_col` must be")
+  expect_identical(d, before)
+})
+
+test_that("fit_linear requires outcome_col to name the formula's response", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  second <- d
+  second$age <- second$age + 1
+  stacked <- rbind(transform(d, imp = 1L), transform(second, imp = 2L))
+  expect_error(
+    fit_linear(ef ~ female, stacked, outcome_col = "age", imputation_col = "imp"),
+    "`outcome_col` (\"age\") is not the formula's response (ef)",
+    fixed = TRUE
+  )
+  expect_identical(fit_linear(ef ~ age, d, outcome_col = "ef")$meta$outcome_col, "ef")
+  expect_identical(fit_linear(log(ef) ~ age, d, outcome_col = "ef")$meta$outcome_col, "ef")
+})
+
+test_that("fit_linear expands a dot formula without the id or imputation column", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  small <- d[c("ef", "age", "female", "id")]
+  fit <- fit_linear(ef ~ ., small)
+  expect_identical(names(stats::coef(fit$models[[1L]])), c("(Intercept)", "age", "female"))
+  expect_identical(deparse(fit$meta$formula), "ef ~ age + female")
+  expect_equal(unname(stats::coef(fit$models[[1L]])),
+               unname(stats::coef(stats::lm(ef ~ age + female, small))))
+
+  second <- small
+  second$age <- second$age + 1
+  stacked <- rbind(transform(small, imp = 1L), transform(second, imp = 2L))
+  pooled <- fit_linear(ef ~ ., stacked, imputation_col = "imp")
+  expect_setequal(pooled$tables$estimates$term, c("(Intercept)", "age", "female"))
+  for (m in pooled$models) {
+    expect_identical(names(stats::coef(m)), c("(Intercept)", "age", "female"))
+  }
+  expect_identical(deparse(pooled$meta$formula), "ef ~ age + female")
+})
