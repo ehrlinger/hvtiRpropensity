@@ -56,8 +56,9 @@ reference:
 - title: "Propensity Score Estimation"
   desc: >
     Functions for estimating propensity scores and balancing scores from
-    raw patient data. Supports binary, ordinal, nominal, continuous, and
-    count outcomes, with optional multiple-imputation averaging.
+    raw patient data. Supports binary, ordinal and nominal treatments and
+    continuous and count exposures, with optional multiple-imputation
+    averaging.
   contents:
   - ps_logistic
   - ps_forest
@@ -68,7 +69,8 @@ reference:
 
 - title: "Outcome Models"
   desc: >
-    Logistic outcome-model bundles and validation without refitting.
+    Logistic and linear outcome-model bundles, and validation of a saved
+    logistic bundle without refitting.
   contents:
   - fit_logistic
   - fit_linear
@@ -92,15 +94,16 @@ reference:
 
 - title: "Treatment Effects"
   desc: >
-    Weighted treatment-effect estimates with bootstrap variance.
+    Matching-weight differences in means and restricted mean survival
+    contrasts, with bootstrap intervals.
   contents:
   - ps_mw_var
   - ps_rmst
 
 - title: "Sensitivity Analysis"
   desc: >
-    Functions for assessing robustness of propensity score analyses to
-    unmeasured confounding and model assumptions.
+    Rosenbaum bounds and E-values for unmeasured confounding; overlap,
+    support and trimming diagnostics for positivity.
   contents:
   - sa_rosenbaum
   - sa_evalue

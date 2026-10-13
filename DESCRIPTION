@@ -30,6 +30,7 @@ Imports:
     stats,
     withr (>= 2.5.0)
 Suggests:
+    hvtiPlotR,
     knitr,
     MASS,
     nnet,

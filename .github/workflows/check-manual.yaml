@@ -49,7 +49,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, github::ehrlinger/hvtiPlotR
           needs: check
 
       # Install the package into the user library so that Quarto's subprocess
