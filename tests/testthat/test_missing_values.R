@@ -95,6 +95,10 @@ test_that("ps_weight() trims over the kept rows only, and ps_rmst() analyses the
   expect_equal(sum(!is.na(r_part$data$w_att)), sum(keep))
   expect_equal(r_part$tables$estimates$rmst_control, r_full$tables$estimates$rmst_control)
   expect_equal(r_part$tables$estimates$rmst_treated, r_full$tables$estimates$rmst_treated)
+  # `n` and the effective sample sizes count the analysed rows, not the excluded ones.
+  expect_equal(r_part$tables$estimates$n, sum(keep))
+  expect_equal(r_part$tables$estimates$ess_control, r_full$tables$estimates$ess_control)
+  expect_equal(r_part$tables$estimates$ess_treated, r_full$tables$estimates$ess_treated)
 })
 
 # ---------------------------------------------------------------------------

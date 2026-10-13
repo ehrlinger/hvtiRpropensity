@@ -221,7 +221,11 @@ ps_rmst <- function(x, time_col, event_col, tau,
     pt <- est_one(idx, type)
     a <- arm[idx]
     w <- wts_rows(idx, type)
-    ess <- function(g) if (any(g)) sum(w[g])^2 / sum(w[g]^2) else 0
+    has_w <- !is.na(w)
+    ess <- function(g) {
+      g <- g & has_w
+      if (any(g)) sum(w[g])^2 / sum(w[g]^2) else 0
+    }
     diff_pt <- (pt$ra$rmst - pt$rb$rmst)
 
     draws <- rep(NA_real_, n_boot)
@@ -245,7 +249,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
       stats::quantile(draws, c(0.025, 0.975), na.rm = TRUE, names = FALSE)
     }
     rows[[i]] <- data.frame(
-      estimator = label, subset = grid$subset[i], weighting = type, n = length(idx),
+      estimator = label, subset = grid$subset[i], weighting = type, n = sum(has_w),
       ess_treated = ess(a), ess_control = ess(!a),
       rmst_treated = pt$ra$rmst, rmst_control = pt$rb$rmst,
       diff = diff_pt, diff_days = diff_pt * time_unit_days,
