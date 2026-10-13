@@ -74,6 +74,7 @@ test_that("binary logistic output agrees with the SAS oracle", {
 })
 
 test_that("ordinal logistic output agrees with the SAS cumulative-logit convention", {
+  skip_if_not_installed("MASS")
   d <- lm_sas_fixture()
   one <- d[d$imputation == 1L, ]
   fit <- fit_logistic(
@@ -110,6 +111,7 @@ test_that("ordinal logistic output agrees with the SAS cumulative-logit conventi
 })
 
 test_that("nominal generalized-logit output agrees with the SAS oracle", {
+  skip_if_not_installed("nnet")
   d <- lm_sas_fixture()
   one <- d[d$imputation == 1L, ]
   fit <- fit_logistic(
