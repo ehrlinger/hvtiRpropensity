@@ -71,6 +71,7 @@ reference:
     Logistic outcome-model bundles and validation without refitting.
   contents:
   - fit_logistic
+  - fit_linear
   - validate_logistic
 
 - title: "Propensity Score Methods"

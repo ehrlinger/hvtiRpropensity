@@ -9,7 +9,7 @@
 \arguments{
 \item{models}{Non-empty list of fitted models.}
 
-\item{family}{One of \code{"binary"}, \code{"ordinal"}, \code{"nominal"}, or \code{"count"}.}
+\item{family}{One of \code{"binary"}, \code{"ordinal"}, \code{"nominal"}, \code{"count"}, or \code{"linear"}.}
 
 \item{conf_level}{Confidence level.}
 }

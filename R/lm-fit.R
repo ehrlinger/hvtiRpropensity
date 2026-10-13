@@ -301,3 +301,128 @@ fit_logistic <- function(formula, data,
   )
   new_ps_data(scored, meta, tables, fitted$models, subclass = "lm_fit")
 }
+
+
+#' Stop when a fitted linear model has an aliased term
+#'
+#' `stats::lm()` returns `NA` for a term it cannot estimate, which would
+#' otherwise surface later as an anonymous non-finite coefficient.
+#'
+#' @param models Named list of fitted models.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.check_aliased <- function(models) {
+  for (i in seq_along(models)) {
+    aliased <- names(stats::coef(models[[i]]))[is.na(stats::coef(models[[i]]))]
+    if (length(aliased)) {
+      label <- if (is.null(names(models))) i else names(models)[[i]]
+      rlang::abort(
+        sprintf("Term(s) aliased in imputation %s: %s. Remove them from the formula.",
+                label, paste(aliased, collapse = ", ")),
+        call. = FALSE
+      )
+    }
+  }
+  invisible(NULL)
+}
+
+
+#' Fit an ordinary least-squares model bundle
+#'
+#' Fits `stats::lm()` to one dataset, or once per imputation of stacked
+#' long-form data, and combines imputations with Rubin's rules. A single fit is
+#' inferred on the t with its residual degrees of freedom, as `PROC REG`
+#' reports it.
+#'
+#' @param formula Model formula. The response may be transformed, e.g.
+#'   `log(los) ~ age`.
+#' @param data A data frame, or stacked imputations when `imputation_col` is set.
+#' @param outcome_col Outcome column. By default the one variable in the
+#'   formula's response.
+#' @param id_col Patient identifier column.
+#' @param imputation_col Imputation-index column, or `NULL` for one dataset.
+#' @param prediction_col Name of the fitted-value column added to `$data`,
+#'   averaged across imputations.
+#'
+#' @return An object of class `c("rm_fit", "ps_data")`. `$tables$fit_quality`
+#'   gives each fit's residual degrees of freedom, residual standard error and
+#'   R-squared; R-squared is `NA` for imputed data, where Rubin's rules define
+#'   none.
+#'
+#' @seealso [fit_logistic()], [bs_continuous()]
+#'
+#' @examples
+#' dta <- sample_ps_data(n = 150, seed = 42)
+#' fit <- fit_linear(ef ~ age + female, data = dta)
+#' fit$tables$estimates[, c("term", "estimate", "std.error", "p.value")]
+#' @export
+fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
+                       imputation_col = NULL, prediction_col = "fitted") {
+  if (!inherits(formula, "formula") || length(formula) != 3L) {
+    rlang::abort("`formula` must be a two-sided R formula.", call. = FALSE)
+  }
+  .check_df(data)
+  if (is.null(outcome_col)) {
+    outcome_col <- all.vars(formula[[2L]])
+    if (length(outcome_col) != 1L) {
+      rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
+                   call. = FALSE)
+    }
+  }
+  .check_cols(data, outcome_col)
+  if (!is.numeric(data[[outcome_col]])) {
+    rlang::abort(sprintf("The outcome `%s` must be numeric for a linear model.", outcome_col),
+                 call. = FALSE)
+  }
+
+  fitted <- .fit_imputations(
+    data = data,
+    response_col = outcome_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    fit_fn = function(df) stats::lm(formula, data = df, na.action = stats::na.exclude),
+    predict_fn = function(fit, df) stats::predict(fit, newdata = df),
+    predictor_cols = all.vars(stats::delete.response(stats::terms(formula)))
+  )
+  .check_aliased(fitted$models)
+  inference <- .model_inference(fitted$models, "linear")
+  imputed <- length(fitted$models) > 1L
+
+  scored <- fitted$data
+  scored[[prediction_col]] <- unname(fitted$predictions)
+  fit_quality <- data.frame(
+    imputation = names(fitted$models),
+    df_residual = vapply(fitted$models, function(m) m$df.residual, numeric(1L)),
+    residual_se = vapply(fitted$models, stats::sigma, numeric(1L)),
+    # Rubin's rules define no pooled R-squared, so none is reported for imputed data.
+    r_squared = if (imputed) NA_real_ else summary(fitted$models[[1L]])$r.squared,
+    row.names = NULL,
+    stringsAsFactors = FALSE
+  )
+
+  meta <- list(
+    formula = formula,
+    outcome_col = outcome_col,
+    id_col = id_col,
+    imputation_col = imputation_col,
+    prediction_col = prediction_col,
+    bundle_version = 1L,
+    model_family = "linear",
+    package_versions = c(
+      R = as.character(getRversion()),
+      hvtiRpropensity = as.character(utils::packageVersion("hvtiRpropensity")),
+      stats = as.character(utils::packageVersion("stats"))
+    ),
+    method = if (imputed) "ols-MI" else "ols",
+    n_imputations = length(fitted$imputations),
+    n_total = nrow(scored)
+  )
+  tables <- list(
+    estimates = inference$estimates,
+    covariance = inference$covariance,
+    by_imputation = inference$by_imputation,
+    fit_status = fitted$status,
+    fit_quality = fit_quality
+  )
+  new_ps_data(scored, meta, tables, fitted$models, subclass = "rm_fit")
+}
