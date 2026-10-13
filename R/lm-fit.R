@@ -331,8 +331,8 @@ fit_logistic <- function(formula, data,
 #'
 #' Fits `stats::lm()` to one dataset, or once per imputation of stacked
 #' long-form data, and combines imputations with Rubin's rules. A single fit is
-#' inferred on the t with its residual degrees of freedom, as `PROC REG`
-#' reports it.
+#' inferred on the t distribution with its residual degrees of freedom, as
+#' `PROC REG` reports it.
 #'
 #' @param formula Model formula. The response may be transformed, e.g.
 #'   `log(los) ~ age`.
@@ -373,6 +373,10 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
   if (!is.numeric(data[[outcome_col]])) {
     rlang::abort(sprintf("The outcome `%s` must be numeric for a linear model.", outcome_col),
                  call. = FALSE)
+  }
+
+  if (prediction_col %in% names(data)) {
+    rlang::abort(sprintf("Column `%s` already exists in `data`.", prediction_col), call. = FALSE)
   }
 
   fitted <- .fit_imputations(

@@ -369,3 +369,12 @@ test_that("fit_linear stops on a non-numeric outcome and on an aliased term", {
   d$age_copy <- d$age
   expect_error(fit_linear(ef ~ age + age_copy, d), "aliased in imputation 1: age_copy")
 })
+
+test_that("fit_linear refuses to overwrite a data column with its predictions", {
+  d <- sample_ps_data(n = 150, seed = 42)
+  d$fitted <- 1
+  expect_error(fit_linear(ef ~ age, d), "already exist")
+  d$fitted <- NULL
+  expect_error(fit_linear(ef ~ age, d, prediction_col = "ef"), "already exist")
+  expect_error(fit_linear(ef ~ age, d, prediction_col = "id"), "already exist")
+})

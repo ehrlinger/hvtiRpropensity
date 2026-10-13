@@ -23,6 +23,8 @@ rm_close <- function(actual, expected, tolerance = 1e-8, relative = FALSE) {
   testthat::expect_lt(max(err), tolerance)
 }
 
+rm_terms <- c("(Intercept)", "age", "female")
+
 rm_matrix <- function(file) {
   raw <- rm_oracle(file)
   keep <- c("Intercept", "age", "female")
@@ -52,6 +54,8 @@ test_that("fit_linear reproduces PROC REG on one dataset", {
   sas <- rm_oracle("single-estimates.csv")
   anova <- rm_oracle("single-anova.csv", na.strings = "_")
   residual_df <- anova$DF[anova$Source == "Error"]
+  expect_identical(length(residual_df), 1L)
+  expect_identical(est$term, rm_terms)
 
   rm_close(est$estimate, sas$Estimate)
   rm_close(est$std.error, sas$StdErr)
@@ -69,6 +73,8 @@ test_that("fit_linear's Rubin pool reproduces PROC MIANALYZE", {
   est <- fit$tables$estimates
   sas <- rm_oracle("pooled-estimates.csv")
 
+  expect_identical(est$term, rm_terms)
+  rm_close(est$statistic, sas$tValue, relative = TRUE)
   rm_close(est$estimate, sas$Estimate)
   rm_close(est$std.error, sas$StdErr)
   rm_close(est$conf.low, sas$LCLMean)
@@ -86,6 +92,7 @@ test_that("fit_linear's Rubin pool reproduces PROC MIANALYZE", {
   coefs <- do.call(rbind, lapply(fit$models, stats::coef))
   m <- length(vcovs)
   k <- ncol(coefs)
+  expect_identical(colnames(coefs), rm_terms)
   ubar <- Reduce(`+`, vcovs) / m
   between <- stats::cov(coefs)
   rbar <- (1 + 1 / m) * sum(diag(between %*% solve(ubar))) / k

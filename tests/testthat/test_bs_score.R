@@ -287,11 +287,17 @@ test_that("bs_continuous carries the model-bundle contract", {
   obj <- bs_continuous(ef ~ age + female, stacked, imputation_col = "imp")
   expect_true(all(c("strata_counts", "estimates", "covariance", "by_imputation", "fit_status") %in%
                     names(obj$tables)))
+  expect_gt(nrow(obj$tables$estimates), 0L)
   expect_true(all(obj$tables$estimates$pooled))
   expect_false("odds_ratio" %in% names(obj$tables$estimates))
   expect_identical(obj$meta$model_family, "continuous")
   expect_identical(obj$meta$bundle_version, 1L)
   expect_true("hvtiRpropensity" %in% names(obj$meta$package_versions))
+})
+
+test_that("bs_continuous rejects a multi-column response", {
+  d <- sample_ps_data(n = 200, seed = 42)
+  expect_error(bs_continuous(cbind(ef, age) ~ female, d), "exactly one column")
 })
 
 test_that("bs_continuous's score is still the averaged fitted value", {

@@ -38,8 +38,8 @@ none.
 \description{
 Fits \code{stats::lm()} to one dataset, or once per imputation of stacked
 long-form data, and combines imputations with Rubin's rules. A single fit is
-inferred on the t with its residual degrees of freedom, as \verb{PROC REG}
-reports it.
+inferred on the t distribution with its residual degrees of freedom, as
+\verb{PROC REG} reports it.
 }
 \examples{
 dta <- sample_ps_data(n = 150, seed = 42)

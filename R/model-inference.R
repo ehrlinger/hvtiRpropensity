@@ -271,8 +271,8 @@
     result <- list(
       estimates = .inference_table(
         terms, estimates[[1L]], covariances[[1L]],
-        # An OLS fit is inferred on the t with its residual degrees of freedom,
-        # as PROC REG reports it; the other families are large-sample.
+        # An OLS fit is inferred on the t distribution with its residual degrees
+        # of freedom, as PROC REG reports it; the other families are large-sample.
         if (identical(family, "linear")) {
           rep.int(models[[1L]]$df.residual, length(terms))
         } else {

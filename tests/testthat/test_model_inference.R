@@ -170,6 +170,7 @@ test_that("a single linear fit is inferred on the t with residual degrees of fre
   expect_equal(out$estimates$p.value, unname(expected[, "Pr(>|t|)"]))
   expect_equal(out$estimates$df, rep(fit$df.residual, 3L))
   expect_equal(out$estimates$conf.low, unname(stats::confint(fit)[, 1L]))
+  expect_equal(out$estimates$conf.high, unname(stats::confint(fit)[, 2L]))
   expect_false("odds_ratio" %in% names(out$estimates))
   expect_false(any(out$estimates$pooled))
 })
