@@ -103,9 +103,10 @@
 #' @param data      A data frame.
 #' @param col       Name of the column to check.
 #' @param call_env  Environment for the error call.
+#' @param hint      Optional sentence appended to the range error.
 #' @return Invisible NULL.
 #' @keywords internal
-.check_probability <- function(data, col, call_env = rlang::caller_env()) {
+.check_probability <- function(data, col, call_env = rlang::caller_env(), hint = NULL) {
   x <- data[[col]]
   if (!is.numeric(x)) {
     rlang::abort(
@@ -115,11 +116,32 @@
   }
   if (any(!is.na(x) & (x < 0 | x > 1))) {
     rlang::abort(
-      sprintf("Column `%s` must contain values in [0, 1].", col),
+      paste(c(sprintf("Column `%s` must contain values in [0, 1].", col), hint), collapse = " "),
       call = call_env
     )
   }
   invisible(NULL)
+}
+
+
+#' The propensity score of a ps_data object on the probability scale
+#'
+#' A [ps_match()] object built with `scale = "logit"` names a logit column in
+#' `$meta$score_col`. Readers that need a probability call this helper, which
+#' applies [stats::plogis()] when `$meta$scale` is `"logit"` and otherwise
+#' returns the column unchanged, then checks that every value lies in \[0, 1\].
+#'
+#' @param x         A `ps_data` object.
+#' @param score_col Name of the score column. Default `x$meta$score_col`.
+#' @param call_env  Environment for the error call.
+#' @return A numeric vector of probabilities, one per row of `x$data`.
+#' @keywords internal
+.probability_score <- function(x, score_col = x$meta$score_col, call_env = rlang::caller_env()) {
+  .check_cols(x$data, score_col, call_env)
+  score <- x$data[[score_col]]
+  if (identical(x$meta$scale, "logit")) score <- stats::plogis(score)
+  .check_probability(stats::setNames(list(score), score_col), score_col, call_env)
+  score
 }
 
 

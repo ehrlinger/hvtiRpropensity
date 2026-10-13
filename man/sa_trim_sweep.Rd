@@ -32,7 +32,9 @@ when \code{x} is a \code{ps_weight} object; defaults to \code{"ATE"} otherwise.}
 \code{x$meta$stabilised} when available; defaults to \code{TRUE}.}
 
 \item{score_col}{Name of the propensity score column.  Taken from
-\code{x$meta$score_col} when \code{x} is a \code{ps_data} object.  Default \code{"prob_t"}.}
+\code{x$meta$score_col} when \code{x} is a \code{ps_data} object.  Default \code{"prob_t"}.
+The score of a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a
+logit, and is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before use.}
 
 \item{treatment_col}{Name of the binary treatment column.  Taken from
 \code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object\verb{.  Default }"tavr"`.}

@@ -518,6 +518,8 @@ sa_evalue <- function(estimate,
 #' @param x             A `ps_data` object **or** a plain data frame.
 #' @param score_col     Name of the propensity score column.  Taken from
 #'   `x$meta$score_col` when `x` is a `ps_data` object.  Default `"prob_t"`.
+#'   The score of a [ps_match()] object built with `scale = "logit"` is a
+#'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column (0/1).  Taken from
 #'   `x$meta$treatment_col` when `x` is a `ps_data` object`.  Default `"tavr"`.
 #' @param trim_threshold Numeric in (0, 0.5).  PS values below this threshold
@@ -568,6 +570,7 @@ sa_overlap <- function(x,
     treatment_col <- rlang::`%||%`(x$meta$treatment_col, treatment_col)
     treated_level <- rlang::`%||%`(x$meta$treated_level, treated_level)
     dta <- x$data
+    dta[[score_col]] <- .probability_score(x, score_col)
   } else if (is.data.frame(x)) {
     dta <- x
   } else {
@@ -727,6 +730,8 @@ sa_overlap <- function(x,
 #'   `x$meta$stabilised` when available; defaults to `TRUE`.
 #' @param score_col   Name of the propensity score column.  Taken from
 #'   `x$meta$score_col` when `x` is a `ps_data` object.  Default `"prob_t"`.
+#'   The score of a [ps_match()] object built with `scale = "logit"` is a
+#'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column.  Taken from
 #'   `x$meta$treatment_col` when `x` is a `ps_data` object`.  Default
 #'   `"tavr"`.
@@ -773,6 +778,7 @@ sa_trim_sweep <- function(x,
     stabilise     <- rlang::`%||%`(x$meta$stabilised,    stabilise)
     treated_level <- rlang::`%||%`(x$meta$treated_level, treated_level)
     dta <- x$data
+    dta[[score_col]] <- .probability_score(x, score_col)
   } else if (is.data.frame(x)) {
     estimand_use <- match.arg(estimand)
     dta <- x

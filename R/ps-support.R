@@ -5,7 +5,10 @@
 #' object; any other rule (for example an isolation-forest tail flag) can be
 #' supplied as a logical vector.
 #'
-#' @param x A `ps_data` object with a score and treatment column.
+#' @param x A `ps_data` object with a score and treatment column. The score of
+#'   a [ps_match()] object built with `scale = "logit"` is a logit, and is
+#'   back-transformed with [stats::plogis()], so `trim` and the common-support
+#'   interval are on the probability scale.
 #' @param flags Optional named list of extra logical vectors, one element per
 #'   row of `x$data`, `TRUE` meaning the rule would drop that patient.
 #' @param trim Length-2 numeric, or `NULL`. Adds the rule "score outside
@@ -17,7 +20,9 @@
 #'   logical column `weak_<rule>` per rule. `$tables$counts` gives the number
 #'   flagged per rule; `$tables$agreement` gives, for every pair of rules,
 #'   `n_both`, `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap
-#'   of the two dropped sets). `$meta$common_support` is the interval used.
+#'   of the two dropped sets). `$meta$common_support` is the interval used,
+#'   on the probability scale. `$meta$scale` is the scale of `score_col`,
+#'   carried from `x` (`"probability"` when `x` records none).
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 3)[, c("id", "tavr", "age", "ef")]
@@ -26,7 +31,7 @@
 #' @export
 ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
-  score <- x$data[[x$meta$score_col]]
+  score <- .probability_score(x)
   trt <- as.integer(as.character(x$data[[x$meta$treatment_col]]) == as.character(x$meta$treated_level))
   n <- nrow(x$data)
 
@@ -72,7 +77,8 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   new_ps_data(
     data = out,
     meta = c(x$meta[c("treatment_col", "score_col", "treated_level")],
-             list(rules = names(rules), common_support = bounds, trim = trim, n_total = n)),
+             list(scale = rlang::`%||%`(x$meta$scale, "probability"),
+                  rules = names(rules), common_support = bounds, trim = trim, n_total = n)),
     tables = list(counts = counts, agreement = agreement),
     subclass = "ps_support"
   )
