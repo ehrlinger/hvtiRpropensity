@@ -64,10 +64,11 @@
 #'   and the caliper are measured on: `"probability"` (default) or `"logit"`.
 #'   The recommended caliper, 0.2 standard deviations of the logit of the
 #'   propensity score (Austin 2011), needs `scale = "logit"`.
-#' @param caliper_sd     Caliper in standard-deviation units of `score_col`:
-#'   the caliper applied is `caliper_sd * sd(score_col)`, the standard
-#'   deviation taken over all non-missing rows of both groups.  `NULL`
-#'   (default) uses `caliper` instead.  `scale = "logit", caliper_sd = 0.2`
+#' @param caliper_sd     Caliper in pooled standard-deviation units of
+#'   `score_col`: the caliper applied is `caliper_sd * sqrt((var_t + var_c) / 2)`,
+#'   where `var_t` and `var_c` are the variances of `score_col` among treated
+#'   and control patients (missing values dropped).  `NULL` (default) uses
+#'   `caliper` instead.  `scale = "logit", caliper_sd = 0.2`
 #'   is the Austin (2011) recommendation.
 #' @references Austin PC (2011). Optimal caliper widths for propensity-score
 #'   matching when estimating differences in means and differences in
@@ -155,7 +156,10 @@ ps_match <- function(data,
     if (!is.null(caliper)) {
       rlang::abort("Give at most one of `caliper` and `caliper_sd`.", call. = FALSE)
     }
-    caliper <- caliper_sd * stats::sd(data[[score_col]], na.rm = TRUE)
+    is_t <- as.integer(data[[treatment_col]]) == 1L
+    pooled_sd <- sqrt((stats::var(data[[score_col]][is_t], na.rm = TRUE) +
+                         stats::var(data[[score_col]][!is_t], na.rm = TRUE)) / 2)
+    caliper <- caliper_sd * pooled_sd
   }
   if (!identical(as.integer(ratio), 1L)) {
     rlang::abort("Only 1:1 matching (`ratio = 1`) is currently supported.",

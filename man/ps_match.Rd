@@ -69,10 +69,11 @@ and the caliper are measured on: \code{"probability"} (default) or \code{"logit"
 The recommended caliper, 0.2 standard deviations of the logit of the
 propensity score (Austin 2011), needs \code{scale = "logit"}.}
 
-\item{caliper_sd}{Caliper in standard-deviation units of \code{score_col}:
-the caliper applied is \code{caliper_sd * sd(score_col)}, the standard
-deviation taken over all non-missing rows of both groups.  \code{NULL}
-(default) uses \code{caliper} instead.  \verb{scale = "logit", caliper_sd = 0.2}
+\item{caliper_sd}{Caliper in pooled standard-deviation units of
+\code{score_col}: the caliper applied is \code{caliper_sd * sqrt((var_t + var_c) / 2)},
+where \code{var_t} and \code{var_c} are the variances of \code{score_col} among treated
+and control patients (missing values dropped).  \code{NULL} (default) uses
+\code{caliper} instead.  \verb{scale = "logit", caliper_sd = 0.2}
 is the Austin (2011) recommendation.}
 }
 \value{
