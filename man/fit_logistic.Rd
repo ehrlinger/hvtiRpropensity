@@ -74,8 +74,9 @@ pooled when imputed), \code{by_imputation} (\code{imputation}, \code{term},
 \code{estimate}, \code{std.error}) and \code{fit_status} (one row per imputation:
 \code{imputation}, \code{converged}, \code{n_input}, \code{n_analyzed}, \code{n_excluded}).}
 \item{\verb{$models}}{The fitted models, one per imputation, named by
-imputation index (\code{"1"} for a single dataset). \code{\link[=validate_logistic]{validate_logistic()}}
-scores new data with them.}
+imputation index (\code{"1"} for a single dataset). For binary bundles,
+\code{\link[=validate_logistic]{validate_logistic()}} scores new data with them; it rejects ordinal and
+nominal bundles.}
 }
 }
 \description{

@@ -119,8 +119,9 @@
 #'     `estimate`, `std.error`) and `fit_status` (one row per imputation:
 #'     `imputation`, `converged`, `n_input`, `n_analyzed`, `n_excluded`).}
 #'   \item{`$models`}{The fitted models, one per imputation, named by
-#'     imputation index (`"1"` for a single dataset). [validate_logistic()]
-#'     scores new data with them.}
+#'     imputation index (`"1"` for a single dataset). For binary bundles,
+#'     [validate_logistic()] scores new data with them; it rejects ordinal and
+#'     nominal bundles.}
 #' }
 #'
 #' @examples
