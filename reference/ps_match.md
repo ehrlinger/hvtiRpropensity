@@ -55,9 +55,11 @@ ps_match(
 
 - covariates:
 
-  Character vector of covariate columns for SMD diagnostics. If `NULL`
-  (default), all numeric columns other than `treatment_col` and
-  `score_col` are used.
+  Character vector of covariate columns for SMD diagnostics, used as
+  given. If `NULL` (default), every numeric column that varies is used,
+  except `treatment_col`, `score_col`, `id_col`, `match_col` and the
+  fixed columns this package appends (`prob_t`, `logit_t`, `mt_wt`,
+  `iptw`, `pair_id`, `quintile`, `decile`, `bs`, `cluster`).
 
 - match_col:
 

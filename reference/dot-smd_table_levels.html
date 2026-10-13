@@ -56,7 +56,8 @@ level as the treated group and versus as the comparison group."></head><body>
 <span>  <span class="va">levels</span>,</span>
 <span>  <span class="va">scheme</span>,</span>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  reserved <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  reserved <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  keep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -81,12 +82,17 @@ level as the treated group and versus as the comparison group."></head><body>
 
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
-<dd><p>Covariate columns. <code>NULL</code> uses every numeric column other
-than those in <code>reserved</code>.</p></dd>
+<dd><p>Covariate columns. <code>NULL</code> uses <code><a href="dot-default_covariates.html">.default_covariates()</a></code>,
+excluding <code>treatment</code> and <code>reserved</code>.</p></dd>
 
 
 <dt id="arg-reserved">reserved<a class="anchor" aria-label="anchor" href="#arg-reserved"></a></dt>
 <dd><p>Columns never treated as covariates.</p></dd>
+
+
+<dt id="arg-keep">keep<a class="anchor" aria-label="anchor" href="#arg-keep"></a></dt>
+<dd><p>Model predictors protected in the default set; see
+<code><a href="dot-default_covariates.html">.default_covariates()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

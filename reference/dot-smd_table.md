@@ -12,7 +12,14 @@ found no pairs, gets `NA` for every covariate rather than an error.
 ## Usage
 
 ``` r
-.smd_table(data, treatment, covariates = NULL, weight_col = NULL)
+.smd_table(
+  data,
+  treatment,
+  covariates = NULL,
+  weight_col = NULL,
+  reserved = character(),
+  keep = character()
+)
 ```
 
 ## Arguments
@@ -27,12 +34,23 @@ found no pairs, gets `NA` for every covariate rather than an error.
 
 - covariates:
 
-  Character vector of covariate column names. If `NULL`, all numeric
-  columns other than `treatment` are used.
+  Character vector of covariate column names, used as given. If `NULL`,
+  the default set from
+  [`.default_covariates()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_covariates.md)
+  is used, excluding `treatment`, `weight_col` and `reserved`.
 
 - weight_col:
 
   Optional name of a weight column.
+
+- reserved:
+
+  Further columns never used as default covariates.
+
+- keep:
+
+  Model predictors protected in the default set; see
+  [`.default_covariates()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_covariates.md).
 
 ## Value
 

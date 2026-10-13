@@ -108,8 +108,11 @@ caliper unless <code>caliper_sd</code> is given.  Give at most one of <code>cali
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
 <dd><p>Character vector of covariate columns for SMD
-diagnostics.  If <code>NULL</code> (default), all numeric columns other than
-<code>treatment_col</code> and <code>score_col</code> are used.</p></dd>
+diagnostics, used as given.  If <code>NULL</code> (default), every numeric column
+that varies is used, except <code>treatment_col</code>, <code>score_col</code>, <code>id_col</code>,
+<code>match_col</code> and the fixed columns this package appends (<code>prob_t</code>,
+<code>logit_t</code>, <code>mt_wt</code>, <code>iptw</code>, <code>pair_id</code>, <code>quintile</code>, <code>decile</code>, <code>bs</code>,
+<code>cluster</code>).</p></dd>
 
 
 <dt id="arg-match-col">match_col<a class="anchor" aria-label="anchor" href="#arg-match-col"></a></dt>

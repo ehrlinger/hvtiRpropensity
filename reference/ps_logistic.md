@@ -69,9 +69,11 @@ ps_logistic(
 - covariates:
 
   Character vector of covariate column names for SMD balance
-  diagnostics. If `NULL` (default), all numeric columns other than
-  `treatment_col`, `score_col`, `logit_col`, `weight_col`, `id_col`,
-  `"quintile"`, and `"decile"` are used.
+  diagnostics, used as given. If `NULL` (default), every numeric column
+  that varies is used, except `treatment_col`, `score_col`, `logit_col`,
+  `weight_col`, `id_col` and the fixed columns this package appends
+  (`quintile`, `decile`, `iptw`, `match`, `pair_id` and the like). A
+  predictor named in `formula` is always kept.
 
 - treatment_levels:
 
@@ -169,7 +171,6 @@ summary(obj)
 #> ef                     ef  0.6139
 #> diabetes         diabetes -0.0554
 #> hypertension hypertension -0.0310
-#> match               match      NA
 #> 
 #> Group counts:
 #>   group treated   n

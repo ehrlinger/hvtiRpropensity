@@ -65,7 +65,14 @@ rather than an error.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.smd_table</span><span class="op">(</span><span class="va">data</span>, <span class="va">treatment</span>, covariates <span class="op">=</span> <span class="cn">NULL</span>, weight_col <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.smd_table</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">treatment</span>,</span>
+<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  weight_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  reserved <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  keep <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -81,12 +88,22 @@ rather than an error.</p>
 
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
-<dd><p>Character vector of covariate column names.  If <code>NULL</code>,
-all numeric columns other than <code>treatment</code> are used.</p></dd>
+<dd><p>Character vector of covariate column names, used as
+given.  If <code>NULL</code>, the default set from <code><a href="dot-default_covariates.html">.default_covariates()</a></code> is used,
+excluding <code>treatment</code>, <code>weight_col</code> and <code>reserved</code>.</p></dd>
 
 
 <dt id="arg-weight-col">weight_col<a class="anchor" aria-label="anchor" href="#arg-weight-col"></a></dt>
 <dd><p>Optional name of a weight column.</p></dd>
+
+
+<dt id="arg-reserved">reserved<a class="anchor" aria-label="anchor" href="#arg-reserved"></a></dt>
+<dd><p>Further columns never used as default covariates.</p></dd>
+
+
+<dt id="arg-keep">keep<a class="anchor" aria-label="anchor" href="#arg-keep"></a></dt>
+<dd><p>Model predictors protected in the default set; see
+<code><a href="dot-default_covariates.html">.default_covariates()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

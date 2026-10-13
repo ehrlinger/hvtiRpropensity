@@ -117,9 +117,11 @@ weight (ATM). Default <code>"mt_wt"</code>.</p></dd>
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
 <dd><p>Character vector of covariate column names for SMD
-balance diagnostics.  If <code>NULL</code> (default), all numeric columns other
-than <code>treatment_col</code>, <code>score_col</code>, <code>logit_col</code>, <code>weight_col</code>,
-<code>id_col</code>, <code>"quintile"</code>, and <code>"decile"</code> are used.</p></dd>
+balance diagnostics, used as given.  If <code>NULL</code> (default), every numeric
+column that varies is used, except <code>treatment_col</code>, <code>score_col</code>,
+<code>logit_col</code>, <code>weight_col</code>, <code>id_col</code> and the fixed columns this package
+appends (<code>quintile</code>, <code>decile</code>, <code>iptw</code>, <code>match</code>, <code>pair_id</code> and the like).
+A predictor named in <code>formula</code> is always kept.</p></dd>
 
 
 <dt id="arg-treatment-levels">treatment_levels<a class="anchor" aria-label="anchor" href="#arg-treatment-levels"></a></dt>
@@ -208,7 +210,6 @@ matched) estimand weight and is used as input to <code><a href="ps_match.html">p
 <span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.6139</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0554</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0310</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>

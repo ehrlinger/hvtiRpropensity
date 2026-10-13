@@ -71,7 +71,8 @@ Returns a <code>ps_weight</code> object whose <code>$tables</code> slot contains
 <span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weight_col <span class="op">=</span> <span class="st">"iptw"</span>,</span>
-<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  id_col <span class="op">=</span> <span class="st">"id"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -117,8 +118,11 @@ Default <code>NULL</code> (no trimming).</p></dd>
 
 <dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
 <dd><p>Character vector of covariate columns for SMD
-diagnostics.  If <code>NULL</code> (default), all numeric columns other than
-<code>treatment_col</code> and <code>score_col</code> are used.</p></dd>
+diagnostics, used as given.  If <code>NULL</code> (default), every numeric column
+that varies is used, except <code>treatment_col</code>, <code>score_col</code>, <code>weight_col</code>,
+<code>id_col</code> and the fixed columns this package appends (<code>prob_t</code>,
+<code>logit_t</code>, <code>mt_wt</code>, <code>iptw</code>, <code>match</code>, <code>pair_id</code>, <code>quintile</code>, <code>decile</code>,
+<code>bs</code>, <code>cluster</code>).</p></dd>
 
 
 <dt id="arg-weight-col">weight_col<a class="anchor" aria-label="anchor" href="#arg-weight-col"></a></dt>
@@ -131,6 +135,11 @@ Default <code>"iptw"</code>.  If the column already exists it is overwritten.</p
 (default) requires a 0/1 or logical column and takes 1 or <code>TRUE</code>. Give a
 value, for example <code>"transcatheter"</code>, to use a column holding any two
 values.</p></dd>
+
+
+<dt id="arg-id-col">id_col<a class="anchor" aria-label="anchor" href="#arg-id-col"></a></dt>
+<dd><p>The patient identifier column, left out of the default
+covariates. Default <code>"id"</code>; it need not exist in <code>data</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -174,23 +183,19 @@ carry a logical <code>treated</code> column.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Smd unweighted:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.4555</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age                   age -0.7994</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> female             female  0.3989</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.6139</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0554</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0310</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Smd weighted:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.4919</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age                   age  0.1143</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> female             female -0.0953</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef -0.0298</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0281</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0985</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>
@@ -210,23 +215,19 @@ carry a logical <code>treated</code> column.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Smd unweighted:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.4555</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age                   age -0.7994</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> female             female  0.3989</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.6139</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.0554</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.0310</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Smd weighted:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  variable     smd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> id                     id  3.3957</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age                   age  0.0734</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> female             female -0.0984</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ef                     ef  0.0305</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> diabetes         diabetes -0.1243</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hypertension hypertension -0.2256</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> match               match      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Group counts:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   group treated   n</span>

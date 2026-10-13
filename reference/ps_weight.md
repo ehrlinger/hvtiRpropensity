@@ -19,7 +19,8 @@ ps_weight(
   trim = NULL,
   covariates = NULL,
   weight_col = "iptw",
-  treated_level = NULL
+  treated_level = NULL,
+  id_col = "id"
 )
 ```
 
@@ -65,9 +66,11 @@ ps_weight(
 
 - covariates:
 
-  Character vector of covariate columns for SMD diagnostics. If `NULL`
-  (default), all numeric columns other than `treatment_col` and
-  `score_col` are used.
+  Character vector of covariate columns for SMD diagnostics, used as
+  given. If `NULL` (default), every numeric column that varies is used,
+  except `treatment_col`, `score_col`, `weight_col`, `id_col` and the
+  fixed columns this package appends (`prob_t`, `logit_t`, `mt_wt`,
+  `iptw`, `match`, `pair_id`, `quintile`, `decile`, `bs`, `cluster`).
 
 - weight_col:
 
@@ -79,6 +82,11 @@ ps_weight(
   The value of `treatment_col` that is treated. `NULL` (default)
   requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
   for example `"transcatheter"`, to use a column holding any two values.
+
+- id_col:
+
+  The patient identifier column, left out of the default covariates.
+  Default `"id"`; it need not exist in `data`.
 
 ## Value
 
@@ -125,23 +133,19 @@ summary(obj)
 #> 
 #> Smd unweighted:
 #>                  variable     smd
-#> id                     id  3.4555
 #> age                   age -0.7994
 #> female             female  0.3989
 #> ef                     ef  0.6139
 #> diabetes         diabetes -0.0554
 #> hypertension hypertension -0.0310
-#> match               match      NA
 #> 
 #> Smd weighted:
 #>                  variable     smd
-#> id                     id  3.4919
 #> age                   age  0.1143
 #> female             female -0.0953
 #> ef                     ef -0.0298
 #> diabetes         diabetes -0.0281
 #> hypertension hypertension -0.0985
-#> match               match      NA
 #> 
 #> Group counts:
 #>   group treated   n
@@ -161,23 +165,19 @@ summary(obj_att)
 #> 
 #> Smd unweighted:
 #>                  variable     smd
-#> id                     id  3.4555
 #> age                   age -0.7994
 #> female             female  0.3989
 #> ef                     ef  0.6139
 #> diabetes         diabetes -0.0554
 #> hypertension hypertension -0.0310
-#> match               match      NA
 #> 
 #> Smd weighted:
 #>                  variable     smd
-#> id                     id  3.3957
 #> age                   age  0.0734
 #> female             female -0.0984
 #> ef                     ef  0.0305
 #> diabetes         diabetes -0.1243
 #> hypertension hypertension -0.2256
-#> match               match      NA
 #> 
 #> Group counts:
 #>   group treated   n

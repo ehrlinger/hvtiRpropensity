@@ -12,7 +12,8 @@ Each pair is compared on the patients in those two levels only, with
   levels,
   scheme,
   covariates = NULL,
-  reserved = character()
+  reserved = character(),
+  keep = character()
 )
 ```
 
@@ -36,12 +37,18 @@ Each pair is compared on the patients in those two levels only, with
 
 - covariates:
 
-  Covariate columns. `NULL` uses every numeric column other than those
-  in `reserved`.
+  Covariate columns. `NULL` uses
+  [`.default_covariates()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_covariates.md),
+  excluding `treatment` and `reserved`.
 
 - reserved:
 
   Columns never treated as covariates.
+
+- keep:
+
+  Model predictors protected in the default set; see
+  [`.default_covariates()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_covariates.md).
 
 ## Value
 
