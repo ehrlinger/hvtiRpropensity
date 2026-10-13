@@ -77,15 +77,29 @@ test_that("SMD tables have 'variable' and 'smd' columns", {
 
 # ---- Caliper ----------------------------------------------------------------
 
-test_that("caliper reduces or maintains number of matched pairs", {
-  obj_no_cal <- ps_match(dta)
-  obj_cal    <- ps_match(dta, caliper = 0.01)
-  expect_lte(obj_cal$meta$n_matched, obj_no_cal$meta$n_matched)
+test_that("a caliper leaves unmatched a treated patient whose nearest control is farther away", {
+  # Treated scores 0.30 and 0.80; control scores 0.31 and 0.50. Whichever
+  # treated patient goes first, 0.30 takes 0.31 (distance 0.01) and the
+  # nearest control left for 0.80 is 0.50, at distance 0.30.
+  d <- data.frame(id = 1:4, tavr = c(1L, 1L, 0L, 0L), prob_t = c(0.30, 0.80, 0.31, 0.50), x = c(1, 2, 3, 5))
+  expect_equal(ps_match(d, seed = 1)$meta$n_matched, 2L)
+  for (seed in 1:5) {
+    obj <- ps_match(d, caliper = 0.05, seed = seed)
+    expect_equal(obj$meta$n_matched, 1L)
+    expect_equal(obj$meta$n_unmatched, 1L)
+    expect_equal(obj$data$match, c(1L, 0L, 1L, 0L))
+  }
 })
 
-test_that("very tight caliper can match zero pairs without error", {
-  expect_no_error(obj <- ps_match(dta, caliper = 1e-10))
-  expect_gte(obj$meta$n_matched, 0L)
+test_that("a caliper tighter than every treated-control distance matches zero pairs", {
+  # The closest treated-control distance is 0.6 - 0.3 = 0.3, above the 0.1 caliper.
+  d <- data.frame(id = 1:4, tavr = c(1L, 1L, 0L, 0L), prob_t = c(0.2, 0.3, 0.6, 0.7), x = c(1, 2, 3, 5))
+  expect_no_error(obj <- ps_match(d, caliper = 0.1, seed = 1))
+  expect_equal(obj$meta$n_matched, 0L)
+  expect_equal(obj$meta$n_unmatched, 2L)
+  expect_true(all(obj$data$match == 0L))
+  expect_true(all(is.na(obj$data$pair_id)))
+  expect_true(all(is.na(obj$tables$smd_after$smd)))
 })
 
 # ---- Custom column names ----------------------------------------------------

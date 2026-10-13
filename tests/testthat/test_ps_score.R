@@ -11,7 +11,7 @@ unscored_ps_data <- function(...) {
 }
 
 # ---------------------------------------------------------------------------
-# ps_logistic — binary treatment, single dataset
+# ps_logistic: binary treatment, single dataset
 # ---------------------------------------------------------------------------
 
 test_that("ps_logistic() returns correct class and slots", {
@@ -93,20 +93,18 @@ test_that("ps_logistic() errors when treatment column is missing", {
 })
 
 # ---------------------------------------------------------------------------
-# ps_logistic — multiply-imputed (stacked) data
+# ps_logistic: multiply-imputed (stacked) data
 # ---------------------------------------------------------------------------
 
 test_that("ps_logistic() works with stacked MI data", {
-  dta_mi <- sample_ps_data_count(n = 80, seed = 10, n_imputations = 3)
-  # Build a binary treatment from diabetes and stack MI-style
-  set.seed(99)
+  # Stack three copies of one dataset MI-style, jittering age in each.
   base <- unscored_ps_data(n = 80, seed = 10)
-  stacked <- do.call(rbind, lapply(1:3, function(m) {
+  stacked <- withr::with_seed(99, do.call(rbind, lapply(1:3, function(m) {
     d                    <- base
-    d$age                <- d$age + rnorm(nrow(d), 0, 0.5)  # jitter
+    d$age                <- d$age + stats::rnorm(nrow(d), 0, 0.5)
     d[["_IMPUTATION_"]] <- m
     d
-  }))
+  })))
 
   obj <- ps_logistic(
     tavr ~ age + female + ef,
@@ -121,6 +119,14 @@ test_that("ps_logistic() works with stacked MI data", {
   expect_true(all(obj$tables$estimates$pooled))
   # Imputation column should be gone from output
   expect_false("_IMPUTATION_" %in% names(obj$data))
+
+  # prob_t is the per-patient mean of the three per-imputation glm predictions.
+  per_imp <- vapply(1:3, function(m) {
+    d   <- stacked[stacked[["_IMPUTATION_"]] == m, ]
+    fit <- stats::glm(tavr ~ age + female + ef, family = stats::binomial(), data = d)
+    stats::predict(fit, type = "response")[match(obj$data$id, d$id)]
+  }, numeric(nrow(obj$data)))
+  expect_equal(obj$data$prob_t, rowMeans(per_imp), ignore_attr = TRUE)
 
   general <- fit_logistic(
     tavr ~ age + female + ef,
@@ -157,7 +163,7 @@ test_that("ps_logistic() honors explicit labelled treatment levels", {
 })
 
 # ---------------------------------------------------------------------------
-# ps_logistic — print
+# ps_logistic: print
 # ---------------------------------------------------------------------------
 
 test_that("print.ps_logistic() produces output and returns invisibly", {
@@ -168,7 +174,7 @@ test_that("print.ps_logistic() produces output and returns invisibly", {
 })
 
 # ---------------------------------------------------------------------------
-# ps_ordinal — single dataset
+# ps_ordinal: single dataset
 # ---------------------------------------------------------------------------
 
 test_that("ps_ordinal() returns correct class and slots", {
@@ -306,7 +312,7 @@ test_that("print.ps_ordinal() runs without error", {
 })
 
 # ---------------------------------------------------------------------------
-# ps_nominal — single dataset
+# ps_nominal: single dataset
 # ---------------------------------------------------------------------------
 
 test_that("ps_nominal() returns correct class and slots", {

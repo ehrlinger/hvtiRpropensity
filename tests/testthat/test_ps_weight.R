@@ -37,11 +37,17 @@ test_that("$data gains an 'iptw' column of positive numerics", {
 
 # ---- Estimands --------------------------------------------------------------
 
-test_that("ATE, ATT, and ATC estimands all produce valid weights", {
-  for (est in c("ATE", "ATT", "ATC")) {
-    obj <- ps_weight(dta, estimand = est)
-    expect_true(all(obj$data$iptw > 0),
-                info = paste("estimand =", est))
+test_that("ATE, ATT, and ATC weights match the inverse-probability formulas", {
+  ps  <- dta$prob_t
+  trt <- dta$tavr == 1L
+  expected <- list(
+    ATE = ifelse(trt, 1 / ps, 1 / (1 - ps)),
+    ATT = ifelse(trt, 1, ps / (1 - ps)),
+    ATC = ifelse(trt, (1 - ps) / ps, 1)
+  )
+  for (est in names(expected)) {
+    obj <- ps_weight(dta, estimand = est, stabilise = FALSE)
+    expect_equal(obj$data$iptw, expected[[est]], info = paste("estimand =", est))
     expect_equal(obj$meta$estimand, est)
   }
 })
@@ -55,11 +61,11 @@ test_that("stabilising the weights does not change the weighted SMDs", {
                ps_weight(dta, stabilise = FALSE)$tables$smd_weighted)
 })
 
-test_that("stabilised weights have smaller variance than unstabilised", {
-  obj_stab   <- ps_weight(dta, stabilise = TRUE)
-  obj_unstab <- ps_weight(dta, stabilise = FALSE)
-  expect_lte(stats::var(obj_stab$data$iptw),
-             stats::var(obj_unstab$data$iptw))
+test_that("stabilised ATE weights are the raw weights times each arm's share", {
+  p1   <- mean(dta$tavr == 1L)
+  raw  <- ps_weight(dta, estimand = "ATE", stabilise = FALSE)$data$iptw
+  stab <- ps_weight(dta, estimand = "ATE", stabilise = TRUE)$data$iptw
+  expect_equal(stab, raw * ifelse(dta$tavr == 1L, p1, 1 - p1))
 })
 
 # ---- Trimming ---------------------------------------------------------------
@@ -74,11 +80,12 @@ test_that("trim winsorises weights to the expected quantile range", {
 })
 
 test_that("trim = NULL does not trim anything", {
-  obj_notrim <- ps_weight(dta, trim = NULL, stabilise = FALSE)
-  obj_trim   <- ps_weight(dta, trim = 0.01, stabilise = FALSE)
-  # range with trimming should be <= range without
-  expect_lte(diff(range(obj_trim$data$iptw)),
-             diff(range(obj_notrim$data$iptw)) + .Machine$double.eps)
+  p1 <- mean(dta$tavr == 1L)
+  untrimmed <- ifelse(dta$tavr == 1L, 1 / dta$prob_t, 1 / (1 - dta$prob_t))
+  expect_identical(ps_weight(dta, trim = NULL, stabilise = FALSE)$data$iptw, untrimmed)
+  expect_identical(ps_weight(dta, trim = NULL, stabilise = TRUE)$data$iptw,
+                   untrimmed * ifelse(dta$tavr == 1L, p1, 1 - p1))
+  expect_null(ps_weight(dta, trim = NULL)$meta$trim)
 })
 
 test_that("invalid trim values raise an error", {

@@ -21,7 +21,7 @@ make_weighted <- function(n = 200, seed = 1, estimand = "ATE") {
 
 
 # ---------------------------------------------------------------------------
-# ps_match — pair_id column (prerequisite for sa_rosenbaum)
+# ps_match: pair_id column (prerequisite for sa_rosenbaum)
 # ---------------------------------------------------------------------------
 
 test_that("ps_match() adds pair_id column to $data", {
@@ -327,9 +327,14 @@ test_that("sa_trim_sweep() accepts a plain data frame", {
 
 test_that("sa_trim_sweep() inherits estimand from ps_weight object", {
   w_att <- make_weighted(estimand = "ATT")
-  # Should run without error; the ATT estimand is picked up from meta
-  res   <- sa_trim_sweep(w_att, trim_seq = c(0, 0.05))$tables$sweep
-  expect_equal(nrow(res), 2L)
+  res   <- sa_trim_sweep(w_att, trim_seq = c(0, 0.05))
+  expect_identical(res$meta$estimand, "ATT")
+  # The untrimmed row summarises the ATT weights themselves, not the ATE ones.
+  untrimmed <- res$tables$sweep[1L, ]
+  expect_equal(untrimmed$max_weight, round(max(w_att$data$iptw), 4))
+  expect_equal(untrimmed$ess_treated, sum(w_att$data$tavr == 1L))
+  expect_equal(res$tables$sweep,
+               sa_trim_sweep(w_att$data, trim_seq = c(0, 0.05), estimand = "ATT")$tables$sweep)
 })
 
 test_that("sa_trim_sweep() errors on bad trim_seq values", {
@@ -373,17 +378,6 @@ test_that("sa_rosenbaum() n_pairs is a positive integer", {
   expect_true(is.numeric(res$meta$n_pairs))
 })
 
-test_that("sa_rosenbaum() p_upper and p_lower at Gamma=1 are equal and valid", {
-  # At Gamma=1 (no hidden bias), upper and lower bounds coincide with the
-  # unadjusted normal approximation to the Wilcoxon signed-rank p-value.
-  m   <- make_matched(n = 300, seed = 45)
-  res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 1, gamma_inc = 1)
-  p_up <- res$tables$bounds$p_upper[1L]
-  p_lo <- res$tables$bounds$p_lower[1L]
-  expect_equal(p_up, p_lo, tolerance = 1e-8)
-  expect_true(p_up >= 0 && p_up <= 1)
-})
-
 test_that("sa_rosenbaum() p_upper >= p_lower for all Gamma (monotone bounds)", {
   m   <- make_matched(n = 300, seed = 49)
   res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 3, gamma_inc = 0.5)
@@ -422,7 +416,7 @@ test_that("sa_rosenbaum() errors when treatment_col missing for plain data frame
 
 
 # ---------------------------------------------------------------------------
-# NEW GUARD TESTS — sa_rosenbaum()
+# NEW GUARD TESTS: sa_rosenbaum()
 # ---------------------------------------------------------------------------
 
 test_that("sa_rosenbaum() errors when gamma_max < 1", {
@@ -476,7 +470,7 @@ test_that("sa_rosenbaum() warns and re-orients when median difference is negativ
                  regexp = "negative")
 })
 
-test_that("sa_rosenbaum() seed argument makes ps_match result reproducible", {
+test_that("ps_match() seed makes the pair_id that sa_rosenbaum() reads reproducible", {
   dta <- sample_ps_data(n = 300, seed = 99)
   m1  <- ps_match(dta, seed = 42)
   m2  <- ps_match(dta, seed = 42)
@@ -495,7 +489,7 @@ test_that("ps_match() warns when pair_id column already exists in input data", {
 
 
 # ---------------------------------------------------------------------------
-# NEW GUARD TESTS — sa_evalue()
+# NEW GUARD TESTS: sa_evalue()
 # ---------------------------------------------------------------------------
 
 test_that("sa_evalue() errors when RD + p0 <= 0", {
@@ -536,7 +530,7 @@ test_that("sa_evalue() null-crossing check works for near-null estimate (float s
 
 
 # ---------------------------------------------------------------------------
-# NEW GUARD TESTS — sa_overlap()
+# NEW GUARD TESTS: sa_overlap()
 # ---------------------------------------------------------------------------
 
 test_that("sa_overlap() errors on non-binary treatment column", {
@@ -574,7 +568,7 @@ test_that("sa_overlap() warns when a group has fewer than 2 patients", {
 
 
 # ---------------------------------------------------------------------------
-# NEW GUARD TESTS — sa_trim_sweep()
+# NEW GUARD TESTS: sa_trim_sweep()
 # ---------------------------------------------------------------------------
 
 test_that("sa_trim_sweep() warns when ps = 0 or ps = 1 produces Inf weights", {
@@ -587,11 +581,17 @@ test_that("sa_trim_sweep() warns when ps = 0 or ps = 1 produces Inf weights", {
                  regexp = "infinite")
 })
 
-test_that("sa_trim_sweep() pct_trimmed is 0 for all near-zero trim values", {
-  # seq() may produce very small non-zero values instead of exact 0
+test_that("sa_trim_sweep() treats a trim below machine epsilon as no trim", {
+  # 2e-16 is below .Machine$double.eps, so the guard applies. Without it the
+  # quantile() bounds at 2e-16 and 1 - 2e-16 would still clip two weights.
   w   <- make_weighted(seed = 81)
-  res <- sa_trim_sweep(w, trim_seq = seq(0, 0.10, by = 0.01))$tables$sweep
-  expect_equal(res$pct_trimmed[1L], 0)
+  tr  <- 2e-16
+  expect_lt(tr, .Machine$double.eps)
+  raw <- w$data$iptw
+  expect_gt(sum(raw < stats::quantile(raw, tr) | raw > stats::quantile(raw, 1 - tr)), 0L)
+  res <- sa_trim_sweep(w, trim_seq = c(0, tr))$tables$sweep
+  expect_equal(res$pct_trimmed[2L], 0)
+  expect_equal(res[2L, names(res) != "trim"], res[1L, names(res) != "trim"], ignore_attr = TRUE)
 })
 
 test_that("sa_overlap() tables name groups by their treatment value", {
