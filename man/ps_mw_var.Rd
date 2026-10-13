@@ -59,6 +59,12 @@ port of the CCF \verb{\%mw_var} SAS macro (Rajeswaran 2014), for matching weight
 as described by Li and Greene (2013).
 }
 \details{
+With the Li-Greene matching weight (\code{mt_wt} from \code{\link[=ps_logistic]{ps_logistic()}} or
+\code{\link[=ps_forest]{ps_forest()}}) the estimate targets the ATM, the average treatment effect
+among the matched: the population that 1:1 matching on the propensity score
+would keep. With other weights it targets whatever estimand those weights
+define.
+
 \strong{Estimate.} For each group, \verb{PROC MEANS} weighted summaries: the mean
 \verb{sum(w y) / sum(w)}, the SD with an \code{n - 1} denominator, and the sum of
 weights. The macro labels the sum of weights \code{N}; it is reported here as
@@ -96,7 +102,7 @@ obj$tables$mw_var
 \references{
 Li L, Greene T. A weighting analogue to pair matching in
 propensity score analysis. The International Journal of Biostatistics.
-2013;9(2):215-234.
+2013;9(2):215-234. \doi{10.1515/ijb-2012-0030}
 }
 \seealso{
 \code{\link[=ps_weight]{ps_weight()}}, \code{\link[=ps_stddiff]{ps_stddiff()}}

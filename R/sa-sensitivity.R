@@ -699,7 +699,7 @@ print.sa_evalue <- function(x, ...) {
 #'   The score of a [ps_match()] object built with `scale = "logit"` is a
 #'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column (0/1).  Taken from
-#'   `x$meta$treatment_col` when `x` is a `ps_data` object`.  Default `"tavr"`.
+#'   `x$meta$treatment_col` when `x` is a `ps_data` object.  Default `"tavr"`.
 #' @param trim_threshold Numeric in (0, 0.5).  PS values below this threshold
 #'   or above `1 - trim_threshold` are flagged as near-positivity violations.
 #'   Default `0.05`.
@@ -956,7 +956,7 @@ print.sa_overlap <- function(x, ...) {
 #'   The score of a [ps_match()] object built with `scale = "logit"` is a
 #'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column.  Taken from
-#'   `x$meta$treatment_col` when `x` is a `ps_data` object`.  Default
+#'   `x$meta$treatment_col` when `x` is a `ps_data` object.  Default
 #'   `"tavr"`.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. Read

@@ -57,8 +57,10 @@ A \code{ps_forest} / \code{ps_data} object. \verb{$data} is \code{data} plus
 \code{\link[=ps_logistic]{ps_logistic()}}, \code{min(p, 1 - p) / p} for treated patients and
 \code{min(p, 1 - p) / (1 - p)} for controls, which targets the ATM estimand
 (average treatment effect among the matched; Li & Greene, 2013,
-\doi{10.1515/ijb-2012-0030}); \verb{$meta} follows \code{\link[=ps_logistic]{ps_logistic()}} with \code{method = "forest-oob"}
-and \code{seed}, the seed used (\code{NA} when none was given); \verb{$tables} holds
+\doi{10.1515/ijb-2012-0030}); \verb{$meta} holds \code{formula}, \code{treatment_col},
+\code{id_col}, \code{score_col}, \code{logit_col}, \code{weight_col}, \code{treated_level},
+\code{treatment_levels}, \code{method} (\code{"forest-oob"}), \code{ntree}, \code{seed} (the seed
+used, \code{NA} when none was given) and \code{n_total}; \verb{$tables} holds
 \code{smd} and \code{group_counts} (\code{group}, the value in \code{treatment_col}; a logical
 \code{treated}; \code{n}); \verb{$models$forest} is the fitted forest.
 }

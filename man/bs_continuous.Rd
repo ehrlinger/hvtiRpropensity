@@ -63,8 +63,11 @@ through \verb{stra_<n_strata>} appended.}
 \code{imputation_col}, \code{score_col}, \code{n_strata}, \code{strata_col},
 \code{bundle_version}, \code{model_family}, \code{package_versions}, \code{method},
 \code{n_imputations}, \code{n_total}.}
-\item{\verb{$tables}}{Named list: \code{strata_counts}, \code{estimates} (Rubin-pooled
-coefficients), \code{covariance}, \code{by_imputation} and \code{fit_status}.}
+\item{\verb{$tables}}{Named list: \code{strata_counts} (\code{stratum}, \code{n}),
+\code{estimates} (Rubin-pooled coefficients when imputed), \code{covariance},
+\code{by_imputation} and \code{fit_status}, laid out as in \code{\link[=fit_linear]{fit_linear()}}.}
+\item{\verb{$models}}{The fitted \code{\link[stats:lm]{stats::lm()}} models, one per imputation,
+named by imputation index.}
 }
 }
 \description{

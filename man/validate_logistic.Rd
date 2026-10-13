@@ -24,7 +24,23 @@ validate_logistic(
 \item{groups}{Number of equal-frequency calibration groups.}
 }
 \value{
-An object of class \code{c("lm_validation", "ps_data")}.
+An object of class \code{c("lm_validation", "ps_data")} with:
+\describe{
+\item{\verb{$data}}{\code{data} with \code{prediction_col} appended: the predicted
+probability of the bundle's \code{event_level}, averaged across the stored
+models on the probability scale. A row a model cannot score, such as
+one missing a predictor, gets \code{NA}.}
+\item{\verb{$meta}}{Named list: \code{bundle_version}, \code{model_family}, \code{formula},
+\code{outcome_col}, \code{outcome_levels}, \code{event_level}, \code{predictors} and
+\code{package_versions}, carried from \code{model}; \code{prediction_col}, \code{groups},
+\code{n_input}, \code{n_analyzed} (rows with an outcome and a prediction) and
+\code{n_excluded}.}
+\item{\verb{$tables}}{Named list: \code{calibration}, one row per equal-frequency
+group of the predicted probability (\code{group}, \code{n}, \code{observed} events,
+\code{expected} events); and \code{performance}, one row (\code{n}, \code{observed},
+\code{expected}, \code{oe_ratio}, \code{auc} (the c-statistic) and \code{brier}).}
+\item{\verb{$models}}{The stored models from \code{model}, unchanged.}
+}
 }
 \description{
 Scores a declared validation cohort with every fitted model retained in a

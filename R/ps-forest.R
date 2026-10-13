@@ -44,8 +44,10 @@
 #'   [ps_logistic()], `min(p, 1 - p) / p` for treated patients and
 #'   `min(p, 1 - p) / (1 - p)` for controls, which targets the ATM estimand
 #'   (average treatment effect among the matched; Li & Greene, 2013,
-#'   \doi{10.1515/ijb-2012-0030}); `$meta` follows [ps_logistic()] with `method = "forest-oob"`
-#'   and `seed`, the seed used (`NA` when none was given); `$tables` holds
+#'   \doi{10.1515/ijb-2012-0030}); `$meta` holds `formula`, `treatment_col`,
+#'   `id_col`, `score_col`, `logit_col`, `weight_col`, `treated_level`,
+#'   `treatment_levels`, `method` (`"forest-oob"`), `ntree`, `seed` (the seed
+#'   used, `NA` when none was given) and `n_total`; `$tables` holds
 #'   `smd` and `group_counts` (`group`, the value in `treatment_col`; a logical
 #'   `treated`; `n`); `$models$forest` is the fitted forest.
 #'

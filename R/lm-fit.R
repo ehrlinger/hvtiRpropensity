@@ -52,14 +52,39 @@
 #'
 #' Fits binary, proportional-odds ordinal, or generalized-logit nominal models
 #' under an explicit outcome-level contract. Stacked long-form imputations are
-#' fitted separately and combined with Rubin's rules.
+#' fitted separately, one model per imputation. The coefficients are combined
+#' with Rubin's rules; the predicted probabilities are averaged per patient.
+#'
+#' @details
+#' **Multiple imputation.** With `imputation_col` set, one model is fitted to
+#' each imputed dataset. The two outputs are then combined differently.
+#' `$tables$estimates` and `$tables$covariance` pool the coefficients and their
+#' variances with Rubin's rules. The probability columns in `$data` are the
+#' per-patient mean, on the probability scale, of the predictions from each
+#' imputation's model. Rubin's rules play no part there: averaging the
+#' predictions is what Leyrat et al. (2019) call the "across" approach. For a
+#' propensity score they favour the "within" approach instead; see
+#' [ps_logistic()] for the recipe.
+#'
+#' `$data` is built from the lowest-numbered imputation: its rows, ordered as
+#' they appear there, its covariate values, and no `imputation_col`.
+#'
+#' @references Leyrat C, Seaman SR, White IR, Douglas I, Smeeth L, Kim J,
+#'   Resche-Rigon M, Carpenter JR, Williamson EJ (2019). Propensity score
+#'   analysis with partially observed covariates: how should multiple
+#'   imputation be used? *Statistical Methods in Medical Research*, 28(1),
+#'   3--19. \doi{10.1177/0962280217713032}
 #'
 #' @param formula Model formula.
 #' @param data A data frame containing the outcome and predictors.
-#' @param family Model family.
+#' @param family Model family: `"binary"` (default, [stats::glm()] with a logit
+#'   link), `"ordinal"` (proportional-odds cumulative logit, [MASS::polr()]; a
+#'   two-level outcome is fitted with [stats::glm()]) or `"nominal"`
+#'   (generalized logit, [nnet::multinom()]).
 #' @param outcome_col Outcome column. By default it is read from `formula`.
-#' @param id_col Patient identifier column. Required, and checked, only when
-#'   `imputation_col` is set.
+#' @param id_col Patient identifier column. Default `"id"`. Required, and
+#'   checked, only when `imputation_col` is set, where it aligns each patient's
+#'   rows across imputations.
 #' @param imputation_col Imputation-index column, or `NULL` for one dataset.
 #' @param outcome_levels Complete outcome levels in their declared order.
 #' @param event_level Event level for a binary model.
@@ -68,7 +93,35 @@
 #'   ordinal and nominal level-specific probability columns.
 #' @param trace Whether model engines should print fitting progress.
 #'
-#' @return An object of class `c("lm_fit", "ps_data")`.
+#' @return An object of class `c("lm_fit", "ps_data")` with:
+#' \describe{
+#'   \item{`$data`}{`data` (the lowest-numbered imputation when
+#'     `imputation_col` is set, without that column) with the predicted
+#'     probabilities appended: one column named `prediction_prefix` for a
+#'     binary model (`prob` by default), the probability of `event_level`; or
+#'     one `<prediction_prefix>_<level>` column per outcome level for an
+#'     ordinal or nominal model, whose outcome column is returned as a factor
+#'     (ordered for an ordinal model). A row missing a predictor has missing
+#'     probabilities.}
+#'   \item{`$meta`}{Named list: `bundle_version` (1), `formula`, `outcome_col`,
+#'     `model_family`, `outcome_levels`, `event_level` (binary only, else
+#'     `NULL`), `reference_level` (nominal only, else `NULL`),
+#'     `cumulative_direction` (ordinal only, else `NULL`), `predictors`,
+#'     `id_col`, `imputation_col`, `n_imputations`, `n_input`, `n_analyzed`,
+#'     `n_excluded` (summed over imputations), `prediction_prefix` and
+#'     `package_versions` (R, this package and the model engine).}
+#'   \item{`$tables`}{Named list: `estimates` (one row per term: `term`,
+#'     `estimate`, `std.error`, `statistic`, `df`, `p.value`, `conf.low`,
+#'     `conf.high`, `odds_ratio` (`NA` for an ordinal threshold), and
+#'     `pooled`, `TRUE` when Rubin's rules
+#'     combined imputations), `covariance` (the coefficient covariance matrix,
+#'     pooled when imputed), `by_imputation` (`imputation`, `term`,
+#'     `estimate`, `std.error`) and `fit_status` (one row per imputation:
+#'     `imputation`, `converged`, `n_input`, `n_analyzed`, `n_excluded`).}
+#'   \item{`$models`}{The fitted models, one per imputation, named by
+#'     imputation index (`"1"` for a single dataset). [validate_logistic()]
+#'     scores new data with them.}
+#' }
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 150, seed = 42)

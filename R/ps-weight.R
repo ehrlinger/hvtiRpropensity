@@ -3,8 +3,10 @@
 ##
 ## Inverse-probability-of-treatment weighting (IPTW).
 ##
-## Ports the weighting logic used in the SAS programs that produce the
-## `mt_wt` column consumed by `hvtiPlotR::hv_mirror_hist()` (weighted mode).
+## Computes the IPTW column (`iptw` by default) that
+## `hvtiPlotR::hv_mirror_hist()` (weighted mode) and `hvtiPlotR::hv_balance()`
+## read. The Li-Greene matching weight `mt_wt` comes from ps_logistic() and
+## ps_forest(), not from here.
 ##
 ## Workflow:
 ##   1. dta  <- sample_ps_data()            # or your own data frame
@@ -17,7 +19,10 @@
 #' Inverse-Probability-of-Treatment Weighting (IPTW)
 #'
 #' Computes IPTW weights from a pre-computed propensity score column and
-#' appends them to the dataset.  Supports ATE, ATT, and ATC estimands.
+#' appends them to the dataset.  `estimand` picks the target: the average
+#' treatment effect in the whole sample (ATE, the default), in the treated
+#' (ATT) or in the controls (ATC). For the matched population (ATM), use the
+#' `mt_wt` column from [ps_logistic()] or [ps_forest()] instead.
 #' Returns a `ps_weight` object whose `$tables` slot contains SMD tables
 #' (unweighted and weighted) and effective-N diagnostics compatible with
 #' `hvtiPlotR::hv_mirror_hist()` (weighted mode) and
@@ -69,13 +74,16 @@
 #' @return An object of class `c("ps_weight", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame with `weight_col` appended.}
-#'   \item{`$meta`}{Named list: `treatment_col`, `score_col`, `weight_col`,
+#'   \item{`$meta`}{Named list: `treatment_col`, `treated_level` (the value of
+#'     `treatment_col` taken as treated), `score_col`, `weight_col`,
 #'     `estimand`, `stabilised`, `trim`, `method`, `n_total`, `n_excluded`
 #'     (rows with a missing treatment or score).}
-#'   \item{`$tables`}{Named list: `smd_unweighted`, `smd_weighted`,
-#'     `group_counts`, `effective_n`. Group tables name each
-#'     group by its value in `treatment_col` (`0`/`1` or `FALSE`/`TRUE`) and
-#'     carry a logical `treated` column.}
+#'   \item{`$tables`}{Named list: `smd_unweighted`, `smd_weighted`
+#'     (`variable`, `smd`), `group_counts` (`group`, `treated`, `n`) and
+#'     `effective_n` (`group`, `treated`, `n_effective`, the Kish effective
+#'     sample size). Group tables name each group by its value in
+#'     `treatment_col` (`0`/`1`, `FALSE`/`TRUE`, or the two values when
+#'     `treated_level` is given) and carry a logical `treated` column.}
 #' }
 #'
 #' @seealso [ps_match()], [sample_ps_data()],

@@ -70,18 +70,24 @@ covariates. Default \code{"id"}; it need not exist in \code{data}.}
 An object of class \code{c("ps_weight", "ps_data")} with:
 \describe{
 \item{\verb{$data}}{The input data frame with \code{weight_col} appended.}
-\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{score_col}, \code{weight_col},
+\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{treated_level} (the value of
+\code{treatment_col} taken as treated), \code{score_col}, \code{weight_col},
 \code{estimand}, \code{stabilised}, \code{trim}, \code{method}, \code{n_total}, \code{n_excluded}
 (rows with a missing treatment or score).}
-\item{\verb{$tables}}{Named list: \code{smd_unweighted}, \code{smd_weighted},
-\code{group_counts}, \code{effective_n}. Group tables name each
-group by its value in \code{treatment_col} (\code{0}/\code{1} or \code{FALSE}/\code{TRUE}) and
-carry a logical \code{treated} column.}
+\item{\verb{$tables}}{Named list: \code{smd_unweighted}, \code{smd_weighted}
+(\code{variable}, \code{smd}), \code{group_counts} (\code{group}, \code{treated}, \code{n}) and
+\code{effective_n} (\code{group}, \code{treated}, \code{n_effective}, the Kish effective
+sample size). Group tables name each group by its value in
+\code{treatment_col} (\code{0}/\code{1}, \code{FALSE}/\code{TRUE}, or the two values when
+\code{treated_level} is given) and carry a logical \code{treated} column.}
 }
 }
 \description{
 Computes IPTW weights from a pre-computed propensity score column and
-appends them to the dataset.  Supports ATE, ATT, and ATC estimands.
+appends them to the dataset.  \code{estimand} picks the target: the average
+treatment effect in the whole sample (ATE, the default), in the treated
+(ATT) or in the controls (ATC). For the matched population (ATM), use the
+\code{mt_wt} column from \code{\link[=ps_logistic]{ps_logistic()}} or \code{\link[=ps_forest]{ps_forest()}} instead.
 Returns a \code{ps_weight} object whose \verb{$tables} slot contains SMD tables
 (unweighted and weighted) and effective-N diagnostics compatible with
 \code{hvtiPlotR::hv_mirror_hist()} (weighted mode) and
