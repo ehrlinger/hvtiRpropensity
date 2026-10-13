@@ -38,8 +38,8 @@
 #'
 #' All functions return a `ps_data` S3 object whose `$data` slot holds the
 #' original dataset with score / weight columns appended, and whose `$tables`
-#' slot holds balance diagnostics compatible with [hvtiPlotR::hv_mirror_hist()]
-#' and [hvtiPlotR::hv_balance()].
+#' slot holds balance diagnostics compatible with `hvtiPlotR::hv_mirror_hist()`
+#' and `hvtiPlotR::hv_balance()`.
 #'
 #' @section Typical two-step workflow (binary treatment):
 #' ```r

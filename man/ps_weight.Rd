@@ -72,8 +72,8 @@ Computes IPTW weights from a pre-computed propensity score column and
 appends them to the dataset.  Supports ATE, ATT, and ATC estimands.
 Returns a \code{ps_weight} object whose \verb{$tables} slot contains SMD tables
 (unweighted and weighted) and effective-N diagnostics compatible with
-\code{\link[hvtiPlotR:hv_mirror_hist]{hvtiPlotR::hv_mirror_hist()}} (weighted mode) and
-\code{\link[hvtiPlotR:hv_balance]{hvtiPlotR::hv_balance()}}.
+\code{hvtiPlotR::hv_mirror_hist()} (weighted mode) and
+\code{hvtiPlotR::hv_balance()}.
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)
