@@ -42,8 +42,8 @@ supplied.}
 \item{logit_col}{Output column name for the logit of the propensity
 score, \code{log(p / (1 - p))}.  Default \code{"logit_t"}.}
 
-\item{weight_col}{Output column name for the matching weight.
-Default \code{"mt_wt"}.}
+\item{weight_col}{Output column name for the Li-Greene matching
+weight (ATM). Default \code{"mt_wt"}.}
 
 \item{covariates}{Character vector of covariate column names for SMD
 balance diagnostics.  If \code{NULL} (default), all numeric columns other
@@ -60,7 +60,11 @@ the historical 0/1 or logical interface.}
 An object of class \code{c("ps_logistic", "ps_data")} with:
 \describe{
 \item{\verb{$data}}{The base data frame with \code{score_col}, \code{logit_col},
-\code{weight_col}, \code{quintile}, and \code{decile} columns appended.}
+\code{weight_col}, \code{quintile}, and \code{decile} columns appended. \code{weight_col}
+holds the Li-Greene matching weight, \code{min(p, 1 - p) / p} for treated
+patients and \code{min(p, 1 - p) / (1 - p)} for controls, which targets the
+ATM estimand (average treatment effect among the matched; Li & Greene,
+2013, \doi{10.1515/ijb-2012-0030}).}
 \item{\verb{$meta}}{Named list: \code{formula}, \code{treatment_col}, \code{id_col},
 \code{imputation_col}, \code{score_col}, \code{logit_col}, \code{weight_col}, \code{method},
 \code{n_imputations}, \code{n_total}.}

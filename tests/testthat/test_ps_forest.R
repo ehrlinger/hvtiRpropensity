@@ -19,6 +19,17 @@ test_that("ps_forest() follows the ps_data contract", {
   expect_equal(nrow(fo$data), nrow(dta))
 })
 
+test_that("ps_forest() writes Li-Greene matching weights to mt_wt", {
+  withr::local_options(rf.cores = 2L)
+  fit <- ps_forest(tavr ~ age + ef, dta, ntree = 60, seed = 7)
+  p   <- fit$data$prob_t
+  trt <- fit$data$tavr == 1
+  expect_true(any(trt) && any(!trt))
+  expect_equal(fit$data$mt_wt[trt],  pmin(p[trt], 1 - p[trt]) / p[trt])
+  expect_equal(fit$data$mt_wt[!trt], pmin(p[!trt], 1 - p[!trt]) / (1 - p[!trt]))
+  expect_true(all(fit$data$mt_wt > 0 & fit$data$mt_wt <= 1))
+})
+
 test_that("ps_forest() feeds ps_weight() and sa_overlap()", {
   w <- ps_weight(fo$data, treatment_col = "tavr", score_col = "prob_t")
   expect_s3_class(w, "ps_weight")

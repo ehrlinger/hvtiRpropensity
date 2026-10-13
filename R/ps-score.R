@@ -53,6 +53,25 @@
 
 
 # ---------------------------------------------------------------------------
+# Internal: Li-Greene matching weight
+# ---------------------------------------------------------------------------
+
+#' Li-Greene matching weight (ATM)
+#'
+#' `min(p, 1 - p) / p` for treated patients and `min(p, 1 - p) / (1 - p)` for
+#' controls, the `mt_wt` of the SAS templates (Li & Greene, 2013). Shared by
+#' [ps_logistic()] and [ps_forest()] so the two cannot drift apart.
+#'
+#' @param p Propensity score, P(treated).
+#' @param trt Integer 0/1 treatment indicator, the same length as `p`.
+#' @return Numeric vector of matching weights.
+#' @keywords internal
+.matching_weight <- function(p, trt) {
+  pmin(p, 1 - p) / (p * trt + (1 - p) * (1L - trt))
+}
+
+
+# ---------------------------------------------------------------------------
 # Internal: collision-free model prediction name
 # ---------------------------------------------------------------------------
 
@@ -123,8 +142,8 @@
 #'   (probability of treatment).  Default `"prob_t"`.
 #' @param logit_col      Output column name for the logit of the propensity
 #'   score, `log(p / (1 - p))`.  Default `"logit_t"`.
-#' @param weight_col     Output column name for the matching weight.
-#'   Default `"mt_wt"`.
+#' @param weight_col     Output column name for the Li-Greene matching
+#'   weight (ATM). Default `"mt_wt"`.
 #' @param covariates     Character vector of covariate column names for SMD
 #'   balance diagnostics.  If `NULL` (default), all numeric columns other
 #'   than `treatment_col`, `score_col`, `logit_col`, `weight_col`,
@@ -137,7 +156,11 @@
 #' @return An object of class `c("ps_logistic", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The base data frame with `score_col`, `logit_col`,
-#'     `weight_col`, `quintile`, and `decile` columns appended.}
+#'     `weight_col`, `quintile`, and `decile` columns appended. `weight_col`
+#'     holds the Li-Greene matching weight, `min(p, 1 - p) / p` for treated
+#'     patients and `min(p, 1 - p) / (1 - p)` for controls, which targets the
+#'     ATM estimand (average treatment effect among the matched; Li & Greene,
+#'     2013, \doi{10.1515/ijb-2012-0030}).}
 #'   \item{`$meta`}{Named list: `formula`, `treatment_col`, `id_col`,
 #'     `imputation_col`, `score_col`, `logit_col`, `weight_col`, `method`,
 #'     `n_imputations`, `n_total`.}
@@ -260,8 +283,7 @@ ps_logistic <- function(formula,
 
   base_data[[score_col]]  <- probs
   base_data[[logit_col]]  <- log(probs / (1 - probs))
-  base_data[[weight_col]] <- pmin(probs, 1 - probs) /
-    (probs * trt + (1 - probs) * (1L - trt))
+  base_data[[weight_col]] <- .matching_weight(probs, trt)
 
   # ---- Quintile / decile strata -------------------------------------------
   strata <- .assign_ps_strata(probs)

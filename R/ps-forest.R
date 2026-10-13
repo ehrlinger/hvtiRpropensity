@@ -13,7 +13,7 @@
 #'   response. Binary, 0/1 or logical.
 #' @param id_col Optional patient identifier column, carried through.
 #' @param score_col,logit_col,weight_col Names of the appended score, logit and
-#'   overlap-weight columns.
+#'   matching-weight columns.
 #' @param treated_level Value of `treatment_col` that is "treated" (the score
 #'   is P(treated)). Defaults to `1` / `TRUE`.
 #' @param ntree Number of trees.
@@ -39,8 +39,12 @@
 #' alone.
 #'
 #' @return A `ps_forest` / `ps_data` object. `$data` is `data` plus
-#'   `score_col`, `logit_col`, `weight_col` (overlap weights), `quintile` and
-#'   `decile`; `$meta` follows [ps_logistic()] with `method = "forest-oob"`
+#'   `score_col`, `logit_col`, `weight_col`, `quintile` and `decile`.
+#'   `weight_col` holds the Li-Greene matching weight computed as in
+#'   [ps_logistic()], `min(p, 1 - p) / p` for treated patients and
+#'   `min(p, 1 - p) / (1 - p)` for controls, which targets the ATM estimand
+#'   (average treatment effect among the matched; Li & Greene, 2013,
+#'   \doi{10.1515/ijb-2012-0030}); `$meta` follows [ps_logistic()] with `method = "forest-oob"`
 #'   and `seed`, the seed used (`NA` when none was given); `$tables` holds
 #'   `smd` and `group_counts` (`group`, the value in `treatment_col`; a logical
 #'   `treated`; `n`); `$models$forest` is the fitted forest.
@@ -104,7 +108,7 @@ ps_forest <- function(formula,
   out <- data
   out[[score_col]]  <- probs
   out[[logit_col]]  <- log(probs / (1 - probs))
-  out[[weight_col]] <- ifelse(trt == 1L, 1 - probs, probs)
+  out[[weight_col]] <- .matching_weight(probs, trt)
   strata <- .assign_ps_strata(probs)
   out[["quintile"]] <- strata$quintile
   out[["decile"]]   <- strata$decile
