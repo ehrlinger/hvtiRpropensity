@@ -249,3 +249,30 @@ test_that("ps_rmst() weights from a logit-scale ps_match object equal those from
   for (col in paste0("w_", w)) expect_equal(r_logit$data[[col]], r_prob$data[[col]])
   expect_lt(max(r_logit$data$w_ate), 1 / 1e-3)
 })
+
+test_that("ps_support() and ps_rmst() carry the score scale forward when chained", {
+  skip_if_not_installed("survival")
+  mp <- logit_pair()
+  for (k in names(mp)) {
+    withr::with_seed(7, mp[[k]]$data$t <- stats::rexp(nrow(mp[[k]]$data), 0.2))
+    mp[[k]]$data$e <- as.integer(mp[[k]]$data$t < 5)
+  }
+  s_logit <- ps_support(mp$logit)
+  s_prob  <- ps_support(mp$prob)
+  expect_identical(s_logit$meta$scale, "logit")
+  expect_identical(s_prob$meta$scale, "probability")
+  expect_identical(ps_support(ps_support(mp$logit))$meta$scale, "logit")
+
+  r_logit <- ps_rmst(s_logit, "t", "e", tau = 4, weights = c("ato", "ate"), n_boot = 2, seed = 1)
+  r_prob  <- ps_rmst(s_prob, "t", "e", tau = 4, weights = c("ato", "ate"), n_boot = 2, seed = 1)
+  expect_identical(r_logit$meta$scale, "logit")
+  expect_equal(r_logit$tables, r_prob$tables)
+  expect_equal(r_logit$data$w_ate, r_prob$data$w_ate)
+  expect_equal(ps_support(r_logit)$tables, ps_support(r_prob)$tables)
+  expect_equal(sa_overlap(s_logit), sa_overlap(s_prob))
+})
+
+test_that("ps_support() records scale = 'probability' when the input records none", {
+  d <- sample_ps_data(n = 200, seed = 3)[, c("id", "tavr", "age", "ef")]
+  expect_identical(ps_support(ps_logistic(tavr ~ age + ef, d))$meta$scale, "probability")
+})

@@ -62,7 +62,8 @@ per subset-and-weighting estimator: \code{estimator}, \code{subset}, \code{weigh
 \verb{$tables$curves} has the weighted Kaplan-Meier steps (\code{estimator}, \code{arm},
 \code{time}, \code{surv}) for plotting; \verb{$data} is \code{x$data} plus one weight column
 \verb{w_<weighting>} per scheme. \verb{$meta$seed} is the seed used (\code{NA} when none
-was given).
+was given). \verb{$meta$scale} is the scale of \code{score_col}, carried from \code{x}
+(\code{"probability"} when \code{x} records none).
 }
 \description{
 Design-based comparison of restricted mean survival time (RMST) between

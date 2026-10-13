@@ -38,7 +38,8 @@
 #'   `$tables$curves` has the weighted Kaplan-Meier steps (`estimator`, `arm`,
 #'   `time`, `surv`) for plotting; `$data` is `x$data` plus one weight column
 #'   `w_<weighting>` per scheme. `$meta$seed` is the seed used (`NA` when none
-#'   was given).
+#'   was given). `$meta$scale` is the scale of `score_col`, carried from `x`
+#'   (`"probability"` when `x` records none).
 #'
 #' @examples
 #' if (requireNamespace("survival", quietly = TRUE)) {
@@ -165,7 +166,8 @@ ps_rmst <- function(x, time_col, event_col, tau,
   new_ps_data(
     data = d,
     meta = c(x$meta[c("treatment_col", "score_col", "treated_level")],
-             list(time_col = time_col, event_col = event_col, tau = tau, n_boot = n_boot, refit = refit,
+             list(scale = rlang::`%||%`(x$meta$scale, "probability"),
+                  time_col = time_col, event_col = event_col, tau = tau, n_boot = n_boot, refit = refit,
                   seed = if (is.null(seed)) NA_integer_ else seed, time_unit_days = time_unit_days, n_total = nrow(d))),
     tables = list(estimates = do.call(rbind, rows), curves = do.call(rbind, curves)),
     subclass = "ps_rmst"
