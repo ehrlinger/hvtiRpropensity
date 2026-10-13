@@ -41,8 +41,6 @@ Suggests:
     devtools,
     quarto,
     pkgload
-Remotes:
-    ehrlinger/hvtiPlotR
 VignetteBuilder: quarto
 SystemRequirements: Quarto command line tool
     (<https://github.com/quarto-dev/quarto-cli>)
