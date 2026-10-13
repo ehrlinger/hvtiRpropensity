@@ -44,7 +44,9 @@ sa_trim_sweep(
 - stabilise:
 
   Logical. Whether to stabilise weights. Taken from `x$meta$stabilised`
-  when available; defaults to `TRUE`.
+  when available; defaults to `TRUE`. As in
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
+  stabilisation applies to the ATE only.
 
 - score_col:
 

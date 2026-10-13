@@ -169,9 +169,9 @@ outcome_model_mi$tables$estimates
 #>           term    estimate   std.error statistic           df      p.value
 #> 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08
 #> 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23
-#> 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01
-#> 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13
-#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02
+#> 3       female  0.23341073 0.141967346  1.644116 4.928167e+60 1.001523e-01
+#> 4           ef  0.04999120 0.006963766  7.178759          Inf 7.034695e-13
+#> 5     diabetes -0.32463972 0.158007358 -2.054586 1.181574e+61 3.991900e-02
 #> 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01
 #>      conf.low   conf.high odds_ratio pooled
 #> 1  2.78243495  5.89694637 76.6838145   TRUE
@@ -676,8 +676,8 @@ patients receive weight `1` and controls receive `ps / (1 - ps)`.
 
 w_att <- ps_weight(dta, estimand = "ATT")
 summary(w_att$data$iptw)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#> 0.01294 0.32236 0.50000 0.50193 0.50000 5.45472
+#>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+#>  0.02588  0.64471  1.00000  1.00386  1.00000 10.90944
 ```
 
 For the **average treatment effect on the controls** (ATC), the roles
@@ -687,8 +687,8 @@ are reversed.
 
 w_atc <- ps_weight(dta, estimand = "ATC")
 summary(w_atc$data$iptw)
-#>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-#> 0.009041 0.313837 0.500000 0.493136 0.500000 3.367004
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.01808 0.62767 1.00000 0.98627 1.00000 6.73401
 ```
 
 ### 7.3 Weight trimming (winsorisation)

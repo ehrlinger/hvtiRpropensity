@@ -68,8 +68,8 @@ ps_match(
 
 - ratio:
 
-  Matching ratio (controls : treated). Currently only `1` (1:1) is
-  supported. Default `1`.
+  Matching ratio (controls : treated). Currently only the number `1`
+  (1:1) is supported. Default `1`.
 
 - seed:
 

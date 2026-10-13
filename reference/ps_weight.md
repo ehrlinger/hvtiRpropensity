@@ -55,8 +55,12 @@ ps_weight(
 
 - stabilise:
 
-  Logical. If `TRUE` (default), weights are stabilised by multiplying by
-  the marginal treatment probability.
+  Logical. If `TRUE` (default) and `estimand = "ATE"`, each weight is
+  multiplied by the marginal probability of the patient's own arm
+  (`P(treated)` or `P(control)`). Stabilisation is defined for the ATE
+  only: for `"ATT"` and `"ATC"` it has no effect, so the reference arm
+  keeps weights of exactly 1. `$meta$stabilised` records whether it was
+  applied.
 
 - trim:
 
@@ -158,8 +162,8 @@ summary(obj)
 #> 2     1    TRUE       107.6
 #> 
 
-# 2. ATT weights, stabilised
-obj_att <- ps_weight(dta, estimand = "ATT", stabilise = TRUE)
+# 2. ATT weights: treated patients keep a weight of 1
+obj_att <- ps_weight(dta, estimand = "ATT")
 summary(obj_att)
 #> Summary of <ps_weight>
 #> 

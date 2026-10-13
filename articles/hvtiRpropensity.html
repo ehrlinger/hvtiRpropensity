@@ -228,9 +228,9 @@
 <span><span class="co">#&gt;           term    estimate   std.error statistic           df      p.value</span></span>
 <span><span class="co">#&gt; 1  (Intercept)  4.33969066 0.794532803  5.461940 5.862614e+07 4.709606e-08</span></span>
 <span><span class="co">#&gt; 2          age -0.09351411 0.009427068 -9.919745 2.395400e+59 3.416280e-23</span></span>
-<span><span class="co">#&gt; 3       female  0.23341073 0.141967346  1.644116 8.532145e+60 1.001523e-01</span></span>
-<span><span class="co">#&gt; 4           ef  0.04999120 0.006963766  7.178759 5.072076e+59 7.034695e-13</span></span>
-<span><span class="co">#&gt; 5     diabetes -0.32463972 0.158007358 -2.054586 1.747890e+60 3.991900e-02</span></span>
+<span><span class="co">#&gt; 3       female  0.23341073 0.141967346  1.644116 4.928167e+60 1.001523e-01</span></span>
+<span><span class="co">#&gt; 4           ef  0.04999120 0.006963766  7.178759          Inf 7.034695e-13</span></span>
+<span><span class="co">#&gt; 5     diabetes -0.32463972 0.158007358 -2.054586 1.181574e+61 3.991900e-02</span></span>
 <span><span class="co">#&gt; 6 hypertension -0.16776550 0.143950649 -1.165438 1.302345e+62 2.438419e-01</span></span>
 <span><span class="co">#&gt;      conf.low   conf.high odds_ratio pooled</span></span>
 <span><span class="co">#&gt; 1  2.78243495  5.89694637 76.6838145   TRUE</span></span>
@@ -698,16 +698,16 @@
 <div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w_att</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_att</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt; 0.01294 0.32236 0.50000 0.50193 0.50000 5.45472</span></span></code></pre></div>
+<span><span class="co">#&gt;     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. </span></span>
+<span><span class="co">#&gt;  0.02588  0.64471  1.00000  1.00386  1.00000 10.90944</span></span></code></pre></div>
 </div>
 <p>For the <strong>average treatment effect on the controls</strong> (ATC), the roles are reversed.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">w_atc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATC"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_atc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. </span></span>
-<span><span class="co">#&gt; 0.009041 0.313837 0.500000 0.493136 0.500000 3.367004</span></span></code></pre></div>
+<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span><span class="co">#&gt; 0.01808 0.62767 1.00000 0.98627 1.00000 6.73401</span></span></code></pre></div>
 </div>
 </section><section class="level3" data-number="7.3"><h3 data-number="7.3" id="weight-trimming-winsorisation">
 <span class="header-section-number">7.3</span> Weight trimming (winsorisation)<a class="anchor" aria-label="anchor" href="#weight-trimming-winsorisation"></a>

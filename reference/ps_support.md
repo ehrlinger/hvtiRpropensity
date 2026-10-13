@@ -25,12 +25,14 @@ ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
 - flags:
 
   Optional named list of extra logical vectors, one element per row of
-  `x$data`, `TRUE` meaning the rule would drop that patient.
+  `x$data`, `TRUE` meaning the rule would drop that patient. The names
+  `"trim"` and `"common"` belong to the built-in rules and are refused.
 
 - trim:
 
   Length-2 numeric, or `NULL`. Adds the rule "score outside
-  `[trim[1], trim[2]]`". Default `c(0.1, 0.9)`.
+  `[trim[1], trim[2]]`". Both values must lie in \[0, 1\], increasing.
+  Default `c(0.1, 0.9)`.
 
 - common:
 

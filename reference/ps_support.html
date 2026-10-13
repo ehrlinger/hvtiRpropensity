@@ -72,12 +72,14 @@ interval are on the probability scale.</p></dd>
 
 <dt id="arg-flags">flags<a class="anchor" aria-label="anchor" href="#arg-flags"></a></dt>
 <dd><p>Optional named list of extra logical vectors, one element per
-row of <code>x$data</code>, <code>TRUE</code> meaning the rule would drop that patient.</p></dd>
+row of <code>x$data</code>, <code>TRUE</code> meaning the rule would drop that patient. The
+names <code>"trim"</code> and <code>"common"</code> belong to the built-in rules and are refused.</p></dd>
 
 
 <dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
 <dd><p>Length-2 numeric, or <code>NULL</code>. Adds the rule "score outside
-<code>[trim[1], trim[2]]</code>". Default <code>c(0.1, 0.9)</code>.</p></dd>
+<code>[trim[1], trim[2]]</code>". Both values must lie in [0, 1], increasing.
+Default <code>c(0.1, 0.9)</code>.</p></dd>
 
 
 <dt id="arg-common">common<a class="anchor" aria-label="anchor" href="#arg-common"></a></dt>
