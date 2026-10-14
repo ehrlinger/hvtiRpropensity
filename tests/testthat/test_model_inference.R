@@ -261,3 +261,65 @@ test_that(".polr_expected_vcov inverts the expected information by brute force",
   expect_equal(unname(.polr_expected_vcov(fit)), unname(solve(info)), tolerance = 1e-6)
   expect_identical(dimnames(.polr_expected_vcov(fit))[[1L]], c("x", "low|mid", "mid|high"))
 })
+
+# Inverse expected information by brute force: numerical gradients of every
+# fitted category probability, for a polr() fit with predictors `x` and `offset`.
+brute_polr_vcov <- function(fit, x, offset) {
+  theta <- c(stats::coef(fit), fit$zeta)
+  n_beta <- length(stats::coef(fit))
+  n_cut <- length(fit$zeta)
+  probs <- function(t) {
+    eta <- offset + if (n_beta) drop(x %*% t[seq_len(n_beta)]) else 0
+    cum <- stats::plogis(outer(-eta, c(-Inf, t[n_beta + seq_len(n_cut)], Inf), "+"))
+    cum[, -1L] - cum[, -(n_cut + 2L)]
+  }
+  base <- probs(theta)
+  grads <- lapply(seq_along(theta), function(k) {
+    h <- replace(numeric(length(theta)), k, 1e-6)
+    (probs(theta + h) - probs(theta - h)) / 2e-6
+  })
+  info <- matrix(0, length(theta), length(theta))
+  for (i in seq_len(nrow(base))) for (j in seq_len(ncol(base))) {
+    g <- vapply(grads, function(gr) gr[i, j], numeric(1L))
+    info <- info + tcrossprod(g) / base[i, j]
+  }
+  solve(info)
+}
+
+polr_offset_data <- function() {
+  withr::local_seed(3)
+  d <- data.frame(x = stats::rnorm(60), off = stats::rnorm(60, sd = 0.5))
+  d$y <- cut(d$x + d$off + stats::rlogis(60), c(-Inf, -0.5, 0.7, Inf),
+             labels = c("a", "b", "c"), ordered_result = TRUE)
+  d
+}
+
+test_that(".polr_expected_vcov includes an offset through the linear predictor", {
+  skip_if_not_installed("MASS")
+  d <- polr_offset_data()
+  fit <- MASS::polr(y ~ x + offset(off), d, Hess = TRUE)
+  expect_equal(unname(.polr_expected_vcov(fit)),
+               unname(brute_polr_vcov(fit, as.matrix(d["x"]), d$off)), tolerance = 1e-6)
+})
+
+test_that(".polr_expected_vcov handles an intercept-only model", {
+  skip_if_not_installed("MASS")
+  d <- polr_offset_data()
+  fit <- MASS::polr(y ~ 1, d, Hess = TRUE)
+  expect_equal(unname(.polr_expected_vcov(fit)),
+               unname(brute_polr_vcov(fit, matrix(0, nrow(d), 0), rep(0, nrow(d)))), tolerance = 1e-6)
+  obj <- fit_logistic(y ~ 1, d, family = "ordinal", outcome_levels = c("a", "b", "c"))
+  expect_identical(obj$tables$estimates$term, c("threshold:a|b", "threshold:b|c"))
+  expect_true(all(is.finite(obj$tables$estimates$std.error)))
+})
+
+test_that(".polr_expected_vcov stays finite when tail probabilities round to 1", {
+  skip_if_not_installed("MASS")
+  d <- polr_offset_data()
+  d$x[[1L]] <- -100
+  d$y[[1L]] <- "a"
+  fit <- suppressWarnings(MASS::polr(y ~ x, d, Hess = TRUE))
+  expect_true(all(is.finite(.polr_expected_vcov(fit))))
+  obj <- suppressWarnings(fit_logistic(y ~ x, d, family = "ordinal", outcome_levels = c("a", "b", "c")))
+  expect_true(all(is.finite(obj$tables$estimates$std.error)))
+})

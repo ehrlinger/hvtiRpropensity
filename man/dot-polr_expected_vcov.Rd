@@ -22,4 +22,9 @@ information analytically, so ordinal standard errors match SAS:
 the fitted probability of category \eqn{j} and \eqn{g_{ij}} its gradient in
 the coefficients and thresholds.
 }
+\details{
+The category probabilities are computed without cancellation, so extreme
+linear predictors give finite contributions, and an \code{offset()} enters through
+the fitted linear predictor.
+}
 \keyword{internal}

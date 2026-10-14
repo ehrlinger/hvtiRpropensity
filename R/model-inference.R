@@ -202,6 +202,10 @@
 #' the fitted probability of category \eqn{j} and \eqn{g_{ij}} its gradient in
 #' the coefficients and thresholds.
 #'
+#' The category probabilities are computed without cancellation, so extreme
+#' linear predictors give finite contributions, and an `offset()` enters through
+#' the fitted linear predictor.
+#'
 #' @param fit A [MASS::polr()] fit with the logistic link and its model frame.
 #' @return The covariance matrix, named and ordered as `vcov(fit)`.
 #' @keywords internal
@@ -214,26 +218,31 @@
   x <- stats::model.matrix(stats::delete.response(fit$terms), frame)
   x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
   beta <- stats::coef(fit)
-  if (!identical(colnames(x), names(beta))) {
+  # An intercept-only model has no columns and no coefficients.
+  if (ncol(x) != length(beta) || !all(colnames(x) == names(beta))) {
     rlang::abort("The polr() model matrix does not match its coefficients.", call. = FALSE)
   }
   weights <- frame[["(weights)"]]
   if (is.null(weights)) weights <- rep.int(1, nrow(x))
-  eta <- drop(x %*% beta)
+  # polr()'s linear predictor includes any offset().
+  eta <- fit$lp
   cuts <- c(-Inf, fit$zeta, Inf)
   n_cuts <- length(fit$zeta)
   info <- matrix(0, length(beta) + n_cuts, length(beta) + n_cuts)
   for (j in seq_len(n_cuts + 1L)) {
     upper <- cuts[[j + 1L]] - eta
     lower <- cuts[[j]] - eta
-    prob <- stats::plogis(upper) - stats::plogis(lower)
+    # F(u) - F(l) = F(u) S(l) (1 - exp(l - u)) has no cancellation: the naive
+    # difference rounds to 0 when both tail probabilities round to 1.
+    prob <- stats::plogis(upper) * stats::plogis(-lower) * -expm1(lower - upper)
     density_upper <- stats::dlogis(upper)
     density_lower <- stats::dlogis(lower)
     gradient_cuts <- matrix(0, nrow(x), n_cuts)
     if (j <= n_cuts) gradient_cuts[, j] <- density_upper
     if (j > 1L) gradient_cuts[, j - 1L] <- -density_lower
     gradient <- cbind(-x * (density_upper - density_lower), gradient_cuts)
-    info <- info + crossprod(gradient * sqrt(weights / prob))
+    scale <- ifelse(prob > 0, sqrt(weights / prob), 0)
+    info <- info + crossprod(gradient * scale)
   }
   covariance <- solve(info)
   dimnames(covariance) <- list(c(names(beta), names(fit$zeta)), c(names(beta), names(fit$zeta)))
