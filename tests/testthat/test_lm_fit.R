@@ -164,11 +164,15 @@ test_that("fit_logistic fits the declared ordinal outcome", {
     levels = c("low", "mid", "high")
   )
   direct <- MASS::polr(ordinal ~ x1_imp + x2, direct_data, Hess = TRUE,
-                       na.action = stats::na.exclude)
+                       na.action = stats::na.exclude,
+                       control = list(reltol = 1e-14, maxit = 1000L))
   expect_equal(obj$tables$estimates$estimate,
                unname(c(stats::coef(direct), direct$zeta)), tolerance = 1e-10)
-  expect_equal(unname(obj$tables$covariance), unname(stats::vcov(direct)),
+  # The covariance is the inverse expected information, as SAS reports, not
+  # polr()'s inverse observed information.
+  expect_equal(unname(obj$tables$covariance), unname(.polr_expected_vcov(direct)),
                tolerance = 1e-10)
+  expect_false(isTRUE(all.equal(unname(obj$tables$covariance), unname(stats::vcov(direct)))))
 })
 
 test_that("ordinal fitting ignores the input factor order", {
@@ -189,7 +193,8 @@ test_that("ordinal fitting ignores the input factor order", {
     levels = c("low", "mid", "high")
   )
   expected <- MASS::polr(ordinal ~ x1_imp + x2, expected_data, Hess = TRUE,
-                         na.action = stats::na.exclude)
+                         na.action = stats::na.exclude,
+                         control = list(reltol = 1e-14, maxit = 1000L))
 
   expect_equal(stats::coef(obj$models[[1L]]), stats::coef(expected))
   expect_equal(obj$models[[1L]]$zeta, expected$zeta)

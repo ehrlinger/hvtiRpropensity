@@ -103,12 +103,14 @@ test_that("ordinal logistic output agrees with the SAS cumulative-logit conventi
   scores <- sas_lm_oracle("ordinal-scores.csv")
   scores <- scores[match(fit$data$id, scores$id), ]
 
-  expect_sas_close(fit$tables$estimates$estimate, sas_estimate, tolerance = 1e-4)
-  expect_sas_close(fit$tables$covariance, covariance, tolerance = 4e-3)
+  # polr() runs at reltol = 1e-14 and the covariance is the inverse expected
+  # information, as PROC LOGISTIC reports: ~1e-7 and ~1e-9, held with 10x margin.
+  expect_sas_close(fit$tables$estimates$estimate, sas_estimate, tolerance = 2e-6)
+  expect_sas_close(fit$tables$covariance, covariance, tolerance = 2e-8)
   expect_sas_close(
     unname(as.matrix(fit$data[c("prob_low", "prob_mid", "prob_high")])),
     unname(as.matrix(scores[c("IP_low", "IP_mid", "IP_high")])),
-    tolerance = 5e-5
+    tolerance = 1e-6
   )
 })
 
@@ -142,9 +144,7 @@ test_that("nominal generalized-logit output agrees with the SAS oracle", {
   scores <- scores[match(fit$data$id, scores$id), ]
 
   # Unformatted export at GCONV=1e-12: agreement is ~1e-7, so these hold 10x
-  # margin. The ordinal checks stay looser: polr()'s own default tolerance limits
-  # its coefficients, and SAS inverts expected where polr() inverts observed
-  # information, which sets the ordinal covariance gap.
+  # margin.
   expect_sas_close(fit$tables$estimates$estimate,
                    sas_estimate[r_terms], tolerance = 1e-5)
   expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-6)

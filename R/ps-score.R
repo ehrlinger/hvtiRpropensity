@@ -438,7 +438,9 @@ print.ps_logistic <- function(x, ...) {
 #' Fits a proportional-odds cumulative logit model via [MASS::polr()] for an
 #' ordered treatment variable and appends one probability column per
 #' treatment level to the dataset.  The model is equivalent to the default
-#' `PROC LOGISTIC` behaviour for ordinal responses in SAS.
+#' `PROC LOGISTIC` behaviour for ordinal responses in SAS, standard errors
+#' included: they come from the expected information, as [fit_logistic()]
+#' describes under "Ordinal standard errors".
 #'
 #' When `imputation_col` is supplied, models are fit on each imputed dataset
 #' separately and per-level probabilities are averaged per patient across

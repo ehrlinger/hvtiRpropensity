@@ -232,3 +232,32 @@ test_that("pooling refuses zero or negative complete-data df", {
     "the model has 0. A saturated model leaves none"
   )
 })
+
+test_that(".polr_expected_vcov inverts the expected information by brute force", {
+  skip_if_not_installed("MASS")
+  d <- data.frame(
+    y = ordered(rep(c("low", "mid", "high"), each = 8), levels = c("low", "mid", "high")),
+    x = rep(seq(-1, 1, length.out = 8), 3) + rep(c(-0.2, 0, 0.2), each = 8),
+    w = rep(c(1, 2), 12)
+  )
+  fit <- MASS::polr(y ~ x, data = d, weights = w, Hess = TRUE)
+  # Sum over every patient and category of w * (dp/dtheta)(dp/dtheta)' / p,
+  # with the gradient of each fitted probability taken numerically.
+  theta <- c(stats::coef(fit), fit$zeta)
+  probs <- function(t) {
+    cum <- stats::plogis(outer(-d$x * t[[1L]], c(-Inf, t[2:3], Inf), function(e, z) z + e))
+    cum[, -1L] - cum[, -4L]
+  }
+  info <- matrix(0, 3, 3)
+  base <- probs(theta)
+  grads <- lapply(1:3, function(k) {
+    h <- replace(numeric(3), k, 1e-6)
+    (probs(theta + h) - probs(theta - h)) / 2e-6
+  })
+  for (i in seq_len(nrow(d))) for (j in 1:3) {
+    g <- vapply(grads, function(gr) gr[i, j], numeric(1L))
+    info <- info + d$w[[i]] * tcrossprod(g) / base[i, j]
+  }
+  expect_equal(unname(.polr_expected_vcov(fit)), unname(solve(info)), tolerance = 1e-6)
+  expect_identical(dimnames(.polr_expected_vcov(fit))[[1L]], c("x", "low|mid", "mid|high"))
+})
