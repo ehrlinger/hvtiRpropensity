@@ -68,10 +68,11 @@ test_that("binary logistic output agrees with the SAS oracle", {
   scores <- sas_lm_oracle("binary-scores.csv")
   scores <- scores[match(fit$data$id, scores$id), ]
 
+  # PROC LOGISTIC runs at GCONV=1e-12: coefficients agree to ~1e-9, covariance ~1e-7.
   expect_sas_close(unname(stats::coef(fit$models[[1L]])[terms]),
-                   estimates$Estimate, tolerance = 1e-4)
-  expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-4)
-  expect_sas_close(fit$data$prob, scores$probability, tolerance = 5e-5)
+                   estimates$Estimate, tolerance = 1e-8)
+  expect_sas_close(fit$tables$covariance, covariance, tolerance = 2e-6)
+  expect_sas_close(fit$data$prob, scores$probability, tolerance = 1e-8)
 })
 
 test_that("ordinal logistic output agrees with the SAS cumulative-logit convention", {
@@ -140,16 +141,17 @@ test_that("nominal generalized-logit output agrees with the SAS oracle", {
   scores <- sas_lm_oracle("nominal-scores.csv")
   scores <- scores[match(fit$data$id, scores$id), ]
 
-  # Unformatted export: agreement is ~1e-6, so these hold 10x margin. The binary
-  # and ordinal coefficient checks stay looser for convergence, and the ordinal
-  # covariance because SAS inverts expected and polr() observed information.
+  # Unformatted export at GCONV=1e-12: agreement is ~1e-7, so these hold 10x
+  # margin. The ordinal checks stay looser: polr()'s own default tolerance limits
+  # its coefficients, and SAS inverts expected where polr() inverts observed
+  # information, which sets the ordinal covariance gap.
   expect_sas_close(fit$tables$estimates$estimate,
-                   sas_estimate[r_terms], tolerance = 3e-5)
-  expect_sas_close(fit$tables$covariance, covariance, tolerance = 5e-6)
+                   sas_estimate[r_terms], tolerance = 1e-5)
+  expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-6)
   expect_sas_close(
     unname(as.matrix(fit$data[c("prob_a", "prob_b", "prob_c")])),
     unname(as.matrix(scores[c("IP_a", "IP_b", "IP_c")])),
-    tolerance = 1e-5
+    tolerance = 5e-6
   )
 })
 
@@ -187,35 +189,36 @@ test_that("Rubin pooled inference agrees with PROC MIANALYZE", {
   averaged <- averaged[match(fit$data$id, averaged$id), ]
 
   expect_sas_close(fit$tables$estimates$estimate, estimates$Estimate,
-                   tolerance = 1e-4)
+                   tolerance = 1e-8)
   expect_sas_close(fit$tables$estimates$std.error, estimates$StdErr,
-                   tolerance = 1e-4)
+                   tolerance = 2e-6)
   # Barnard-Rubin df: PROC MIANALYZE EDF= with the complete-data df n - k.
   edf <- sas_lm_oracle("pooled-estimates-edf.csv")
   complete <- sas_lm_oracle("complete-df.csv")
   expect_equal(stats::df.residual(fit$models[[1L]]), complete$edf)
-  expect_lt(max(abs(fit$tables$estimates$df - edf$DF) / edf$DF), 1e-4)
-  expect_sas_close(fit$tables$estimates$p.value, edf$Probt, tolerance = 1e-4)
-  expect_sas_close(fit$tables$estimates$conf.low, edf$LCLMean, tolerance = 1e-4)
-  expect_sas_close(fit$tables$estimates$conf.high, edf$UCLMean, tolerance = 1e-4)
+  expect_lt(max(abs(fit$tables$estimates$df - edf$DF) / edf$DF), 1e-8)
+  expect_sas_close(fit$tables$estimates$p.value, edf$Probt, tolerance = 1e-6)
+  expect_sas_close(fit$tables$estimates$conf.low, edf$LCLMean, tolerance = 5e-6)
+  expect_sas_close(fit$tables$estimates$conf.high, edf$UCLMean, tolerance = 5e-6)
   # The test helper's algebra, from the default (Rubin 1987) run, agrees with EDF=.
   br <- barnard_rubin_from_sas(estimates, complete$edf)
   expect_lt(max(abs(br$df - edf$DF) / edf$DF), 1e-4)
-  expect_sas_close(fit$data$prob, averaged$probability, tolerance = 5e-5)
+  expect_sas_close(fit$data$prob, averaged$probability, tolerance = 1e-8)
 
   # SAS's TCov is the multivariate total covariance under MIANALYZE's
   # proportionality assumption, (1 + rbar) * Ubar, not the elementwise Rubin
   # total T = Ubar + (1 + 1/m) * B that R reports. So compare R's diagonal to
   # the SAS standard errors, and rebuild TCov from the per-imputation fits.
-  # The 1e-5 floor is the per-imputation fits, not the pooling: R's vcov()
-  # already differs from SAS's mi-covariance.csv by up to about 8e-6. The
-  # direct comparison of T to TCov is off by about 3e-5 and fails here.
+  # The 2e-6 floor is the per-imputation fits, not the pooling: R's vcov()
+  # differs from SAS's mi-covariance.csv by up to about 1.4e-7. The direct
+  # comparison of T to TCov is off by about 4e-5, the proportionality
+  # assumption, and fails here.
   pooled_terms <- sub("^Intercept$", "(Intercept)", estimates$Parm)
   expect_identical(fit$tables$estimates$term, pooled_terms)
   expect_identical(dimnames(fit$tables$covariance), list(pooled_terms, pooled_terms))
   expect_identical(sub("^Intercept$", "(Intercept)", rownames(covariance)), pooled_terms)
   expect_identical(sub("^Intercept$", "(Intercept)", colnames(covariance)), pooled_terms)
-  expect_sas_close(diag(fit$tables$covariance), estimates$StdErr^2, tolerance = 1e-5)
+  expect_sas_close(diag(fit$tables$covariance), estimates$StdErr^2, tolerance = 2e-6)
 
   vcovs <- lapply(fit$models, stats::vcov)
   coefs <- do.call(rbind, lapply(fit$models, stats::coef))
@@ -225,5 +228,5 @@ test_that("Rubin pooled inference agrees with PROC MIANALYZE", {
   ubar <- Reduce(`+`, vcovs) / m
   between <- stats::cov(coefs)
   rbar <- (1 + 1 / m) * sum(diag(between %*% solve(ubar))) / k
-  expect_sas_close((1 + rbar) * ubar, covariance, tolerance = 1e-5)
+  expect_sas_close((1 + rbar) * ubar, covariance, tolerance = 2e-6)
 })
