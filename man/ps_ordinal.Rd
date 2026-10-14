@@ -81,7 +81,9 @@ two-level treatment.}
 Fits a proportional-odds cumulative logit model via \code{\link[MASS:polr]{MASS::polr()}} for an
 ordered treatment variable and appends one probability column per
 treatment level to the dataset.  The model is equivalent to the default
-\verb{PROC LOGISTIC} behaviour for ordinal responses in SAS.
+\verb{PROC LOGISTIC} behaviour for ordinal responses in SAS, standard errors
+included: they come from the expected information, as \code{\link[=fit_logistic]{fit_logistic()}}
+describes under "Ordinal standard errors".
 }
 \details{
 When \code{imputation_col} is supplied, models are fit on each imputed dataset

@@ -60,13 +60,16 @@ with the default `GCONV=` (1e-8, a relative gradient criterion) left binary
 coefficients 7.8e-5 from `glm()`; at 1e-12 they agree to about 1e-9, and the
 binary, nominal and pooled checks are tested near that. The `PROC GENMOD`
 Poisson fit has no `GCONV=`; it already agrees to 1e-6 or better and is tested
-there too. Two ordinal gaps are
-not SAS convergence and stay at looser tolerances. `polr()`'s own default
-tolerance moves its coefficients by about 2e-5. The ordinal covariance check
-uses an absolute tolerance because SAS and `MASS::polr()` use different
-information matrices: SAS's covariance is the inverse expected Fisher
-information, `polr()` inverts the observed Hessian. Tightening either fit's
-convergence leaves that gap (about 3e-3) unchanged.
+there too.
+
+The ordinal fit had two further gaps, and neither was SAS convergence.
+`polr()`'s default tolerance stopped its coefficients about 2e-5 short, and
+SAS and `MASS::polr()` used different information matrices: SAS's covariance
+is the inverse expected Fisher information, `polr()` inverts the observed
+Hessian, a gap of about 3e-3 that no convergence setting closes. Since 0.2.1
+the package runs `polr()` at `reltol = 1e-14` and reports the inverse expected
+information, so the ordinal coefficients agree to about 1e-7 and the
+covariance to about 1e-9, and they are tested there.
 
 ## Degrees of freedom
 
