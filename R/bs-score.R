@@ -409,13 +409,22 @@ bs_count <- function(formula,
     rlang::abort("`formula` must be an R formula.", call. = FALSE)
   }
   .check_df(data)
-  if (is.null(outcome_col)) outcome_col <- as.character(formula[[2L]])
+  if (is.null(outcome_col)) {
+    outcome_col <- all.vars(formula[[2L]])
+    if (length(outcome_col) != 1L) {
+      rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
+                   call. = FALSE)
+    }
+  } else {
+    .check_outcome_response(formula, outcome_col)
+  }
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
     rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
   }
   n_strata <- as.integer(n_strata)
+  formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
 
   # ---- Fit function -------------------------------------------------------
   fit_fn <- if (dist == "negbin") {

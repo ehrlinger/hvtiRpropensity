@@ -159,8 +159,9 @@ fit_logistic <- function(formula, data,
     rlang::abort("`outcome_col` must name the outcome on the left side of `formula`.",
                  call. = FALSE)
   }
-  .check_cols(data, all.vars(formula))
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
+  formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
+  .check_cols(data, all.vars(formula))
   if (!is.character(prediction_prefix) || length(prediction_prefix) != 1L ||
         is.na(prediction_prefix) || !nzchar(prediction_prefix)) {
     rlang::abort("`prediction_prefix` must be one non-empty string.",

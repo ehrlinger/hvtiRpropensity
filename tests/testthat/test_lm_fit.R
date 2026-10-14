@@ -427,3 +427,13 @@ test_that("fit_linear expands a dot formula without the id or imputation column"
   }
   expect_identical(deparse(pooled$meta$formula), "ef ~ age + female")
 })
+
+test_that("fit_logistic expands a dot formula without the id or imputation column", {
+  d <- lm_fixture()
+  small <- d[c("binary", "x1_imp", "x2", "id", "imputation")]
+  obj <- fit_logistic(binary ~ ., small, family = "binary",
+                      imputation_col = "imputation",
+                      outcome_levels = c(0, 1), event_level = 1)
+  expect_identical(obj$meta$predictors, c("x1_imp", "x2"))
+  expect_identical(names(stats::coef(obj$models[[1L]])), c("(Intercept)", "x1_imp", "x2"))
+})

@@ -344,3 +344,21 @@ test_that("bs_continuous expands a dot formula without the id or imputation colu
     expect_identical(names(stats::coef(m)), c("(Intercept)", "age", "female"))
   }
 })
+
+test_that("bs_count requires outcome_col to name the formula's response", {
+  d <- sample_ps_data_count(n = 150, seed = 40)
+  expect_error(
+    bs_count(rbc_tot ~ female, d, outcome_col = "age"),
+    "`outcome_col` (\"age\") is not the formula's response (rbc_tot)",
+    fixed = TRUE
+  )
+  expect_error(bs_count(cbind(rbc_tot, age) ~ female, d), "exactly one column")
+  expect_identical(bs_count(rbc_tot ~ age, d, outcome_col = "rbc_tot")$meta$outcome_col, "rbc_tot")
+})
+
+test_that("bs_count expands a dot formula without the id or imputation column", {
+  d <- sample_ps_data_count(n = 150, seed = 40)
+  small <- d[c("rbc_tot", "age", "female", "id")]
+  obj <- bs_count(rbc_tot ~ ., small)
+  expect_identical(names(stats::coef(obj$models[[1L]])), c("(Intercept)", "age", "female"))
+})
