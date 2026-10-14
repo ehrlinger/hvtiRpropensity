@@ -360,7 +360,7 @@ ps_logistic <- function(formula,
   reserved <- c(treatment_col, score_col, logit_col, weight_col,
                 id_col, "quintile", "decile")
   if (is.null(covariates)) {
-    covariates <- .default_covariates(base_data, reserved, keep = all.vars(formula[[3L]]))
+    covariates <- .default_covariates(base_data, reserved, keep = .retained_predictors(model$meta$formula))
   }
   diagnostic_data <- base_data
   diagnostic_data[[treatment_col]] <- trt
@@ -611,7 +611,7 @@ ps_ordinal <- function(formula,
   smd_tbl <- .smd_table_levels(
     base_data, treatment_col, lvls, smd_pairs, covariates,
     reserved = c(score_cols, id_col, imputation_col, "quintile", "decile"),
-    keep = all.vars(formula[[3L]])
+    keep = .retained_predictors(model$meta$formula)
   )
 
   # ---- Group counts -------------------------------------------------------
@@ -850,7 +850,7 @@ ps_nominal <- function(formula,
   smd_tbl <- .smd_table_levels(
     base_data, treatment_col, lvls, smd_pairs, covariates,
     reserved = c(score_cols, id_col, imputation_col, "quintile", "decile"),
-    keep = all.vars(formula[[3L]])
+    keep = .retained_predictors(model$meta$formula)
   )
 
   # ---- Group counts -------------------------------------------------------

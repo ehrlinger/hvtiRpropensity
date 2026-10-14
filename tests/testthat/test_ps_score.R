@@ -522,3 +522,10 @@ test_that("default balance tables leave out generated score columns and keep dec
   expect_true("bs" %in% fit$tables$smd$variable)
   expect_false(any(c("id", "logit_t", "quintile") %in% fit$tables$smd$variable))
 })
+
+test_that("a constant column the formula subtracts stays out of the SMD table", {
+  d <- unscored_ps_data(n = 100, seed = 1)[c("id", "tavr", "age", "female", "ef")]
+  d$dropme <- 1
+  obj <- ps_logistic(tavr ~ . - dropme, d)
+  expect_identical(obj$tables$smd$variable, c("age", "female", "ef"))
+})
