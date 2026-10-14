@@ -83,7 +83,10 @@ feeds <code><a href="https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_h
 
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>Two-sided formula, <code>treatment ~ x1 + x2 + ...</code>.</p></dd>
+<dd><p>Two-sided formula, <code>treatment ~ x1 + x2 + ...</code>. A <code>.</code> on the
+right-hand side expands to the data's other columns, excluding the
+treatment and <code>id_col</code>; terms the formula subtracts, as in <code>. - x3</code>, are
+left out of the forest.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>

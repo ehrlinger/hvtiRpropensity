@@ -37,7 +37,10 @@ ps_forest(
 
 - formula:
 
-  Two-sided formula, `treatment ~ x1 + x2 + ...`.
+  Two-sided formula, `treatment ~ x1 + x2 + ...`. A `.` on the
+  right-hand side expands to the data's other columns, excluding the
+  treatment and `id_col`; terms the formula subtracts, as in `. - x3`,
+  are left out of the forest.
 
 - data:
 
