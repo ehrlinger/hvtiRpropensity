@@ -7,7 +7,8 @@ pooling. Do not substitute R-generated values.
 
 ## Controlled run
 
-1. Copy the complete `lm-oracle-20260921` folder to a path visible to SAS.
+1. Copy a folder holding `program/generate-fixtures.sas`, `input/input.csv` and
+   an empty `out/` to a path visible to SAS.
 2. In `program/generate-fixtures.sas`, set only `%let root=` to that folder's
    absolute server path. Do not add a trailing slash.
 3. Confirm that `input/input.csv` and the empty `out/` directory exist.
@@ -57,7 +58,9 @@ every value carries full precision, and every `PROC LOGISTIC` fit runs at
 Two earlier runs that day isolated the causes of the remaining gaps. The run
 with the default `GCONV=` (1e-8, a relative gradient criterion) left binary
 coefficients 7.8e-5 from `glm()`; at 1e-12 they agree to about 1e-9, and the
-binary, nominal and pooled checks are tested near that. Two ordinal gaps are
+binary, nominal and pooled checks are tested near that. The `PROC GENMOD`
+Poisson fit has no `GCONV=`; it already agrees to 1e-6 or better and is tested
+there too. Two ordinal gaps are
 not SAS convergence and stay at looser tolerances. `polr()`'s own default
 tolerance moves its coefficients by about 2e-5. The ordinal covariance check
 uses an absolute tolerance because SAS and `MASS::polr()` use different

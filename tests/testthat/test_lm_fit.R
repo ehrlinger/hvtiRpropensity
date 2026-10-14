@@ -480,3 +480,22 @@ test_that("fit_linear requires a one-column response even with outcome_col", {
   expect_error(fit_linear(I(count + other) ~ x, d), "exactly one column")
   expect_identical(fit_linear(log1p(count) ~ x, d, outcome_col = "count")$meta$outcome_col, "count")
 })
+
+test_that("a subtracted column missing from data is caught by the package, not lm()", {
+  d <- mi_with_dropme()[1:60, ]
+  zz <- 1 # a same-named object in the calling environment must not be used
+  expect_error(fit_linear(count ~ x - zz, d), "Required column(s) not found in `data`: zz", fixed = TRUE)
+  expect_error(fit_linear(count ~ . - zz, d), "Required column(s) not found in `data`: zz", fixed = TRUE)
+  expect_error(fit_logistic(binary ~ . - zz, d, outcome_levels = c(0, 1)),
+               "Required column(s) not found in `data`: zz", fixed = TRUE)
+})
+
+test_that("fit_logistic refuses a transformed outcome", {
+  d <- mi_with_dropme()[1:60, ]
+  expect_error(fit_logistic(log(binary + 1) ~ x, d, outcome_levels = c(0, 1)), "untransformed outcome")
+})
+
+test_that("a dot that leaves no columns gets a clear error", {
+  d <- mi_with_dropme()[1:60, c("id", "count")]
+  expect_error(fit_linear(count ~ ., d), "leaves no columns")
+})

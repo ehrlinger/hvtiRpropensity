@@ -390,3 +390,18 @@ test_that("bs_* require a one-column response even with outcome_col", {
     expect_error(fn(cbind(rbc_tot, other) ~ age, d, outcome_col = "rbc_tot"), "exactly one column")
   }
 })
+
+test_that("bs_* catch a subtracted column missing from data", {
+  d <- sample_ps_data_count(n = 150, seed = 40)
+  zz <- 1 # a same-named object in the calling environment must not be used
+  expect_error(bs_count(rbc_tot ~ age - zz, d, dist = "poisson"),
+               "Required column(s) not found in `data`: zz", fixed = TRUE)
+  expect_error(bs_continuous(rbc_tot ~ age - zz, d), "Required column(s) not found in `data`: zz", fixed = TRUE)
+})
+
+test_that("bs_count refuses a transformed count response", {
+  d <- sample_ps_data_count(n = 150, seed = 40)
+  expect_error(bs_count(log(rbc_tot + 1) ~ age, d, dist = "poisson"), "must be a column name")
+  expect_error(bs_count(log(rbc_tot + 1) ~ age, d, outcome_col = "rbc_tot", dist = "poisson"),
+               "must be a column name")
+})

@@ -174,3 +174,11 @@ test_that("ps_forest keeps offset() terms, which rfsrc fits as predictors", {
   dot <- ps_forest(tavr ~ . - female + offset(log(ef)), d, ntree = 50, seed = 1)
   expect_identical(dot$meta$formula, tavr ~ age + ef + offset(log(ef)), ignore_formula_env = TRUE)
 })
+
+test_that("ps_forest refuses a subtracted column that is not in data", {
+  d <- sample_ps_data(n = 100, seed = 1)[c("id", "tavr", "age", "female", "ef")]
+  expect_error(ps_forest(tavr ~ . - eff, d, ntree = 50, seed = 1),
+               "Required column(s) not found in `data`: eff", fixed = TRUE)
+  expect_error(ps_forest(tavr ~ age - eff, d, ntree = 50, seed = 1),
+               "Required column(s) not found in `data`: eff", fixed = TRUE)
+})

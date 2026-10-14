@@ -23,7 +23,9 @@ ps_forest(
 \item{formula}{Two-sided formula, \code{treatment ~ x1 + x2 + ...}. A \code{.} on the
 right-hand side expands to the data's other columns, excluding the
 treatment and \code{id_col}; terms the formula subtracts, as in \code{. - x3}, are
-left out of the forest.}
+left out of the forest. The forest splits on the raw variables, so a
+transformation such as \code{log(age)} or an interaction such as \code{age:ef}
+contributes \code{age} and \code{ef} as they are.}
 
 \item{data}{Data frame with no missing values in the formula variables.}
 

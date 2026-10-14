@@ -126,7 +126,9 @@
 #'   imputation be used? *Statistical Methods in Medical Research*, 28(1),
 #'   3--19. \doi{10.1177/0962280217713032}
 #'
-#' @param formula Model formula.
+#' @param formula Model formula with the outcome column, untransformed, on the
+#'   left. A `.` on the right-hand side expands to the data's other columns,
+#'   excluding the outcome, `id_col` and `imputation_col`.
 #' @param data A data frame containing the outcome and predictors.
 #' @param family Model family: `"binary"` (default, [stats::glm()] with a logit
 #'   link), `"ordinal"` (proportional-odds cumulative logit, [MASS::polr()]; a
@@ -200,7 +202,7 @@ fit_logistic <- function(formula, data,
     rlang::abort("`formula` must be a model formula.", call. = FALSE)
   }
   response_vars <- all.vars(formula[[2L]])
-  if (length(response_vars) != 1L) {
+  if (!is.name(formula[[2L]])) {
     rlang::abort("`formula` must contain one untransformed outcome column.",
                  call. = FALSE)
   }
@@ -503,7 +505,14 @@ fit_logistic <- function(formula, data,
 #' @keywords internal
 .expand_dot_formula <- function(formula, data, exclude = NULL) {
   if (!"." %in% all.vars(formula[[3L]])) return(formula)
+  # Name the columns the formula spells out first: terms() only warns about one
+  # that is missing, and a subtracted typo would otherwise be dropped silently.
+  .check_cols(data, setdiff(all.vars(formula), "."))
   keep <- setdiff(names(data), c(exclude, all.vars(formula[[2L]])))
+  if (!length(keep)) {
+    rlang::abort("`.` in `formula` leaves no columns once the response, `id_col` and `imputation_col` are set aside.",
+                 call. = FALSE)
+  }
   expanded <- stats::formula(stats::terms(formula, data = data[keep]))
   environment(expanded) <- environment(formula)
   expanded
@@ -565,6 +574,7 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
     rlang::abort(sprintf("Column `%s` already exists in `data`.", prediction_col), call. = FALSE)
   }
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
+  .check_cols(data, all.vars(formula))
 
   fitted <- .fit_imputations(
     data = data,

@@ -19,7 +19,9 @@ fit_logistic(
 )
 }
 \arguments{
-\item{formula}{Model formula.}
+\item{formula}{Model formula with the outcome column, untransformed, on the
+left. A \code{.} on the right-hand side expands to the data's other columns,
+excluding the outcome, \code{id_col} and \code{imputation_col}.}
 
 \item{data}{A data frame containing the outcome and predictors.}
 

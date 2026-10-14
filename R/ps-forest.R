@@ -10,7 +10,9 @@
 #' @param formula Two-sided formula, `treatment ~ x1 + x2 + ...`. A `.` on the
 #'   right-hand side expands to the data's other columns, excluding the
 #'   treatment and `id_col`; terms the formula subtracts, as in `. - x3`, are
-#'   left out of the forest.
+#'   left out of the forest. The forest splits on the raw variables, so a
+#'   transformation such as `log(age)` or an interaction such as `age:ef`
+#'   contributes `age` and `ef` as they are.
 #' @param data Data frame with no missing values in the formula variables.
 #' @param treatment_col Treatment column name; defaults to the formula
 #'   response. Binary, 0/1 or logical.
@@ -94,6 +96,7 @@ ps_forest <- function(formula,
   # the missing-value check and the SMD table all see the same predictors.
   # rfsrc() fits an offset() term as an ordinary predictor, so offsets are kept.
   formula <- .expand_dot_formula(formula, data, id_col)
+  .check_cols(data, all.vars(formula))
   formula_env <- environment(formula)
   model_terms <- stats::terms(formula)
   offsets <- vapply(as.list(attr(model_terms, "variables"))[-1L][attr(model_terms, "offset")],
