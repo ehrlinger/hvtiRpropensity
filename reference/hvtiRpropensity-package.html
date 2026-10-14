@@ -20,7 +20,8 @@ or Poisson regression; equivalent to SAS PROC GENMOD dist=nb).
 
 Outcome models:
 fit_logistic(): binary, ordinal or nominal outcome-model bundle, with
-Rubin pooling over stacked imputations.
+Rubin pooling over stacked imputations and Barnard-Rubin degrees of
+freedom, matching mice::pool().
 fit_linear(): linear outcome-model bundle, with Rubin pooling.
 validate_logistic(): applies a saved binary bundle to a validation
 cohort without refitting.
@@ -94,7 +95,8 @@ or Poisson regression; equivalent to SAS PROC GENMOD dist=nb).
 
 Outcome models:
 fit_logistic(): binary, ordinal or nominal outcome-model bundle, with
-Rubin pooling over stacked imputations.
+Rubin pooling over stacked imputations and Barnard-Rubin degrees of
+freedom, matching mice::pool().
 fit_linear(): linear outcome-model bundle, with Rubin pooling.
 validate_logistic(): applies a saved binary bundle to a validation
 cohort without refitting.
@@ -207,7 +209,8 @@ via <code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-l
 <li><p><code><a href="bs_count.html">bs_count()</a></code>: balancing score for a count exposure (negative-binomial
 or Poisson regression; equivalent to SAS <code>PROC GENMOD dist=nb</code>).</p></li>
 </ul><p><strong>Outcome models</strong>:</p><ul><li><p><code><a href="fit_logistic.html">fit_logistic()</a></code>: binary, ordinal or nominal outcome-model bundle, with
-Rubin pooling over stacked imputations.</p></li>
+Rubin pooling over stacked imputations and Barnard-Rubin degrees of
+freedom, matching <code>mice::pool()</code>.</p></li>
 <li><p><code><a href="fit_linear.html">fit_linear()</a></code>: linear outcome-model bundle, with Rubin pooling.</p></li>
 <li><p><code><a href="validate_logistic.html">validate_logistic()</a></code>: applies a saved binary bundle to a validation
 cohort without refitting.</p></li>

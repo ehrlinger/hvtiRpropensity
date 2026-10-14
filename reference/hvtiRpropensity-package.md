@@ -37,7 +37,8 @@ workflow.
 
 - [`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md):
   binary, ordinal or nominal outcome-model bundle, with Rubin pooling
-  over stacked imputations.
+  over stacked imputations and Barnard-Rubin degrees of freedom,
+  matching `mice::pool()`.
 
 - [`fit_linear()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.md):
   linear outcome-model bundle, with Rubin pooling.

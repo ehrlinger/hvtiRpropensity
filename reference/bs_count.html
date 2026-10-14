@@ -161,7 +161,7 @@ dispersion estimate, one per imputation, named by imputation index;
 as in <code><a href="fit_logistic.html">fit_logistic()</a></code> except that <code>estimates</code> has <code>rate_ratio</code>, the
 exponentiated coefficient, in place of <code>odds_ratio</code>. With
 <code>imputation_col</code>, <code>estimates</code> and <code>covariance</code> are pooled with Rubin's
-rules.</p></dd>
+rules, with Barnard and Rubin's degrees of freedom.</p></dd>
 
 <dt><code>$models</code></dt>
 <dd><p>The fitted models, one per imputation, named by
@@ -182,6 +182,52 @@ more suitable for rank-based stratification.</p>
 <p><code>dist = "negbin"</code> (the default) requires the <span class="pkg">MASS</span> package (a
 recommended R package, usually pre-installed).  Install with
 <code>install.packages("MASS")</code> if missing, or use <code>dist = "poisson"</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="pooled-degrees-of-freedom">Pooled degrees of freedom<a class="anchor" aria-label="anchor" href="#pooled-degrees-of-freedom"></a></h2>
+
+
+<p>With <code>imputation_col</code> set, each pooled coefficient is tested against a t
+distribution, and the <code>df</code> column of <code>$tables$estimates</code> gives its degrees
+of freedom. We use Barnard and Rubin's (1999) small-sample degrees of
+freedom, computed the way <code>mice::pool()</code> computes them, so a pooled table
+here and one from <code>mice</code> agree.</p>
+<p>Rubin's (1987) original degrees of freedom are
+\(\nu_{old} = (m - 1) / \lambda^2\), where \(m\) is the number of
+imputations and \(\lambda = (1 + 1/m) B / T\) is the proportion of a
+coefficient's total variance \(T\) due to missing data, through the
+between-imputation variance \(B\). (This is <code>lambda</code> in <code>mice</code>, not its
+finite-sample fraction of missing information, <code>fmi</code>.) When little is
+missing, \(\lambda\) is small and \(\nu_{old}\) can run into the
+millions, larger than the sample could ever support, and the intervals come
+out too narrow. Barnard and Rubin cap it with the complete-data degrees of
+freedom \(\nu_{com}\), the value the analysis would have had with no
+missing data:
+$$\nu_{obs} = \frac{\nu_{com} + 1}{\nu_{com} + 3} \nu_{com} (1 - \lambda), \qquad
+  \nu = \left(\frac{1}{\nu_{old}} + \frac{1}{\nu_{obs}}\right)^{-1}.$$
+So \(\nu\) never exceeds \(\nu_{com}\), and it approaches
+\(\nu_{old}\) as \(\nu_{com}\) grows.</p>
+<p>\(\nu_{com}\) is \(n - k\), the residual degrees of freedom of the
+first imputation's model: \(n\) analysed patients minus \(k\) estimated
+parameters. That holds for every family, linear, logistic, ordinal, nominal
+and count, as it does in <code>mice</code>. <code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom()</a></code> reports no residual
+degrees of freedom, so for a nominal model \(k\) is its effective degrees
+of freedom, again as <code>mice</code> does.
+Pooling stops with an error when \(\nu_{com}\) is zero or negative, as it
+is for a saturated model, because no small-sample degrees of freedom exist
+then.</p>
+<p>Two consequences are worth knowing. First, a single logistic, ordinal,
+nominal or count fit is tested against the normal distribution (<code>df</code> is
+<code>Inf</code>), but the same model pooled over imputations reports a finite <code>df</code>
+and a t test. A single linear fit uses its residual degrees of freedom.
+Second, SAS <code>PROC MIANALYZE</code> reports \(\nu_{old}\) unless you give it the
+complete-data degrees of freedom with <code>EDF=</code>. To reproduce these <code>df</code>, and
+the p-values and intervals that depend on them, run <code>PROC MIANALYZE</code> with
+<code>EDF=</code> set to \(n - k\).</p>
+<p>Barnard J, Rubin DB (1999). Small-sample degrees of freedom with multiple
+imputation. <em>Biometrika</em>, 86(4), 948–955. <a href="https://doi.org/10.1093/biomet/86.4.948" class="external-link">doi:10.1093/biomet/86.4.948</a></p>
+<p>Rubin DB (1987). <em>Multiple Imputation for Nonresponse in Surveys</em>. Wiley.
+<a href="https://doi.org/10.1002/9780470316696" class="external-link">doi:10.1002/9780470316696</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -1,11 +1,14 @@
 # Combine coefficient vectors and covariance matrices with Rubin's rules
 
-Combine coefficient vectors and covariance matrices with Rubin's rules
+The degrees of freedom are Barnard and Rubin's (1999) small-sample
+adjustment, computed as `mice::pool()` computes them. With
+`df_com = Inf` they reduce to Rubin's (1987) large-sample degrees of
+freedom.
 
 ## Usage
 
 ``` r
-.rubin_pool(estimates, covariances, conf_level = 0.95)
+.rubin_pool(estimates, covariances, conf_level = 0.95, df_com = Inf)
 ```
 
 ## Arguments
@@ -21,6 +24,12 @@ Combine coefficient vectors and covariance matrices with Rubin's rules
 - conf_level:
 
   Confidence level.
+
+- df_com:
+
+  Complete-data degrees of freedom, from
+  [`.complete_df()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-complete_df.md).
+  Must be positive; `Inf` gives Rubin's (1987) degrees of freedom.
 
 ## Value
 
