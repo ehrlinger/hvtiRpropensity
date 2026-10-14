@@ -150,8 +150,21 @@ data sas_environment;
   run_datetime=put(datetime(), e8601dt.);
 run;
 
+/* PROC EXPORT writes formatted values, so strip the display formats first, as
+ * the rm oracle does: an oracle needs every digit, and a p-value printed as
+ * <.0001 is not a number. ordinal_order keeps its low/mid/high labels. */
 %macro export_raw(data=, file=);
-  proc export data=&data
+  %local dsid has_order rc;
+  %let dsid=%sysfunc(open(&data));
+  %let has_order=%sysfunc(varnum(&dsid, ordinal_order));
+  %let rc=%sysfunc(close(&dsid));
+  data _export;
+    set &data;
+    format _numeric_ best32.
+      %if &has_order > 0 %then %do; ordinal_order ordinal_order_format. %end;
+    ;
+  run;
+  proc export data=_export
       outfile="&output_dir./&file..csv" dbms=csv replace;
   run;
 %mend;
