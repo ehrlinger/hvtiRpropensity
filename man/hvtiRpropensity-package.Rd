@@ -30,7 +30,8 @@ or Poisson regression; equivalent to SAS \verb{PROC GENMOD dist=nb}).
 \strong{Outcome models}:
 \itemize{
 \item \code{\link[=fit_logistic]{fit_logistic()}}: binary, ordinal or nominal outcome-model bundle, with
-Rubin pooling over stacked imputations.
+Rubin pooling over stacked imputations and Barnard-Rubin degrees of
+freedom, matching \code{mice::pool()}.
 \item \code{\link[=fit_linear]{fit_linear()}}: linear outcome-model bundle, with Rubin pooling.
 \item \code{\link[=validate_logistic]{validate_logistic()}}: applies a saved binary bundle to a validation
 cohort without refitting.

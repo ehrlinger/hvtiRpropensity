@@ -186,13 +186,12 @@ test_that("Rubin pooled inference agrees with PROC MIANALYZE", {
                    tolerance = 1e-4)
   expect_sas_close(fit$tables$estimates$std.error, estimates$StdErr,
                    tolerance = 1e-4)
-  expect_lt(max(abs(fit$tables$estimates$df - estimates$DF) / estimates$DF), 0.01)
-  expect_sas_close(fit$tables$estimates$p.value, estimates$Probt,
-                   tolerance = 1e-4)
-  expect_sas_close(fit$tables$estimates$conf.low, estimates$LCLMean,
-                   tolerance = 1e-4)
-  expect_sas_close(fit$tables$estimates$conf.high, estimates$UCLMean,
-                   tolerance = 1e-4)
+  # Barnard-Rubin df, rebuilt from SAS's Rubin df with n - k complete-data df.
+  br <- barnard_rubin_from_sas(estimates, stats::df.residual(fit$models[[1L]]))
+  expect_lt(max(abs(fit$tables$estimates$df - br$df) / br$df), 0.01)
+  expect_sas_close(fit$tables$estimates$p.value, br$p.value, tolerance = 1e-4)
+  expect_sas_close(fit$tables$estimates$conf.low, br$conf.low, tolerance = 1e-4)
+  expect_sas_close(fit$tables$estimates$conf.high, br$conf.high, tolerance = 1e-4)
   expect_sas_close(fit$data$prob, averaged$probability, tolerance = 5e-5)
 
   # SAS's TCov is the multivariate total covariance under MIANALYZE's

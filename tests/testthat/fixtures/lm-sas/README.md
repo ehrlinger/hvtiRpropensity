@@ -17,23 +17,25 @@ pooling. Do not substitute R-generated values.
 The last log marker must be:
 
 ```text
-NOTE: LM_ORACLE_COMPLETE expected_outputs=19.
+NOTE: LM_ORACLE_COMPLETE expected_outputs=21.
 ```
 
-The run must produce these 19 CSVs:
+The run must produce these 21 CSVs:
 
 - binary, ordinal, nominal, and count: `*-estimates.csv`,
   `*-covariance.csv`, and `*-scores.csv` (12 files);
 - multiply-imputed binary: `mi-estimates.csv`, `mi-covariance.csv`,
   `mi-outest.csv`, and `mi-scores.csv` (4 files);
 - pooled binary: `pooled-estimates.csv` and `pooled-covariance.csv` (2 files);
+- pooled binary with `EDF=`: `pooled-estimates-edf.csv` and `complete-df.csv`
+  (2 files);
 - `sas-environment.csv` (1 file).
 
 It also writes `generate-fixtures.log`. The raw log is retained with the
 controlled run outside Git because its SAS header contains institutional
 licensing metadata. `sas-run-summary.txt` records its SHA-256 checksum, clean
 diagnostic counts and completion marker. The log is not included in the
-19-CSV count. Before acceptance, confirm that it has no `ERROR:` and no warning
+21-CSV count. Before acceptance, confirm that it has no `ERROR:` and no warning
 about convergence, separation, Hessian, covariance, or `PROC MIANALYZE`. The
 environment CSV records the exact SAS product/version, platform, and run time.
 
@@ -53,3 +55,20 @@ inference against them. The ordinal covariance check uses an absolute tolerance
 because SAS and `MASS::polr()` use different Hessian calculations; their
 coefficient, standard-error, and probability results agree at the documented
 cross-engine tolerances.
+
+## Degrees of freedom
+
+`pooled-estimates.csv` is `PROC MIANALYZE` without `EDF=`: Rubin's (1987)
+large-sample `DF`, and the `LCLMean`, `UCLMean` and `Probt` built on it. The
+package reports Barnard and Rubin's (1999) degrees of freedom, as
+`mice::pool()` does, with complete-data degrees of freedom n - k.
+`generate-fixtures.sas` therefore runs `PROC MIANALYZE` a second time with
+`EDF=` set to n - k for imputation 1 and writes `pooled-estimates-edf.csv`,
+with the n, k and EDF it used in `complete-df.csv`.
+
+Until the fixture is regenerated, the committed CSVs predate those two files
+and the tests rebuild the Barnard-Rubin values from SAS's own `Estimate`,
+`StdErr` and `DF` (`helper_barnard_rubin.R`). After regeneration, compare
+`df`, `p.value`, `conf.low` and `conf.high` against `pooled-estimates-edf.csv`
+directly, check `complete-df.csv` against `df.residual()` of the first
+imputation's model, and keep the helper as a check of itself against SAS.

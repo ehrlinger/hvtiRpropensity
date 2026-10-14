@@ -4,7 +4,7 @@
 \alias{.rubin_pool}
 \title{Combine coefficient vectors and covariance matrices with Rubin's rules}
 \usage{
-.rubin_pool(estimates, covariances, conf_level = 0.95)
+.rubin_pool(estimates, covariances, conf_level = 0.95, df_com = Inf)
 }
 \arguments{
 \item{estimates}{List of identically named coefficient vectors.}
@@ -12,11 +12,16 @@
 \item{covariances}{List of identically named covariance matrices.}
 
 \item{conf_level}{Confidence level.}
+
+\item{df_com}{Complete-data degrees of freedom, from \code{\link[=.complete_df]{.complete_df()}}. Must be
+positive; \code{Inf} gives Rubin's (1987) degrees of freedom.}
 }
 \value{
 A list with final estimates, covariance and per-imputation values.
 }
 \description{
-Combine coefficient vectors and covariance matrices with Rubin's rules
+The degrees of freedom are Barnard and Rubin's (1999) small-sample
+adjustment, computed as \code{mice::pool()} computes them. With \code{df_com = Inf}
+they reduce to Rubin's (1987) large-sample degrees of freedom.
 }
 \keyword{internal}

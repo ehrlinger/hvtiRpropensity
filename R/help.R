@@ -28,7 +28,8 @@
 #'
 #' **Outcome models**:
 #' - [fit_logistic()]: binary, ordinal or nominal outcome-model bundle, with
-#'   Rubin pooling over stacked imputations.
+#'   Rubin pooling over stacked imputations and Barnard-Rubin degrees of
+#'   freedom, matching `mice::pool()`.
 #' - [fit_linear()]: linear outcome-model bundle, with Rubin pooling.
 #' - [validate_logistic()]: applies a saved binary bundle to a validation
 #'   cohort without refitting.

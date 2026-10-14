@@ -109,13 +109,27 @@
 
 #' Combine coefficient vectors and covariance matrices with Rubin's rules
 #'
+#' The degrees of freedom are Barnard and Rubin's (1999) small-sample
+#' adjustment, computed as `mice::pool()` computes them. With `df_com = Inf`
+#' they reduce to Rubin's (1987) large-sample degrees of freedom.
+#'
 #' @param estimates List of identically named coefficient vectors.
 #' @param covariances List of identically named covariance matrices.
 #' @param conf_level Confidence level.
+#' @param df_com Complete-data degrees of freedom, from [.complete_df()]. Must be
+#'   positive; `Inf` gives Rubin's (1987) degrees of freedom.
 #' @return A list with final estimates, covariance and per-imputation values.
 #' @keywords internal
-.rubin_pool <- function(estimates, covariances, conf_level = 0.95) {
+.rubin_pool <- function(estimates, covariances, conf_level = 0.95, df_com = Inf) {
   .check_conf_level(conf_level)
+  if (!is.numeric(df_com) || length(df_com) != 1L || is.na(df_com) || df_com <= 0) {
+    rlang::abort(
+      sprintf(paste("Pooling over imputations needs positive complete-data degrees of freedom",
+                    "(n - k); the model has %s. A saturated model leaves none."),
+              format(df_com)),
+      call. = FALSE
+    )
+  }
   if (!is.list(estimates) || !is.list(covariances) ||
         length(estimates) < 2L || length(estimates) != length(covariances)) {
     rlang::abort(
@@ -151,13 +165,14 @@
   total <- ubar + (1 + 1 / m) * between
   dimnames(total) <- list(terms, terms)
 
-  between_diag <- diag(between)
-  within_diag <- diag(ubar)
-  df <- ifelse(
-    between_diag == 0,
-    Inf,
-    (m - 1) * (1 + within_diag / ((1 + 1 / m) * between_diag))^2
-  )
+  # lambda is the fraction of the total variance due to missing data.
+  lambda <- (1 + 1 / m) * diag(between) / diag(total)
+  df <- if (is.infinite(df_com)) {
+    (m - 1) / lambda^2
+  } else {
+    observed <- (1 - lambda) * (1 + df_com) * df_com
+    (m - 1) * observed / ((df_com + 3) * (m - 1) + lambda^2 * observed)
+  }
   by_imputation <- do.call(rbind, lapply(seq_len(m), function(i) {
     data.frame(
       imputation = imputation_labels[[i]],
@@ -235,6 +250,23 @@
 }
 
 
+#' Complete-data degrees of freedom of a fitted model
+#'
+#' The residual degrees of freedom, n minus the number of estimated parameters,
+#' which is the complete-data value `mice::pool()` uses. `nnet::multinom()`
+#' defines no `df.residual()` method, so n minus its effective degrees of
+#' freedom is used, as `mice` does.
+#'
+#' @param model A fitted model.
+#' @return One number; `Inf` when the model reports no residual degrees of freedom.
+#' @keywords internal
+.complete_df <- function(model) {
+  df <- stats::df.residual(model)
+  if (is.null(df) && inherits(model, "multinom")) df <- nrow(model$residuals) - model$edf
+  if (is.null(df)) Inf else as.numeric(df)
+}
+
+
 #' Compute normalized inference for a model bundle
 #'
 #' @param models Non-empty list of fitted models.
@@ -264,7 +296,7 @@
   estimates <- lapply(components, `[[`, "estimate")
   covariances <- lapply(components, `[[`, "covariance")
   if (length(models) > 1L) {
-    result <- .rubin_pool(estimates, covariances, conf_level)
+    result <- .rubin_pool(estimates, covariances, conf_level, .complete_df(models[[1L]]))
   } else {
     terms <- names(estimates[[1L]])
     .check_inference_input(estimates[[1L]], covariances[[1L]], terms, 1L)

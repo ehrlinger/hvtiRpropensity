@@ -77,10 +77,12 @@ test_that("fit_linear's Rubin pool reproduces PROC MIANALYZE", {
   rm_close(est$statistic, sas$tValue, relative = TRUE)
   rm_close(est$estimate, sas$Estimate)
   rm_close(est$std.error, sas$StdErr)
-  rm_close(est$conf.low, sas$LCLMean)
-  rm_close(est$conf.high, sas$UCLMean)
-  rm_close(est$df, sas$DF, relative = TRUE)
-  rm_close(est$p.value, sas$Probt, relative = TRUE)
+  # Barnard-Rubin df, rebuilt from SAS's Rubin df with n - k complete-data df.
+  br <- barnard_rubin_from_sas(sas, stats::df.residual(fit$models[[1L]]))
+  rm_close(est$conf.low, br$conf.low)
+  rm_close(est$conf.high, br$conf.high)
+  rm_close(est$df, br$df, relative = TRUE)
+  rm_close(est$p.value, br$p.value, relative = TRUE)
 
   # SAS's TCov is the multivariate total covariance under MIANALYZE's
   # proportionality assumption, (1 + rbar) * Ubar, not the elementwise Rubin

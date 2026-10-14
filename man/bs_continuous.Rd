@@ -65,7 +65,8 @@ through \verb{stra_<n_strata>} appended.}
 \code{bundle_version}, \code{model_family}, \code{package_versions}, \code{method},
 \code{n_imputations}, \code{n_total}.}
 \item{\verb{$tables}}{Named list: \code{strata_counts} (\code{stratum}, \code{n}),
-\code{estimates} (Rubin-pooled coefficients when imputed), \code{covariance},
+\code{estimates} (Rubin-pooled coefficients when imputed, with Barnard and
+Rubin's degrees of freedom), \code{covariance},
 \code{by_imputation} and \code{fit_status}, laid out as in \code{\link[=fit_linear]{fit_linear()}}.}
 \item{\verb{$models}}{The fitted \code{\link[stats:lm]{stats::lm()}} models, one per imputation,
 named by imputation index.}
@@ -88,6 +89,58 @@ A formula with an aliased term, such as a covariate that duplicates another,
 is an error naming the imputation, rather than a score from a rank-deficient
 fit.
 }
+\section{Pooled degrees of freedom}{
+
+With \code{imputation_col} set, each pooled coefficient is tested against a t
+distribution, and the \code{df} column of \verb{$tables$estimates} gives its degrees
+of freedom. We use Barnard and Rubin's (1999) small-sample degrees of
+freedom, computed the way \code{mice::pool()} computes them, so a pooled table
+here and one from \code{mice} agree.
+
+Rubin's (1987) original degrees of freedom are
+\eqn{\nu_{old} = (m - 1) / \lambda^2}, where \eqn{m} is the number of
+imputations and \eqn{\lambda = (1 + 1/m) B / T} is the proportion of a
+coefficient's total variance \eqn{T} due to missing data, through the
+between-imputation variance \eqn{B}. (This is \code{lambda} in \code{mice}, not its
+finite-sample fraction of missing information, \code{fmi}.) When little is
+missing, \eqn{\lambda} is small and \eqn{\nu_{old}} can run into the
+millions, larger than the sample could ever support, and the intervals come
+out too narrow. Barnard and Rubin cap it with the complete-data degrees of
+freedom \eqn{\nu_{com}}, the value the analysis would have had with no
+missing data:
+\deqn{\nu_{obs} = \frac{\nu_{com} + 1}{\nu_{com} + 3} \nu_{com} (1 - \lambda), \qquad
+  \nu = \left(\frac{1}{\nu_{old}} + \frac{1}{\nu_{obs}}\right)^{-1}.}{
+  nu_obs = (nu_com + 1) / (nu_com + 3) * nu_com * (1 - lambda),
+  nu = 1 / (1 / nu_old + 1 / nu_obs).}
+So \eqn{\nu} never exceeds \eqn{\nu_{com}}, and it approaches
+\eqn{\nu_{old}} as \eqn{\nu_{com}} grows.
+
+\eqn{\nu_{com}} is \eqn{n - k}, the residual degrees of freedom of the
+first imputation's model: \eqn{n} analysed patients minus \eqn{k} estimated
+parameters. That holds for every family, linear, logistic, ordinal, nominal
+and count, as it does in \code{mice}. \code{\link[nnet:multinom]{nnet::multinom()}} reports no residual
+degrees of freedom, so for a nominal model \eqn{k} is its effective degrees
+of freedom, again as \code{mice} does.
+Pooling stops with an error when \eqn{\nu_{com}} is zero or negative, as it
+is for a saturated model, because no small-sample degrees of freedom exist
+then.
+
+Two consequences are worth knowing. First, a single logistic, ordinal,
+nominal or count fit is tested against the normal distribution (\code{df} is
+\code{Inf}), but the same model pooled over imputations reports a finite \code{df}
+and a t test. A single linear fit uses its residual degrees of freedom.
+Second, SAS \verb{PROC MIANALYZE} reports \eqn{\nu_{old}} unless you give it the
+complete-data degrees of freedom with \verb{EDF=}. To reproduce these \code{df}, and
+the p-values and intervals that depend on them, run \verb{PROC MIANALYZE} with
+\verb{EDF=} set to \eqn{n - k}.
+
+Barnard J, Rubin DB (1999). Small-sample degrees of freedom with multiple
+imputation. \emph{Biometrika}, 86(4), 948--955. \doi{10.1093/biomet/86.4.948}
+
+Rubin DB (1987). \emph{Multiple Imputation for Nonresponse in Surveys}. Wiley.
+\doi{10.1002/9780470316696}
+}
+
 \examples{
 # Use ef (ejection fraction) as a stand-in for a continuous exposure
 dta <- sample_ps_data(n = 300, seed = 42)
