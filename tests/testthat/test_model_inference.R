@@ -181,9 +181,38 @@ test_that("linear fits over imputations are Rubin pooled without an odds ratio",
   second$age <- second$age + 0.5
   fits <- list("1" = stats::lm(ef ~ age, d), "2" = stats::lm(ef ~ age, second))
   out <- .model_inference(fits, "linear")
-  pooled <- .rubin_pool(lapply(fits, stats::coef), lapply(fits, stats::vcov))
+  pooled <- .rubin_pool(lapply(fits, stats::coef), lapply(fits, stats::vcov),
+                        df_com = stats::df.residual(fits[[1L]]))
   expect_equal(out$estimates$estimate, pooled$estimates$estimate)
   expect_equal(out$estimates$df, pooled$estimates$df)
   expect_true(all(out$estimates$pooled))
   expect_false("odds_ratio" %in% names(out$estimates))
+})
+
+test_that("Barnard-Rubin df matches mice's formula and caps at the complete-data df", {
+  input <- rubin_inputs()
+  df_com <- 20
+  result <- .rubin_pool(input$q, input$u, df_com = df_com)
+  lambda <- c(a = 1.5 * 2 / 5, b = 1.5 * 2 / 6)
+  df_old <- (2 - 1) / lambda^2
+  df_obs <- (df_com + 1) / (df_com + 3) * df_com * (1 - lambda)
+  expect_equal(result$estimates$df, unname(df_old * df_obs / (df_old + df_obs)))
+  expect_true(all(result$estimates$df < df_com))
+
+  # No between-imputation variance leaves the observed-data df alone.
+  estimates <- list(c(a = 1), c(a = 1), c(a = 1))
+  covariance <- matrix(2, 1, 1, dimnames = list("a", "a"))
+  flat <- .rubin_pool(estimates, rep(list(covariance), 3L), df_com = df_com)
+  expect_equal(flat$estimates$df, df_com * (df_com + 1) / (df_com + 3))
+})
+
+test_that("complete-data df is n minus the estimated parameters for every engine", {
+  d <- sample_ps_data(n = 120, seed = 7)
+  expect_identical(.complete_df(stats::lm(ef ~ age, d)), as.numeric(nrow(d) - 2))
+  expect_identical(.complete_df(stats::glm(female ~ age, binomial, d)), as.numeric(nrow(d) - 2))
+  expect_identical(.complete_df(list()), Inf)
+  skip_if_not_installed("nnet")
+  d$grp <- factor(rep_len(c("a", "b", "c"), nrow(d)))
+  fit <- nnet::multinom(grp ~ age, d, trace = FALSE)
+  expect_identical(.complete_df(fit), as.numeric(nrow(d) - 4))
 })

@@ -119,11 +119,14 @@
 #'     `bundle_version`, `model_family`, `package_versions`, `method`,
 #'     `n_imputations`, `n_total`.}
 #'   \item{`$tables`}{Named list: `strata_counts` (`stratum`, `n`),
-#'     `estimates` (Rubin-pooled coefficients when imputed), `covariance`,
+#'     `estimates` (Rubin-pooled coefficients when imputed, with Barnard and
+#'     Rubin's degrees of freedom), `covariance`,
 #'     `by_imputation` and `fit_status`, laid out as in [fit_linear()].}
 #'   \item{`$models`}{The fitted [stats::lm()] models, one per imputation,
 #'     named by imputation index.}
 #' }
+#'
+#' @inheritSection fit_logistic Pooled degrees of freedom
 #'
 #' @seealso [bs_count()], [fit_linear()], [ps_logistic()], [sample_ps_data()]
 #'
@@ -332,7 +335,7 @@ print.bs_continuous <- function(x, ...) {
 #'     as in [fit_logistic()] except that `estimates` has `rate_ratio`, the
 #'     exponentiated coefficient, in place of `odds_ratio`. With
 #'     `imputation_col`, `estimates` and `covariance` are pooled with Rubin's
-#'     rules.}
+#'     rules, with Barnard and Rubin's degrees of freedom.}
 #'   \item{`$models`}{The fitted models, one per imputation, named by
 #'     imputation index: [MASS::glm.nb()] or [stats::glm()] fits.}
 #' }
@@ -341,6 +344,8 @@ print.bs_continuous <- function(x, ...) {
 #'   `dist = "negbin"` (the default) requires the \pkg{MASS} package (a
 #'   recommended R package, usually pre-installed).  Install with
 #'   `install.packages("MASS")` if missing, or use `dist = "poisson"`.
+#'
+#' @inheritSection fit_logistic Pooled degrees of freedom
 #'
 #' @seealso [bs_continuous()], [ps_logistic()]
 #'

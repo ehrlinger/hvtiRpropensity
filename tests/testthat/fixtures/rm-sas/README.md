@@ -31,3 +31,13 @@ missing ODS table is a NOTE, not an error, so read for it. The raw log stays
 outside Git because its header carries licensing metadata;
 `sas-run-summary.txt` records its SHA-256, its diagnostic counts and the
 completion marker.
+
+## Degrees of freedom
+
+`PROC MIANALYZE` ran without `EDF=`, so `pooled-estimates.csv` holds Rubin's
+(1987) large-sample `DF`, and the `LCLMean`, `UCLMean` and `Probt` built on it.
+The package reports Barnard and Rubin's (1999) degrees of freedom, as
+`mice::pool()` does, with complete-data degrees of freedom n - k. The tests
+rebuild those values from SAS's own `Estimate`, `StdErr` and `DF`
+(`helper_barnard_rubin.R`). A regenerated fixture should pass `EDF=` set to
+n - k, after which the tests can compare against `DF` directly.
