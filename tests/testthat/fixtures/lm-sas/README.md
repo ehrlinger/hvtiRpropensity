@@ -55,11 +55,15 @@ so every value carries full precision. Each new value rounds to the value
 printed by the earlier formatted run; the one exception was `count-estimates.csv`,
 whose `ProbChiSq` read `<.0001` and is now a number.
 
-With full precision, the remaining gap to R is convergence, not rounding.
-`PROC LOGISTIC`'s default `GCONV=` stops short of `glm()` and `polr()`, so the
-binary and ordinal comparisons agree to about 1e-4 (the ordinal covariance to
-about 3e-3), while the nominal and Poisson fits agree to 1e-6 or better and are
-tested at those tighter tolerances.
+With full precision, two causes remain, and neither is rounding. Coefficient
+differences are convergence: `PROC LOGISTIC`'s default `GCONV=` stops short of
+`glm()`, and `polr()`'s own default tolerance moves its coefficients by about
+2e-5, so the binary and ordinal coefficients agree to about 1e-4. The ordinal
+covariance check uses an absolute tolerance because SAS and `MASS::polr()` use
+different information matrices: SAS's covariance is the inverse expected Fisher
+information, `polr()` inverts the observed Hessian. Tightening either fit's
+convergence leaves that gap (about 3e-3) unchanged. The nominal and Poisson fits
+agree to 1e-6 or better and are tested at those tighter tolerances.
 
 ## Degrees of freedom
 

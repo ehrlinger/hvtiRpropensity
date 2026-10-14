@@ -141,8 +141,8 @@ test_that("nominal generalized-logit output agrees with the SAS oracle", {
   scores <- scores[match(fit$data$id, scores$id), ]
 
   # Unformatted export: agreement is ~1e-6, so these hold 10x margin. The binary
-  # and ordinal checks stay looser because PROC LOGISTIC's default GCONV stops
-  # short of glm() and polr() convergence, not because of rounding.
+  # and ordinal coefficient checks stay looser for convergence, and the ordinal
+  # covariance because SAS inverts expected and polr() observed information.
   expect_sas_close(fit$tables$estimates$estimate,
                    sas_estimate[r_terms], tolerance = 3e-5)
   expect_sas_close(fit$tables$covariance, covariance, tolerance = 5e-6)
