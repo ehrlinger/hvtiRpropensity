@@ -146,3 +146,17 @@ test_that("ps_forest() group_counts names groups by their treatment value", {
   expect_identical(counts$treated, c(FALSE, TRUE))
   expect_equal(counts$n, c(sum(dta$tavr == 0), sum(dta$tavr == 1)))
 })
+
+test_that("ps_forest expands a dot formula without id and drops subtracted terms", {
+  d <- sample_ps_data(n = 100, seed = 1)[c("id", "tavr", "age", "female", "ef")]
+  explicit <- ps_forest(tavr ~ age + female + ef, d, ntree = 50, seed = 1)
+  dot <- ps_forest(tavr ~ ., d, ntree = 50, seed = 1)
+  expect_identical(dot$meta$formula, tavr ~ age + female + ef, ignore_formula_env = TRUE)
+  expect_equal(dot$data$prob_t, explicit$data$prob_t)
+
+  # A subtracted column is neither fitted nor checked for missing values.
+  d$dropme <- c(NA, rep(1, nrow(d) - 1L))
+  minus <- ps_forest(tavr ~ . - dropme, d, ntree = 50, seed = 1)
+  expect_equal(minus$data$prob_t, explicit$data$prob_t)
+  expect_identical(minus$tables$smd$variable, c("age", "female", "ef"))
+})

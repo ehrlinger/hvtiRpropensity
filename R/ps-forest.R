@@ -7,7 +7,10 @@
 #' [ps_weight()], [ps_match()] and [sa_overlap()] unchanged, and its `$data`
 #' feeds `hvtiPlotR::hv_mirror_hist()`.
 #'
-#' @param formula Two-sided formula, `treatment ~ x1 + x2 + ...`.
+#' @param formula Two-sided formula, `treatment ~ x1 + x2 + ...`. A `.` on the
+#'   right-hand side expands to the data's other columns, excluding the
+#'   treatment and `id_col`; terms the formula subtracts, as in `. - x3`, are
+#'   left out of the forest.
 #' @param data Data frame with no missing values in the formula variables.
 #' @param treatment_col Treatment column name; defaults to the formula
 #'   response. Binary, 0/1 or logical.
@@ -87,7 +90,13 @@ ps_forest <- function(formula,
   .check_cols(data, treatment_col)
   .check_output_columns(data, c(score_col, logit_col, weight_col, "quintile", "decile"))
 
-  vars <- all.vars(formula)
+  # Expand `.` without the id column, then drop subtracted terms, so the forest,
+  # the missing-value check and the SMD table all see the same predictors.
+  formula <- .expand_dot_formula(formula, data, id_col)
+  formula_env <- environment(formula)
+  formula <- stats::reformulate(attr(stats::terms(formula), "term.labels"), response = formula[[2L]])
+  environment(formula) <- formula_env
+  vars <- c(treatment_col, .retained_predictors(formula))
   .check_cols(data, vars)
   if (anyNA(data[, vars, drop = FALSE])) {
     rlang::abort("`data` has missing values in the formula variables; impute or drop them first.",
