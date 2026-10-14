@@ -40,7 +40,9 @@ ps_forest(
   Two-sided formula, `treatment ~ x1 + x2 + ...`. A `.` on the
   right-hand side expands to the data's other columns, excluding the
   treatment and `id_col`; terms the formula subtracts, as in `. - x3`,
-  are left out of the forest.
+  are left out of the forest. The forest splits on the raw variables, so
+  a transformation such as `log(age)` or an interaction such as `age:ef`
+  contributes `age` and `ef` as they are.
 
 - data:
 

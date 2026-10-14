@@ -32,8 +32,10 @@ bs_count(
 
 - formula:
 
-  A formula with the count outcome on the LHS, e.g.
-  `rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb`.
+  A formula with the count outcome, untransformed, on the LHS, e.g.
+  `rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb`. A `.` on the
+  right-hand side expands to the data's other columns, excluding the
+  outcome, `id_col` and `imputation_col`.
 
 - data:
 

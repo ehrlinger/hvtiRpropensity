@@ -76,7 +76,9 @@ with Rubin's rules; the predicted probabilities are averaged per patient.</p>
 
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
-<dd><p>Model formula.</p></dd>
+<dd><p>Model formula with the outcome column, untransformed, on the
+left. A <code>.</code> on the right-hand side expands to the data's other columns,
+excluding the outcome, <code>id_col</code> and <code>imputation_col</code>.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>

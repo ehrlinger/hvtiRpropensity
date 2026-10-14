@@ -28,7 +28,9 @@ fit_logistic(
 
 - formula:
 
-  Model formula.
+  Model formula with the outcome column, untransformed, on the left. A
+  `.` on the right-hand side expands to the data's other columns,
+  excluding the outcome, `id_col` and `imputation_col`.
 
 - data:
 
