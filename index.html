@@ -73,15 +73,20 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
+<p>hvtiRpropensity is part of the HVTI R family. Install it with the rest of the family through <a href="https://github.com/ehrlinger/hvtiR" class="external-link">hvtiR</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install the development version from GitHub:</span></span>
-<span><span class="co"># install.packages("pak")</span></span>
-<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"ehrlinger/hvtiRpropensity"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"ehrlinger/hvtiR"</span><span class="op">)</span></span>
+<span><span class="fu">hvtiR</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><code>hvtiR::install()</code> installs every member in one call, so the versions the members require of one another resolve together. Update later with <code>hvtiR::update()</code>, from a fresh R session: it will not overwrite a package that is already loaded.</p>
+<p>To install hvtiRpropensity on its own:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"ehrlinger/hvtiRpropensity"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ehrlinger/hvtiRpropensity" class="external-link">hvtiRpropensity</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reproducible synthetic dataset. Drop the generator's true score so the</span></span>
@@ -109,7 +114,7 @@
 <h2 id="logistic-model-bundles">Logistic model bundles<a class="anchor" aria-label="anchor" href="#logistic-model-bundles"></a>
 </h2>
 <p><code><a href="reference/fit_logistic.html">fit_logistic()</a></code> fits binary, proportional-odds ordinal, and generalized-logit nominal outcome models. Clinically meaningful levels are always explicit; factor storage order never decides the event, order, or reference category.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">binary_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit_logistic.html">fit_logistic</a></span><span class="op">(</span></span>
 <span>  <span class="va">tavr</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">female</span> <span class="op">+</span> <span class="va">ef</span> <span class="op">+</span> <span class="va">diabetes</span> <span class="op">+</span> <span class="va">hypertension</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">dta</span>,</span>

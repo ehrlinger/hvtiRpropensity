@@ -1219,7 +1219,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6            xfun_0.61               ggplot2_4.0.3          
-#>  [4] hvtiPlotR_2.8.9         htmlwidgets_1.6.4       visNetwork_2.1.4       
+#>  [4] hvtiPlotR_2.8.10        htmlwidgets_1.6.4       visNetwork_2.1.4       
 #>  [7] lattice_0.22-9          vctrs_0.7.3             tools_4.6.1            
 #> [10] generics_0.1.4          parallel_4.6.1          tibble_3.3.1           
 #> [13] pkgconfig_2.0.3         Matrix_1.7-5            RColorBrewer_1.1-3     
