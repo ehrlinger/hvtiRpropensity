@@ -1,3 +1,89 @@
+# hvtiRpropensity 0.2.1
+
+0.2.1 fixes formula handling across the model functions and the findings of a
+rollup review of the 0.2.0 series. Two changes move published numbers; check
+them before upgrading a study:
+
+* Pooled degrees of freedom are Barnard and Rubin's, as `mice::pool()` reports
+  them, so pooled p-values and intervals change.
+* Ordinal standard errors come from the expected information, as SAS reports
+  them, so ordinal p-values and intervals change, by a fraction of a percent
+  on the package's test data.
+
+* `fit_logistic()` accepts a dot formula such as `y ~ .`. It stopped with
+  "Required column(s) not found in `data`: ." before. The dot expands to every
+  column except the outcome, `id_col` and `imputation_col`, as it already did in
+  `bs_continuous()` and `fit_linear()`.
+* `bs_count()` checks `outcome_col` the way `bs_continuous()` does: a value that
+  is not the formula's response, or a response naming more than one column, is
+  refused. A dot formula no longer fits the `id_col` and `imputation_col`
+  columns as covariates.
+* `fit_logistic()`, `fit_linear()`, `bs_continuous()` and `bs_count()` check
+  only the predictors the model keeps. A variable the formula subtracts, as in
+  `y ~ . - dropme`, is no longer checked for matching levels across
+  imputations, and `fit_logistic()` no longer lists it in `$meta$predictors`.
+* `fit_linear()`, `bs_continuous()` and `bs_count()` require the response to
+  read exactly one column even when `outcome_col` is supplied.
+  `I(count + other)` with `outcome_col = "count"` fitted the sum while
+  recording `count` as the outcome; `cbind(count, other)` stopped with an
+  unhelpful subscript error.
+
+* Pooled estimates from `fit_logistic()`, `fit_linear()`, `bs_continuous()`
+  and `bs_count()` use Barnard and Rubin's (1999) small-sample degrees of
+  freedom, with complete-data degrees of freedom n - k, as `mice::pool()` does.
+  They used Rubin's (1987) large-sample degrees of freedom, which can run into
+  the millions when little is missing. The `df` column, and the p-values and
+  intervals built on it, change for every pooled model; estimates and standard
+  errors do not. A coefficient with no between-imputation variance, which had
+  infinite `df` and a normal test, now gets a finite `df`. To reproduce the
+  values in SAS, run `PROC MIANALYZE` with `EDF=` set to n - k. The help pages
+  for all four functions explain the calculation under "Pooled degrees of
+  freedom".
+* Pooling over imputations stops with an error when the first imputation's
+  model has no residual degrees of freedom (n - k of zero or less), as a
+  saturated model does. A saturated pooled logistic model returned meaningless
+  `df` and p-values before.
+
+* The SAS oracle fixtures for `fit_logistic()` and `fit_linear()` now include
+  a `PROC MIANALYZE EDF=` run, and the tests check the pooled degrees of
+  freedom, p-values and intervals against it directly. No change in behaviour.
+
+* `ps_forest()` accepts a dot formula such as `tavr ~ .`. It stopped with
+  "Required column(s) not found in `data`: ." before. The dot expands to every
+  column except the treatment and `id_col`, as it does in `ps_logistic()`.
+  A column the formula subtracts, as in `. - x3`, is no longer fitted, checked
+  for missing values or reported in the SMD table.
+* `ps_logistic()`, `ps_ordinal()` and `ps_nominal()` leave a constant column
+  the formula subtracts out of the SMD table.
+
+* The SAS oracle fixtures for `fit_logistic()` and `bs_count()` are exported at
+  full precision, with the `PROC LOGISTIC` fits run at `GCONV=1e-12`. The
+  binary, nominal and pooled comparisons, and the `PROC GENMOD` Poisson
+  comparison, are tested at tolerances near their measured agreement. No change
+  in behaviour.
+
+* `fit_linear()`, `bs_continuous()`, `bs_count()` and `ps_forest()` check every
+  column the formula names, subtracted ones included, as `fit_logistic()` does.
+  A subtracted column missing from `data` reached `lm()` or `glm()` as "object
+  not found", or picked up a same-named object from the calling environment;
+  in `ps_forest()` a misspelled one was ignored, so the column meant to be
+  dropped was fitted.
+* `bs_count()` refuses a transformed response such as `log(count + 1)`, which
+  it fitted as counts with a warning. `fit_logistic()` refuses one too,
+  matching its error message.
+* A `.` that leaves no columns once the response, `id_col` and
+  `imputation_col` are set aside stops with a clear error.
+
+* Ordinal models in `fit_logistic()` and `ps_ordinal()` report standard
+  errors from the expected (Fisher) information, as SAS `PROC LOGISTIC` does,
+  instead of `MASS::polr()`'s observed information. The two differ for the
+  cumulative logit; on the package's SAS oracle data the standard errors moved
+  by up to 0.4%, and the p-values, intervals and pooled results with them.
+  `vcov()` on the stored `polr()` model still returns the observed version.
+* `polr()` runs at a tighter tolerance (`reltol = 1e-14`), so ordinal
+  estimates move slightly (about 2e-5 on the oracle data) and now agree with
+  SAS to about 1e-7.
+
 # hvtiRpropensity 0.2.0
 
 0.2.0 consolidates the work since 0.1.0 and the fixes from a rollup review of
