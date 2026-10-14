@@ -154,6 +154,19 @@ Adding a <code>ps_*()</code> function means returning that shape through the con
 <h2 id="prose">Prose<a class="anchor" aria-label="anchor" href="#prose"></a></h2>
 <p>Documentation prose follows the house voice, composed into <code>.claude/house-style.md</code> and checked by <code>house-style.yaml</code>. A propensity-score reader needs to know which estimand a function targets and what balance it achieved. Say both.</p>
 </div>
+<div class="section level2">
+<h2 id="release-ordering">Release ordering<a class="anchor" aria-label="anchor" href="#release-ordering"></a></h2>
+<p>This package is <strong>tier 2, released before <code>hvtiPlotR</code></strong> in the hvtiR release order. It suggests <code>hvtiPlotR</code>, the other half of the family’s one Suggests cycle. <code>hvtiPlotR</code> and <code>hvtiRtemplates</code> suggest it.</p>
+<ul><li>
+<strong>Order follows hard dependencies (<code>Imports</code>) only.</strong> <code>Suggests</code> never forces an order; it matters only when a version floor moves.</li>
+<li>
+<strong>A floor on another hvtiR package moves only in this package’s own bump</strong>, to the version it was tested against, and only when it relies on something new there.</li>
+<li>
+<strong>Before a bump merges, run each dependent’s tests against this package’s branch</strong>: install it into a scratch library and run <code>R_LIBS=&lt;lib&gt; Rscript -e 'devtools::test()'</code> in the dependent.</li>
+<li>
+<strong>Tag every bump</strong> <code>vX.Y.Z</code>. <code>Remotes</code> are unpinned, so a floor is checked against the dependency’s <code>main</code>, not a tag.</li>
+</ul><p>The full policy and dependency graph are in the maintainer’s Obsidian vault at <code>Projects/hvtiR release ordering.md</code>.</p>
+</div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
