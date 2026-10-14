@@ -33,7 +33,8 @@ test_that("the controlled SAS oracle run is complete and clean", {
     paste0(rep(c("binary", "ordinal", "nominal", "count"), each = 3L),
            rep(c("-estimates.csv", "-covariance.csv", "-scores.csv"), 4L)),
     "mi-estimates.csv", "mi-covariance.csv", "mi-outest.csv", "mi-scores.csv",
-    "pooled-estimates.csv", "pooled-covariance.csv", "sas-environment.csv"
+    "pooled-estimates.csv", "pooled-covariance.csv", "pooled-estimates-edf.csv",
+    "complete-df.csv", "sas-environment.csv"
   )
   fixture_dir <- testthat::test_path("fixtures", "lm-sas")
   expect_true(all(file.exists(file.path(fixture_dir, expected))))
@@ -41,7 +42,7 @@ test_that("the controlled SAS oracle run is complete and clean", {
   summary <- readLines(file.path(fixture_dir, "sas-run-summary.txt"), warn = FALSE)
   expect_true("errors=0" %in% summary)
   expect_true("warnings=0" %in% summary)
-  expect_true("completion_marker=LM_ORACLE_COMPLETE expected_outputs=19" %in% summary)
+  expect_true("completion_marker=LM_ORACLE_COMPLETE expected_outputs=21" %in% summary)
 
   environment <- sas_lm_oracle("sas-environment.csv")
   expect_identical(environment$product_version, "9.04.01M8P02222023")
@@ -186,12 +187,17 @@ test_that("Rubin pooled inference agrees with PROC MIANALYZE", {
                    tolerance = 1e-4)
   expect_sas_close(fit$tables$estimates$std.error, estimates$StdErr,
                    tolerance = 1e-4)
-  # Barnard-Rubin df, rebuilt from SAS's Rubin df with n - k complete-data df.
-  br <- barnard_rubin_from_sas(estimates, stats::df.residual(fit$models[[1L]]))
-  expect_lt(max(abs(fit$tables$estimates$df - br$df) / br$df), 0.01)
-  expect_sas_close(fit$tables$estimates$p.value, br$p.value, tolerance = 1e-4)
-  expect_sas_close(fit$tables$estimates$conf.low, br$conf.low, tolerance = 1e-4)
-  expect_sas_close(fit$tables$estimates$conf.high, br$conf.high, tolerance = 1e-4)
+  # Barnard-Rubin df: PROC MIANALYZE EDF= with the complete-data df n - k.
+  edf <- sas_lm_oracle("pooled-estimates-edf.csv")
+  complete <- sas_lm_oracle("complete-df.csv")
+  expect_equal(stats::df.residual(fit$models[[1L]]), complete$edf)
+  expect_lt(max(abs(fit$tables$estimates$df - edf$DF) / edf$DF), 1e-4)
+  expect_sas_close(fit$tables$estimates$p.value, edf$Probt, tolerance = 1e-4)
+  expect_sas_close(fit$tables$estimates$conf.low, edf$LCLMean, tolerance = 1e-4)
+  expect_sas_close(fit$tables$estimates$conf.high, edf$UCLMean, tolerance = 1e-4)
+  # The test helper's algebra, from the default (Rubin 1987) run, agrees with EDF=.
+  br <- barnard_rubin_from_sas(estimates, complete$edf)
+  expect_lt(max(abs(br$df - edf$DF) / edf$DF), 1e-4)
   expect_sas_close(fit$data$prob, averaged$probability, tolerance = 5e-5)
 
   # SAS's TCov is the multivariate total covariance under MIANALYZE's
