@@ -89,6 +89,16 @@ fitted separately, one model per imputation. The coefficients are combined
 with Rubin's rules; the predicted probabilities are averaged per patient.
 }
 \details{
+\strong{Ordinal standard errors.} An ordinal model is fitted with \code{\link[MASS:polr]{MASS::polr()}}
+at a tight \code{optim()} tolerance (\code{reltol = 1e-14}), and its covariance in
+\verb{$tables} is the inverse of the expected (Fisher) information, the matrix
+SAS \verb{PROC LOGISTIC} reports. \code{polr()} itself, and \code{vcov()} on the model in
+\verb{$models}, invert the observed information instead. For the cumulative logit
+the two differ at the estimate, here by a fraction of a percent in the
+standard errors, so the bundle's ordinal standard errors and p-values match
+SAS rather than \code{summary()} of the stored model. Binary and nominal models
+use canonical links, where the two matrices are the same.
+
 \strong{Multiple imputation.} With \code{imputation_col} set, one model is fitted to
 each imputed dataset. The two outputs are then combined differently.
 \verb{$tables$estimates} and \verb{$tables$covariance} pool the coefficients and their
