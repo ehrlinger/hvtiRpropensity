@@ -160,3 +160,17 @@ test_that("ps_forest expands a dot formula without id and drops subtracted terms
   expect_equal(minus$data$prob_t, explicit$data$prob_t)
   expect_identical(minus$tables$smd$variable, c("age", "female", "ef"))
 })
+
+test_that("ps_forest keeps offset() terms, which rfsrc fits as predictors", {
+  d <- sample_ps_data(n = 100, seed = 1)[c("id", "tavr", "age", "female", "ef")]
+  mixed <- ps_forest(tavr ~ age + offset(ef), d, ntree = 50, seed = 1)
+  expect_identical(mixed$meta$formula, tavr ~ age + offset(ef), ignore_formula_env = TRUE)
+  expect_identical(mixed$tables$smd$variable, c("age", "ef"))
+
+  only <- ps_forest(tavr ~ offset(ef), d, ntree = 50, seed = 1)
+  expect_identical(only$meta$formula, tavr ~ offset(ef), ignore_formula_env = TRUE)
+  expect_identical(only$tables$smd$variable, "ef")
+
+  dot <- ps_forest(tavr ~ . - female + offset(log(ef)), d, ntree = 50, seed = 1)
+  expect_identical(dot$meta$formula, tavr ~ age + ef + offset(log(ef)), ignore_formula_env = TRUE)
+})

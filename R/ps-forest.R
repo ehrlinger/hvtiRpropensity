@@ -92,9 +92,13 @@ ps_forest <- function(formula,
 
   # Expand `.` without the id column, then drop subtracted terms, so the forest,
   # the missing-value check and the SMD table all see the same predictors.
+  # rfsrc() fits an offset() term as an ordinary predictor, so offsets are kept.
   formula <- .expand_dot_formula(formula, data, id_col)
   formula_env <- environment(formula)
-  formula <- stats::reformulate(attr(stats::terms(formula), "term.labels"), response = formula[[2L]])
+  model_terms <- stats::terms(formula)
+  offsets <- vapply(as.list(attr(model_terms, "variables"))[-1L][attr(model_terms, "offset")],
+                    function(term) paste(deparse(term), collapse = ""), character(1L))
+  formula <- stats::reformulate(c(attr(model_terms, "term.labels"), offsets), response = formula[[2L]])
   environment(formula) <- formula_env
   vars <- c(treatment_col, .retained_predictors(formula))
   .check_cols(data, vars)
