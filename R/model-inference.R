@@ -116,11 +116,20 @@
 #' @param estimates List of identically named coefficient vectors.
 #' @param covariances List of identically named covariance matrices.
 #' @param conf_level Confidence level.
-#' @param df_com Complete-data degrees of freedom, from [.complete_df()].
+#' @param df_com Complete-data degrees of freedom, from [.complete_df()]. Must be
+#'   positive; `Inf` gives Rubin's (1987) degrees of freedom.
 #' @return A list with final estimates, covariance and per-imputation values.
 #' @keywords internal
 .rubin_pool <- function(estimates, covariances, conf_level = 0.95, df_com = Inf) {
   .check_conf_level(conf_level)
+  if (!is.numeric(df_com) || length(df_com) != 1L || is.na(df_com) || df_com <= 0) {
+    rlang::abort(
+      sprintf(paste("Pooling over imputations needs positive complete-data degrees of freedom",
+                    "(n - k); the model has %s. A saturated model leaves none."),
+              format(df_com)),
+      call. = FALSE
+    )
+  }
   if (!is.list(estimates) || !is.list(covariances) ||
         length(estimates) < 2L || length(estimates) != length(covariances)) {
     rlang::abort(

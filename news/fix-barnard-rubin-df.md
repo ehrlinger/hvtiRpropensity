@@ -8,3 +8,6 @@
   a finite `df` and a t test. To reproduce the values in SAS, run
   `PROC MIANALYZE` with `EDF=` set to n - k. The help pages for all four
   functions explain the calculation under "Pooled degrees of freedom".
+* Pooling over imputations stops with an error when a model has no residual
+  degrees of freedom, as a saturated model does, instead of returning `NaN`
+  p-values and intervals.

@@ -13,7 +13,8 @@
 
 \item{conf_level}{Confidence level.}
 
-\item{df_com}{Complete-data degrees of freedom, from \code{\link[=.complete_df]{.complete_df()}}.}
+\item{df_com}{Complete-data degrees of freedom, from \code{\link[=.complete_df]{.complete_df()}}. Must be
+positive; \code{Inf} gives Rubin's (1987) degrees of freedom.}
 }
 \value{
 A list with final estimates, covariance and per-imputation values.

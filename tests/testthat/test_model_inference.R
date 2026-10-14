@@ -216,3 +216,19 @@ test_that("complete-data df is n minus the estimated parameters for every engine
   fit <- nnet::multinom(grp ~ age, d, trace = FALSE)
   expect_identical(.complete_df(fit), as.numeric(nrow(d) - 4))
 })
+
+test_that("pooling refuses zero or negative complete-data df", {
+  input <- rubin_inputs()
+  for (bad in list(0, -2, -0.5, NA_real_, c(10, 20), "20")) {
+    expect_error(.rubin_pool(input$q, input$u, df_com = bad),
+                 "positive complete-data degrees of freedom")
+  }
+  expect_no_error(.rubin_pool(input$q, input$u, df_com = Inf))
+
+  # A saturated Poisson fit converges with finite covariance but no residual df.
+  d <- data.frame(id = rep(1:3, 2), imp = rep(1:2, each = 3), x = rep(1:3, 2), y = rep(1:3, 2))
+  expect_error(
+    suppressWarnings(bs_count(y ~ x + I(x^2), d, imputation_col = "imp", dist = "poisson")),
+    "the model has 0. A saturated model leaves none"
+  )
+})

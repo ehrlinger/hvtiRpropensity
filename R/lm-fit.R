@@ -79,9 +79,10 @@
 #'
 #' Rubin's (1987) original degrees of freedom are
 #' \eqn{\nu_{old} = (m - 1) / \lambda^2}, where \eqn{m} is the number of
-#' imputations and \eqn{\lambda = (1 + 1/m) B / T} is the share of a
-#' coefficient's total variance \eqn{T} that comes from the between-imputation
-#' variance \eqn{B} (the "fraction of missing information"). When little is
+#' imputations and \eqn{\lambda = (1 + 1/m) B / T} is the proportion of a
+#' coefficient's total variance \eqn{T} due to missing data, through the
+#' between-imputation variance \eqn{B}. (This is `lambda` in `mice`, not its
+#' finite-sample fraction of missing information, `fmi`.) When little is
 #' missing, \eqn{\lambda} is small and \eqn{\nu_{old}} can run into the
 #' millions, larger than the sample could ever support, and the intervals come
 #' out too narrow. Barnard and Rubin cap it with the complete-data degrees of
@@ -100,6 +101,9 @@
 #' and count, as it does in `mice`. [nnet::multinom()] reports no residual
 #' degrees of freedom, so for a nominal model \eqn{k} is its effective degrees
 #' of freedom, again as `mice` does.
+#' Pooling stops with an error when \eqn{\nu_{com}} is zero or negative, as it
+#' is for a saturated model, because no small-sample degrees of freedom exist
+#' then.
 #'
 #' Two consequences are worth knowing. First, a single logistic, ordinal,
 #' nominal or count fit is tested against the normal distribution (`df` is
