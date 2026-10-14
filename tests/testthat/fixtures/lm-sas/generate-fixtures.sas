@@ -55,17 +55,21 @@ run;
 
 ods exclude all;
 
+/* Every PROC LOGISTIC fit uses GCONV=1e-12. The default (1e-8, a relative
+ * gradient criterion) stops short of glm() and polr() convergence, which left
+ * a gap of ~1e-4 in coefficients that was SAS's, not R's. */
+
 /* Binary logistic outcome model. */
 ods output ParameterEstimates=binary_estimates CovB=binary_covariance;
 proc logistic data=one order=internal;
-  model binary(event='1') = x1_imp x2 / covb;
+  model binary(event='1') = x1_imp x2 / covb gconv=1e-12;
   output out=binary_scores p=probability xbeta=linear_predictor;
 run;
 
 /* Proportional-odds cumulative logistic outcome model. */
 ods output ParameterEstimates=ordinal_estimates CovB=ordinal_covariance;
 proc logistic data=one order=internal;
-  model ordinal_order = x1_imp x2 / covb;
+  model ordinal_order = x1_imp x2 / covb gconv=1e-12;
   output out=ordinal_scores predprobs=individual;
 run;
 
@@ -73,7 +77,7 @@ run;
 ods output ParameterEstimates=nominal_estimates CovB=nominal_covariance;
 proc logistic data=one order=internal;
   class nominal(ref='a') / param=ref;
-  model nominal(ref='a') = x1_imp x2 / link=glogit covb;
+  model nominal(ref='a') = x1_imp x2 / link=glogit covb gconv=1e-12;
   output out=nominal_scores predprobs=individual;
 run;
 
@@ -89,7 +93,7 @@ run;
 ods output ParameterEstimates=mi_estimates CovB=mi_covariance;
 proc logistic data=fixture order=internal covout outest=mi_outest;
   by imputation;
-  model binary(event='1') = x1_imp x2 / covb;
+  model binary(event='1') = x1_imp x2 / covb gconv=1e-12;
   output out=mi_scores p=probability xbeta=linear_predictor;
 run;
 
@@ -150,8 +154,21 @@ data sas_environment;
   run_datetime=put(datetime(), e8601dt.);
 run;
 
+/* PROC EXPORT writes formatted values, so strip the display formats first, as
+ * the rm oracle does: an oracle needs every digit, and a p-value printed as
+ * <.0001 is not a number. ordinal_order keeps its low/mid/high labels. */
 %macro export_raw(data=, file=);
-  proc export data=&data
+  %local dsid has_order rc;
+  %let dsid=%sysfunc(open(&data));
+  %let has_order=%sysfunc(varnum(&dsid, ordinal_order));
+  %let rc=%sysfunc(close(&dsid));
+  data _export;
+    set &data;
+    format _numeric_ best32.
+      %if &has_order > 0 %then %do; ordinal_order ordinal_order_format. %end;
+    ;
+  run;
+  proc export data=_export
       outfile="&output_dir./&file..csv" dbms=csv replace;
   run;
 %mend;

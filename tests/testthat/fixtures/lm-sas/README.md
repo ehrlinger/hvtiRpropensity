@@ -47,17 +47,23 @@ observed SAS schema explicitly and compare estimates, covariance, scores, and
 pooled inference. This prevents either implementation from defining the other
 one's answer.
 
-Status on 2026-10-14: the controlled run completed under SAS
-9.04.01M8P02222023 on Linux. The 21 raw CSVs and the non-sensitive run summary
-are committed; the raw log remains in the controlled-run folder. The 19 outputs
-from the 2026-09-21 run were reproduced byte for byte, apart from the run time in
-`sas-environment.csv`; the run added `pooled-estimates-edf.csv` and
-`complete-df.csv`.
-`test_lm_sas_oracle.R` checks coefficients, covariance, predictions, and pooled
-inference against them. The ordinal covariance check uses an absolute tolerance
-because SAS and `MASS::polr()` use different Hessian calculations; their
-coefficient, standard-error, and probability results agree at the documented
-cross-engine tolerances.
+Status on 2026-10-14: the controlled run (`lm-oracle-20261014c`) completed
+under SAS 9.04.01M8P02222023 on Linux. The 21 raw CSVs and the non-sensitive
+run summary are committed; the raw log remains in the controlled-run folder.
+The program strips display formats before export, as the rm oracle does, so
+every value carries full precision, and every `PROC LOGISTIC` fit runs at
+`GCONV=1e-12`; the log reports that criterion satisfied for all six fits.
+
+Two earlier runs that day isolated the causes of the remaining gaps. The run
+with the default `GCONV=` (1e-8, a relative gradient criterion) left binary
+coefficients 7.8e-5 from `glm()`; at 1e-12 they agree to about 1e-9, and the
+binary, nominal and pooled checks are tested near that. Two ordinal gaps are
+not SAS convergence and stay at looser tolerances. `polr()`'s own default
+tolerance moves its coefficients by about 2e-5. The ordinal covariance check
+uses an absolute tolerance because SAS and `MASS::polr()` use different
+information matrices: SAS's covariance is the inverse expected Fisher
+information, `polr()` inverts the observed Hessian. Tightening either fit's
+convergence leaves that gap (about 3e-3) unchanged.
 
 ## Degrees of freedom
 
