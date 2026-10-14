@@ -167,6 +167,7 @@ bs_continuous <- function(formula,
   }
   n_strata <- as.integer(n_strata)
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
+  .check_cols(data, all.vars(formula))
 
   # ---- Fit model(s) -------------------------------------------------------
   fit_fn <- function(df) {
@@ -289,8 +290,10 @@ print.bs_continuous <- function(x, ...) {
 #' used as the balancing score because it is on an unbounded continuous scale
 #' more suitable for rank-based stratification.
 #'
-#' @param formula             A formula with the count outcome on the LHS,
-#'   e.g. `rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb`.
+#' @param formula             A formula with the count outcome, untransformed,
+#'   on the LHS, e.g. `rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb`.
+#'   A `.` on the right-hand side expands to the data's other columns,
+#'   excluding the outcome, `id_col` and `imputation_col`.
 #' @param data                A data frame, or a stacked MI data frame when
 #'   `imputation_col` is set.
 #' @param outcome_col         Name of the count outcome column.  `NULL`
@@ -409,6 +412,10 @@ bs_count <- function(formula,
   }
   .check_df(data)
   outcome_col <- .check_outcome_response(formula, outcome_col)
+  if (!is.name(formula[[2L]])) {
+    rlang::abort("The count response must be a column name, not a transformation such as `log(count)`.",
+                 call. = FALSE)
+  }
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
@@ -416,6 +423,7 @@ bs_count <- function(formula,
   }
   n_strata <- as.integer(n_strata)
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
+  .check_cols(data, all.vars(formula))
 
   # ---- Fit function -------------------------------------------------------
   fit_fn <- if (dist == "negbin") {

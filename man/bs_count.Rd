@@ -19,8 +19,10 @@ bs_count(
 )
 }
 \arguments{
-\item{formula}{A formula with the count outcome on the LHS,
-e.g. \code{rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb}.}
+\item{formula}{A formula with the count outcome, untransformed,
+on the LHS, e.g. \code{rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb}.
+A \code{.} on the right-hand side expands to the data's other columns,
+excluding the outcome, \code{id_col} and \code{imputation_col}.}
 
 \item{data}{A data frame, or a stacked MI data frame when
 \code{imputation_col} is set.}

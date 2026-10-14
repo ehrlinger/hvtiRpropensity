@@ -9,7 +9,7 @@
 * `fit_logistic()`, `fit_linear()`, `bs_continuous()` and `bs_count()` check
   only the predictors the model keeps. A variable the formula subtracts, as in
   `y ~ . - dropme`, is no longer checked for matching levels across
-  imputations, and no longer listed in `$meta$predictors`.
+  imputations, and `fit_logistic()` no longer lists it in `$meta$predictors`.
 * `fit_linear()`, `bs_continuous()` and `bs_count()` require the response to
   read exactly one column even when `outcome_col` is supplied. `I(count + other)`
   with `outcome_col = "count"` fitted the sum while recording `count` as the
