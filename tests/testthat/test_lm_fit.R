@@ -427,3 +427,56 @@ test_that("fit_linear expands a dot formula without the id or imputation column"
   }
   expect_identical(deparse(pooled$meta$formula), "ef ~ age + female")
 })
+
+test_that("fit_logistic expands a dot formula without the id or imputation column", {
+  d <- lm_fixture()
+  small <- d[c("binary", "x1_imp", "x2", "id", "imputation")]
+  obj <- fit_logistic(binary ~ ., small, family = "binary",
+                      imputation_col = "imputation",
+                      outcome_levels = c(0, 1), event_level = 1)
+  expect_identical(obj$meta$predictors, c("x1_imp", "x2"))
+  expect_identical(names(stats::coef(obj$models[[1L]])), c("(Intercept)", "x1_imp", "x2"))
+})
+
+# Stacked imputations whose `dropme` column has levels a and b in imputation 1
+# but a, b and c in imputation 2. Only a model that keeps `dropme` should care.
+mi_with_dropme <- function() {
+  withr::local_seed(11)
+  n <- 60
+  base <- data.frame(id = seq_len(n), binary = rep(0:1, n / 2), count = stats::rpois(n, 3),
+                     other = stats::rpois(n, 2))
+  one <- function(i, levels) {
+    cbind(base, imp = i, x = stats::rnorm(n), dropme = factor(rep_len(levels, n)))
+  }
+  rbind(one(1L, c("a", "b")), one(2L, c("a", "b", "c")))
+}
+
+test_that(".retained_predictors drops subtracted variables and keeps offsets", {
+  expect_identical(.retained_predictors(y ~ x + d + log(z) + offset(log(t)) - d + `odd name`),
+                   c("x", "z", "odd name", "t"))
+  expect_identical(.retained_predictors(y ~ 1), character())
+})
+
+test_that("predictors a formula subtracts are not checked across imputations", {
+  d <- mi_with_dropme()
+  dot <- fit_logistic(binary ~ . - dropme - count - other, d, imputation_col = "imp",
+                      outcome_levels = c(0, 1), event_level = 1)
+  explicit <- fit_logistic(binary ~ x, d, imputation_col = "imp",
+                           outcome_levels = c(0, 1), event_level = 1)
+  expect_identical(dot$meta$predictors, "x")
+  expect_equal(dot$tables$estimates, explicit$tables$estimates)
+  expect_error(fit_logistic(binary ~ x + dropme, d, imputation_col = "imp",
+                            outcome_levels = c(0, 1), event_level = 1),
+               "`dropme` has different observed levels")
+
+  lin <- fit_linear(count ~ . - dropme - binary - other, d, imputation_col = "imp")
+  expect_equal(lin$tables$estimates, fit_linear(count ~ x, d, imputation_col = "imp")$tables$estimates)
+})
+
+test_that("fit_linear requires a one-column response even with outcome_col", {
+  d <- mi_with_dropme()[1:60, ]
+  expect_error(fit_linear(I(count + other) ~ x, d, outcome_col = "count"), "exactly one column")
+  expect_error(fit_linear(cbind(count, other) ~ x, d, outcome_col = "count"), "exactly one column")
+  expect_error(fit_linear(I(count + other) ~ x, d), "exactly one column")
+  expect_identical(fit_linear(log1p(count) ~ x, d, outcome_col = "count")$meta$outcome_col, "count")
+})

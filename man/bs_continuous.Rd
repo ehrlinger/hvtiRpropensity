@@ -28,7 +28,8 @@ response, \code{id_col} and \code{imputation_col}.}
 \code{imputation_col} is set.}
 
 \item{outcome_col}{Name of the continuous outcome column.  \code{NULL}
-(default) extracts from \code{formula}.}
+(default) extracts from \code{formula}, whose response must read exactly one
+column; a supplied value must name that column.}
 
 \item{id_col}{Patient identifier column.  Required, and checked,
 only when \code{imputation_col} is set.  Default \code{"id"}.}

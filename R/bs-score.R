@@ -86,7 +86,8 @@
 #' @param data                A data frame, or a stacked MI data frame when
 #'   `imputation_col` is set.
 #' @param outcome_col         Name of the continuous outcome column.  `NULL`
-#'   (default) extracts from `formula`.
+#'   (default) extracts from `formula`, whose response must read exactly one
+#'   column; a supplied value must name that column.
 #' @param id_col              Patient identifier column.  Required, and checked,
 #'   only when `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col      Imputation-index column for stacked MI data.
@@ -155,15 +156,7 @@ bs_continuous <- function(formula,
     rlang::abort("`formula` must be an R formula.", call. = FALSE)
   }
   .check_df(data)
-  if (is.null(outcome_col)) {
-    outcome_col <- all.vars(formula[[2L]])
-    if (length(outcome_col) != 1L) {
-      rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
-                   call. = FALSE)
-    }
-  } else {
-    .check_outcome_response(formula, outcome_col)
-  }
+  outcome_col <- .check_outcome_response(formula, outcome_col)
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
@@ -186,7 +179,7 @@ bs_continuous <- function(formula,
     imputation_col = imputation_col,
     fit_fn = fit_fn,
     predict_fn = pred_fn,
-    predictor_cols = all.vars(stats::delete.response(stats::terms(formula))),
+    predictor_cols = .retained_predictors(formula),
     require_stable_response = FALSE
   )
   .check_aliased(fitted$models)
@@ -298,7 +291,8 @@ print.bs_continuous <- function(x, ...) {
 #' @param data                A data frame, or a stacked MI data frame when
 #'   `imputation_col` is set.
 #' @param outcome_col         Name of the count outcome column.  `NULL`
-#'   (default) extracts from `formula`.
+#'   (default) extracts from `formula`, whose response must read exactly one
+#'   column; a supplied value must name that column.
 #' @param id_col              Patient identifier column.  Required, and checked,
 #'   only when `imputation_col` is set.  Default `"id"`.
 #' @param imputation_col      Imputation-index column.  `NULL` (default)
@@ -409,13 +403,14 @@ bs_count <- function(formula,
     rlang::abort("`formula` must be an R formula.", call. = FALSE)
   }
   .check_df(data)
-  if (is.null(outcome_col)) outcome_col <- as.character(formula[[2L]])
+  outcome_col <- .check_outcome_response(formula, outcome_col)
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
     rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
   }
   n_strata <- as.integer(n_strata)
+  formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
 
   # ---- Fit function -------------------------------------------------------
   fit_fn <- if (dist == "negbin") {
@@ -442,7 +437,7 @@ bs_count <- function(formula,
     imputation_col = imputation_col,
     fit_fn = fit_fn,
     predict_fn = pred_fn,
-    predictor_cols = all.vars(stats::delete.response(stats::terms(formula))),
+    predictor_cols = .retained_predictors(formula),
     require_stable_response = FALSE
   )
   inference <- .model_inference(fitted$models, "count")

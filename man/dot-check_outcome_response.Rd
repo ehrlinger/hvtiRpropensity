@@ -2,21 +2,23 @@
 % Please edit documentation in R/lm-fit.R
 \name{.check_outcome_response}
 \alias{.check_outcome_response}
-\title{Stop when \code{outcome_col} is not the formula's response}
+\title{Resolve \code{outcome_col} from the formula's response}
 \usage{
-.check_outcome_response(formula, outcome_col)
+.check_outcome_response(formula, outcome_col = NULL)
 }
 \arguments{
 \item{formula}{Two-sided model formula.}
 
-\item{outcome_col}{Supplied outcome column name.}
+\item{outcome_col}{Supplied outcome column name, or \code{NULL}.}
 }
 \value{
-Invisible \code{NULL}.
+The outcome column name.
 }
 \description{
-A mismatched \code{outcome_col} would fit one column but run the stable-response
-check, and record the metadata, against another. A transformed response such
-as \code{log(ef)} is matched by the column it reads, \code{ef}.
+The response must read exactly one column, whether or not \code{outcome_col} is
+supplied: \code{I(count + other)} or \code{cbind(count, other)} would fit one quantity
+while the stable-response check, and the metadata, used another. A
+transformed response such as \code{log(ef)} reads one column, \code{ef}. A supplied
+\code{outcome_col} must name that column.
 }
 \keyword{internal}
