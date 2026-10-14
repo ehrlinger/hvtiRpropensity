@@ -362,3 +362,31 @@ test_that("bs_count expands a dot formula without the id or imputation column", 
   obj <- bs_count(rbc_tot ~ ., small)
   expect_identical(names(stats::coef(obj$models[[1L]])), c("(Intercept)", "age", "female"))
 })
+
+test_that("bs_* do not check subtracted predictors across imputations", {
+  withr::local_seed(11)
+  n <- 60
+  base <- data.frame(id = seq_len(n), count = stats::rpois(n, 3), other = stats::rpois(n, 2))
+  one <- function(i, levels) {
+    cbind(base, imp = i, x = stats::rnorm(n), dropme = factor(rep_len(levels, n)))
+  }
+  d <- rbind(one(1L, c("a", "b")), one(2L, c("a", "b", "c")))
+
+  cnt <- bs_count(count ~ . - dropme - other, d, imputation_col = "imp", dist = "poisson")
+  expect_equal(cnt$tables$estimates,
+               bs_count(count ~ x, d, imputation_col = "imp", dist = "poisson")$tables$estimates)
+  cont <- bs_continuous(count ~ . - dropme - other, d, imputation_col = "imp")
+  expect_equal(cont$tables$estimates,
+               bs_continuous(count ~ x, d, imputation_col = "imp")$tables$estimates)
+  expect_error(bs_count(count ~ x + dropme, d, imputation_col = "imp", dist = "poisson"),
+               "`dropme` has different observed levels")
+})
+
+test_that("bs_* require a one-column response even with outcome_col", {
+  d <- sample_ps_data_count(n = 150, seed = 40)
+  d$other <- d$rbc_tot + 1L
+  for (fn in list(bs_count, bs_continuous)) {
+    expect_error(fn(I(rbc_tot + other) ~ age, d, outcome_col = "rbc_tot"), "exactly one column")
+    expect_error(fn(cbind(rbc_tot, other) ~ age, d, outcome_col = "rbc_tot"), "exactly one column")
+  }
+})

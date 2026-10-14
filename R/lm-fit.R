@@ -303,7 +303,7 @@ fit_logistic <- function(formula, data,
     imputation_col = imputation_col,
     fit_fn = fit_fn,
     predict_fn = predict_fn,
-    predictor_cols = all.vars(stats::delete.response(stats::terms(formula)))
+    predictor_cols = .retained_predictors(formula)
   )
   inference <- .model_inference(fitted$models, family)
   scored <- fitted$data
@@ -340,7 +340,7 @@ fit_logistic <- function(formula, data,
     } else {
       NULL
     },
-    predictors = all.vars(stats::delete.response(stats::terms(formula))),
+    predictors = .retained_predictors(formula),
     id_col = id_col,
     imputation_col = imputation_col,
     n_imputations = as.integer(length(fitted$imputations)),
@@ -388,27 +388,50 @@ fit_logistic <- function(formula, data,
 }
 
 
-#' Stop when `outcome_col` is not the formula's response
+#' Resolve `outcome_col` from the formula's response
 #'
-#' A mismatched `outcome_col` would fit one column but run the stable-response
-#' check, and record the metadata, against another. A transformed response such
-#' as `log(ef)` is matched by the column it reads, `ef`.
+#' The response must read exactly one column, whether or not `outcome_col` is
+#' supplied: `I(count + other)` or `cbind(count, other)` would fit one quantity
+#' while the stable-response check, and the metadata, used another. A
+#' transformed response such as `log(ef)` reads one column, `ef`. A supplied
+#' `outcome_col` must name that column.
 #'
 #' @param formula Two-sided model formula.
-#' @param outcome_col Supplied outcome column name.
-#' @return Invisible `NULL`.
+#' @param outcome_col Supplied outcome column name, or `NULL`.
+#' @return The outcome column name.
 #' @keywords internal
-.check_outcome_response <- function(formula, outcome_col) {
+.check_outcome_response <- function(formula, outcome_col = NULL) {
   response <- all.vars(formula[[2L]])
+  if (length(response) != 1L) {
+    rlang::abort("The formula's response must name exactly one column.", call. = FALSE)
+  }
+  if (is.null(outcome_col)) return(response)
   if (!is.character(outcome_col) || length(outcome_col) != 1L ||
-        !outcome_col %in% response) {
+        !identical(outcome_col, response)) {
     rlang::abort(
       sprintf("`outcome_col` (\"%s\") is not the formula's response (%s).",
               paste(outcome_col, collapse = ", "), paste(response, collapse = ", ")),
       call. = FALSE
     )
   }
-  invisible(NULL)
+  response
+}
+
+
+#' Variables the model's retained terms read
+#'
+#' `all.vars()` on the right-hand side also returns variables a formula
+#' subtracts, such as `dropme` in `y ~ . - dropme`. These are the variables of
+#' the terms the model keeps, plus any `offset()`.
+#'
+#' @param formula Model formula.
+#' @return Character vector of column names, possibly empty.
+#' @keywords internal
+.retained_predictors <- function(formula) {
+  rhs <- stats::delete.response(stats::terms(formula))
+  kept <- lapply(attr(rhs, "term.labels"), str2lang)
+  offsets <- as.list(attr(rhs, "variables"))[-1L][attr(rhs, "offset")]
+  unique(as.character(unlist(lapply(c(kept, offsets), all.vars))))
 }
 
 
@@ -447,8 +470,8 @@ fit_logistic <- function(formula, data,
 #'   columns, excluding the response, `id_col` and `imputation_col`.
 #' @param data A data frame, or stacked imputations when `imputation_col` is set.
 #' @param outcome_col Outcome column. By default the one variable in the
-#'   formula's response; if supplied, it must be one of the variables in the
-#'   response.
+#'   formula's response; if supplied, it must name that variable. The
+#'   response must read exactly one column.
 #' @param id_col Patient identifier column. Required only when `imputation_col` is set.
 #' @param imputation_col Imputation-index column, or `NULL` for one dataset.
 #' @param prediction_col Name of the fitted-value column added to `$data`,
@@ -472,15 +495,7 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
     rlang::abort("`formula` must be a two-sided R formula.", call. = FALSE)
   }
   .check_df(data)
-  if (is.null(outcome_col)) {
-    outcome_col <- all.vars(formula[[2L]])
-    if (length(outcome_col) != 1L) {
-      rlang::abort("The formula's response must name exactly one column; set `outcome_col`.",
-                   call. = FALSE)
-    }
-  } else {
-    .check_outcome_response(formula, outcome_col)
-  }
+  outcome_col <- .check_outcome_response(formula, outcome_col)
   .check_cols(data, outcome_col)
   if (!is.numeric(data[[outcome_col]])) {
     rlang::abort(sprintf("The outcome `%s` must be numeric for a linear model.", outcome_col),
@@ -503,7 +518,7 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
     imputation_col = imputation_col,
     fit_fn = function(df) stats::lm(formula, data = df, na.action = stats::na.exclude),
     predict_fn = function(fit, df) stats::predict(fit, newdata = df),
-    predictor_cols = all.vars(stats::delete.response(stats::terms(formula)))
+    predictor_cols = .retained_predictors(formula)
   )
   .check_aliased(fitted$models)
   inference <- .model_inference(fitted$models, "linear")

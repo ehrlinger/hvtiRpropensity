@@ -21,8 +21,8 @@ columns, excluding the response, \code{id_col} and \code{imputation_col}.}
 \item{data}{A data frame, or stacked imputations when \code{imputation_col} is set.}
 
 \item{outcome_col}{Outcome column. By default the one variable in the
-formula's response; if supplied, it must be one of the variables in the
-response.}
+formula's response; if supplied, it must name that variable. The
+response must read exactly one column.}
 
 \item{id_col}{Patient identifier column. Required only when \code{imputation_col} is set.}
 

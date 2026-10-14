@@ -26,7 +26,8 @@ e.g. \code{rbc_tot ~ female + agee + in_hct + hx_csurg + iv_cpb}.}
 \code{imputation_col} is set.}
 
 \item{outcome_col}{Name of the count outcome column.  \code{NULL}
-(default) extracts from \code{formula}.}
+(default) extracts from \code{formula}, whose response must read exactly one
+column; a supplied value must name that column.}
 
 \item{id_col}{Patient identifier column.  Required, and checked,
 only when \code{imputation_col} is set.  Default \code{"id"}.}
