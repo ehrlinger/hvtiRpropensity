@@ -17,12 +17,13 @@ pooling. Do not substitute R-generated values.
 The last log marker must be:
 
 ```text
-NOTE: RM_ORACLE_COMPLETE expected_outputs=8.
+NOTE: RM_ORACLE_COMPLETE expected_outputs=10.
 ```
 
-The eight CSVs are `single-estimates`, `single-covariance`, `single-anova`
+The ten CSVs are `single-estimates`, `single-covariance`, `single-anova`
 (whose `Error` row carries the residual degrees of freedom), `single-scores`,
-`pooled-estimates`, `pooled-covariance`, `mi-scores` and `sas-environment`.
+`pooled-estimates`, `pooled-covariance`, `pooled-estimates-edf`, `complete-df`,
+`mi-scores` and `sas-environment`.
 Before acceptance, confirm that the log has no `ERROR:` and no `WARNING:`, and
 that the ODS tables `ParameterEstimates`, `CovB`, `ANOVA` and `TCov` were all
 created. Values are exported unformatted, so a CSV holding `<.0001` or a
@@ -34,10 +35,17 @@ completion marker.
 
 ## Degrees of freedom
 
-`PROC MIANALYZE` ran without `EDF=`, so `pooled-estimates.csv` holds Rubin's
-(1987) large-sample `DF`, and the `LCLMean`, `UCLMean` and `Probt` built on it.
-The package reports Barnard and Rubin's (1999) degrees of freedom, as
-`mice::pool()` does, with complete-data degrees of freedom n - k. The tests
-rebuild those values from SAS's own `Estimate`, `StdErr` and `DF`
-(`helper_barnard_rubin.R`). A regenerated fixture should pass `EDF=` set to
-n - k, after which the tests can compare against `DF` directly.
+`pooled-estimates.csv` is `PROC MIANALYZE` without `EDF=`: Rubin's (1987)
+large-sample `DF`, and the `LCLMean`, `UCLMean` and `Probt` built on it. The
+package reports Barnard and Rubin's (1999) degrees of freedom, as
+`mice::pool()` does, with complete-data degrees of freedom n - k.
+`generate-fixtures.sas` therefore runs `PROC MIANALYZE` a second time with
+`EDF=` set to n - k for imputation 1 and writes `pooled-estimates-edf.csv`,
+with the EDF it used in `complete-df.csv`.
+
+Until the fixture is regenerated, the committed CSVs predate those two files
+and the tests rebuild the Barnard-Rubin values from SAS's own `Estimate`,
+`StdErr` and `DF` (`helper_barnard_rubin.R`). After regeneration, compare
+`df`, `p.value`, `conf.low` and `conf.high` against `pooled-estimates-edf.csv`
+directly, check `complete-df.csv` against `df.residual()` of the first
+imputation's model, and keep the helper as a check of itself against SAS.

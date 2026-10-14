@@ -27,6 +27,27 @@ proc mianalyze data=work.mi_outest tcov;
   modeleffects Intercept age female;
 run;
 
+/* Barnard-Rubin (1999) degrees of freedom. EDF= is the complete-data df,
+   n - k: the Error DF of imputation 1's fit, the value R takes from
+   df.residual() of the first imputation's model. */
+proc sql noprint;
+  select DF into :edf trimmed from work.single_anova where Source = "Error";
+quit;
+%if %length(&edf) = 0 %then %do;
+  %put ERROR: The complete-data degrees of freedom were not computed.;
+  %abort cancel;
+%end;
+%put NOTE: Complete-data degrees of freedom EDF=&edf..;
+
+data work.complete_df;
+  edf = &edf;
+run;
+
+ods output ParameterEstimates=work.pooled_est_edf;
+proc mianalyze data=work.mi_outest edf=&edf;
+  modeleffects Intercept age female;
+run;
+
 /* The balancing score is the per-patient fitted value averaged over imputations. */
 proc summary data=work.mi_pred nway;
   class id;
@@ -55,7 +76,9 @@ run;
 %export(single_scores, single-scores.csv)
 %export(pooled_est, pooled-estimates.csv)
 %export(pooled_cov, pooled-covariance.csv)
+%export(pooled_est_edf, pooled-estimates-edf.csv)
+%export(complete_df, complete-df.csv)
 %export(mi_scores, mi-scores.csv)
 %export(sas_environment, sas-environment.csv)
 
-%put NOTE: RM_ORACLE_COMPLETE expected_outputs=8.;
+%put NOTE: RM_ORACLE_COMPLETE expected_outputs=10.;

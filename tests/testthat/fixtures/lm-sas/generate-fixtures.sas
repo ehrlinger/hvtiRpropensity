@@ -109,6 +109,38 @@ proc mianalyze parms=mi_estimates_mianalyze
   modeleffects Intercept x1_imp x2;
 run;
 
+/* Barnard-Rubin (1999) degrees of freedom. EDF= is the complete-data df,
+ * n - k for imputation 1: the rows PROC LOGISTIC can use (outcome and both
+ * predictors observed) minus the estimated parameters. This is the value R
+ * takes from df.residual() of the first imputation's model. */
+proc sql noprint;
+  select count(*) into :n_used trimmed
+    from fixture
+    where imputation = 1 and not missing(binary)
+      and not missing(x1_imp) and not missing(x2);
+  select count(*) into :n_parms trimmed
+    from mi_estimates
+    where imputation = 1;
+quit;
+%let edf=%eval(&n_used - &n_parms);
+%if &n_parms = 0 or &edf <= 0 %then %do;
+  %put ERROR: The complete-data degrees of freedom were not computed (n=&n_used k=&n_parms).;
+  %abort cancel;
+%end;
+%put NOTE: Complete-data degrees of freedom EDF=&edf (n=&n_used k=&n_parms).;
+
+data complete_df;
+  n_used = &n_used;
+  n_parms = &n_parms;
+  edf = &edf;
+run;
+
+ods output ParameterEstimates=pooled_estimates_edf;
+proc mianalyze parms=mi_estimates_mianalyze
+    covb(effectvar=stacking)=mi_covariance_mianalyze edf=&edf;
+  modeleffects Intercept x1_imp x2;
+run;
+
 ods exclude none;
 
 data sas_environment;
@@ -147,9 +179,11 @@ run;
 
 %export_raw(data=pooled_estimates, file=pooled-estimates);
 %export_raw(data=pooled_covariance, file=pooled-covariance);
+%export_raw(data=pooled_estimates_edf, file=pooled-estimates-edf);
+%export_raw(data=complete_df, file=complete-df);
 %export_raw(data=sas_environment, file=sas-environment);
 
-%put NOTE: LM_ORACLE_COMPLETE expected_outputs=19.;
+%put NOTE: LM_ORACLE_COMPLETE expected_outputs=21.;
 
 proc printto;
 run;
