@@ -49,15 +49,17 @@ one's answer.
 
 Status on 2026-10-14: the controlled run completed under SAS
 9.04.01M8P02222023 on Linux. The 21 raw CSVs and the non-sensitive run summary
-are committed; the raw log remains in the controlled-run folder. The 19 outputs
-from the 2026-09-21 run were reproduced byte for byte, apart from the run time in
-`sas-environment.csv`; the run added `pooled-estimates-edf.csv` and
-`complete-df.csv`.
-`test_lm_sas_oracle.R` checks coefficients, covariance, predictions, and pooled
-inference against them. The ordinal covariance check uses an absolute tolerance
-because SAS and `MASS::polr()` use different Hessian calculations; their
-coefficient, standard-error, and probability results agree at the documented
-cross-engine tolerances.
+are committed; the raw log remains in the controlled-run folder. Since this
+run the program strips display formats before export, as the rm oracle does,
+so every value carries full precision. Each new value rounds to the value
+printed by the earlier formatted run; the one exception was `count-estimates.csv`,
+whose `ProbChiSq` read `<.0001` and is now a number.
+
+With full precision, the remaining gap to R is convergence, not rounding.
+`PROC LOGISTIC`'s default `GCONV=` stops short of `glm()` and `polr()`, so the
+binary and ordinal comparisons agree to about 1e-4 (the ordinal covariance to
+about 3e-3), while the nominal and Poisson fits agree to 1e-6 or better and are
+tested at those tighter tolerances.
 
 ## Degrees of freedom
 

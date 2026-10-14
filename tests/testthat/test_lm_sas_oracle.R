@@ -140,13 +140,16 @@ test_that("nominal generalized-logit output agrees with the SAS oracle", {
   scores <- sas_lm_oracle("nominal-scores.csv")
   scores <- scores[match(fit$data$id, scores$id), ]
 
+  # Unformatted export: agreement is ~1e-6, so these hold 10x margin. The binary
+  # and ordinal checks stay looser because PROC LOGISTIC's default GCONV stops
+  # short of glm() and polr() convergence, not because of rounding.
   expect_sas_close(fit$tables$estimates$estimate,
-                   sas_estimate[r_terms], tolerance = 1e-4)
-  expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-4)
+                   sas_estimate[r_terms], tolerance = 3e-5)
+  expect_sas_close(fit$tables$covariance, covariance, tolerance = 5e-6)
   expect_sas_close(
     unname(as.matrix(fit$data[c("prob_a", "prob_b", "prob_c")])),
     unname(as.matrix(scores[c("IP_a", "IP_b", "IP_c")])),
-    tolerance = 5e-5
+    tolerance = 1e-5
   )
 })
 
@@ -161,9 +164,9 @@ test_that("Poisson balancing output agrees with the SAS oracle", {
   scores <- scores[match(fit$data$id, scores$id), ]
 
   expect_sas_close(fit$tables$estimates$estimate, estimates$Estimate,
-                   tolerance = 1e-4)
-  expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-4)
-  expect_sas_close(fit$data$bs, scores$linear_predictor, tolerance = 5e-5)
+                   tolerance = 1e-5)
+  expect_sas_close(fit$tables$covariance, covariance, tolerance = 1e-7)
+  expect_sas_close(fit$data$bs, scores$linear_predictor, tolerance = 1e-5)
 })
 
 test_that("Rubin pooled inference agrees with PROC MIANALYZE", {
