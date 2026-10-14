@@ -4,7 +4,10 @@ Fits a proportional-odds cumulative logit model via
 [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) for an ordered
 treatment variable and appends one probability column per treatment
 level to the dataset. The model is equivalent to the default
-`PROC LOGISTIC` behaviour for ordinal responses in SAS.
+`PROC LOGISTIC` behaviour for ordinal responses in SAS, standard errors
+included: they come from the expected information, as
+[`fit_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.md)
+describes under "Ordinal standard errors".
 
 ## Usage
 

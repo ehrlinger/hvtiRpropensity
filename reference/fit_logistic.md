@@ -128,6 +128,20 @@ An object of class `c("lm_fit", "ps_data")` with:
 
 ## Details
 
+**Ordinal standard errors.** An ordinal model is fitted with
+[`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) at a tight
+[`optim()`](https://rdrr.io/r/stats/optim.html) tolerance
+(`reltol = 1e-14`), and its covariance in `$tables` is the inverse of
+the expected (Fisher) information, the matrix SAS `PROC LOGISTIC`
+reports. `polr()` itself, and
+[`vcov()`](https://rdrr.io/r/stats/vcov.html) on the model in `$models`,
+invert the observed information instead. For the cumulative logit the
+two differ at the estimate, here by a fraction of a percent in the
+standard errors, so the bundle's ordinal standard errors and p-values
+match SAS rather than [`summary()`](https://rdrr.io/r/base/summary.html)
+of the stored model. Binary and nominal models use canonical links,
+where the two matrices are the same.
+
 **Multiple imputation.** With `imputation_col` set, one model is fitted
 to each imputed dataset. The two outputs are then combined differently.
 `$tables$estimates` and `$tables$covariance` pool the coefficients and

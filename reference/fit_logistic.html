@@ -169,7 +169,16 @@ nominal bundles.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>Multiple imputation.</strong> With <code>imputation_col</code> set, one model is fitted to
+    <p><strong>Ordinal standard errors.</strong> An ordinal model is fitted with <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>
+at a tight <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> tolerance (<code>reltol = 1e-14</code>), and its covariance in
+<code>$tables</code> is the inverse of the expected (Fisher) information, the matrix
+SAS <code>PROC LOGISTIC</code> reports. <code>polr()</code> itself, and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> on the model in
+<code>$models</code>, invert the observed information instead. For the cumulative logit
+the two differ at the estimate, here by a fraction of a percent in the
+standard errors, so the bundle's ordinal standard errors and p-values match
+SAS rather than <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of the stored model. Binary and nominal models
+use canonical links, where the two matrices are the same.</p>
+<p><strong>Multiple imputation.</strong> With <code>imputation_col</code> set, one model is fitted to
 each imputed dataset. The two outputs are then combined differently.
 <code>$tables$estimates</code> and <code>$tables$covariance</code> pool the coefficients and their
 variances with Rubin's rules, with Barnard and Rubin's degrees of freedom
