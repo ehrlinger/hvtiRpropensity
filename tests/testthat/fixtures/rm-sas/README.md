@@ -43,9 +43,8 @@ package reports Barnard and Rubin's (1999) degrees of freedom, as
 `EDF=` set to n - k for imputation 1 and writes `pooled-estimates-edf.csv`,
 with the EDF it used in `complete-df.csv`.
 
-Until the fixture is regenerated, the committed CSVs predate those two files
-and the tests rebuild the Barnard-Rubin values from SAS's own `Estimate`,
-`StdErr` and `DF` (`helper_barnard_rubin.R`). After regeneration, compare
-`df`, `p.value`, `conf.low` and `conf.high` against `pooled-estimates-edf.csv`
+The controlled run on 2026-10-14 produced both files. The tests compare `df`,
+`p.value`, `conf.low` and `conf.high` against `pooled-estimates-edf.csv`
 directly, check `complete-df.csv` against `df.residual()` of the first
-imputation's model, and keep the helper as a check of itself against SAS.
+imputation's model, and check that `helper_barnard_rubin.R`, applied to the
+default run's `DF`, reproduces the `EDF=` degrees of freedom.

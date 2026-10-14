@@ -47,9 +47,12 @@ observed SAS schema explicitly and compare estimates, covariance, scores, and
 pooled inference. This prevents either implementation from defining the other
 one's answer.
 
-Status on 2026-09-21: the controlled run completed under SAS
-9.04.01M8P02222023 on Linux. The 19 raw CSVs and the non-sensitive run summary
-are committed; the raw log remains in the controlled-run folder.
+Status on 2026-10-14: the controlled run completed under SAS
+9.04.01M8P02222023 on Linux. The 21 raw CSVs and the non-sensitive run summary
+are committed; the raw log remains in the controlled-run folder. The 19 outputs
+from the 2026-09-21 run were reproduced byte for byte, apart from the run time in
+`sas-environment.csv`; the run added `pooled-estimates-edf.csv` and
+`complete-df.csv`.
 `test_lm_sas_oracle.R` checks coefficients, covariance, predictions, and pooled
 inference against them. The ordinal covariance check uses an absolute tolerance
 because SAS and `MASS::polr()` use different Hessian calculations; their
@@ -66,9 +69,8 @@ package reports Barnard and Rubin's (1999) degrees of freedom, as
 `EDF=` set to n - k for imputation 1 and writes `pooled-estimates-edf.csv`,
 with the n, k and EDF it used in `complete-df.csv`.
 
-Until the fixture is regenerated, the committed CSVs predate those two files
-and the tests rebuild the Barnard-Rubin values from SAS's own `Estimate`,
-`StdErr` and `DF` (`helper_barnard_rubin.R`). After regeneration, compare
-`df`, `p.value`, `conf.low` and `conf.high` against `pooled-estimates-edf.csv`
+The controlled run on 2026-10-14 produced both files. The tests compare `df`,
+`p.value`, `conf.low` and `conf.high` against `pooled-estimates-edf.csv`
 directly, check `complete-df.csv` against `df.residual()` of the first
-imputation's model, and keep the helper as a check of itself against SAS.
+imputation's model, and check that `helper_barnard_rubin.R`, applied to the
+default run's `DF`, reproduces the `EDF=` degrees of freedom.

@@ -38,13 +38,14 @@ test_that("the rm SAS oracle run is complete and clean", {
   expected <- c(
     "single-estimates.csv", "single-covariance.csv", "single-anova.csv",
     "single-scores.csv", "pooled-estimates.csv", "pooled-covariance.csv",
+    "pooled-estimates-edf.csv", "complete-df.csv",
     "mi-scores.csv", "sas-environment.csv", "sas-run-summary.txt"
   )
   expect_true(all(file.exists(file.path(fixture_dir, expected))))
   summary <- readLines(file.path(fixture_dir, "sas-run-summary.txt"), warn = FALSE)
   expect_true("errors=0" %in% summary)
   expect_true("warnings=0" %in% summary)
-  expect_true("completion_marker=RM_ORACLE_COMPLETE expected_outputs=8" %in% summary)
+  expect_true("completion_marker=RM_ORACLE_COMPLETE expected_outputs=10" %in% summary)
 })
 
 test_that("fit_linear reproduces PROC REG on one dataset", {
@@ -77,12 +78,17 @@ test_that("fit_linear's Rubin pool reproduces PROC MIANALYZE", {
   rm_close(est$statistic, sas$tValue, relative = TRUE)
   rm_close(est$estimate, sas$Estimate)
   rm_close(est$std.error, sas$StdErr)
-  # Barnard-Rubin df, rebuilt from SAS's Rubin df with n - k complete-data df.
-  br <- barnard_rubin_from_sas(sas, stats::df.residual(fit$models[[1L]]))
-  rm_close(est$conf.low, br$conf.low)
-  rm_close(est$conf.high, br$conf.high)
-  rm_close(est$df, br$df, relative = TRUE)
-  rm_close(est$p.value, br$p.value, relative = TRUE)
+  # Barnard-Rubin df: PROC MIANALYZE EDF= with the complete-data df n - k.
+  edf <- rm_oracle("pooled-estimates-edf.csv")
+  complete <- rm_oracle("complete-df.csv")
+  expect_equal(stats::df.residual(fit$models[[1L]]), complete$edf)
+  rm_close(est$conf.low, edf$LCLMean)
+  rm_close(est$conf.high, edf$UCLMean)
+  rm_close(est$df, edf$DF, relative = TRUE)
+  rm_close(est$p.value, edf$Probt, relative = TRUE)
+  # The test helper's algebra, from the default (Rubin 1987) run, agrees with EDF=.
+  br <- barnard_rubin_from_sas(sas, complete$edf)
+  rm_close(br$df, edf$DF, relative = TRUE)
 
   # SAS's TCov is the multivariate total covariance under MIANALYZE's
   # proportionality assumption, (1 + rbar) * Ubar, not the elementwise Rubin
