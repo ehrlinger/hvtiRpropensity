@@ -1,14 +1,15 @@
-# Stop when `outcome_col` is not the formula's response
+# Resolve `outcome_col` from the formula's response
 
-A mismatched `outcome_col` would fit one column but run the
-stable-response check, and record the metadata, against another. A
-transformed response such as `log(ef)` is matched by the column it
-reads, `ef`.
+The response must read exactly one column, whether or not `outcome_col`
+is supplied: `I(count + other)` or `cbind(count, other)` would fit one
+quantity while the stable-response check, and the metadata, used
+another. A transformed response such as `log(ef)` reads one column,
+`ef`. A supplied `outcome_col` must name that column.
 
 ## Usage
 
 ``` r
-.check_outcome_response(formula, outcome_col)
+.check_outcome_response(formula, outcome_col = NULL)
 ```
 
 ## Arguments
@@ -19,8 +20,8 @@ reads, `ef`.
 
 - outcome_col:
 
-  Supplied outcome column name.
+  Supplied outcome column name, or `NULL`.
 
 ## Value
 
-Invisible `NULL`.
+The outcome column name.

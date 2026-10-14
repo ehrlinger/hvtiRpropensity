@@ -40,7 +40,8 @@ bs_continuous(
 - outcome_col:
 
   Name of the continuous outcome column. `NULL` (default) extracts from
-  `formula`.
+  `formula`, whose response must read exactly one column; a supplied
+  value must name that column.
 
 - id_col:
 

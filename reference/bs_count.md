@@ -42,7 +42,8 @@ bs_count(
 - outcome_col:
 
   Name of the count outcome column. `NULL` (default) extracts from
-  `formula`.
+  `formula`, whose response must read exactly one column; a supplied
+  value must name that column.
 
 - id_col:
 

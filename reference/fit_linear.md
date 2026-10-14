@@ -33,7 +33,8 @@ fit_linear(
 - outcome_col:
 
   Outcome column. By default the one variable in the formula's response;
-  if supplied, it must be one of the variables in the response.
+  if supplied, it must name that variable. The response must read
+  exactly one column.
 
 - id_col:
 
