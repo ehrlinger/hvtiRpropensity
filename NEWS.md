@@ -1,3 +1,9 @@
+# hvtiRpropensity 0.2.2
+
+* The README's Installation section now leads with `hvtiR::install()`, which
+  installs the whole HVTI R family in one call, and then gives
+  `pak::pak("ehrlinger/hvtiRpropensity")` for this package alone.
+
 # hvtiRpropensity 0.2.1
 
 0.2.1 fixes formula handling across the model functions and the findings of a
