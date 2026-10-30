@@ -1194,7 +1194,7 @@ plot(cb)
 ``` r
 
 sessionInfo()
-#> R version 4.6.1 (2026-06-24)
+#> R version 4.6.2 (2026-10-29)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.5 LTS
 #> 
@@ -1215,28 +1215,28 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] hvtiRpropensity_0.2.1
+#> [1] hvtiRpropensity_0.2.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6            xfun_0.61               ggplot2_4.0.3          
-#>  [4] hvtiPlotR_2.8.10        htmlwidgets_1.6.4       visNetwork_2.1.4       
-#>  [7] lattice_0.22-9          vctrs_0.7.3             tools_4.6.1            
-#> [10] generics_0.1.4          parallel_4.6.1          tibble_3.3.1           
-#> [13] pkgconfig_2.0.3         Matrix_1.7-5            RColorBrewer_1.1-3     
+#>  [1] gtable_0.3.6            xfun_0.62               ggplot2_4.0.3          
+#>  [4] hvtiPlotR_2.8.20        htmlwidgets_1.6.4       visNetwork_2.1.4       
+#>  [7] lattice_0.23-1          vctrs_0.7.3             tools_4.6.2            
+#> [10] generics_0.1.4          parallel_4.6.2          tibble_3.3.1           
+#> [13] pkgconfig_2.0.3         Matrix_1.7-6            RColorBrewer_1.1-3     
 #> [16] S7_0.2.2                rvg_0.4.2               randomForestSRC_3.9.0  
 #> [19] uuid_1.2-2              ggupset_0.4.1           lifecycle_1.0.5        
-#> [22] compiler_4.6.1          farver_2.1.2            textshaping_1.0.5      
+#> [22] compiler_4.6.2          farver_2.1.2            textshaping_1.0.5      
 #> [25] data.tree_1.2.0         fontquiver_0.2.1        fontLiberation_0.1.0   
 #> [28] htmltools_0.5.9         yaml_2.3.12             pillar_1.11.1          
-#> [31] tidyr_1.3.2             MASS_7.3-65             openssl_2.4.2          
+#> [31] tidyr_1.3.2             MASS_7.3-66             openssl_2.4.2          
 #> [34] fontBitstreamVera_0.1.1 tidyselect_1.2.1        zip_3.0.2              
 #> [37] digest_0.6.39           stringi_1.8.9           dplyr_1.2.1            
-#> [40] purrr_1.2.2             labeling_0.4.3          splines_4.6.1          
-#> [43] fastmap_1.2.0           grid_4.6.1              cli_3.6.6              
+#> [40] purrr_1.2.2             labeling_0.4.3          splines_4.6.2          
+#> [43] fastmap_1.2.0           grid_4.6.2              cli_3.6.6              
 #> [46] magrittr_2.0.5          DiagrammeR_1.0.12       patchwork_1.3.2        
-#> [49] survival_3.8-6          withr_3.0.3             gdtools_0.5.1          
+#> [49] survival_3.8-12         withr_3.0.3             gdtools_0.5.2          
 #> [52] scales_1.4.0            consort_1.2.4           rmarkdown_2.32         
-#> [55] officer_0.7.6           otel_0.2.0              nnet_7.3-20            
+#> [55] officer_0.7.7           otel_0.2.0              nnet_7.3-21            
 #> [58] askpass_1.2.1           ragg_1.5.2              ggalluvial_0.12.6      
 #> [61] evaluate_1.0.5          knitr_1.52              rlang_1.3.0            
 #> [64] Rcpp_1.1.2              glue_1.8.1              xml2_1.6.0             
