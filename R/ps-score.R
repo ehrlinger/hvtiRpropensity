@@ -101,10 +101,10 @@
   shown <- paste(utils::head(who, 10L), collapse = ", ")
   if (length(who) > 10L) shown <- paste0(shown, ", ...")
   warning(warningCondition(
-    paste0(.err_prefix(), sprintf(paste0("%d patient(s) have `%s` numerically 0 or 1 (%s). The model ",
-                   "converged, so an extreme covariate value is the usual cause. Their `%s` is the fitting routine's cap, not an estimate, and an ",
-                   "inverse-probability weight for them can be of order 1e15; consider trimming or checking ",
-                   "those values."),
+    paste0(.err_prefix(), sprintf(paste0(
+      "%d patient(s) have `%s` numerically 0 or 1 (%s). The model converged, so an extreme covariate value ",
+      "is the usual cause. Their `%s` is the fitting routine's cap, not an estimate, and an inverse-probability ",
+      "weight for them can be of order 1e15; consider trimming or checking those values."),
             length(sat), score_col, shown, logit_col)),
     class = "hvtiRpropensity_saturated_score",
     call = NULL
