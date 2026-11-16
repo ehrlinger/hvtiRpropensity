@@ -13,19 +13,25 @@
   and other numeric columns the Gaussian one. Factor, character and logical
   columns were left out of the default tables before, and naming one stopped.
   Binary columns move by a small amount, because they were treated as Gaussian.
-  The tables keep their `variable` and `smd` columns.
+  A categorical difference is unsigned whatever number of levels the rows hold,
+  so a factor that loses a level after matching is not switched to the signed
+  binary formula. The tables keep their `variable` and `smd` columns.
 * `fit_logistic()` and `ps_logistic()` stop, with a condition of class
-  `hvtiRpropensity_separation`, when a binary fit puts a fitted probability at
-  0 or 1, which gives an infinite logit. A term the model cannot estimate is
-  named as aliased instead of reported as a non-finite coefficient.
+  `hvtiRpropensity_separation`, when a binary fit is separated: its
+  coefficients keep growing under further Newton steps, so no maximum
+  likelihood estimate exists. A converged fit in which one extreme patient's
+  probability rounds to 0 or 1 is not separation; `ps_logistic()` fits it and
+  warns, with class `hvtiRpropensity_saturated_score`, naming the patients. A
+  term the model cannot estimate is named as aliased instead of reported as a
+  non-finite coefficient.
 * `ps_rmst()` warns, with class `hvtiRpropensity_bootstrap_failures`, when more
   than 5% of an estimator's bootstrap replicates fail. A replicate whose
   resampled follow-up in an arm ends before `tau` now fails instead of being
   carried flat to `tau`.
 * A treatment column holding one arm is refused by every function that needs
   both, instead of failing later or returning empty tables.
-* `ps_match()` breaks tied distances by the smallest `id_col`, so the match no
-  longer depends on row order.
+* `ps_match()` breaks tied distances by the smallest `id_col`, among the
+  controls within the caliper, so the match no longer depends on row order.
 * `ps_weight()` names the patients who get a weight of 0 (a score of exactly 0
   for an ATT control, or 1 for an ATC treated patient), instead of the
   `ps_stddiff()` error about non-positive weights.

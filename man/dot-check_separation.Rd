@@ -15,13 +15,21 @@
 Invisible \code{NULL}.
 }
 \description{
-Complete or quasi-complete separation drives some fitted probabilities to 0
-or 1, so the logits are infinite and the coefficients and their standard
-errors are meaningless. \code{\link[stats:glm]{stats::glm()}} only warns; a score of exactly 0 or
-1 gives an infinite logit and weight, so it cannot be used for matching or
-weighting, and this stops. The threshold is the one \code{glm.fit()} warns at,
-\code{10 * .Machine$double.eps}. Only \code{\link[stats:glm]{stats::glm()}} fits are checked: in an
-ordinal or nominal model one extreme covariate value can round a level's
-probability to 0 or 1 with finite, well-estimated coefficients.
+Under complete or quasi-complete separation the maximum likelihood estimate
+does not exist: the likelihood keeps rising as some coefficients grow
+without bound, and \code{\link[stats:glm]{stats::glm()}} stops only because its deviance criterion
+is met, with a warning at most. The coefficients and their standard errors
+are then meaningless. The test is whether the fit has reached a maximum:
+25 further Newton steps are taken from the reported coefficients, and if
+any coefficient moves by more than \code{1e-4} of its size (or of 1, if
+smaller) the fit is diverging. At a finite maximum the steps leave the
+coefficients where they are, to rounding.
+}
+\details{
+A fitted probability that rounds to exactly 0 or 1 is not, alone, evidence
+of separation: one extreme but valid covariate value does it with finite,
+well-estimated coefficients (PR #122 review). That case is left to the
+callers: \code{\link[=ps_logistic]{ps_logistic()}} warns and names those patients.
+Only \code{\link[stats:glm]{stats::glm()}} fits are checked.
 }
 \keyword{internal}

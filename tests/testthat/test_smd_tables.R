@@ -77,3 +77,17 @@ test_that("a covariate takes the same formula before and after a match", {
   expect_equal(.smd_table(sub, "tavr", "x", types = types)$smd, round(ref, 4))
   expect_false(isTRUE(all.equal(.smd_table(sub, "tavr", "x")$smd, round(ref, 4))))
 })
+
+test_that("a three-level factor keeps the unsigned multilevel distance when a level drops out", {
+  # PR #122 review: after matching, only two levels remain.
+  d <- data.frame(tavr = rep(0:1, each = 9),
+                  site = factor(c("a", "a", "b", "b", "b", "c", "c", "c", "c",
+                                  "a", "a", "a", "a", "b", "b", "c", "c", "c")))
+  types <- .covariate_types(d, "site")
+  sub <- d[d$site != "c", ]
+  sub_smd <- .smd_table(sub, "tavr", "site", types = types)$smd
+  ref <- ps_stddiff(sub, treatment_col = "tavr", categorical_cols = "site")$tables$stddiff$stddiff
+  expect_true(ref < 0)
+  expect_equal(sub_smd, round(abs(ref), 4))
+  expect_gte(.smd_table(d, "tavr", "site", types = types)$smd, 0)
+})

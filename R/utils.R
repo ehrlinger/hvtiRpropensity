@@ -218,8 +218,11 @@
 #' Each covariate is routed to the [ps_stddiff()] formula for its type. A
 #' logical column, or a numeric column whose non-missing values are all 0 or
 #' 1, takes the binary formula. A factor or character column takes the
-#' categorical formula of Yang and Dalton (2012), one row per column, or the
-#' binary formula when it has two levels. Every other numeric column is
+#' categorical formula of Yang and Dalton (2012), one row per column. With
+#' two levels left that distance is the absolute value of the binary formula,
+#' and it is reported that way, unsigned, so a factor whose third level is
+#' absent from the matched rows keeps the same scale and sign convention as
+#' before the match (#122). Every other numeric column is
 #' Gaussian, with the denominator `sqrt((var1 + var0) / 2)`. With `weight_col`,
 #' proportions and variances are weighted as [ps_stddiff()] describes. A
 #' subset with a group absent, such as the matched rows of a match that found
@@ -257,7 +260,8 @@
                       binary_cols = covariates[type == "binary"],
                       categorical_cols = covariates[type == "categorical"],
                       weight_col = weight_col)$tables$stddiff
-    tbl$stddiff[match(covariates, tbl$variable)]
+    out <- tbl$stddiff[match(covariates, tbl$variable)]
+    ifelse(type == "categorical", abs(out), out)
   }
 
   data.frame(

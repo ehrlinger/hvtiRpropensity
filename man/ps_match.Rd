@@ -131,6 +131,8 @@ the estimate describes.
 When two or more remaining controls are equally close to a treated patient
 (within \code{1e-12} on the score scale), the one with the smallest \code{id_col}
 value is taken, so the match does not depend on the row order of \code{data}.
+Only controls within the caliper are candidates, so a tie is broken among
+eligible controls.
 
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. \code{hvtiPlotR::hv_mirror_hist()}

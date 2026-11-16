@@ -476,34 +476,46 @@ fit_logistic <- function(formula, data,
 
 #' Stop when a binary logistic fit predicts the outcome perfectly
 #'
-#' Complete or quasi-complete separation drives some fitted probabilities to 0
-#' or 1, so the logits are infinite and the coefficients and their standard
-#' errors are meaningless. [stats::glm()] only warns; a score of exactly 0 or
-#' 1 gives an infinite logit and weight, so it cannot be used for matching or
-#' weighting, and this stops. The threshold is the one `glm.fit()` warns at,
-#' `10 * .Machine$double.eps`. Only [stats::glm()] fits are checked: in an
-#' ordinal or nominal model one extreme covariate value can round a level's
-#' probability to 0 or 1 with finite, well-estimated coefficients.
+#' Under complete or quasi-complete separation the maximum likelihood estimate
+#' does not exist: the likelihood keeps rising as some coefficients grow
+#' without bound, and [stats::glm()] stops only because its deviance criterion
+#' is met, with a warning at most. The coefficients and their standard errors
+#' are then meaningless. The test is whether the fit has reached a maximum:
+#' 25 further Newton steps are taken from the reported coefficients, and if
+#' any coefficient moves by more than `1e-4` of its size (or of 1, if
+#' smaller) the fit is diverging. At a finite maximum the steps leave the
+#' coefficients where they are, to rounding.
+#'
+#' A fitted probability that rounds to exactly 0 or 1 is not, alone, evidence
+#' of separation: one extreme but valid covariate value does it with finite,
+#' well-estimated coefficients (PR #122 review). That case is left to the
+#' callers: [ps_logistic()] warns and names those patients.
+#' Only [stats::glm()] fits are checked.
 #'
 #' @param models Named list of fitted models.
 #' @param outcome_col The outcome column, for the message.
 #' @return Invisible `NULL`.
 #' @keywords internal
 .check_separation <- function(models, outcome_col) {
-  eps <- 10 * .Machine$double.eps
   for (i in seq_along(models)) {
-    if (!inherits(models[[i]], "glm")) next
-    p <- stats::fitted(models[[i]])
-    n <- sum(p < eps | p > 1 - eps, na.rm = TRUE)
-    if (n > 0L) {
+    m <- models[[i]]
+    if (!inherits(m, "glm") || !identical(m$family$family, "binomial")) next
+    b <- stats::coef(m)
+    ok <- !is.na(b)
+    more <- suppressWarnings(stats::glm.fit(
+      x = stats::model.matrix(m)[, ok, drop = FALSE], y = m$y, weights = m$prior.weights,
+      start = b[ok], offset = m$offset, family = m$family,
+      control = stats::glm.control(epsilon = 1e-300, maxit = 25L)
+    ))$coefficients
+    moved <- max(abs(more - b[ok]) / pmax(1, abs(b[ok])))
+    if (!is.finite(moved) || moved > 1e-4) {
       label <- if (is.null(names(models))) i else names(models)[[i]]
       stop(errorCondition(
-        paste0(.err_prefix(), sprintf(paste0("The model separates `%s` (imputation %s): %d fitted ",
-                       "probabilit%s numerically 0 or 1, ",
-                       "so the logits are infinite. Usually a predictor, or a combination of predictors, predicts ",
-                       "the outcome perfectly (separation); an extreme covariate value can do it too. Remove ",
-                       "or combine the predictor, merge sparse levels, or check the extreme values."),
-                outcome_col, label, n, if (n == 1L) "y is" else "ies are")),
+        paste0(.err_prefix(), sprintf(paste0("The model separates `%s` (imputation %s): its coefficients keep ",
+                       "growing instead of converging, so no maximum likelihood estimate exists. A predictor, or ",
+                       "a combination of predictors, predicts the outcome perfectly. Remove or combine the ",
+                       "predictor, or merge sparse levels."),
+                outcome_col, label)),
         class = "hvtiRpropensity_separation",
         call = NULL
       ))

@@ -316,3 +316,11 @@ test_that("tied match distances go to the smallest id, whatever the row order", 
   expect_identical(m1$data$id[m1$data$match == 1L & m1$data$tavr == 0], 2)
   expect_identical(m2$data$id[m2$data$match == 1L & m2$data$tavr == 0], 2)
 })
+
+test_that("the caliper is applied before the tie-break", {
+  # PR #122 review: A is within the tie tolerance of B but outside the caliper.
+  d <- data.frame(id = c(1, 2, 3), tavr = c(1, 0, 0), prob_t = c(0.5, 0.5 + 8e-13, 0.5))
+  m <- ps_match(d, treatment_col = "tavr", caliper = 4e-13, covariate_cols = character(0), seed = 1)
+  expect_identical(m$meta$n_matched, 1L)
+  expect_identical(m$data$id[m$data$match == 1L & m$data$tavr == 0], 3)
+})
