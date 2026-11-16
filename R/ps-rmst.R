@@ -127,7 +127,7 @@ ps_rmst <- function(data, time_col, event_col, tau,
   lower <- weights %in% c("ato", "att", "ate")
   if (any(lower)) {
     .deprecate("ps_rmst", "weights", "Lower-case `weights` values are deprecated; use \"ATO\", \"ATT\" or \"ATE\".")
-    weights[lower] <- toupper(weights[lower])
+    weights <- unique(replace(weights, lower, toupper(weights[lower])))
   }
   weights <- match.arg(weights, c("unweighted", "ATO", "ATT", "ATE"), several.ok = TRUE)
   if (matched && any(weights != "unweighted")) {

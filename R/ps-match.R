@@ -147,7 +147,8 @@
 #'
 #' # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
 #' dta$logit_t <- stats::qlogis(dta$prob_t)
-#' obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+#' obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t",
+#'                       scale = "logit", caliper_sd = 0.2)
 #' obj_logit$meta$caliper
 #'
 #' @export

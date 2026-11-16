@@ -795,6 +795,9 @@ sa_overlap <- function(data,
     score_col     <- .resolve_meta_arg("score_col", score_col, !missing(score_col), x$meta$score_col)
     treatment_col <- .resolve_meta_arg("treatment_col", treatment_col, !missing(treatment_col),
                                        x$meta$treatment_col)
+    if (is.null(treatment_col)) {
+      stop("sa_overlap(): the object records no `treatment_col`; name the treatment column.", call. = FALSE)
+    }
     treated_level <- .resolve_meta_arg("treated_level", treated_level, !missing(treated_level),
                                        x$meta$treated_level)
     scale <- rlang::`%||%`(x$meta$scale, scale)
@@ -1066,6 +1069,9 @@ sa_trim_sweep <- function(data,
     score_col     <- .resolve_meta_arg("score_col", score_col, !missing(score_col), x$meta$score_col)
     treatment_col <- .resolve_meta_arg("treatment_col", treatment_col, !missing(treatment_col),
                                        x$meta$treatment_col)
+    if (is.null(treatment_col)) {
+      stop("sa_trim_sweep(): the object records no `treatment_col`; name the treatment column.", call. = FALSE)
+    }
     estimand_use  <- .resolve_meta_arg("estimand", estimand, estimand_supplied, x$meta$estimand)
     stabilise     <- .resolve_meta_arg("stabilise", stabilise, !missing(stabilise), x$meta$stabilised,
                                        meta_name = "stabilised")

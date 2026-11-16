@@ -55,6 +55,23 @@ test_that("an omitted treatment_col warns once per session and means \"tavr\"", 
   expect_warning(sa_overlap(dta), "treatment_col")
   # A ps_data input records its treatment column, so nothing is deprecated.
   expect_no_warning(sa_overlap(ps_weight(dta, treatment_col = "tavr")))
+  expect_warning(m <- ps_match(dta, seed = 1), "treatment_col")
+  expect_identical(m$meta$treatment_col, "tavr")
+  expect_warning(ps_stddiff(dta, gaussian = "age"), "treatment_col")
+  expect_warning(ps_stddiff_perm(dta, gaussian = "age", n_perm = 3, seed = 1), "treatment_col")
+  expect_warning(ps_mw_var(dta, outcomes = "age", weight_col = "prob_t", n_boot = 3, seed = 1), "treatment_col")
+  expect_warning(sa_trim_sweep(dta), "treatment_col")
+})
+
+test_that("an error raised through lapply() still names the function", {
+  e <- expect_error(lapply(list(dta), ps_match, treatment_col = "nope"), class = "hvtiRpropensity_missing_column")
+  expect_match(conditionMessage(e), "^ps_match\\(\\): ")
+})
+
+test_that("a ps_data object without a recorded treatment column is refused by name", {
+  obj <- ps_weight(dta, treatment_col = "tavr")
+  obj$meta$treatment_col <- NULL
+  expect_error(sa_overlap(obj), "records no `treatment_col`")
 })
 
 test_that("renamed arguments keep working for one release", {
@@ -88,6 +105,8 @@ test_that("ps_rmst() takes upper-case estimands and deprecates lower case", {
   expect_warning(low <- ps_rmst(fit, "t", "e", tau = 4, weights = "ato", n_boot = 2, seed = 1),
                  class = "hvtiRpropensity_deprecated")
   expect_identical(low$tables, up$tables)
+  both <- ps_rmst(fit, "t", "e", tau = 4, weights = c("ATO", "ato"), n_boot = 2, seed = 1)
+  expect_identical(nrow(both$tables$estimates), 1L)
 })
 
 # ---- Provenance -----------------------------------------------------------

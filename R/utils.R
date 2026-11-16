@@ -484,11 +484,15 @@
 #' @return A character string.
 #' @keywords internal
 .err_prefix <- function() {
+  ns <- asNamespace("hvtiRpropensity")
   exports <- getNamespaceExports("hvtiRpropensity")
-  for (call in sys.calls()) {
-    fn <- call[[1L]]
-    if (is.call(fn) && length(fn) == 3L && as.character(fn[[1L]]) %in% c("::", ":::")) fn <- fn[[3L]]
-    if (is.name(fn) && as.character(fn) %in% exports) return(paste0(as.character(fn), "(): "))
+  funs <- mget(exports, envir = ns)
+  # Match the function object, not the symbol, so a call made through
+  # lapply(), Map() or do.call() is found too.
+  for (i in seq_along(sys.calls())) {
+    f <- sys.function(i)
+    hit <- exports[vapply(funs, identical, logical(1L), f)]
+    if (length(hit)) return(paste0(hit[[1L]], "(): "))
   }
   ""
 }
