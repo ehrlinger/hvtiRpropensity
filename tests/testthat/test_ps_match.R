@@ -187,7 +187,7 @@ test_that("matching on logit_t leaves prob_t and identifiers out of the default 
     expect_false(any(c("prob_t", "logit_t", "id", "match", "pair_id") %in% tbl$variable))
   }
   explicit <- ps_match(d, score_col = "logit_t", scale = "logit", caliper_sd = 0.2, seed = 101,
-                       covariates = c("prob_t", "age"))
+                       covariate_cols = c("prob_t", "age"))
   expect_identical(explicit$tables$smd_before$variable, c("prob_t", "age"))
 })
 
@@ -277,7 +277,7 @@ test_that("ps_rmst() gives the same matched-pair analysis from a logit-scale ps_
   expect_equal(r_logit$tables, r_prob$tables)
   # Score weights on a matched set are refused on either scale; ps_support() output, which is not a match,
   # carries the score-weight comparison in the next test.
-  expect_error(ps_rmst(mp$logit, "t", "e", tau = 4, weights = "ate", n_boot = 2), "unweighted")
+  expect_error(ps_rmst(mp$logit, "t", "e", tau = 4, weights = "ATE", n_boot = 2), "unweighted")
 })
 
 test_that("ps_support() and ps_rmst() carry the score scale forward when chained", {
@@ -293,8 +293,8 @@ test_that("ps_support() and ps_rmst() carry the score scale forward when chained
   expect_identical(s_prob$meta$scale, "probability")
   expect_identical(ps_support(ps_support(mp$logit))$meta$scale, "logit")
 
-  r_logit <- ps_rmst(s_logit, "t", "e", tau = 4, weights = c("ato", "ate"), n_boot = 2, seed = 1)
-  r_prob  <- ps_rmst(s_prob, "t", "e", tau = 4, weights = c("ato", "ate"), n_boot = 2, seed = 1)
+  r_logit <- ps_rmst(s_logit, "t", "e", tau = 4, weights = c("ATO", "ATE"), n_boot = 2, seed = 1)
+  r_prob  <- ps_rmst(s_prob, "t", "e", tau = 4, weights = c("ATO", "ATE"), n_boot = 2, seed = 1)
   expect_identical(r_logit$meta$scale, "logit")
   expect_equal(r_logit$tables, r_prob$tables)
   expect_equal(r_logit$data$w_ate, r_prob$data$w_ate)
@@ -311,8 +311,8 @@ test_that("ps_support() records scale = 'probability' when the input records non
 
 test_that("tied match distances go to the smallest id, whatever the row order", {
   d <- data.frame(id = c(1, 2, 3), tavr = c(1, 0, 0), prob_t = c(0.5, 0.4, 0.6), age = c(60, 70, 80))
-  m1 <- ps_match(d, covariates = "age", seed = 1)
-  m2 <- ps_match(d[c(1, 3, 2), ], covariates = "age", seed = 1)
+  m1 <- ps_match(d, covariate_cols = "age", seed = 1)
+  m2 <- ps_match(d[c(1, 3, 2), ], covariate_cols = "age", seed = 1)
   expect_identical(m1$data$id[m1$data$match == 1L & m1$data$tavr == 0], 2)
   expect_identical(m2$data$id[m2$data$match == 1L & m2$data$tavr == 0], 2)
 })
@@ -320,7 +320,7 @@ test_that("tied match distances go to the smallest id, whatever the row order", 
 test_that("the caliper is applied before the tie-break", {
   # PR #122 review: A is within the tie tolerance of B but outside the caliper.
   d <- data.frame(id = c(1, 2, 3), tavr = c(1, 0, 0), prob_t = c(0.5, 0.5 + 8e-13, 0.5))
-  m <- ps_match(d, caliper = 4e-13, covariates = character(0), seed = 1)
+  m <- ps_match(d, treatment_col = "tavr", caliper = 4e-13, covariate_cols = character(0), seed = 1)
   expect_identical(m$meta$n_matched, 1L)
   expect_identical(m$data$id[m$data$match == 1L & m$data$tavr == 0], 3)
 })

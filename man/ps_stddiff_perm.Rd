@@ -6,28 +6,34 @@
 \usage{
 ps_stddiff_perm(
   data,
-  treatment_col = "tavr",
-  gaussian = NULL,
-  nong_ord = NULL,
-  binary = NULL,
-  categorical = NULL,
+  treatment_col,
+  gaussian_cols = NULL,
+  nong_ord_cols = NULL,
+  binary_cols = NULL,
+  categorical_cols = NULL,
   weight_col = NULL,
   reweight = NULL,
   n_perm = 1000L,
   seed = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  gaussian,
+  nong_ord,
+  binary,
+  categorical
 )
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{treatment_col}{Name of the group column, coded 0/1 or logical, with
-both groups present. Default \code{"tavr"}.}
+both groups present. Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
-\item{gaussian, nong_ord, binary, categorical}{Character vectors of column
+\item{gaussian_cols, nong_ord_cols, binary_cols, categorical_cols}{Character vectors of column
 names, by type. See Details. At least one variable is required, and a
-variable may appear under one type only. A \code{binary} column must be
-coded 0/1 or logical; a \code{categorical} column may have any coding.}
+variable may appear under one type only. A column named in \code{binary_cols}
+must be coded 0/1 or logical; one in \code{categorical_cols} may have any coding.}
 
 \item{weight_col}{Optional name of the column \code{\link[=ps_stddiff]{ps_stddiff()}} weights by.
 Requires \code{reweight}, which supplies its values.}
@@ -50,6 +56,10 @@ advance it, and \verb{$meta$seed} is \code{NA}.}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
 value, for example \code{"transcatheter"}, to use a column holding any two
 values.}
+
+\item{gaussian, nong_ord, binary, categorical}{Deprecated: the old names of
+\code{gaussian_cols}, \code{nong_ord_cols}, \code{binary_cols} and \code{categorical_cols}.
+They still work, and warn once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_stddiff_perm", "ps_data")} with:
@@ -101,8 +111,8 @@ current stream is used and advanced.
 }
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)
-obj <- ps_stddiff_perm(dta, treatment_col = "tavr", gaussian = c("age", "ef"),
-                       binary = "female", n_perm = 200, seed = 1)
+obj <- ps_stddiff_perm(dta, treatment_col = "tavr", gaussian_cols = c("age", "ef"),
+                       binary_cols = "female", n_perm = 200, seed = 1)
 obj$tables$stddiff_perm
 
 }

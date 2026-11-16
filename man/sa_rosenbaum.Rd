@@ -5,7 +5,7 @@
 \title{Rosenbaum Sensitivity Bounds for Matched Analyses}
 \usage{
 sa_rosenbaum(
-  x,
+  data,
   outcome_col,
   gamma_max = 3,
   gamma_inc = 0.25,
@@ -13,11 +13,12 @@ sa_rosenbaum(
   treatment_col = NULL,
   pair_id_col = "pair_id",
   treated_level = NULL,
-  alternative = c("auto", "greater", "less")
+  alternative = c("auto", "greater", "less"),
+  x
 )
 }
 \arguments{
-\item{x}{A \code{ps_match} object (returned by \code{\link[=ps_match]{ps_match()}}) \strong{or} a
+\item{data}{A \code{ps_match} object (returned by \code{\link[=ps_match]{ps_match()}}) \strong{or} a
 plain data frame whose rows are matched patients.}
 
 \item{outcome_col}{Name of the numeric outcome column.  Required.}
@@ -29,11 +30,11 @@ plain data frame whose rows are matched patients.}
 \item{alpha}{Significance threshold.  Default \code{0.05}.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1).  Taken from
-\code{x$meta$treatment_col} when \code{x} is a \code{ps_match} object.  Required when
-\code{x} is a plain data frame.}
+\code{data$meta$treatment_col} when \code{data} is a \code{ps_match} object.  Required when
+\code{data} is a plain data frame.}
 
 \item{pair_id_col}{Name of the pair-ID column created by \code{\link[=ps_match]{ps_match()}}.
-Taken from \code{x$meta$pair_id_col} when recorded.  Default \code{"pair_id"}.}
+Taken from \code{data$meta$pair_id_col} when recorded.  Default \code{"pair_id"}.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. Read
 from the metadata of a \code{ps_data} object when it records one. \code{NULL}
@@ -42,11 +43,14 @@ from the metadata of a \code{ps_data} object when it records one. \code{NULL}
 \item{alternative}{Direction of the test: \code{"auto"} (default; chosen from
 the sign of the median difference, see Details), \code{"greater"} (treated
 outcome above control) or \code{"less"}.}
+
+\item{x}{Deprecated: the old name of \code{data}. It still works, and warns
+once per session, for one release.}
 }
 \value{
 An object of class \code{c("sa_rosenbaum", "ps_data")}:
 \describe{
-\item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_match} object).}
+\item{\verb{$data}}{The input data frame (\code{data$data} for a \code{ps_match} object).}
 \item{\verb{$meta}}{Column names, \code{treated_level}, the settings (\code{gamma}, the
 grid tested, \code{gamma_max}, \code{gamma_inc}, \code{alpha}, \code{alternative}, the
 direction tested, and \code{direction_from_data}), and the results:
@@ -101,7 +105,7 @@ must agree with that metadata; a conflict aborts.
 }
 \examples{
 dta <- sample_ps_data(n = 300, seed = 1)
-m   <- ps_match(dta)
+m   <- ps_match(dta, treatment_col = "tavr")
 res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2, alternative = "greater")
 res
 res$tables$bounds

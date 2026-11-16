@@ -6,15 +6,16 @@
 \usage{
 ps_weight(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   score_col = "prob_t",
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
   trim = NULL,
-  covariates = NULL,
+  covariate_cols = NULL,
   weight_col = "iptw",
   treated_level = NULL,
-  id_col = "id"
+  id_col = "id",
+  covariates
 )
 }
 \arguments{
@@ -22,7 +23,9 @@ ps_weight(
 \code{score_col}.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1 or logical).
-Default \code{"tavr"}.}
+Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
 \item{score_col}{Name of the numeric propensity score column (values
 in [0, 1]).  Default \code{"prob_t"}.}
@@ -52,7 +55,7 @@ exactly 1; \code{"ATC"} is the mirror image. For \code{"ATE"} both arms are
 reweighted, so the quantiles are taken over all weights pooled across both
 arms (Lee, Lessler and Stuart, 2011). Default \code{NULL} (no trimming).}
 
-\item{covariates}{Character vector of covariate columns for SMD
+\item{covariate_cols}{Character vector of covariate columns for SMD
 diagnostics, used as given.  A 0/1 or logical column takes the binary
 standardized difference, a factor or character column the categorical
 one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric column the
@@ -73,6 +76,9 @@ values.}
 
 \item{id_col}{The patient identifier column, left out of the default
 covariates. Default \code{"id"}; it need not exist in \code{data}.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_weight", "ps_data")} with:
@@ -112,12 +118,12 @@ effective sample sizes, and one warning states how many there are.
 dta <- sample_ps_data(n = 200, seed = 42)
 
 # 1. ATE weights (default)
-obj <- ps_weight(dta)
+obj <- ps_weight(dta, treatment_col = "tavr")
 print(obj)
 summary(obj)
 
 # 2. ATT weights: treated patients keep a weight of 1
-obj_att <- ps_weight(dta, estimand = "ATT")
+obj_att <- ps_weight(dta, treatment_col = "tavr", estimand = "ATT")
 summary(obj_att)
 
 # 3. Extract data with weights appended

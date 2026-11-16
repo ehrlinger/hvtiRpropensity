@@ -14,9 +14,10 @@ ps_nominal(
   ref_level = NULL,
   score_col_prefix = "prob",
   trace = FALSE,
-  covariates = NULL,
+  covariate_cols = NULL,
   treatment_levels = NULL,
-  smd_pairs = "reference"
+  smd_pairs = "reference",
+  covariates
 )
 }
 \arguments{
@@ -43,7 +44,7 @@ by default).  Default \code{"prob"}.}
 \item{trace}{Logical.  If \code{FALSE} (default), suppresses
 \code{\link[nnet:multinom]{nnet::multinom()}} iteration messages.}
 
-\item{covariates}{Covariate columns for the balance table. \code{NULL}
+\item{covariate_cols}{Covariate columns for the balance table. \code{NULL}
 (default) uses every numeric, logical, factor or character column that
 varies, other than the treatment, score, identifier and strata columns;
 types are routed as in \code{\link[=ps_logistic]{ps_logistic()}}.}
@@ -55,6 +56,9 @@ the levels inferred by the historical interface.}
 compares. \code{"reference"} (default) compares each level with \code{ref_level};
 \code{"all"} compares every pair. The levels have no order, so there is no
 \code{"adjacent"} choice.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_nominal", "ps_data")} with:

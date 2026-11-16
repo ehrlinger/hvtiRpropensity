@@ -12,9 +12,10 @@ ps_ordinal(
   id_col = "id",
   imputation_col = NULL,
   score_col_prefix = "prob",
-  covariates = NULL,
+  covariate_cols = NULL,
   treatment_levels = NULL,
-  smd_pairs = "reference"
+  smd_pairs = "reference",
+  covariates
 )
 }
 \arguments{
@@ -39,7 +40,7 @@ alphabetical order is not a safe guess for an ordinal scale.}
 are named \verb{<prefix>_<level>} for each level of the treatment.
 Default \code{"prob"}.}
 
-\item{covariates}{Covariate columns for the balance table. \code{NULL}
+\item{covariate_cols}{Covariate columns for the balance table. \code{NULL}
 (default) uses every numeric, logical, factor or character column that
 varies, other than the treatment, score, identifier and strata columns;
 types are routed as in \code{\link[=ps_logistic]{ps_logistic()}}.}
@@ -53,6 +54,9 @@ compares. \code{"reference"} (default) compares each level with the first
 level; \code{"adjacent"} compares each level with the one below it; \code{"all"}
 compares every pair. Give more than one to combine them, for example
 \code{c("reference", "adjacent")}.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_ordinal", "ps_data")} with:

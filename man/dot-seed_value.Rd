@@ -4,12 +4,10 @@
 \alias{.seed_value}
 \title{Validate a seed and return its absolute value}
 \usage{
-.seed_value(seed, call_env = rlang::caller_env())
+.seed_value(seed)
 }
 \arguments{
 \item{seed}{\code{NULL}, or one whole number.}
-
-\item{call_env}{Environment for the error call.}
 }
 \value{
 \code{NULL}, or \code{abs(seed)} as an integer.

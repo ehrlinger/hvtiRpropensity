@@ -5,17 +5,18 @@
 \title{IPTW Weight-Trimming Sensitivity Sweep}
 \usage{
 sa_trim_sweep(
-  x,
+  data,
   trim_seq = seq(0, 0.1, by = 0.01),
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
   score_col = "prob_t",
-  treatment_col = "tavr",
-  treated_level = NULL
+  treatment_col = NULL,
+  treated_level = NULL,
+  x
 )
 }
 \arguments{
-\item{x}{A \code{ps_weight} object (returned by \code{\link[=ps_weight]{ps_weight()}}) \strong{or}
+\item{data}{A \code{ps_weight} object (returned by \code{\link[=ps_weight]{ps_weight()}}) \strong{or}
 a \code{ps_match} object \strong{or} a plain data frame that contains a propensity
 score column and a binary treatment column.}
 
@@ -27,30 +28,35 @@ and both arms pooled for the ATE.  \code{0} means no trimming.
 Default \code{seq(0, 0.10, by = 0.01)}.}
 
 \item{estimand}{One of \code{"ATE"}, \code{"ATT"}, or \code{"ATC"} -- the causal
-estimand used to compute IPTW weights.  Taken from \code{x$meta$estimand}
-when \code{x} is a \code{ps_weight} object; defaults to \code{"ATE"} otherwise.}
+estimand used to compute IPTW weights.  Taken from \code{data$meta$estimand}
+when \code{data} is a \code{ps_weight} object; defaults to \code{"ATE"} otherwise.}
 
 \item{stabilise}{Logical.  Whether to stabilise weights.  Taken from
-\code{x$meta$stabilised} when available; defaults to \code{TRUE}.  As in
+\code{data$meta$stabilised} when available; defaults to \code{TRUE}.  As in
 \code{\link[=ps_weight]{ps_weight()}}, stabilisation applies to the ATE only.}
 
 \item{score_col}{Name of the propensity score column.  Taken from
-\code{x$meta$score_col} when \code{x} is a \code{ps_data} object.  Default \code{"prob_t"}.
+\code{data$meta$score_col} when \code{data} is a \code{ps_data} object.  Default \code{"prob_t"}.
 The score of a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a
 logit, and is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before use.}
 
 \item{treatment_col}{Name of the binary treatment column.  Taken from
-\code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object.  Default
-\code{"tavr"}.}
+\code{data$meta$treatment_col} when \code{data} is a \code{ps_data} object, and
+required for a data frame. Omitting it for a data frame, or for an
+object that records none, is deprecated and still means \code{"tavr"}, for
+one release.}
 
 \item{treated_level}{The value of \code{treatment_col} that is treated. Read
 from the metadata of a \code{ps_data} object when it records one. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
+
+\item{x}{Deprecated: the old name of \code{data}. It still works, and warns
+once per session, for one release.}
 }
 \value{
 An object of class \code{c("sa_trim_sweep", "ps_data")}:
 \describe{
-\item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_data} object),
+\item{\verb{$data}}{The input data frame (\code{data$data} for a \code{ps_data} object),
 unchanged.}
 \item{\verb{$meta}}{\code{score_col}, \code{treatment_col}, \code{treated_level}, \code{scale},
 \code{estimand}, \code{stabilised} (whether stabilisation was applied, so \code{FALSE}
@@ -80,7 +86,7 @@ from the metadata, then take their defaults.
 }
 \examples{
 dta    <- sample_ps_data(n = 400, seed = 3)
-w_obj  <- ps_weight(dta, estimand = "ATE")
+w_obj  <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 sweep  <- sa_trim_sweep(w_obj)
 head(sweep$tables$sweep)
 

@@ -100,14 +100,15 @@
   who <- if (is.null(id)) sat else id[sat]
   shown <- paste(utils::head(who, 10L), collapse = ", ")
   if (length(who) > 10L) shown <- paste0(shown, ", ...")
-  rlang::warn(
-    sprintf(paste0("%d patient(s) have `%s` numerically 0 or 1 (%s). The model converged, so an extreme covariate ",
-                   "value is the usual cause. Their `%s` is the fitting routine's cap, not an estimate, and an ",
-                   "inverse-probability weight for them can be of order 1e15; consider trimming or checking ",
-                   "those values."),
-            length(sat), score_col, shown, logit_col),
-    class = "hvtiRpropensity_saturated_score"
-  )
+  warning(warningCondition(
+    paste0(.err_prefix(), sprintf(paste0(
+      "%d patient(s) have `%s` numerically 0 or 1 (%s). The model converged, so an extreme covariate value ",
+      "is the usual cause. Their `%s` is the fitting routine's cap, not an estimate, and an inverse-probability ",
+      "weight for them can be of order 1e15; consider trimming or checking those values."),
+            length(sat), score_col, shown, logit_col)),
+    class = "hvtiRpropensity_saturated_score",
+    call = NULL
+  ))
   invisible(NULL)
 }
 
@@ -129,13 +130,16 @@
 
 .check_output_columns <- function(data, columns) {
   if (anyNA(columns) || any(!nzchar(columns)) || anyDuplicated(columns)) {
-    rlang::abort("Output column names must be unique non-empty strings.", call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "Output column names must be unique non-empty strings."),
+      call. = FALSE
+    )
   }
   existing <- intersect(columns, names(data))
   if (length(existing)) {
-    rlang::abort(
-      sprintf("Output column(s) already exist in `data`: %s.",
-              paste(existing, collapse = ", ")),
+    stop(
+      paste0(.err_prefix(), sprintf("Output column(s) already exist in `data`: %s.",
+              paste(existing, collapse = ", "))),
       call. = FALSE
     )
   }
@@ -210,7 +214,7 @@
 #'   score, `log(p / (1 - p))`.  Default `"logit_t"`.
 #' @param weight_col     Output column name for the Li-Greene matching
 #'   weight (ATM). Default `"mt_wt"`.
-#' @param covariates     Character vector of covariate column names for SMD
+#' @param covariate_cols Character vector of covariate column names for SMD
 #'   balance diagnostics, used as given.  A 0/1 or logical column takes the
 #'   binary standardized difference, a factor or character column the
 #'   categorical one of [ps_stddiff()] (one row per column), any other numeric
@@ -228,6 +232,8 @@
 #'   Given alone, the treatment may hold any two values (a factor such as
 #'   `"TAVR"`/`"SAVR"`, for example) and this names the treated one.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_logistic", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -289,7 +295,7 @@
 #'                   "quintile", "decile")])
 #'
 #' # Pass the scored data to ps_match() for downstream matching
-#' matched <- ps_match(obj$data, score_col = obj$meta$score_col, seed = 42)
+#' matched <- ps_match(obj$data, treatment_col = "tavr", score_col = obj$meta$score_col, seed = 42)
 #' nrow(matched$data[matched$data$match == 1L, ])
 #'
 #' # --- Multiply-imputed data (mirrors tp.lm.logistic_propensity_score.sas)
@@ -325,13 +331,21 @@ ps_logistic <- function(formula,
                         score_col      = "prob_t",
                         logit_col      = "logit_t",
                         weight_col     = "mt_wt",
-                        covariates     = NULL,
+                        covariate_cols = NULL,
                         treatment_levels = NULL,
-                        treated_level = NULL) {
+                        treated_level = NULL,
+                        covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_logistic", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_logistic(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
 
@@ -353,8 +367,12 @@ ps_logistic <- function(formula,
   treatment_levels <- as.character(treatment_levels)
   present <- unique(as.character(data[[treatment_col]][!is.na(data[[treatment_col]])]))
   if (length(present) < 2L) {
-    rlang::abort(sprintf("Column `%s` must hold both treatment values; it holds %s.", treatment_col,
-                         if (length(present)) paste("only", present) else "none"), call. = FALSE)
+    stop(errorCondition(
+      sprintf("ps_logistic(): Column `%s` must hold both treatment values; it holds %s.", treatment_col,
+                         if (length(present)) paste("only", present) else "none"),
+      class = "hvtiRpropensity_one_arm",
+      call = NULL
+    ))
   }
   if (is.null(treated_level)) treated_level <- utils::tail(treatment_levels, 1L)
   treated_level <- as.character(treated_level)
@@ -384,10 +402,13 @@ ps_logistic <- function(formula,
   trt <- as.integer(as.character(base_data[[treatment_col]]) == treated_level)
   missing_trt <- is.na(trt)
   if (any(missing_trt)) {
-    rlang::warn(sprintf(paste(
-      "Column `%s` is missing for %d patient(s). They are left out of the model fit, the strata,",
+    warning(
+      sprintf(paste(
+      "ps_logistic(): Column `%s` is missing for %d patient(s). They are left out of the model fit, the strata,",
       "the balance tables and the group counts; they keep a predicted `%s`."
-    ), treatment_col, sum(missing_trt), score_col))
+    ), treatment_col, sum(missing_trt), score_col),
+      call. = FALSE
+    )
   }
 
   base_data[[score_col]]  <- probs
@@ -443,7 +464,8 @@ ps_logistic <- function(formula,
       model$tables
     ),
     models = model$models,
-    subclass = "ps_logistic"
+    subclass = "ps_logistic",
+    provenance = .provenance("logistic")
   )
 }
 
@@ -508,7 +530,7 @@ print.ps_logistic <- function(x, ...) {
 #' @param score_col_prefix Prefix for the per-level output columns.  Columns
 #'   are named `<prefix>_<level>` for each level of the treatment.
 #'   Default `"prob"`.
-#' @param covariates       Covariate columns for the balance table. `NULL`
+#' @param covariate_cols   Covariate columns for the balance table. `NULL`
 #'   (default) uses every numeric, logical, factor or character column that
 #'   varies, other than the treatment, score, identifier and strata columns;
 #'   types are routed as in [ps_logistic()].
@@ -521,6 +543,8 @@ print.ps_logistic <- function(x, ...) {
 #'   (default) takes the levels of the treatment, which must then be an ordered
 #'   factor.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_ordinal", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -587,13 +611,18 @@ ps_ordinal <- function(formula,
                        id_col           = "id",
                        imputation_col   = NULL,
                        score_col_prefix = "prob",
-                       covariates       = NULL,
+                       covariate_cols   = NULL,
                        treatment_levels = NULL,
-                       smd_pairs        = "reference") {
+                       smd_pairs        = "reference",
+                       covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_ordinal", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   if (!requireNamespace("MASS", quietly = TRUE)) {
-    rlang::abort(
-      paste0("`ps_ordinal()` requires the MASS package.\n",
+    stop(
+      paste0("ps_ordinal(): `ps_ordinal()` requires the MASS package.\n",
              "Install it with: install.packages(\"MASS\")"),
       call. = FALSE
     )
@@ -601,7 +630,10 @@ ps_ordinal <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_ordinal(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
 
@@ -612,12 +644,11 @@ ps_ordinal <- function(formula,
   smd_pairs <- match.arg(smd_pairs, c("reference", "adjacent", "all"), several.ok = TRUE)
   if (is.null(treatment_levels)) {
     if (!is.ordered(data[[treatment_col]])) {
-      rlang::abort(
-        c(
-          sprintf("Column `%s` must be an ordered factor, or the level order must be given.", treatment_col),
-          i = sprintf("Convert it with `ordered(%s, levels = c(...))`, lowest level first.", treatment_col),
-          i = "Or pass `treatment_levels`, lowest level first."
-        ),
+      stop(
+        paste("ps_ordinal():",
+              sprintf("Column `%s` must be an ordered factor, or the level order must be given.", treatment_col),
+              sprintf("Convert it with `ordered(%s, levels = c(...))`, lowest level first.", treatment_col),
+              "Or pass `treatment_levels`, lowest level first."),
         call. = FALSE
       )
     }
@@ -691,7 +722,8 @@ ps_ordinal <- function(formula,
     ),
     tables   = c(list(smd = smd_tbl, group_counts = group_counts), model$tables),
     models = model$models,
-    subclass = "ps_ordinal"
+    subclass = "ps_ordinal",
+    provenance = .provenance("nominal logistic")
   )
 }
 
@@ -756,7 +788,7 @@ print.ps_ordinal <- function(x, ...) {
 #'   by default).  Default `"prob"`.
 #' @param trace            Logical.  If `FALSE` (default), suppresses
 #'   [nnet::multinom()] iteration messages.
-#' @param covariates       Covariate columns for the balance table. `NULL`
+#' @param covariate_cols   Covariate columns for the balance table. `NULL`
 #'   (default) uses every numeric, logical, factor or character column that
 #'   varies, other than the treatment, score, identifier and strata columns;
 #'   types are routed as in [ps_logistic()].
@@ -767,6 +799,8 @@ print.ps_ordinal <- function(x, ...) {
 #' @param treatment_levels Complete nominal treatment levels. `NULL` preserves
 #'   the levels inferred by the historical interface.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_nominal", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -837,13 +871,18 @@ ps_nominal <- function(formula,
                        ref_level        = NULL,
                        score_col_prefix = "prob",
                        trace            = FALSE,
-                       covariates       = NULL,
+                       covariate_cols   = NULL,
                        treatment_levels = NULL,
-                       smd_pairs        = "reference") {
+                       smd_pairs        = "reference",
+                       covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_nominal", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
-    rlang::abort(
-      paste0("`ps_nominal()` requires the nnet package.\n",
+    stop(
+      paste0("ps_nominal(): `ps_nominal()` requires the nnet package.\n",
              "Install it with: install.packages(\"nnet\")"),
       call. = FALSE
     )
@@ -851,7 +890,10 @@ ps_nominal <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_nominal(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
 
@@ -931,7 +973,8 @@ ps_nominal <- function(formula,
     ),
     tables   = c(list(smd = smd_tbl, group_counts = group_counts), model$tables),
     models = model$models,
-    subclass = "ps_nominal"
+    subclass = "ps_nominal",
+    provenance = .provenance("ordinal logistic")
   )
 }
 

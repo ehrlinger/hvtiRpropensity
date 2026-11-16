@@ -14,7 +14,7 @@ sd_of <- function(obj, v) obj$tables$stddiff$stddiff[obj$tables$stddiff$variable
 
 test_that("ps_stddiff() returns a ps_stddiff / ps_data object", {
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6))
-  obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian_cols = "x")
   expect_s3_class(obj, "ps_stddiff")
   expect_s3_class(obj, "ps_data")
   expect_identical(obj$data, d)
@@ -28,7 +28,7 @@ test_that("gaussian uses sqrt((var1 + var0) / 2), not a size-weighted pool", {
   # (2 - 5) / sqrt((1 + 20/3) / 2) = -3 / sqrt(23/6) = -1.532262
   # A sample-size-weighted pool gives -3 / sqrt((2*1 + 3*20/3) / 5) = -1.391365.
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6, 8))
-  obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian_cols = "x")
   expect_equal(sd_of(obj, "x"), -3 / sqrt(23 / 6))
 })
 
@@ -39,7 +39,7 @@ test_that("weighted gaussian uses PROC MEANS weighted variance, n - 1, on weight
   # g0: x 2 4 6, w 2 1 1. mean 14/4. sum w(x-m)^2 = 4.5 + .25 + 6.25 = 11, /2 = 5.5, * 3/4 = 4.125
   # (2.25 - 3.5) / sqrt((1.03125 + 4.125) / 2)
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6), w = c(1, 1, 2, 2, 1, 1))
-  obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x", weight_col = "w")
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian_cols = "x", weight_col = "w")
   expect_equal(sd_of(obj, "x"), -1.25 / sqrt(2.578125))
 })
 
@@ -49,7 +49,7 @@ test_that("weights that already average 1 in each group are used as given", {
   # g0: w 1 1 1, x 2 4 6. mean 4, var 4.
   # (7/3 - 4) / sqrt((5/6 + 4) / 2)
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6), w = c(0.5, 1, 1.5, 1, 1, 1))
-  obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x", weight_col = "w")
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian_cols = "x", weight_col = "w")
   expect_equal(sd_of(obj, "x"), (7 / 3 - 4) / sqrt((5 / 6 + 4) / 2))
 })
 
@@ -60,8 +60,8 @@ test_that("weighted differences do not change when a group's weights are multipl
   d$ef_rank <- d$ef
   score <- function(w) {
     d$w_k <- w
-    ps_stddiff(d, treatment_col = "tavr", gaussian = c("age", "ef"), nong_ord = "ef_rank",
-               binary = c("female", "diabetes"), weight_col = "w_k")$tables$stddiff$stddiff
+    ps_stddiff(d, treatment_col = "tavr", gaussian_cols = c("age", "ef"), nong_ord_cols = "ef_rank",
+               binary_cols = c("female", "diabetes"), weight_col = "w_k")$tables$stddiff$stddiff
   }
   base <- score(d$w)
   expect_equal(score(4 * d$w), base)
@@ -70,7 +70,7 @@ test_that("weighted differences do not change when a group's weights are multipl
 
 test_that("missing values are dropped per variable, missing group per row", {
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0, NA), x = c(1, 2, 3, 2, 4, 6, 100), y = c(1, NA, 3, 2, 4, 6, 0))
-  obj <- ps_stddiff(d, treatment_col = "g", gaussian = c("x", "y"))
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian_cols = c("x", "y"))
   expect_equal(sd_of(obj, "x"), -2 / sqrt(2.5))
   # y, g1: 1 3 -> mean 2, var 2.   g0: 2 4 6 -> mean 4, var 4.
   expect_equal(sd_of(obj, "y"), -2 / sqrt(3))
@@ -83,7 +83,7 @@ test_that("nong_ord uses pooled ranks with ties averaged", {
   # g1 mean 29/6, var 19/12.  g0 mean 13/6, var 19/12.
   # (29/6 - 13/6) / sqrt(19/12)
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(3, 4, 5, 1, 2, 3))
-  obj <- ps_stddiff(d, treatment_col = "g", nong_ord = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", nong_ord_cols = "x")
   expect_equal(sd_of(obj, "x"), (16 / 6) / sqrt(19 / 12))
 })
 
@@ -93,7 +93,7 @@ test_that("weighted nong_ord weights the rank moments, not the ranks", {
   # g0 1 2 3.5, w 2 1 1 -> mean 7.5/4 = 1.875, the same sum, /2 = 2.09375
   # Weights average 4/3 in each group, so each variance is 2.09375 * 3/4 = 1.5703125.
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(3, 4, 5, 1, 2, 3), w = c(1, 1, 2, 2, 1, 1))
-  obj <- ps_stddiff(d, treatment_col = "g", nong_ord = "x", weight_col = "w")
+  obj <- ps_stddiff(d, treatment_col = "g", nong_ord_cols = "x", weight_col = "w")
   expect_equal(sd_of(obj, "x"), 3.25 / sqrt(1.5703125))
 })
 
@@ -102,7 +102,7 @@ test_that("weighted nong_ord weights the rank moments, not the ranks", {
 test_that("binary uses the proportion difference over the average Bernoulli variance", {
   # p1 = .5, p0 = .25: .25 / sqrt((.25 + .1875) / 2)
   d <- data.frame(g = c(1, 1, 1, 1, 0, 0, 0, 0), x = c(1, 1, 0, 0, 1, 0, 0, 0))
-  obj <- ps_stddiff(d, treatment_col = "g", binary = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", binary_cols = "x")
   expect_equal(sd_of(obj, "x"), 0.25 / sqrt(0.21875))
   expect_identical(obj$tables$stddiff$type, "binary")
 })
@@ -111,7 +111,7 @@ test_that("weighted binary proportions come from the weights", {
   # g1: x 1 0, w 3 1 -> p1 = .75.  g0: x 1 0, w 1 1 -> p0 = .5.
   # .25 / sqrt((.1875 + .25) / 2)
   d <- data.frame(g = c(1, 1, 0, 0), x = c(1, 0, 1, 0), w = c(3, 1, 1, 1))
-  obj <- ps_stddiff(d, treatment_col = "g", binary = "x", weight_col = "w")
+  obj <- ps_stddiff(d, treatment_col = "g", binary_cols = "x", weight_col = "w")
   expect_equal(sd_of(obj, "x"), 0.25 / sqrt(0.21875))
 })
 
@@ -120,7 +120,7 @@ test_that("categorical uses Yang and Dalton's Mahalanobis form, last level dropp
   # t - c = (.25, -.25).  S = [.21875 -.125; -.125 .21875], det = .0322265625
   # d^2 = 2 * .25 * (.21875 - .125) * .25 / det
   d <- data.frame(g = c(1, 1, 1, 1, 0, 0, 0, 0), x = c("a", "a", "b", "c", "a", "b", "b", "c"))
-  obj <- ps_stddiff(d, treatment_col = "g", categorical = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", categorical_cols = "x")
   expect_equal(sd_of(obj, "x"), sqrt(2 * 0.25 * 0.09375 * 0.25 / 0.0322265625))
   expect_identical(obj$tables$stddiff$type, "categorical")
 })
@@ -128,7 +128,7 @@ test_that("categorical uses Yang and Dalton's Mahalanobis form, last level dropp
 test_that("categorical is routed by observed level count, as the macro does", {
   d <- data.frame(g = c(1, 1, 0, 0), one = c(1, 1, 1, 1), two = c("m", "f", "f", "f"),
                   three = c("a", "b", "c", "a"))
-  obj <- ps_stddiff(d, treatment_col = "g", binary = "one", categorical = c("two", "three"))
+  obj <- ps_stddiff(d, treatment_col = "g", binary_cols = "one", categorical_cols = c("two", "three"))
   tbl <- obj$tables$stddiff
   expect_identical(tbl$type[tbl$variable == "one"], "onelevel")
   expect_identical(sd_of(obj, "one"), 0)
@@ -138,15 +138,15 @@ test_that("categorical is routed by observed level count, as the macro does", {
 
 test_that("a binary variable must be coded 0/1, rather than silently becoming categorical", {
   d <- data.frame(g = c(1, 1, 0, 0), x = c(1, 2, 3, 1))
-  expect_error(ps_stddiff(d, treatment_col = "g", binary = "x"), "0/1")
+  expect_error(ps_stddiff(d, treatment_col = "g", binary_cols = "x"), "0/1")
   d <- data.frame(g = c(1, 1, 0, 0), x = c(TRUE, FALSE, FALSE, FALSE))
-  expect_identical(ps_stddiff(d, treatment_col = "g", binary = "x")$tables$stddiff$type, "binary")
+  expect_identical(ps_stddiff(d, treatment_col = "g", binary_cols = "x")$tables$stddiff$type, "binary")
 })
 
 test_that("an unordered factor is accepted as categorical", {
   d <- data.frame(g = c(1, 1, 1, 1, 0, 0, 0, 0),
                   x = factor(c("a", "a", "b", "c", "a", "b", "b", "c")))
-  obj <- ps_stddiff(d, treatment_col = "g", categorical = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", categorical_cols = "x")
   expect_equal(sd_of(obj, "x"), sqrt(2 * 0.25 * 0.09375 * 0.25 / 0.0322265625))
 })
 
@@ -155,13 +155,13 @@ test_that("weighted categorical proportions come from the weights", {
   # g1: a b c, w 2 1 1 -> .5 .25 .25.   g0: a b c, w 1 2 1 -> .25 .5 .25.
   # Same proportions as the unweighted categorical case above.
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c("a", "b", "c", "a", "b", "c"), w = c(2, 1, 1, 1, 2, 1))
-  obj <- ps_stddiff(d, treatment_col = "g", categorical = "x", weight_col = "w")
+  obj <- ps_stddiff(d, treatment_col = "g", categorical_cols = "x", weight_col = "w")
   expect_equal(sd_of(obj, "x"), sqrt(2 * 0.25 * 0.09375 * 0.25 / 0.0322265625))
 })
 
 test_that("a variable with no non-missing values is NA and does not stop the table", {
   d <- data.frame(g = c(1, 1, 0, 0), x = c(NA, NA, NA, NA), y = c(1, 2, 3, 5))
-  obj <- ps_stddiff(d, treatment_col = "g", categorical = "x", gaussian = "y")
+  obj <- ps_stddiff(d, treatment_col = "g", categorical_cols = "x", gaussian_cols = "y")
   expect_identical(sd_of(obj, "x"), NA_real_)
   expect_true(is.finite(sd_of(obj, "y")))
 })
@@ -171,7 +171,7 @@ test_that("a variable with no non-missing values is NA and does not stop the tab
 test_that("rows keep the order variables were given, and labels are carried", {
   d <- data.frame(g = c(1, 1, 1, 0, 0, 0), x = c(1, 2, 3, 2, 4, 6), b = c(1, 0, 1, 0, 0, 1))
   attr(d$x, "label") <- "Age at surgery"
-  obj <- ps_stddiff(d, treatment_col = "g", binary = "b", gaussian = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", binary_cols = "b", gaussian_cols = "x")
   expect_identical(obj$tables$stddiff$variable, c("x", "b"))
   expect_identical(obj$tables$stddiff$label, c("Age at surgery", NA_character_))
 })
@@ -179,14 +179,14 @@ test_that("rows keep the order variables were given, and labels are carried", {
 test_that("a categorical variable whose groups share no levels is NA with a warning, and does not stop the table", {
   # S is singular here: group 1 holds only a and b, group 0 only c.
   d <- data.frame(g = c(1, 1, 0, 0), x = c("a", "b", "c", "c"), y = c(1, 2, 3, 4))
-  expect_warning(obj <- ps_stddiff(d, treatment_col = "g", categorical = "x", gaussian = "y"), "`x`")
+  expect_warning(obj <- ps_stddiff(d, treatment_col = "g", categorical_cols = "x", gaussian_cols = "y"), "`x`")
   expect_true(is.finite(sd_of(obj, "y")))
   expect_identical(sd_of(obj, "x"), NA_real_)
 })
 
 test_that("a variable with zero pooled variance gets NA, not Inf", {
   d <- data.frame(g = c(1, 1, 0, 0), x = c(5, 5, 5, 5))
-  obj <- ps_stddiff(d, treatment_col = "g", gaussian = "x")
+  obj <- ps_stddiff(d, treatment_col = "g", gaussian_cols = "x")
   expect_identical(sd_of(obj, "x"), NA_real_)
 })
 
@@ -194,25 +194,25 @@ test_that("a variable with zero pooled variance gets NA, not Inf", {
 
 test_that("the group must be 0/1 with both groups present", {
   d <- data.frame(g = c(1, 2, 1, 2), x = 1:4)
-  expect_error(ps_stddiff(d, treatment_col = "g", gaussian = "x"), "binary")
+  expect_error(ps_stddiff(d, treatment_col = "g", gaussian_cols = "x"), "binary")
   d <- data.frame(g = c(1, 1, 1, 1), x = 1:4)
-  expect_error(ps_stddiff(d, treatment_col = "g", gaussian = "x"), "both")
+  expect_error(ps_stddiff(d, treatment_col = "g", gaussian_cols = "x"), "both")
 })
 
 test_that("at least one variable is required, and each only once", {
   d <- data.frame(g = c(1, 1, 0, 0), x = 1:4)
   expect_error(ps_stddiff(d, treatment_col = "g"), "at least one")
-  expect_error(ps_stddiff(d, treatment_col = "g", gaussian = "x", nong_ord = "x"), "more than one")
+  expect_error(ps_stddiff(d, treatment_col = "g", gaussian_cols = "x", nong_ord_cols = "x"), "more than one")
 })
 
 test_that("gaussian and nong_ord variables must be numeric", {
   d <- data.frame(g = c(1, 1, 0, 0), x = c("a", "b", "a", "b"))
-  expect_error(ps_stddiff(d, treatment_col = "g", gaussian = "x"), "numeric")
+  expect_error(ps_stddiff(d, treatment_col = "g", gaussian_cols = "x"), "numeric")
 })
 
 test_that("weights must be positive and not missing", {
   d <- data.frame(g = c(1, 1, 0, 0), x = 1:4, w = c(1, 0, 1, 1))
-  expect_error(ps_stddiff(d, treatment_col = "g", gaussian = "x", weight_col = "w"), "positive")
+  expect_error(ps_stddiff(d, treatment_col = "g", gaussian_cols = "x", weight_col = "w"), "positive")
   d$w <- c(1, Inf, 1, 1)
-  expect_error(ps_stddiff(d, treatment_col = "g", gaussian = "x", weight_col = "w"), "finite")
+  expect_error(ps_stddiff(d, treatment_col = "g", gaussian_cols = "x", weight_col = "w"), "finite")
 })

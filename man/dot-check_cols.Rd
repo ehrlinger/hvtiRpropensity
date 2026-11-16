@@ -4,14 +4,12 @@
 \alias{.check_cols}
 \title{Assert that required columns exist in a data frame}
 \usage{
-.check_cols(data, cols, call_env = rlang::caller_env())
+.check_cols(data, cols)
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{cols}{Character vector of required column names.}
-
-\item{call_env}{Environment for the error call (use \code{rlang::caller_env()}).}
 }
 \value{
 Invisible NULL.  Signals a classed error on failure.

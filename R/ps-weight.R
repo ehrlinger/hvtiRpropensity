@@ -37,7 +37,9 @@
 #' @param data           A data frame.  Must contain `treatment_col` and
 #'   `score_col`.
 #' @param treatment_col  Name of the binary treatment column (0/1 or logical).
-#'   Default `"tavr"`.
+#'   Required: it has no default, because a study's
+#'   column name never is one. Omitting it is deprecated, warns once per
+#'   session and still means `"tavr"`, for one release.
 #' @param score_col      Name of the numeric propensity score column (values
 #'   in \[0, 1\]).  Default `"prob_t"`.
 #' @param estimand       Causal estimand.  One of:
@@ -60,7 +62,7 @@
 #'   exactly 1; `"ATC"` is the mirror image. For `"ATE"` both arms are
 #'   reweighted, so the quantiles are taken over all weights pooled across both
 #'   arms (Lee, Lessler and Stuart, 2011). Default `NULL` (no trimming).
-#' @param covariates     Character vector of covariate columns for SMD
+#' @param covariate_cols Character vector of covariate columns for SMD
 #'   diagnostics, used as given.  A 0/1 or logical column takes the binary
 #'   standardized difference, a factor or character column the categorical
 #'   one of [ps_stddiff()] (one row per column), any other numeric column the
@@ -79,6 +81,8 @@
 #'   values.
 #' @param id_col The patient identifier column, left out of the default
 #'   covariates. Default `"id"`; it need not exist in `data`.
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_weight", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame with `weight_col` appended.}
@@ -105,12 +109,12 @@
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #'
 #' # 1. ATE weights (default)
-#' obj <- ps_weight(dta)
+#' obj <- ps_weight(dta, treatment_col = "tavr")
 #' print(obj)
 #' summary(obj)
 #'
 #' # 2. ATT weights: treated patients keep a weight of 1
-#' obj_att <- ps_weight(dta, estimand = "ATT")
+#' obj_att <- ps_weight(dta, treatment_col = "tavr", estimand = "ATT")
 #' summary(obj_att)
 #'
 #' # 3. Extract data with weights appended
@@ -118,15 +122,21 @@
 #'
 #' @export
 ps_weight <- function(data,
-                      treatment_col = "tavr",
+                      treatment_col,
                       score_col     = "prob_t",
                       estimand      = c("ATE", "ATT", "ATC"),
                       stabilise     = TRUE,
                       trim          = NULL,
-                      covariates    = NULL,
+                      covariate_cols = NULL,
                       weight_col    = "iptw",
                       treated_level = NULL,
-                      id_col        = "id") {
+                      id_col        = "id",
+                      covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_weight", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
+  if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_weight")
 
   # ---- Input validation ---------------------------------------------------
   estimand <- match.arg(estimand)
@@ -139,7 +149,10 @@ ps_weight <- function(data,
 
   if (!is.null(trim)) {
     if (!is.numeric(trim) || length(trim) != 1L || is.na(trim) || trim <= 0 || trim >= 0.5) {
-      rlang::abort("`trim` must be a number in (0, 0.5) or NULL.", call. = FALSE)
+      stop(
+        "ps_weight(): `trim` must be a number in (0, 0.5) or NULL.",
+        call. = FALSE
+      )
     }
   }
 
@@ -172,26 +185,29 @@ ps_weight <- function(data,
   # Only the reweighted arm is trimmed for the ATT and ATC; see .trim_weights().
   if (!is.null(trim)) w <- .trim_weights(w, trt, estimand, trim)
   if (any(is.infinite(w))) {
-    rlang::abort(
-      sprintf(paste0("%d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
+    stop(errorCondition(
+      sprintf(paste0("ps_weight(): %d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
                      "that divides by it. Set `trim` to winsorise them, or remove those patients."),
               sum(is.infinite(w)), score_col),
+      class = "hvtiRpropensity_weight",
       call = NULL
-    )
+    ))
   }
   zero <- which(kept & w == 0)
   if (length(zero) > 0L) {
     who <- if (id_col %in% names(data)) paste0("`", id_col, "` ", paste(utils::head(data[[id_col]][zero], 10L),
                                                                        collapse = ", "))
            else paste("row", paste(utils::head(zero, 10L), collapse = ", "))
-    rlang::abort(
-      sprintf(paste0("%d patient(s) get a weight of 0 because `%s` is exactly %s for a %s patient under the %s: %s%s. ",
+    stop(errorCondition(
+      sprintf(paste0("ps_weight(): %d patient(s) get a weight of 0 because `%s` is exactly %s for a %s ",
+                     "patient under the %s: %s%s. ",
                      "Set `trim` to winsorise them, or remove those patients."),
               length(zero), score_col, if (estimand == "ATT") "0" else "1",
               if (estimand == "ATT") "control" else "treated", estimand,
               who, if (length(zero) > 10L) ", ..." else ""),
+      class = "hvtiRpropensity_weight",
       call = NULL
-    )
+    ))
   }
 
   # ---- Build output data frame -------------------------------------------

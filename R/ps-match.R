@@ -49,7 +49,9 @@
 #' @param data           A data frame.  Must contain `treatment_col`,
 #'   `score_col`, and `id_col`.
 #' @param treatment_col  Name of the binary treatment column (0/1 or
-#'   logical).  Default `"tavr"`.
+#'   logical).  Required: it has no default, because a study's
+#'   column name never is one. Omitting it is deprecated, warns once per
+#'   session and still means `"tavr"`, for one release.
 #' @param score_col      Name of the numeric propensity score column, on the
 #'   scale named by `scale`: probabilities in \[0, 1\] for
 #'   `scale = "probability"`, or logits (any finite value, such as the
@@ -61,7 +63,7 @@
 #'   own scale, for a match to be accepted.  `NULL` (default) imposes no
 #'   caliper unless `caliper_sd` is given.  Give at most one of `caliper` and
 #'   `caliper_sd`.
-#' @param covariates     Character vector of covariate columns for SMD
+#' @param covariate_cols Character vector of covariate columns for SMD
 #'   diagnostics, used as given.  A 0/1 or logical column takes the binary
 #'   standardized difference, a factor or character column the categorical
 #'   one of [ps_stddiff()] (one row per column), any other numeric column the
@@ -102,6 +104,8 @@
 #'   matching when estimating differences in means and differences in
 #'   proportions in observational studies. *Pharmaceutical Statistics*,
 #'   10(2), 150--161.  \doi{10.1002/pst.433}
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_match", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The full input data frame with `match_col` and `pair_id`
@@ -131,7 +135,7 @@
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #'
 #' # 1. Build the matched object
-#' obj <- ps_match(dta)
+#' obj <- ps_match(dta, treatment_col = "tavr")
 #'
 #' # 2. Inspect diagnostics
 #' print(obj)
@@ -147,22 +151,29 @@
 #'
 #' # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
 #' dta$logit_t <- stats::qlogis(dta$prob_t)
-#' obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+#' obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t",
+#'                       scale = "logit", caliper_sd = 0.2)
 #' obj_logit$meta$caliper
 #'
 #' @export
 ps_match <- function(data,
-                     treatment_col = "tavr",
+                     treatment_col,
                      score_col     = "prob_t",
                      id_col        = "id",
                      caliper       = NULL,
-                     covariates    = NULL,
+                     covariate_cols = NULL,
                      match_col     = "match",
                      ratio         = 1L,
                      seed          = NULL,
                      treated_level = NULL,
                      scale         = c("probability", "logit"),
-                     caliper_sd    = NULL) {
+                     caliper_sd    = NULL,
+                     covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_match", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
+  if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_match")
 
   # ---- Input validation ---------------------------------------------------
   .check_df(data)
@@ -176,24 +187,39 @@ ps_match <- function(data,
     .check_probability(data, score_col,
                        hint = "For a score on the logit scale, such as `logit_t`, set `scale = \"logit\"`.")
   } else if (!is.numeric(data[[score_col]]) || any(is.infinite(data[[score_col]]))) {
-    rlang::abort(sprintf("Column `%s` must contain finite numeric logits.", score_col), call. = FALSE)
+    stop(
+      sprintf("ps_match(): Column `%s` must contain finite numeric logits.", score_col),
+      call. = FALSE
+    )
   } else if (all(data[[score_col]] >= 0 & data[[score_col]] <= 1, na.rm = TRUE)) {
-    rlang::warn(sprintf(paste(
-      "Every value of `%s` lies in [0, 1], so it looks like a probability, but `scale = \"logit\"`",
+    warning(
+      sprintf(paste(
+      "ps_match(): Every value of `%s` lies in [0, 1], so it looks like a probability, but `scale = \"logit\"`",
       "expects logits, such as `score_col = \"logit_t\"`."
-    ), score_col))
+    ), score_col),
+      call. = FALSE
+    )
   }
 
   if (!is.null(caliper) &&
       (!is.numeric(caliper) || length(caliper) != 1L || is.na(caliper) || caliper <= 0)) {
-    rlang::abort("`caliper` must be a positive number or NULL.", call. = FALSE)
+    stop(
+      "ps_match(): `caliper` must be a positive number or NULL.",
+      call. = FALSE
+    )
   }
   if (!is.null(caliper_sd)) {
     if (!is.numeric(caliper_sd) || length(caliper_sd) != 1L || is.na(caliper_sd) || caliper_sd <= 0) {
-      rlang::abort("`caliper_sd` must be a positive number or NULL.", call. = FALSE)
+      stop(
+        "ps_match(): `caliper_sd` must be a positive number or NULL.",
+        call. = FALSE
+      )
     }
     if (!is.null(caliper)) {
-      rlang::abort("Give at most one of `caliper` and `caliper_sd`.", call. = FALSE)
+      stop(
+        "ps_match(): Give at most one of `caliper` and `caliper_sd`.",
+        call. = FALSE
+      )
     }
     is_t <- as.integer(data[[treatment_col]]) == 1L
     pooled_sd <- sqrt((stats::var(data[[score_col]][is_t], na.rm = TRUE) +
@@ -201,15 +227,18 @@ ps_match <- function(data,
     caliper <- caliper_sd * pooled_sd
   }
   if (!is.numeric(ratio) || length(ratio) != 1L || is.na(ratio) || ratio != 1) {
-    rlang::abort(sprintf("Only 1:1 matching (`ratio = 1`) is currently supported, not `ratio = %s`.",
+    stop(
+      sprintf("ps_match(): Only 1:1 matching (`ratio = 1`) is currently supported, not `ratio = %s`.",
                          paste(deparse(ratio), collapse = "")),
-                 call. = FALSE)
+      call. = FALSE
+    )
   }
 
   # ---- Warn if pair_id column already exists in input data ---------------
   if ("pair_id" %in% names(data)) {
-    rlang::warn(
-      "Input data already contains a column named 'pair_id'. It will be overwritten."
+    warning(
+      "ps_match(): Input data already contains a column named 'pair_id'. It will be overwritten.",
+      call. = FALSE
     )
   }
 
@@ -338,6 +367,7 @@ ps_match <- function(data,
       group_counts_before  = group_counts_before,
       group_counts_after   = group_counts_after
     ),
-    subclass = "ps_match"
+    subclass = "ps_match",
+    provenance = .provenance("nearest-neighbour matching", seed)
   )
 }

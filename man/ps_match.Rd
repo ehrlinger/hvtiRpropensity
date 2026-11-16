@@ -6,17 +6,18 @@
 \usage{
 ps_match(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   score_col = "prob_t",
   id_col = "id",
   caliper = NULL,
-  covariates = NULL,
+  covariate_cols = NULL,
   match_col = "match",
   ratio = 1L,
   seed = NULL,
   treated_level = NULL,
   scale = c("probability", "logit"),
-  caliper_sd = NULL
+  caliper_sd = NULL,
+  covariates
 )
 }
 \arguments{
@@ -24,7 +25,9 @@ ps_match(
 \code{score_col}, and \code{id_col}.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1 or
-logical).  Default \code{"tavr"}.}
+logical).  Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
 \item{score_col}{Name of the numeric propensity score column, on the
 scale named by \code{scale}: probabilities in [0, 1] for
@@ -40,7 +43,7 @@ own scale, for a match to be accepted.  \code{NULL} (default) imposes no
 caliper unless \code{caliper_sd} is given.  Give at most one of \code{caliper} and
 \code{caliper_sd}.}
 
-\item{covariates}{Character vector of covariate columns for SMD
+\item{covariate_cols}{Character vector of covariate columns for SMD
 diagnostics, used as given.  A 0/1 or logical column takes the binary
 standardized difference, a factor or character column the categorical
 one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric column the
@@ -82,6 +85,9 @@ where \code{var_t} and \code{var_c} are the variances of \code{score_col} among 
 and control patients (missing values dropped).  \code{NULL} (default) uses
 \code{caliper} instead.  \verb{scale = "logit", caliper_sd = 0.2}
 is the Austin (2011) recommendation.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_match", "ps_data")} with:
@@ -142,7 +148,7 @@ warning states how many there are. \verb{$meta$n_excluded} keeps the count.
 dta <- sample_ps_data(n = 200, seed = 42)
 
 # 1. Build the matched object
-obj <- ps_match(dta)
+obj <- ps_match(dta, treatment_col = "tavr")
 
 # 2. Inspect diagnostics
 print(obj)
@@ -158,7 +164,8 @@ nrow(matched)
 
 # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
 dta$logit_t <- stats::qlogis(dta$prob_t)
-obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t",
+                      scale = "logit", caliper_sd = 0.2)
 obj_logit$meta$caliper
 
 }

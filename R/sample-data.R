@@ -54,9 +54,9 @@
 #' @export
 sample_ps_data <- function(n = 500L, seed = 42L, separation = 1.0) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
-    stop("`n` must be a positive integer.", call. = FALSE)
+    stop("sample_ps_data(): `n` must be a positive integer.", call. = FALSE)
   if (!is.numeric(separation) || length(separation) != 1L || separation <= 0)
-    stop("`separation` must be a positive number.", call. = FALSE)
+    stop("sample_ps_data(): `separation` must be a positive number.", call. = FALSE)
 
   seed <- .seed_value(seed)
   if (!is.null(seed)) withr::local_seed(seed)
@@ -131,7 +131,7 @@ sample_ps_data <- function(n = 500L, seed = 42L, separation = 1.0) {
 #' @export
 sample_ps_data_ordinal <- function(n = 300L, seed = 42L) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
-    stop("`n` must be a positive integer.", call. = FALSE)
+    stop("sample_ps_data_ordinal(): `n` must be a positive integer.", call. = FALSE)
 
   seed <- .seed_value(seed)
   if (!is.null(seed)) withr::local_seed(seed)
@@ -204,7 +204,7 @@ sample_ps_data_ordinal <- function(n = 300L, seed = 42L) {
 #' @export
 sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
-    stop("`n` must be a positive integer.", call. = FALSE)
+    stop("sample_ps_data_nominal(): `n` must be a positive integer.", call. = FALSE)
 
   seed <- .seed_value(seed)
   if (!is.null(seed)) withr::local_seed(seed)
@@ -269,7 +269,7 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
 #'   same demo dataset on every call. `NULL` draws from the caller's random-number stream, as
 #'   [ps_match()] does: the data differ from call to call, and `set.seed()` before the call
 #'   reproduces them. A negative seed gives the same data as its absolute value.
-#' @param n_imputations If `> 1`, returns `n_imputations` datasets stacked in
+#' @param m             Number of imputations. If `> 1`, returns `m` datasets stacked in
 #'   the long format, with an `_IMPUTATION_` index column. Each is an
 #'   independent draw of `n` patients, covariates and outcome alike, that
 #'   reuses the `id` values `1` to `n`. They exercise the stacked format; they
@@ -277,10 +277,13 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
 #'   and outcome agree across datasets. Default `1L` (single complete
 #'   dataset).
 #'
+#' @param n_imputations Deprecated: the old name of `m`. It still works, and
+#'   warns once per session, for one release.
+#'
 #' @return A data frame with columns: `id`, `rbc_tot` (count), `age`,
 #'   `female`, `diabetes`, `hypertension`, `hct_pr` (pre-op haematocrit),
 #'   `cpb_time` (cardiopulmonary bypass time, minutes), and optionally
-#'   `_IMPUTATION_` when `n_imputations > 1`.
+#'   `_IMPUTATION_` when `m > 1`.
 #'
 #' @seealso [bs_count()], [bs_continuous()]
 #'
@@ -289,21 +292,23 @@ sample_ps_data_nominal <- function(n = 200L, seed = 42L) {
 #' hist(dta$rbc_tot, main = "RBC units distribution")
 #'
 #' # Stacked multiply-imputed version (3 imputations)
-#' dta_mi <- sample_ps_data_count(n = 200, seed = 7, n_imputations = 3)
+#' dta_mi <- sample_ps_data_count(n = 200, seed = 7, m = 3)
 #' table(dta_mi[["_IMPUTATION_"]])
 #'
 #' @export
-sample_ps_data_count <- function(n = 500L, seed = 42L, n_imputations = 1L) {
+sample_ps_data_count <- function(n = 500L, seed = 42L, m = 1L, n_imputations) {
+  if (!missing(n_imputations)) {
+    m <- .renamed_arg("sample_ps_data_count", "n_imputations", "m", n_imputations, !missing(m))
+  }
   if (!is.numeric(n) || length(n) != 1L || n < 1L)
-    stop("`n` must be a positive integer.", call. = FALSE)
-  if (!is.numeric(n_imputations) || length(n_imputations) != 1L ||
-      n_imputations < 1L)
-    stop("`n_imputations` must be a positive integer.", call. = FALSE)
+    stop("sample_ps_data_count(): `n` must be a positive integer.", call. = FALSE)
+  if (!is.numeric(m) || length(m) != 1L || m < 1L)
+    stop("sample_ps_data_count(): `m` must be a positive integer.", call. = FALSE)
 
   seed <- .seed_value(seed)
   if (!is.null(seed)) withr::local_seed(seed)
   n             <- as.integer(n)
-  n_imputations <- as.integer(n_imputations)
+  m <- as.integer(m)
 
   .one_dataset <- function(seed_offset = 0L) {
     if (!is.null(seed)) withr::local_seed(seed + seed_offset)
@@ -334,14 +339,14 @@ sample_ps_data_count <- function(n = 500L, seed = 42L, n_imputations = 1L) {
     )
   }
 
-  if (n_imputations == 1L) {
+  if (m == 1L) {
     return(.one_dataset(0L))
   }
 
   # Stacked MI format: an independent draw per imputation that reuses the IDs
-  dsets <- lapply(seq_len(n_imputations), function(m) {
-    d                    <- .one_dataset(seed_offset = m * 100L)
-    d[["_IMPUTATION_"]] <- m
+  dsets <- lapply(seq_len(m), function(k) {
+    d                    <- .one_dataset(seed_offset = k * 100L)
+    d[["_IMPUTATION_"]] <- k
     d
   })
   do.call(rbind, dsets)

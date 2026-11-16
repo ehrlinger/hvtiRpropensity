@@ -17,7 +17,7 @@ Test whether an object is a ps_data instance
 }
 \examples{
 dta <- sample_ps_data()
-obj <- ps_match(dta)
+obj <- ps_match(dta, treatment_col = "tavr")
 is_ps_data(obj)   # TRUE
 is_ps_data(list()) # FALSE
 

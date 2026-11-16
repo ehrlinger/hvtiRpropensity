@@ -4,7 +4,14 @@
 \alias{new_ps_data}
 \title{Construct a validated ps_data object}
 \usage{
-new_ps_data(data, meta, tables = list(), models = list(), subclass)
+new_ps_data(
+  data,
+  meta,
+  tables = list(),
+  models = list(),
+  subclass,
+  provenance = NULL
+)
 }
 \arguments{
 \item{data}{A data frame: the original data with propensity scores or
@@ -20,6 +27,10 @@ counts, effective N, etc.).  May be \code{list()}.}
 
 \item{subclass}{A single string naming the specific subclass
 (e.g. \code{"ps_match"}).}
+
+\item{provenance}{\code{NULL}, or the record from \code{.provenance()}, stored as
+\verb{$meta$provenance}. Every function that fits a model or draws random
+numbers passes one.}
 }
 \value{
 A named list of class \code{c(subclass, "ps_data")}.

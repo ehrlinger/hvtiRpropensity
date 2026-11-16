@@ -5,21 +5,22 @@
 \title{Observed-outcome restricted mean survival contrast, weighted}
 \usage{
 ps_rmst(
-  x,
+  data,
   time_col,
   event_col,
   tau,
-  weights = c("unweighted", "ato"),
+  weights = c("unweighted", "ATO"),
   subsets = list(),
   n_boot = 200L,
   refit = FALSE,
   seed = NULL,
   time_unit_days = 365.2425,
-  clip = 0.001
+  clip = 0.001,
+  x
 )
 }
 \arguments{
-\item{x}{A \code{ps_data} object with a score and treatment column. A
+\item{data}{A \code{ps_data} object with a score and treatment column. A
 \code{\link[=ps_match]{ps_match()}} object is analysed on its matched pairs only, and a
 \code{\link[=ps_weight]{ps_weight()}} object contributes its stored weight column; see Details.
 A score on the logit scale (\code{scale = "logit"}, as a \code{\link[=ps_match]{ps_match()}} object
@@ -27,15 +28,17 @@ can carry) is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} 
 are built.}
 
 \item{time_col, event_col}{Follow-up time and event indicator (0/1) columns
-of \code{x$data}.}
+of \code{data$data}.}
 
 \item{tau}{Horizon, in the units of \code{time_col}. It must not exceed the
 largest observed time among the rows that enter either arm's curve, for
 any analysed subset and weighting.}
 
-\item{weights}{Weighting schemes to run: any of \code{"unweighted"}, \code{"ato"}
-(overlap), \code{"att"}, \code{"ate"}. For a \code{\link[=ps_match]{ps_match()}} input the default is
-\code{"unweighted"} alone, and no other scheme is accepted.}
+\item{weights}{Weighting schemes to run: any of \code{"unweighted"}, \code{"ATO"}
+(overlap), \code{"ATT"}, \code{"ATE"}, the family's upper-case estimand names.
+Lower-case \code{"ato"}, \code{"att"} and \code{"ate"} are deprecated: they still work,
+and warn once per session, for one release. For a \code{\link[=ps_match]{ps_match()}} input the
+default is \code{"unweighted"} alone, and no other scheme is accepted.}
 
 \item{subsets}{Optional named list of logical vectors (one value per row);
 each is run as a restricted analysis (for example a common-support
@@ -60,6 +63,9 @@ advance it, and \verb{$meta$seed} is \code{NA}.}
 column. Default \code{365.2425} (time in years).}
 
 \item{clip}{Scores are clipped to \verb{[clip, 1 - clip]} before weighting.}
+
+\item{x}{Deprecated: the old name of \code{data}. It still works, and warns
+once per session, for one release.}
 }
 \value{
 A \code{ps_rmst} / \code{ps_data} object. \verb{$tables$estimates} has one row
@@ -70,10 +76,10 @@ per subset-and-weighting estimator: \code{estimator}, \code{subset}, \code{weigh
 \code{lo_days}, \code{hi_days} (2.5 and 97.5 percent bootstrap) and \code{n_failed}
 (bootstrap draws that gave no estimate).
 \verb{$tables$curves} has the weighted Kaplan-Meier steps (\code{estimator}, \code{arm},
-\code{time}, \code{surv}) for plotting; \verb{$data} is \code{x$data} plus one weight column
-\verb{w_<weighting>} per scheme. \verb{$meta$seed} is the seed used (\code{NA} when none
-was given). \verb{$meta$scale} is the scale of \code{score_col}, carried from \code{x}
-(\code{"probability"} when \code{x} records none). \verb{$meta$resampling} is \code{"pair"}
+\code{time}, \code{surv}) for plotting; \verb{$data} is \code{data$data} plus one weight column
+\verb{w_<weighting>} per scheme, its name in lower case (\code{w_ato}). \verb{$meta$seed} is the seed used (\code{NA} when none
+was given). \verb{$meta$scale} is the scale of \code{score_col}, carried from \code{data}
+(\code{"probability"} when \code{data} records none). \verb{$meta$resampling} is \code{"pair"}
 for a matched input and \code{"row"} (stratified by arm) otherwise, and
 \verb{$meta$stored_weighting} names the scheme that used a \code{\link[=ps_weight]{ps_weight()}}
 object's stored weights (\code{NA} when none did).
@@ -85,10 +91,10 @@ Kaplan-Meier curves (weights from the propensity score) integrated to
 \code{tau}, differenced, with a stratified bootstrap interval.
 }
 \details{
-\strong{Weights.} \code{"unweighted"} gives every row weight 1. \code{"ato"} weights
+\strong{Weights.} \code{"unweighted"} gives every row weight 1. \code{"ATO"} weights
 treated rows by \code{1 - p} and controls by \code{p}, targeting the overlap
-population; \code{"att"} weights controls by \code{p / (1 - p)}, targeting the
-treated; \code{"ate"} weights by \code{1 / p} and \code{1 / (1 - p)}, targeting the whole
+population; \code{"ATT"} weights controls by \code{p / (1 - p)}, targeting the
+treated; \code{"ATE"} weights by \code{1 / p} and \code{1 / (1 - p)}, targeting the whole
 cohort. Here \code{p} is the score clipped to \verb{[clip, 1 - clip]}.
 
 \strong{Matched input.} For a \code{\link[=ps_match]{ps_match()}} object only the rows with
@@ -102,8 +108,8 @@ within-pair correlation that a row bootstrap ignores. A subset that splits
 a pair keeps the member it contains, which is then resampled alone.
 
 \strong{Weighted input.} For a \code{\link[=ps_weight]{ps_weight()}} object, the scheme that matches its
-estimand (\code{"ate"} for \code{estimand = "ATE"}, \code{"att"} for \code{"ATT"}) uses the
-stored column \code{x$meta$weight_col} instead of recomputing weights from the
+estimand (\code{"ATE"} or \code{"ATT"}) uses the
+stored column \code{data$meta$weight_col} instead of recomputing weights from the
 score, so any trimming is kept. Stabilisation multiplies each arm by a
 constant, which leaves each arm's Kaplan-Meier curve and effective sample
 size unchanged. The other schemes are computed from the score, and an

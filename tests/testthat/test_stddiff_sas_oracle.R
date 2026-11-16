@@ -30,9 +30,9 @@ variables <- c(gaussian = "x_gauss", nong_ord = "x_ord", binary = "x_bin", categ
 n_perm <- 20L
 
 r_stddiff <- function(group = "grp", weight = NULL) {
-  tbl <- ps_stddiff(fixture, treatment_col = group, gaussian = variables[["gaussian"]],
-                    nong_ord = variables[["nong_ord"]], binary = variables[["binary"]],
-                    categorical = variables[["categorical"]], weight_col = weight)$tables$stddiff
+  tbl <- ps_stddiff(fixture, treatment_col = group, gaussian_cols = variables[["gaussian"]],
+                    nong_ord_cols = variables[["nong_ord"]], binary_cols = variables[["binary"]],
+                    categorical_cols = variables[["categorical"]], weight_col = weight)$tables$stddiff
   stats::setNames(tbl$stddiff, tbl$variable)
 }
 
@@ -117,8 +117,9 @@ permuted_data <- function(k, weighted) {
 
 permuted_stddiff <- function(k, weighted) {
   d <- permuted_data(k, weighted)
-  tbl <- ps_stddiff(d, treatment_col = "grp", gaussian = variables[["gaussian"]], nong_ord = variables[["nong_ord"]],
-                    binary = variables[["binary"]], categorical = variables[["categorical"]],
+  tbl <- ps_stddiff(d, treatment_col = "grp", gaussian_cols = variables[["gaussian"]],
+                    nong_ord_cols = variables[["nong_ord"]],
+                    binary_cols = variables[["binary"]], categorical_cols = variables[["categorical"]],
                     weight_col = if (weighted) "w")$tables$stddiff
   stats::setNames(tbl$stddiff, tbl$variable)[unname(variables)]
 }
@@ -180,8 +181,8 @@ test_that("the permutation reference matches %stddiffci, weighted", {
 test_that("ps_mw_var() matches %mw_var on the observed difference and group summaries", {
   skip_without_oracle("mw-summary.csv")
   sas <- read_oracle("mw-summary.csv")
-  r <- ps_mw_var(fixture, treatment_col = "grp", outcomes = c("y_cont", "y_bin"), weight_col = "w",
-                 n_rep = 10, seed = 1)$tables$mw_var
+  r <- ps_mw_var(fixture, treatment_col = "grp", outcome_cols = c("y_cont", "y_bin"), weight_col = "w",
+                 n_boot = 10, seed = 1)$tables$mw_var
   for (v in c("y_cont", "y_bin")) {
     s <- sas[tolower(sas$`_outcome`) == v, ]
     rr <- r[r$outcome == v, ]
@@ -212,8 +213,8 @@ test_that("ps_mw_var()'s bootstrap SD is within Monte Carlo error of %mw_var's (
   skip_without_oracle("mw-summary.csv")
   sas <- read_oracle("mw-summary.csv")
   n_rep <- 2000L
-  r <- ps_mw_var(fixture, treatment_col = "grp", outcomes = c("y_cont", "y_bin"), weight_col = "w",
-                 n_rep = n_rep, seed = 20260930)$tables$mw_var
+  r <- ps_mw_var(fixture, treatment_col = "grp", outcome_cols = c("y_cont", "y_bin"), weight_col = "w",
+                 n_boot = n_rep, seed = 20260930)$tables$mw_var
   for (v in c("y_cont", "y_bin")) {
     s <- sas[tolower(sas$`_outcome`) == v, ]
     # A bootstrap SD from B replicates has relative standard error about

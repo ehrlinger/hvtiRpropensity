@@ -44,15 +44,15 @@
 .check_model_predictions <- function(predictions, n, imputation, columns = NULL) {
   actual <- if (is.matrix(predictions)) nrow(predictions) else length(predictions)
   if (actual != n) {
-    rlang::abort(
-      sprintf("Imputation %s returned %d predictions for %d rows.",
-              imputation, actual, n),
+    stop(
+      paste0(.err_prefix(), sprintf("Imputation %s returned %d predictions for %d rows.",
+              imputation, actual, n)),
       call. = FALSE
     )
   }
   if (!is.numeric(predictions)) {
-    rlang::abort(
-      sprintf("Imputation %s predictions must be numeric.", imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("Imputation %s predictions must be numeric.", imputation)),
       call. = FALSE
     )
   }
@@ -60,15 +60,15 @@
 
   current <- colnames(predictions)
   if (is.null(current) || anyNA(current) || any(!nzchar(current))) {
-    rlang::abort(
-      sprintf("Imputation %s prediction columns must be named.", imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("Imputation %s prediction columns must be named.", imputation)),
       call. = FALSE
     )
   }
   if (!is.null(columns) && !identical(current, columns)) {
-    rlang::abort(
-      sprintf("Imputation %s prediction columns differ from the first imputation.",
-              imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("Imputation %s prediction columns differ from the first imputation.",
+              imputation)),
       call. = FALSE
     )
   }
@@ -134,19 +134,23 @@
   }
 
   if (is.null(id_col)) {
-    rlang::abort("`id_col` is required when `imputation_col` is supplied.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "`id_col` is required when `imputation_col` is supplied."),
+      call. = FALSE
+    )
   }
   .check_cols(data, imputation_col)
   if (anyNA(data[[imputation_col]])) {
-    rlang::abort("`imputation_col` must not contain missing values.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "`imputation_col` must not contain missing values."),
+      call. = FALSE
+    )
   }
   imputations <- sort(unique(data[[imputation_col]]))
   if (length(imputations) < 2L) {
-    rlang::abort(
-      sprintf("Column `%s` must contain at least 2 distinct imputation indices.",
-              imputation_col),
+    stop(
+      paste0(.err_prefix(), sprintf("Column `%s` must contain at least 2 distinct imputation indices.",
+              imputation_col)),
       call. = FALSE
     )
   }
@@ -156,16 +160,16 @@
   })
   for (i in seq_along(partitions)) {
     if (anyNA(partitions[[i]][[id_col]])) {
-      rlang::abort(
-        sprintf("Imputation %s contains a missing patient key.", imputations[[i]]),
+      stop(
+        paste0(.err_prefix(), sprintf("Imputation %s contains a missing patient key.", imputations[[i]])),
         call. = FALSE
       )
     }
     duplicated_ids <- duplicated(partitions[[i]][[id_col]])
     if (any(duplicated_ids)) {
-      rlang::abort(
-        sprintf("Imputation %s contains %d duplicate patient key(s).",
-                imputations[[i]], sum(duplicated_ids)),
+      stop(
+        paste0(.err_prefix(), sprintf("Imputation %s contains %d duplicate patient key(s).",
+                imputations[[i]], sum(duplicated_ids))),
         call. = FALSE
       )
     }
@@ -182,19 +186,19 @@
         if (length(missing_ids)) sprintf("missing %d patient(s)", length(missing_ids)),
         if (length(extra_ids)) sprintf("has %d extra patient(s)", length(extra_ids))
       )
-      rlang::abort(
-        sprintf("Imputation %s %s relative to imputation %s.",
+      stop(
+        paste0(.err_prefix(), sprintf("Imputation %s %s relative to imputation %s.",
                 imputations[[i]], paste(detail, collapse = " and "),
-                imputations[[1L]]),
+                imputations[[1L]])),
         call. = FALSE
       )
     }
     partitions[[i]] <- partitions[[i]][match(reference_ids, ids), , drop = FALSE]
     same <- .same_response(partitions[[i]][[response_col]], reference_response)
     if (require_stable_response && any(!same)) {
-      rlang::abort(
-        sprintf("Imputation %s response differs for %d patient(s) from imputation %s.",
-                imputations[[i]], sum(!same), imputations[[1L]]),
+      stop(
+        paste0(.err_prefix(), sprintf("Imputation %s response differs for %d patient(s) from imputation %s.",
+                imputations[[i]], sum(!same), imputations[[1L]])),
         call. = FALSE
       )
     }
@@ -214,9 +218,9 @@
         partitions[[i]][[predictor]][!is.na(partitions[[i]][[predictor]])]
       )))
       if (!identical(current_levels, reference_levels)) {
-        rlang::abort(
-          sprintf("Predictor `%s` has different observed levels in imputation %s.",
-                  predictor, imputations[[i]]),
+        stop(
+          paste0(.err_prefix(), sprintf("Predictor `%s` has different observed levels in imputation %s.",
+                  predictor, imputations[[i]])),
           call. = FALSE
         )
       }

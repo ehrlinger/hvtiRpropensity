@@ -49,16 +49,20 @@
 #' @param models   A named list of fitted model objects. May be `list()`.
 #' @param subclass A single string naming the specific subclass
 #'   (e.g. `"ps_match"`).
+#' @param provenance `NULL`, or the record from `.provenance()`, stored as
+#'   `$meta$provenance`. Every function that fits a model or draws random
+#'   numbers passes one.
 #'
 #' @return A named list of class `c(subclass, "ps_data")`.
 #' @keywords internal
-new_ps_data <- function(data, meta, tables = list(), models = list(), subclass) {
+new_ps_data <- function(data, meta, tables = list(), models = list(), subclass, provenance = NULL) {
   stopifnot(is.data.frame(data))
   stopifnot(is.list(meta))
   stopifnot(is.list(tables))
   stopifnot(is.list(models))
   stopifnot(is.character(subclass), length(subclass) == 1L, nzchar(subclass))
 
+  if (!is.null(provenance)) meta$provenance <- provenance
   structure(
     list(data = data, meta = meta, tables = tables, models = models),
     class = c(subclass, "ps_data")
@@ -77,7 +81,7 @@ new_ps_data <- function(data, meta, tables = list(), models = list(), subclass) 
 #'
 #' @examples
 #' dta <- sample_ps_data()
-#' obj <- ps_match(dta)
+#' obj <- ps_match(dta, treatment_col = "tavr")
 #' is_ps_data(obj)   # TRUE
 #' is_ps_data(list()) # FALSE
 #'
@@ -155,4 +159,32 @@ summary.ps_data <- function(object, ...) {
   }
 
   invisible(tbls)
+}
+
+
+#' The hvtiR family provenance record
+#'
+#' A named list with the seven fields every hvtiR package records, in this
+#' order: `package` and `version` (character), `sha` (the installed commit,
+#' `RemoteSha`, else `NA`), `method` (what was run), `seed` (integer, `NA`
+#' when none was given), `rng_kind` (`RNGkind()`, three strings) and `time`
+#' (POSIXct). A field that does not apply is `NA` of its type, so a provenance
+#' table shows a gap rather than a plausible value. The family's spec, not a
+#' shared helper: each package keeps its own copy and a conformance test.
+#'
+#' @param method What was run, for example `"logistic-binary"`.
+#' @param seed The seed used, or `NULL`.
+#' @return A named list.
+#' @keywords internal
+.provenance <- function(method, seed = NULL) {
+  sha <- suppressWarnings(utils::packageDescription("hvtiRpropensity", fields = "RemoteSha"))
+  list(
+    package  = "hvtiRpropensity",
+    version  = as.character(utils::packageVersion("hvtiRpropensity")),
+    sha      = if (length(sha) != 1L || is.na(sha)) NA_character_ else as.character(sha),
+    method   = as.character(method),
+    seed     = if (is.null(seed)) NA_integer_ else as.integer(seed),
+    rng_kind = RNGkind(),
+    time     = Sys.time()
+  )
 }

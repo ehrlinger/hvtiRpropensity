@@ -15,7 +15,8 @@ bs_count(
   n_strata = 10L,
   strata_col = "cluster",
   create_binary_strata = TRUE,
-  covariates = NULL
+  covariate_cols = NULL,
+  covariates
 )
 }
 \arguments{
@@ -52,7 +53,10 @@ calls \code{\link[MASS:glm.nb]{MASS::glm.nb()}} (negative binomial, log link);  
 \item{create_binary_strata}{Logical.  If \code{TRUE} (default), binary
 indicator columns \code{stra_1} through \verb{stra_<n_strata>} are appended.}
 
-\item{covariates}{Covariate columns for diagnostics.}
+\item{covariate_cols}{Covariate columns for diagnostics.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("bs_count", "ps_data")} with:

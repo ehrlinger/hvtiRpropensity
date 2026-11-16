@@ -67,16 +67,16 @@ test_that("ps_rmst() with a seed ignores the session's history and records the s
 
 test_that("ps_stddiff_perm() with a seed ignores the session's history and records the seed", {
   d <- sample_ps_data(n = 120, seed = 42)
-  run <- function(seed) ps_stddiff_perm(d, gaussian = "age", n_perm = 20, seed = seed)
+  run <- function(seed) ps_stddiff_perm(d, gaussian_cols = "age", n_perm = 20, seed = seed)
   expect_seed_stable(function() run(4)$tables)
   expect_identical(run(-4)$tables, run(4)$tables)
   expect_identical(run(4)$meta$seed, 4L)
-  expect_identical(ps_stddiff_perm(d, gaussian = "age", n_perm = 5)$meta$seed, NA_integer_)
+  expect_identical(ps_stddiff_perm(d, gaussian_cols = "age", n_perm = 5)$meta$seed, NA_integer_)
 })
 
 test_that("ps_mw_var() with a seed ignores the session's history and records the seed", {
   d <- mw_data()
-  run <- function(seed) ps_mw_var(d, outcomes = "age", weight_col = "mt_wt", n_rep = 20, seed = seed)
+  run <- function(seed) ps_mw_var(d, outcome_cols = "age", weight_col = "mt_wt", n_boot = 20, seed = seed)
   expect_seed_stable(function() run(8)$tables)
   expect_identical(run(-8)$tables, run(8)$tables)
   expect_identical(run(8)$meta$seed, 8L)
@@ -86,8 +86,8 @@ test_that("the sample-data generators take a seed's absolute value and reject a 
   expect_identical(sample_ps_data(n = 50, seed = -3), sample_ps_data(n = 50, seed = 3))
   expect_identical(sample_ps_data_ordinal(n = 50, seed = -3), sample_ps_data_ordinal(n = 50, seed = 3))
   expect_identical(sample_ps_data_nominal(n = 50, seed = -3), sample_ps_data_nominal(n = 50, seed = 3))
-  expect_identical(sample_ps_data_count(n = 50, seed = -3, n_imputations = 2),
-                   sample_ps_data_count(n = 50, seed = 3, n_imputations = 2))
+  expect_identical(sample_ps_data_count(n = 50, seed = -3, m = 2),
+                   sample_ps_data_count(n = 50, seed = 3, m = 2))
   expect_error(sample_ps_data(n = 50, seed = 1.5), "whole number")
   expect_error(sample_ps_data_count(n = 50, seed = "1"), "whole number")
 })
@@ -97,7 +97,7 @@ test_that("a seed that is not one whole number is rejected", {
   expect_error(ps_match(d, seed = 1.5), "whole number")
   expect_error(ps_match(d, seed = c(1, 2)), "whole number")
   expect_error(ps_match(d, seed = "1"), "whole number")
-  expect_error(ps_stddiff_perm(d, gaussian = "age", n_perm = 5, seed = NA), "whole number")
+  expect_error(ps_stddiff_perm(d, gaussian_cols = "age", n_perm = 5, seed = NA), "whole number")
 })
 
 

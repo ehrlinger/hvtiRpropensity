@@ -206,7 +206,7 @@ head(obj_ps$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
 
 ```{r}
 #| label: ps-logistic-to-match
-m_from_ps <- ps_match(obj_ps$data,
+m_from_ps <- ps_match(obj_ps$data, treatment_col = "tavr",
                       score_col = obj_ps$meta$score_col,
                       seed      = 42)
 print(m_from_ps)
@@ -387,7 +387,7 @@ reproducible whatever ran earlier in the session.
 
 ```{r}
 #| label: match-build
-m <- ps_match(dta, seed = 42)
+m <- ps_match(dta, treatment_col = "tavr", seed = 42)
 print(m)
 ```
 
@@ -428,7 +428,7 @@ for tighter balance.
 
 ```{r}
 #| label: match-caliper
-m_cal <- ps_match(dta, caliper = 0.05, seed = 42)
+m_cal <- ps_match(dta, treatment_col = "tavr", caliper = 0.05, seed = 42)
 print(m_cal)
 ```
 
@@ -444,7 +444,7 @@ records that value in `$meta$caliper`.
 
 ```{r}
 #| label: match-logit
-m_logit <- ps_match(obj_ps$data,
+m_logit <- ps_match(obj_ps$data, treatment_col = "tavr",
                     score_col  = "logit_t",
                     scale      = "logit",
                     caliper_sd = 0.2,
@@ -468,7 +468,7 @@ estimand is the **average treatment effect** (ATE).
 
 ```{r}
 #| label: weight-ate
-w_ate <- ps_weight(dta, estimand = "ATE")
+w_ate <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 print(w_ate)
 ```
 
@@ -492,7 +492,7 @@ receive weight `1` and controls receive `ps / (1 - ps)`.
 
 ```{r}
 #| label: weight-att
-w_att <- ps_weight(dta, estimand = "ATT")
+w_att <- ps_weight(dta, treatment_col = "tavr", estimand = "ATT")
 summary(w_att$data$iptw)
 ```
 
@@ -501,7 +501,7 @@ reversed.
 
 ```{r}
 #| label: weight-atc
-w_atc <- ps_weight(dta, estimand = "ATC")
+w_atc <- ps_weight(dta, treatment_col = "tavr", estimand = "ATC")
 summary(w_atc$data$iptw)
 ```
 
@@ -512,7 +512,7 @@ to the (`trim`, `1 - trim`) quantile range.
 
 ```{r}
 #| label: weight-trim
-w_trim <- ps_weight(dta, estimand = "ATE", trim = 0.05)
+w_trim <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE", trim = 0.05)
 summary(w_trim$data$iptw)
 ```
 
@@ -534,9 +534,9 @@ answer. The result is a proportion of a standard deviation, not a percent.
 
 ```{r}
 #| label: stddiff
-sd_mw <- ps_stddiff(obj_ps$data,
-                    gaussian   = c("age", "ef"),
-                    binary     = c("female", "diabetes", "hypertension"),
+sd_mw <- ps_stddiff(obj_ps$data, treatment_col = "tavr",
+                    gaussian_cols   = c("age", "ef"),
+                    binary_cols     = c("female", "diabetes", "hypertension"),
                     weight_col = "mt_wt")
 sd_mw$tables$stddiff
 ```
@@ -551,9 +551,9 @@ the weights for each permutation, so this example is unweighted.
 
 ```{r}
 #| label: stddiff-perm
-perm <- ps_stddiff_perm(obj_ps$data,
-                        gaussian = c("age", "ef"),
-                        binary   = "female",
+perm <- ps_stddiff_perm(obj_ps$data, treatment_col = "tavr",
+                        gaussian_cols = c("age", "ef"),
+                        binary_cols   = "female",
                         n_perm   = 200,
                         seed     = 1)
 perm$tables$stddiff_perm
@@ -568,10 +568,10 @@ uncertainty in estimating the score. Here `ef` stands in for an outcome.
 
 ```{r}
 #| label: mw-var
-mw <- ps_mw_var(obj_ps$data,
-                outcomes   = "ef",
+mw <- ps_mw_var(obj_ps$data, treatment_col = "tavr",
+                outcome_cols   = "ef",
                 weight_col = "mt_wt",
-                n_rep      = 200,
+                n_boot     = 200,
                 seed       = 1)
 mw$tables$mw_var[, c("outcome", "mean_0", "mean_1", "estimate", "sd",
                      "p2_5", "p97_5")]
@@ -595,11 +595,11 @@ dta_s$t <- withr::with_seed(7, stats::rexp(nrow(dta_s), 0.2))
 dta_s$e <- as.integer(dta_s$t < 5)
 dta_s$t <- pmin(dta_s$t, 5)
 
-m_s <- ps_match(dta_s,
+m_s <- ps_match(dta_s, treatment_col = "tavr",
                 score_col  = "logit_t",
                 scale      = "logit",
                 caliper_sd = 0.2,
-                covariates = c("age", "female", "ef", "diabetes", "hypertension"),
+                covariate_cols = c("age", "female", "ef", "diabetes", "hypertension"),
                 seed       = 42)
 rm_match <- ps_rmst(m_s, time_col = "t", event_col = "e", tau = 4,
                     n_boot = 100, seed = 1)
@@ -623,8 +623,8 @@ would need to be to change the conclusion. Each `sa_*()` function returns a
 ```{r}
 #| label: sa-setup
 dta  <- sample_ps_data(n = 500, seed = 42)
-m    <- ps_match(dta, seed = 42)
-w    <- ps_weight(dta, estimand = "ATE")
+m    <- ps_match(dta, treatment_col = "tavr", seed = 42)
+w    <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 ```
 
 ### Overlap and positivity: `sa_overlap()`

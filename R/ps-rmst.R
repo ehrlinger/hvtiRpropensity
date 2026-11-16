@@ -5,20 +5,22 @@
 #' Kaplan-Meier curves (weights from the propensity score) integrated to
 #' `tau`, differenced, with a stratified bootstrap interval.
 #'
-#' @param x A `ps_data` object with a score and treatment column. A
+#' @param data A `ps_data` object with a score and treatment column. A
 #'   [ps_match()] object is analysed on its matched pairs only, and a
 #'   [ps_weight()] object contributes its stored weight column; see Details.
 #'   A score on the logit scale (`scale = "logit"`, as a [ps_match()] object
 #'   can carry) is back-transformed with [stats::plogis()] before any weights
 #'   are built.
 #' @param time_col,event_col Follow-up time and event indicator (0/1) columns
-#'   of `x$data`.
+#'   of `data$data`.
 #' @param tau Horizon, in the units of `time_col`. It must not exceed the
 #'   largest observed time among the rows that enter either arm's curve, for
 #'   any analysed subset and weighting.
-#' @param weights Weighting schemes to run: any of `"unweighted"`, `"ato"`
-#'   (overlap), `"att"`, `"ate"`. For a [ps_match()] input the default is
-#'   `"unweighted"` alone, and no other scheme is accepted.
+#' @param weights Weighting schemes to run: any of `"unweighted"`, `"ATO"`
+#'   (overlap), `"ATT"`, `"ATE"`, the family's upper-case estimand names.
+#'   Lower-case `"ato"`, `"att"` and `"ate"` are deprecated: they still work,
+#'   and warn once per session, for one release. For a [ps_match()] input the
+#'   default is `"unweighted"` alone, and no other scheme is accepted.
 #' @param subsets Optional named list of logical vectors (one value per row);
 #'   each is run as a restricted analysis (for example a common-support
 #'   subset). The full data is always included as `"all"`.
@@ -39,10 +41,10 @@
 #' @param clip Scores are clipped to `[clip, 1 - clip]` before weighting.
 #'
 #' @details
-#' **Weights.** `"unweighted"` gives every row weight 1. `"ato"` weights
+#' **Weights.** `"unweighted"` gives every row weight 1. `"ATO"` weights
 #' treated rows by `1 - p` and controls by `p`, targeting the overlap
-#' population; `"att"` weights controls by `p / (1 - p)`, targeting the
-#' treated; `"ate"` weights by `1 / p` and `1 / (1 - p)`, targeting the whole
+#' population; `"ATT"` weights controls by `p / (1 - p)`, targeting the
+#' treated; `"ATE"` weights by `1 / p` and `1 / (1 - p)`, targeting the whole
 #' cohort. Here `p` is the score clipped to `[clip, 1 - clip]`.
 #'
 #' **Matched input.** For a [ps_match()] object only the rows with
@@ -56,8 +58,8 @@
 #' a pair keeps the member it contains, which is then resampled alone.
 #'
 #' **Weighted input.** For a [ps_weight()] object, the scheme that matches its
-#' estimand (`"ate"` for `estimand = "ATE"`, `"att"` for `"ATT"`) uses the
-#' stored column `x$meta$weight_col` instead of recomputing weights from the
+#' estimand (`"ATE"` or `"ATT"`) uses the
+#' stored column `data$meta$weight_col` instead of recomputing weights from the
 #' score, so any trimming is kept. Stabilisation multiplies each arm by a
 #' constant, which leaves each arm's Kaplan-Meier curve and effective sample
 #' size unchanged. The other schemes are computed from the score, and an
@@ -78,6 +80,8 @@
 #' of class `hvtiRpropensity_bootstrap_failures` says so, the family rule for
 #' every hvtiR bootstrap.
 #'
+#' @param x Deprecated: the old name of `data`. It still works, and warns
+#'   once per session, for one release.
 #' @return A `ps_rmst` / `ps_data` object. `$tables$estimates` has one row
 #'   per subset-and-weighting estimator: `estimator`, `subset`, `weighting`,
 #'   `n` (rows analysed; for a matched input, twice the matched pairs),
@@ -86,10 +90,10 @@
 #'   `lo_days`, `hi_days` (2.5 and 97.5 percent bootstrap) and `n_failed`
 #'   (bootstrap draws that gave no estimate).
 #'   `$tables$curves` has the weighted Kaplan-Meier steps (`estimator`, `arm`,
-#'   `time`, `surv`) for plotting; `$data` is `x$data` plus one weight column
-#'   `w_<weighting>` per scheme. `$meta$seed` is the seed used (`NA` when none
-#'   was given). `$meta$scale` is the scale of `score_col`, carried from `x`
-#'   (`"probability"` when `x` records none). `$meta$resampling` is `"pair"`
+#'   `time`, `surv`) for plotting; `$data` is `data$data` plus one weight column
+#'   `w_<weighting>` per scheme, its name in lower case (`w_ato`). `$meta$seed` is the seed used (`NA` when none
+#'   was given). `$meta$scale` is the scale of `score_col`, carried from `data`
+#'   (`"probability"` when `data` records none). `$meta$resampling` is `"pair"`
 #'   for a matched input and `"row"` (stratified by arm) otherwise, and
 #'   `$meta$stored_weighting` names the scheme that used a [ps_weight()]
 #'   object's stored weights (`NA` when none did).
@@ -105,32 +109,54 @@
 #'   res$tables$estimates
 #' }
 #' @export
-ps_rmst <- function(x, time_col, event_col, tau,
-                    weights = c("unweighted", "ato"),
+ps_rmst <- function(data, time_col, event_col, tau,
+                    weights = c("unweighted", "ATO"),
                     subsets = list(),
                     n_boot = 200L, refit = FALSE, seed = NULL,
-                    time_unit_days = 365.2425, clip = 1e-3) {
+                    time_unit_days = 365.2425, clip = 1e-3,
+                    x) {
+  if (!missing(x)) data <- .renamed_arg("ps_rmst", "x", "data", x, !missing(data))
+  x <- data
   rlang::check_installed("survival", reason = "to fit Kaplan-Meier curves.")
-  if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
+  if (!is_ps_data(x)) stop(
+                        "ps_rmst(): `data` must be a ps_data object.",
+                        call. = FALSE
+                      )
   matched <- inherits(x, "ps_match")
   if (matched && missing(weights)) weights <- "unweighted"
-  weights <- match.arg(weights, c("unweighted", "ato", "att", "ate"), several.ok = TRUE)
+  lower <- weights %in% c("ato", "att", "ate")
+  if (any(lower)) {
+    .deprecate("ps_rmst", "weights", "Lower-case `weights` values are deprecated; use \"ATO\", \"ATT\" or \"ATE\".")
+    weights <- unique(replace(weights, lower, toupper(weights[lower])))
+  }
+  weights <- match.arg(weights, c("unweighted", "ATO", "ATT", "ATE"), several.ok = TRUE)
   if (matched && any(weights != "unweighted")) {
-    rlang::abort(paste0("A ps_match object is analysed unweighted on its matched pairs; ",
+    stop(
+      paste0("ps_rmst(): A ps_match object is analysed unweighted on its matched pairs; ",
                         "weighting the matched set by the score adjusts twice. Use `weights = \"unweighted\"`."),
-                 call. = FALSE)
+      call. = FALSE
+    )
   }
   .check_cols(x$data, c(time_col, event_col))
   seed <- .seed_value(seed)
   if (!is.numeric(tau) || length(tau) != 1L || !is.finite(tau) || tau <= 0) {
-    rlang::abort("`tau` must be one positive number.", call. = FALSE)
+    stop(
+      "ps_rmst(): `tau` must be one positive number.",
+      call. = FALSE
+    )
   }
   if (length(subsets) && (is.null(names(subsets)) || any(!nzchar(names(subsets))) ||
                           any(lengths(subsets) != nrow(x$data)))) {
-    rlang::abort("`subsets` must be a named list of logical vectors, one value per row.", call. = FALSE)
+    stop(
+      "ps_rmst(): `subsets` must be a named list of logical vectors, one value per row.",
+      call. = FALSE
+    )
   }
   if (refit && !inherits(x, c("ps_logistic", "ps_forest"))) {
-    rlang::abort("`refit = TRUE` needs a ps_logistic or ps_forest object.", call. = FALSE)
+    stop(
+      "ps_rmst(): `refit = TRUE` needs a ps_logistic or ps_forest object.",
+      call. = FALSE
+    )
   }
 
   d <- x$data
@@ -143,7 +169,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
   stored_w <- NULL
   if (inherits(x, "ps_weight")) {
     stored_w <- d[[x$meta$weight_col]]  # read before any w_<type> column can overwrite it
-    stored_type <- unname(c(ATE = "ate", ATT = "att")[x$meta$estimand])
+    stored_type <- unname(c(ATE = "ATE", ATT = "ATT")[x$meta$estimand])
     if (is.na(stored_type) || !stored_type %in% weights) stored_type <- NA_character_
   }
   in_match <- if (matched) d[[x$meta$match_col]] %in% 1L else rep(TRUE, nrow(d))
@@ -153,16 +179,16 @@ ps_rmst <- function(x, time_col, event_col, tau,
     p <- pmin(pmax(sc, clip), 1 - clip)
     switch(type,
       unweighted = rep(1, length(a)),
-      ato = ifelse(a, 1 - p, p),
-      att = ifelse(a, 1, p / (1 - p)),
-      ate = ifelse(a, 1 / p, 1 / (1 - p))
+      ATO = ifelse(a, 1 - p, p),
+      ATT = ifelse(a, 1, p / (1 - p)),
+      ATE = ifelse(a, 1 / p, 1 / (1 - p))
     )
   }
   # Weights for rows `idx`: the stored ps_weight column for its own scheme, else from the score.
   wts_rows <- function(idx, type, sc = score) {
     if (identical(type, stored_type)) stored_w[idx] else wts(sc[idx], arm[idx], type)
   }
-  for (type in weights) d[[paste0("w_", type)]] <- wts_rows(seq_len(nrow(d)), type)
+  for (type in weights) d[[paste0("w_", tolower(type))]] <- wts_rows(seq_len(nrow(d)), type)
 
   subsets <- c(list(all = rep(TRUE, nrow(d))), lapply(subsets, function(s) as.logical(s) & !is.na(s)))
   subsets <- lapply(subsets, function(s) s & in_match)
@@ -175,10 +201,13 @@ ps_rmst <- function(x, time_col, event_col, tau,
     for (g in c(TRUE, FALSE)) {
       tg <- time[idx][used & arm[idx] == g]
       if (length(tg) && tau > max(tg)) {
-        rlang::abort(sprintf(paste0("`tau` = %g is past the last observed time (%g) in the %s arm of ",
+        stop(errorCondition(
+          sprintf(paste0("ps_rmst(): `tau` = %g is past the last observed time (%g) in the %s arm of ",
                                     "estimator \"%s/%s\". Choose a `tau` within follow-up."),
                              tau, max(tg), if (g) "treated" else "control", grid$subset[i], grid$weighting[i]),
-                     call. = FALSE)
+          class = "hvtiRpropensity_tau",
+          call = NULL
+        ))
       }
     }
   }
@@ -251,12 +280,15 @@ ps_rmst <- function(x, time_col, event_col, tau,
     }
     n_failed <- sum(is.na(draws))
     if (n_boot > 0L && n_failed > 0.05 * n_boot) {
-      rlang::warn(sprintf(paste0("%d of %d bootstrap replicates (%.0f%%) failed for estimator \"%s\": the fit ",
+      warning(warningCondition(
+        sprintf(paste0("ps_rmst(): %d of %d bootstrap replicates (%.0f%%) failed for estimator \"%s\": the fit ",
                                  "errored, an arm was empty, or the resampled follow-up of an arm ended before ",
                                  "`tau` = %g. The interval rests on the rest. Check that the subset holds both ",
                                  "arms, and consider a smaller `tau`."),
                           n_failed, n_boot, 100 * n_failed / n_boot, label, tau),
-                  class = "hvtiRpropensity_bootstrap_failures")
+        class = "hvtiRpropensity_bootstrap_failures",
+        call = NULL
+      ))
     }
     ci <- if (all(is.na(draws))) {
       c(NA_real_, NA_real_)
@@ -284,7 +316,8 @@ ps_rmst <- function(x, time_col, event_col, tau,
                   seed = if (is.null(seed)) NA_integer_ else seed, time_unit_days = time_unit_days, n_total = nrow(d),
                   resampling = if (matched) "pair" else "row", stored_weighting = stored_type)),
     tables = list(estimates = do.call(rbind, rows), curves = do.call(rbind, curves)),
-    subclass = "ps_rmst"
+    subclass = "ps_rmst",
+    provenance = .provenance("rmst bootstrap", seed)
   )
 }
 

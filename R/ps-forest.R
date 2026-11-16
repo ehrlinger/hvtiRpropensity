@@ -81,13 +81,19 @@ ps_forest <- function(formula,
                       ...) {
   rlang::check_installed("randomForestSRC", reason = "to fit a forest propensity score.")
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_forest(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   seed <- .seed_value(seed)
   if (is.null(treatment_col)) treatment_col <- as.character(formula[[2L]])
   if (!identical(treatment_col, as.character(formula[[2L]]))) {
-    rlang::abort("`treatment_col` must match the response on the left of `formula`.", call. = FALSE)
+    stop(
+      "ps_forest(): `treatment_col` must match the response on the left of `formula`.",
+      call. = FALSE
+    )
   }
   .check_cols(data, treatment_col)
   .check_output_columns(data, c(score_col, logit_col, weight_col, "quintile", "decile"))
@@ -106,8 +112,10 @@ ps_forest <- function(formula,
   vars <- c(treatment_col, .retained_predictors(formula))
   .check_cols(data, vars)
   if (anyNA(data[, vars, drop = FALSE])) {
-    rlang::abort("`data` has missing values in the formula variables; impute or drop them first.",
-                 call. = FALSE)
+    stop(
+      "ps_forest(): `data` has missing values in the formula variables; impute or drop them first.",
+      call. = FALSE
+    )
   }
 
   treatment <- .treatment_indicator(data, treatment_col, treated_level)
@@ -157,7 +165,8 @@ ps_forest <- function(formula,
                                 n = c(sum(trt == 0L), sum(trt == 1L)))
     ),
     models = list(forest = fit),
-    subclass = "ps_forest"
+    subclass = "ps_forest",
+    provenance = .provenance("random forest", seed)
   )
 }
 

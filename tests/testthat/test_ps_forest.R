@@ -84,11 +84,11 @@ surv_dta <- local({
 
 test_that("ps_rmst() returns estimates and curves with the documented columns", {
   res <- ps_rmst(ps_logistic(tavr ~ age + ef, surv_dta), "t", "e", tau = 4,
-                 weights = c("unweighted", "ato"), subsets = list(half = surv_dta$age > 60), n_boot = 25,
+                 weights = c("unweighted", "ATO"), subsets = list(half = surv_dta$age > 60), n_boot = 25,
                  seed = 1024)
   expect_s3_class(res, "ps_rmst")
   est <- res$tables$estimates
-  expect_setequal(est$estimator, c("all/unweighted", "all/ato", "half/unweighted", "half/ato"))
+  expect_setequal(est$estimator, c("all/unweighted", "all/ATO", "half/unweighted", "half/ATO"))
   expect_true(all(c("diff_days", "lo_days", "hi_days", "ess_treated", "ess_control", "n_failed") %in% names(est)))
   expect_equal(est$diff_days, est$diff * 365.2425)
   expect_true(all(est$lo_days <= est$hi_days))
@@ -97,14 +97,14 @@ test_that("ps_rmst() returns estimates and curves with the documented columns", 
   expect_gt(est$diff_days[est$estimator == "all/unweighted"], 0)
   # deterministic given seed
   again <- ps_rmst(ps_logistic(tavr ~ age + ef, surv_dta), "t", "e", tau = 4,
-                   weights = c("unweighted", "ato"), subsets = list(half = surv_dta$age > 60), n_boot = 25,
+                   weights = c("unweighted", "ATO"), subsets = list(half = surv_dta$age > 60), n_boot = 25,
                    seed = 1024)
   expect_equal(again$tables$estimates, est)
 })
 
 test_that("ps_rmst() supports refit and validates input", {
   x <- ps_logistic(tavr ~ age + ef, surv_dta)
-  r <- ps_rmst(x, "t", "e", tau = 4, weights = "ato", n_boot = 8, refit = TRUE)
+  r <- ps_rmst(x, "t", "e", tau = 4, weights = "ATO", n_boot = 8, refit = TRUE)
   expect_equal(r$tables$estimates$n_failed, 0L)
   rf <- ps_rmst(fo, "age", "tavr", tau = 50, weights = "unweighted", n_boot = 3)
   expect_s3_class(rf, "ps_rmst")

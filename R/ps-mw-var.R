@@ -42,7 +42,7 @@
 #' deviation of the replicate differences, and the percentiles use
 #' `quantile(type = 4)`, which is SAS `PCTLDEF=1` as the macro sets it.
 #' Replicates where an outcome has no non-missing value in a group are left
-#' out for that outcome, and `n_rep` counts those that remain.
+#' out for that outcome, and the table's `n_rep` counts those that remain.
 #'
 #' **The weights are held fixed.** Each resampled row keeps its original
 #' weight; the propensity model and the weights are not re-estimated. This
@@ -57,11 +57,13 @@
 #'
 #' @param data A data frame.
 #' @param treatment_col Name of the group column, coded 0/1 or logical, with
-#'   both groups present. Default `"tavr"`.
-#' @param outcomes Character vector of numeric outcome columns.
+#'   both groups present. Required: it has no default, because a study's
+#'   column name never is one. Omitting it is deprecated, warns once per
+#'   session and still means `"tavr"`, for one release.
+#' @param outcome_cols Character vector of numeric outcome columns.
 #' @param weight_col Name of the column of matching weights, which must be
 #'   positive and finite.
-#' @param n_rep Number of bootstrap replicates. Default `1000`, the macro's
+#' @param n_boot Number of bootstrap replicates. Default `1000`, the macro's
 #'   `RESAMPL=`.
 #' @param seed `NULL` (default) or one whole number. With a seed, the
 #'   random number stream is set to `abs(seed)` immediately before the draws,
@@ -74,11 +76,17 @@
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
 #'   value, for example `"transcatheter"`, to use a column holding any two
 #'   values.
+#' @param n_rep Deprecated: the old name of `n_boot`. It still works, and warns
+#'   once per session, for one release.
+#' @param outcomes Deprecated: the old name of `outcome_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_mw_var", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
-#'   \item{`$meta`}{Named list: `treatment_col`, `weight_col`, `outcomes`,
-#'     `method`, `n_rep`, `seed`, `n_total`, `n_dropped`.}
+#'   \item{`$meta`}{Named list: `treatment_col`, `weight_col`, `outcomes`
+#'     (the `outcome_cols` given), `method`, `n_boot`, `n_rep` (the same
+#'     value as `n_boot`, kept for one release so code reading the old field
+#'     still works; read `n_boot`), `seed`, `n_total`, `n_dropped`.}
 #'   \item{`$tables`}{Named list with `mw_var`, one row per outcome:
 #'     `outcome`, `label`, `sumwgt_0`, `mean_0`, `sd_0`, `sumwgt_1`,
 #'     `mean_1`, `sd_1`, `estimate`, `n_rep`, `sd`, `p2_5`, `p16`, `p50`,
@@ -95,31 +103,48 @@
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #' dta$mt_wt <- pmin(dta$prob_t, 1 - dta$prob_t) /
 #'   ifelse(dta$tavr == 1, dta$prob_t, 1 - dta$prob_t)
-#' obj <- ps_mw_var(dta, treatment_col = "tavr", outcomes = c("age", "ef"),
-#'                  weight_col = "mt_wt", n_rep = 200, seed = 1)
+#' obj <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = c("age", "ef"),
+#'                  weight_col = "mt_wt", n_boot = 200, seed = 1)
 #' obj$tables$mw_var
 #'
 #' @export
 ps_mw_var <- function(data,
-                      treatment_col = "tavr",
-                      outcomes,
+                      treatment_col,
+                      outcome_cols,
                       weight_col,
-                      n_rep         = 1000L,
+                      n_boot        = 1000L,
                       seed          = NULL,
-                      treated_level = NULL) {
-  .check_df(data)
-  if (!is.numeric(n_rep) || length(n_rep) != 1L || !is.finite(n_rep) ||
-      n_rep < 1 || n_rep > .Machine$integer.max || n_rep != round(n_rep)) {
-    rlang::abort("`n_rep` must be a positive whole number.", call = NULL)
+                      treated_level = NULL,
+                      n_rep,
+                      outcomes) {
+  if (!missing(outcomes)) {
+    outcome_cols <- .renamed_arg("ps_mw_var", "outcomes", "outcome_cols", outcomes, !missing(outcome_cols))
   }
-  n_rep <- as.integer(n_rep)
+  outcomes <- outcome_cols
+  if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_mw_var")
+  .check_df(data)
+  if (!missing(n_rep)) n_boot <- .renamed_arg("ps_mw_var", "n_rep", "n_boot", n_rep, !missing(n_boot))
+  if (!is.numeric(n_boot) || length(n_boot) != 1L || !is.finite(n_boot) ||
+      n_boot < 1 || n_boot > .Machine$integer.max || n_boot != round(n_boot)) {
+    stop(
+      "ps_mw_var(): `n_boot` must be a positive whole number.",
+      call. = FALSE
+    )
+  }
+  n_boot <- as.integer(n_boot)
   outcomes <- as.character(outcomes)
-  if (length(outcomes) == 0L) rlang::abort("Name at least one column in `outcomes`.", call = NULL)
+  if (length(outcomes) == 0L) stop(
+                                "ps_mw_var(): Name at least one column in `outcome_cols`.",
+                                call. = FALSE
+                              )
   .check_cols(data, c(treatment_col, outcomes, weight_col))
   seed <- .seed_value(seed)
   for (v in outcomes) {
     if (!is.numeric(data[[v]])) {
-      rlang::abort(sprintf("Outcome column `%s` must be numeric.", v), call = NULL)
+      stop(
+        sprintf("ps_mw_var(): Outcome column `%s` must be numeric.", v),
+        call. = FALSE
+      )
     }
   }
 
@@ -127,11 +152,17 @@ ps_mw_var <- function(data,
   base <- data[keep, , drop = FALSE]
   grp <- .treatment_indicator(base, treatment_col, treated_level)$trt
   if (!all(c(0L, 1L) %in% grp)) {
-    rlang::abort(sprintf("Column `%s` must contain both treatment groups.", treatment_col), call = NULL)
+    stop(
+      sprintf("ps_mw_var(): Column `%s` must contain both treatment groups.", treatment_col),
+      call. = FALSE
+    )
   }
   w <- base[[weight_col]]
   if (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0)) {
-    rlang::abort(sprintf("Column `%s` must hold positive, finite, non-missing weights.", weight_col), call = NULL)
+    stop(
+      sprintf("ps_mw_var(): Column `%s` must hold positive, finite, non-missing weights.", weight_col),
+      call. = FALSE
+    )
   }
 
   # Weighted mean of y over rows r, NA when none of them has a value.
@@ -154,7 +185,7 @@ ps_mw_var <- function(data,
   })
 
   if (!is.null(seed)) withr::local_seed(seed)
-  reps <- vapply(seq_len(n_rep), function(i) {
+  reps <- vapply(seq_len(n_boot), function(i) {
     r0 <- i0[sample.int(length(i0), replace = TRUE)]
     r1 <- i1[sample.int(length(i1), replace = TRUE)]
     vapply(outcomes, function(v) wmean(base[[v]], r1) - wmean(base[[v]], r0), numeric(1))
@@ -183,9 +214,13 @@ ps_mw_var <- function(data,
   new_ps_data(
     data   = data,
     meta   = list(treatment_col = treatment_col, weight_col = weight_col, outcomes = outcomes,
-                  method = "mw_var", n_rep = n_rep, seed = if (is.null(seed)) NA_integer_ else seed,
+                  # n_rep is n_boot under its old name, kept for one release so existing
+                  # readers of $meta$n_rep do not get NULL (#124 review).
+                  method = "mw_var", n_boot = n_boot, n_rep = n_boot,
+                  seed = if (is.null(seed)) NA_integer_ else seed,
                   n_total = nrow(data), n_dropped = sum(!keep)),
     tables = list(mw_var = tbl),
-    subclass = "ps_mw_var"
+    subclass = "ps_mw_var",
+    provenance = .provenance("mw_var bootstrap", seed)
   )
 }

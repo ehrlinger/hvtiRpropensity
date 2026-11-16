@@ -102,7 +102,7 @@
 #' @param create_binary_strata Logical.  If `TRUE` (default), binary columns
 #'   `stra_1` through `stra_<n_strata>` are appended, mirroring the `%grp`
 #'   macro in the SAS template.
-#' @param covariates          Covariate columns for diagnostics (not used in
+#' @param covariate_cols      Covariate columns for diagnostics (not used in
 #'   computation; reserved for future balance-checking helpers).
 #'
 #' @details
@@ -110,6 +110,8 @@
 #' is an error naming the imputation, rather than a score from a rank-deficient
 #' fit.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("bs_continuous", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{Base data frame with `score_col`, `"quintile"`,
@@ -152,18 +154,30 @@ bs_continuous <- function(formula,
                           n_strata             = 10L,
                           strata_col           = "cluster",
                           create_binary_strata = TRUE,
-                          covariates           = NULL) {
+                          covariate_cols       = NULL,
+                          covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("bs_continuous", "covariates", "covariate_cols", covariates,
+                                   !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "bs_continuous(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   outcome_col <- .check_outcome_response(formula, outcome_col)
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
-    rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
+    stop(
+      "bs_continuous(): `n_strata` must be an integer >= 2.",
+      call. = FALSE
+    )
   }
   n_strata <- as.integer(n_strata)
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
@@ -243,7 +257,8 @@ bs_continuous <- function(formula,
       fit_status = fitted$status
     ),
     models = fitted$models,
-    subclass = "bs_continuous"
+    subclass = "bs_continuous",
+    provenance = .provenance("continuous balancing score")
   )
 }
 
@@ -313,8 +328,10 @@ print.bs_continuous <- function(x, ...) {
 #'   `"cluster"`.
 #' @param create_binary_strata Logical.  If `TRUE` (default), binary
 #'   indicator columns `stra_1` through `stra_<n_strata>` are appended.
-#' @param covariates          Covariate columns for diagnostics.
+#' @param covariate_cols      Covariate columns for diagnostics.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("bs_count", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -390,15 +407,20 @@ bs_count <- function(formula,
                      n_strata             = 10L,
                      strata_col           = "cluster",
                      create_binary_strata = TRUE,
-                     covariates           = NULL) {
+                     covariate_cols       = NULL,
+                     covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("bs_count", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   dist <- match.arg(dist)
   model_engine <- if (identical(dist, "negbin")) "MASS" else "stats"
 
   if (dist == "negbin" && !requireNamespace("MASS", quietly = TRUE)) {
-    rlang::abort(
+    stop(
       paste0(
-        "`bs_count(dist = 'negbin')` requires the MASS package.\n",
+        "bs_count(): `bs_count(dist = 'negbin')` requires the MASS package.\n",
         "Install it with: install.packages(\"MASS\"), ",
         "or use dist = 'poisson'."
       ),
@@ -408,18 +430,26 @@ bs_count <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "bs_count(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   outcome_col <- .check_outcome_response(formula, outcome_col)
   if (!is.name(formula[[2L]])) {
-    rlang::abort("The count response must be a column name, not a transformation such as `log(count)`.",
-                 call. = FALSE)
+    stop(
+      "bs_count(): The count response must be a column name, not a transformation such as `log(count)`.",
+      call. = FALSE
+    )
   }
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
-    rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
+    stop(
+      "bs_count(): `n_strata` must be an integer >= 2.",
+      call. = FALSE
+    )
   }
   n_strata <- as.integer(n_strata)
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
@@ -517,7 +547,8 @@ bs_count <- function(formula,
       fit_status = fitted$status
     ),
     models = fitted$models,
-    subclass = "bs_count"
+    subclass = "bs_count",
+    provenance = .provenance("count balancing score")
   )
 }
 
