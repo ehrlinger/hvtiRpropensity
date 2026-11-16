@@ -134,7 +134,9 @@ ps_forest <- function(formula,
   out[["decile"]]   <- strata$decile
 
   covariates <- setdiff(vars, treatment_col)
-  covariates <- covariates[vapply(data[covariates], is.numeric, logical(1L))]
+  covariates <- covariates[vapply(data[covariates], function(x) {
+    is.numeric(x) || is.logical(x) || is.factor(x) || is.character(x)
+  }, logical(1L))]
   diag <- out
   diag[[treatment_col]] <- trt
   smd_tbl <- .smd_table(diag, treatment_col, covariates)

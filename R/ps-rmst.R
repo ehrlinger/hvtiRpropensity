@@ -67,12 +67,16 @@
 #' **Horizon.** The weighted Kaplan-Meier curve is not defined past the last
 #' observed time in an arm, counting only the rows that enter the curve (time
 #' and event present, weight above zero), so a `tau` beyond it stops with an error rather
-#' than carrying the last survival value forward. A bootstrap draw can still
-#' end short of `tau`, and its curve is then carried flat to `tau`.
+#' than carrying the last survival value forward. A bootstrap draw whose
+#' resampled follow-up in either arm ends before `tau` is held to the same
+#' rule: it fails rather than being carried flat to `tau`.
 #'
-#' **Failures.** A bootstrap draw that errors, or that leaves an arm empty,
-#' gives `NA`; the interval is taken over the other draws and the number of
-#' `NA` draws is reported as `n_failed`.
+#' **Failures.** A bootstrap draw that errors, that leaves an arm empty, or
+#' whose follow-up in an arm ends before `tau` gives `NA`; the interval is
+#' taken over the other draws and the number of `NA` draws is reported as
+#' `n_failed`. When more than 5% of the draws for an estimator fail, a warning
+#' of class `hvtiRpropensity_bootstrap_failures` says so, the family rule for
+#' every hvtiR bootstrap.
 #'
 #' @return A `ps_rmst` / `ps_data` object. `$tables$estimates` has one row
 #'   per subset-and-weighting estimator: `estimator`, `subset`, `weighting`,
@@ -240,8 +244,19 @@ ps_rmst <- function(x, time_col, event_col, tau,
           score
         }
         r <- est_one(bi, type, sc)
-        (r$ra$rmst - r$rb$rmst) * time_unit_days
+        # A resample whose follow-up in either arm ends before tau has no curve
+        # at tau; carrying the last value flat would invent survival, so it fails.
+        if (r$ra$t_max < tau || r$rb$t_max < tau) NA_real_ else (r$ra$rmst - r$rb$rmst) * time_unit_days
       }, error = function(e) NA_real_)
+    }
+    n_failed <- sum(is.na(draws))
+    if (n_boot > 0L && n_failed > 0.05 * n_boot) {
+      rlang::warn(sprintf(paste0("%d of %d bootstrap replicates (%.0f%%) failed for estimator \"%s\": the fit ",
+                                 "errored, an arm was empty, or the resampled follow-up of an arm ended before ",
+                                 "`tau` = %g. The interval rests on the rest. Check that the subset holds both ",
+                                 "arms, and consider a smaller `tau`."),
+                          n_failed, n_boot, 100 * n_failed / n_boot, label, tau),
+                  class = "hvtiRpropensity_bootstrap_failures")
     }
     ci <- if (all(is.na(draws))) {
       c(NA_real_, NA_real_)
@@ -253,7 +268,7 @@ ps_rmst <- function(x, time_col, event_col, tau,
       ess_treated = ess(a), ess_control = ess(!a),
       rmst_treated = pt$ra$rmst, rmst_control = pt$rb$rmst,
       diff = diff_pt, diff_days = diff_pt * time_unit_days,
-      lo_days = ci[1L], hi_days = ci[2L], n_failed = sum(is.na(draws))
+      lo_days = ci[1L], hi_days = ci[2L], n_failed = n_failed
     )
     curves[[i]] <- rbind(
       data.frame(estimator = label, arm = "treated", pt$ra$curve),
@@ -273,14 +288,14 @@ ps_rmst <- function(x, time_col, event_col, tau,
   )
 }
 
-# Weighted Kaplan-Meier -> list(rmst, curve). Zero-weight rows are dropped.
+# Weighted Kaplan-Meier -> list(rmst, curve, t_max). Zero-weight rows are dropped.
 .weighted_km <- function(time, event, weights, tau) {
   keep <- !is.na(time) & !is.na(event) & !is.na(weights) & weights > 0
   dd <- data.frame(t = time[keep], e = event[keep], w = weights[keep])
-  if (!nrow(dd)) return(list(rmst = NA_real_, curve = data.frame(time = 0, surv = 1)))
+  if (!nrow(dd)) return(list(rmst = NA_real_, curve = data.frame(time = 0, surv = 1), t_max = -Inf))
   km <- survival::survfit(survival::Surv(t, e) ~ 1, data = dd, weights = dd$w)
   curve <- data.frame(time = c(0, km$time), surv = c(1, km$surv))
-  list(rmst = .rmst_step(curve$time, curve$surv, tau), curve = curve)
+  list(rmst = .rmst_step(curve$time, curve$surv, tau), curve = curve, t_max = max(dd$t))
 }
 
 # Area under a right-continuous step curve on [0, tau].

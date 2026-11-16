@@ -10,7 +10,8 @@
   covariates = NULL,
   weight_col = NULL,
   reserved = character(),
-  keep = character()
+  keep = character(),
+  types = NULL
 )
 }
 \arguments{
@@ -28,17 +29,29 @@ excluding \code{treatment}, \code{weight_col} and \code{reserved}.}
 
 \item{keep}{Model predictors protected in the default set; see
 \code{.default_covariates()}.}
+
+\item{types}{Named character vector from \code{.covariate_types()}. A caller
+that builds two tables from different rows, such as before and after a
+match, types the covariates once on the larger set and passes the result
+to both, so a column is never Gaussian in one table and binary in the
+other. \code{NULL} types them on \code{data}.}
 }
 \value{
-A data frame with columns \code{variable} and \code{smd}, rounded to 4 places.
+A data frame with columns \code{variable} and \code{smd}, rounded to 4 places,
+one row per covariate.
 }
 \description{
-Every covariate is treated as Gaussian, so the denominator is
-\code{sqrt((var1 + var0) / 2)}, and with \code{weight_col} the variances are the
-\verb{PROC MEANS} weighted ones, divided by \code{n - 1}, after the weights are
-normalised to mean 1 within each group. This is the one formula the
-package uses; see \code{\link[=ps_stddiff]{ps_stddiff()}}. A subset with a group absent, such as the
-matched rows of a match that found no pairs, gets \code{NA} for every covariate
-rather than an error.
+Each covariate is routed to the \code{\link[=ps_stddiff]{ps_stddiff()}} formula for its type. A
+logical column, or a numeric column whose non-missing values are all 0 or
+1, takes the binary formula. A factor or character column takes the
+categorical formula of Yang and Dalton (2012), one row per column. With
+two levels left that distance is the absolute value of the binary formula,
+and it is reported that way, unsigned, so a factor whose third level is
+absent from the matched rows keeps the same scale and sign convention as
+before the match (#122). Every other numeric column is
+Gaussian, with the denominator \code{sqrt((var1 + var0) / 2)}. With \code{weight_col},
+proportions and variances are weighted as \code{\link[=ps_stddiff]{ps_stddiff()}} describes. A
+subset with a group absent, such as the matched rows of a match that found
+no pairs, gets \code{NA} for every covariate rather than an error.
 }
 \keyword{internal}

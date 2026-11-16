@@ -372,6 +372,8 @@ fit_logistic <- function(formula, data,
     predict_fn = predict_fn,
     predictor_cols = .retained_predictors(formula)
   )
+  .check_aliased(fitted$models)
+  .check_separation(fitted$models, outcome_col)
   inference <- .model_inference(fitted$models, family)
   scored <- fitted$data
   if (identical(family, "binary")) {
@@ -431,22 +433,77 @@ fit_logistic <- function(formula, data,
 }
 
 
-#' Stop when a fitted linear model has an aliased term
+#' Stop when a fitted linear or logistic model has an aliased term
 #'
-#' `stats::lm()` returns `NA` for a term it cannot estimate, which would
-#' otherwise surface later as an anonymous non-finite coefficient.
+#' `stats::lm()` and `stats::glm()` return `NA` for a term they cannot
+#' estimate, which would otherwise surface later as an anonymous non-finite
+#' coefficient. Models from other engines are skipped: [MASS::polr()] drops an
+#' aliased column itself, and a [nnet::multinom()] coefficient matrix carries
+#' no `NA`.
 #'
 #' @param models Named list of fitted models.
 #' @return Invisible `NULL`.
 #' @keywords internal
 .check_aliased <- function(models) {
   for (i in seq_along(models)) {
+    if (!inherits(models[[i]], "lm")) next
     aliased <- names(stats::coef(models[[i]]))[is.na(stats::coef(models[[i]]))]
     if (length(aliased)) {
       label <- if (is.null(names(models))) i else names(models)[[i]]
       rlang::abort(
         sprintf("Term(s) aliased in imputation %s: %s. Remove them from the formula.",
                 label, paste(aliased, collapse = ", ")),
+        call. = FALSE
+      )
+    }
+  }
+  invisible(NULL)
+}
+
+
+#' Stop when a binary logistic fit predicts the outcome perfectly
+#'
+#' Under complete or quasi-complete separation the maximum likelihood estimate
+#' does not exist: the likelihood keeps rising as some coefficients grow
+#' without bound, and [stats::glm()] stops only because its deviance criterion
+#' is met, with a warning at most. The coefficients and their standard errors
+#' are then meaningless. The test is whether the fit has reached a maximum:
+#' 25 further Newton steps are taken from the reported coefficients, and if
+#' any coefficient moves by more than `1e-4` of its size (or of 1, if
+#' smaller) the fit is diverging. At a finite maximum the steps leave the
+#' coefficients where they are, to rounding.
+#'
+#' A fitted probability that rounds to exactly 0 or 1 is not, alone, evidence
+#' of separation: one extreme but valid covariate value does it with finite,
+#' well-estimated coefficients (PR #122 review). That case is left to the
+#' callers: [ps_logistic()] warns and names those patients.
+#' Only [stats::glm()] fits are checked.
+#'
+#' @param models Named list of fitted models.
+#' @param outcome_col The outcome column, for the message.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.check_separation <- function(models, outcome_col) {
+  for (i in seq_along(models)) {
+    m <- models[[i]]
+    if (!inherits(m, "glm") || !identical(m$family$family, "binomial")) next
+    b <- stats::coef(m)
+    ok <- !is.na(b)
+    more <- suppressWarnings(stats::glm.fit(
+      x = stats::model.matrix(m)[, ok, drop = FALSE], y = m$y, weights = m$prior.weights,
+      start = b[ok], offset = m$offset, family = m$family,
+      control = stats::glm.control(epsilon = 1e-300, maxit = 25L)
+    ))$coefficients
+    moved <- max(abs(more - b[ok]) / pmax(1, abs(b[ok])))
+    if (!is.finite(moved) || moved > 1e-4) {
+      label <- if (is.null(names(models))) i else names(models)[[i]]
+      rlang::abort(
+        sprintf(paste0("The model separates `%s` (imputation %s): its coefficients keep growing instead of ",
+                       "converging, so no maximum likelihood estimate exists. A predictor, or a combination of ",
+                       "predictors, predicts the outcome perfectly. Remove or combine the predictor, or merge ",
+                       "sparse levels."),
+                outcome_col, label),
+        class = "hvtiRpropensity_separation",
         call. = FALSE
       )
     }

@@ -45,12 +45,20 @@ keeps weights of exactly 1.  \verb{$meta$stabilised} records whether it was
 applied.}
 
 \item{trim}{Optional numeric in (0, 0.5).  If supplied, weights
-outside the (\code{trim}, \code{1 - trim}) quantile range are winsorised.
-Default \code{NULL} (no trimming).}
+outside the (\code{trim}, \code{1 - trim}) quantile range are winsorised, within the
+arm that is reweighted. For \code{"ATT"} only the control weights are trimmed,
+at quantiles of the control weights, and every treated weight stays
+exactly 1; \code{"ATC"} is the mirror image. For \code{"ATE"} both arms are
+reweighted, so the quantiles are taken over all weights pooled across both
+arms (Lee, Lessler and Stuart, 2011). Default \code{NULL} (no trimming).}
 
 \item{covariates}{Character vector of covariate columns for SMD
-diagnostics, used as given.  If \code{NULL} (default), every numeric column
-that varies is used, except \code{treatment_col}, \code{score_col}, \code{weight_col},
+diagnostics, used as given.  A 0/1 or logical column takes the binary
+standardized difference, a factor or character column the categorical
+one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric column the
+Gaussian one.  If \code{NULL} (default), every numeric, logical, factor or
+character column that varies is used, except identifier-like text columns
+(every value different), \code{treatment_col}, \code{score_col}, \code{weight_col},
 \code{id_col} and the fixed columns this package appends (\code{prob_t},
 \code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile}, \code{decile},
 \code{bs}, \code{cluster}).}
@@ -90,8 +98,8 @@ treatment effect in the whole sample (ATE, the default), in the treated
 \code{mt_wt} column from \code{\link[=ps_logistic]{ps_logistic()}} or \code{\link[=ps_forest]{ps_forest()}} instead.
 Returns a \code{ps_weight} object whose \verb{$tables} slot contains SMD tables
 (unweighted and weighted) and effective-N diagnostics. Its \verb{$data} feeds
-\code{hvtiPlotR::hv_mirror_hist()} in weighted mode; \code{hvtiPlotR::hv_balance()}
-needs the SMD tables stacked into long form (see the vignette).
+\code{hvtiPlotR::hv_mirror_hist()} in weighted mode, and \code{hvtiPlotR::hv_balance()}
+reads the object itself (hvtiPlotR 2.8.22 or later).
 }
 \details{
 A patient with a missing treatment or a missing score cannot be weighted.
@@ -115,6 +123,11 @@ summary(obj_att)
 # 3. Extract data with weights appended
 head(obj$data[, c("id", "tavr", "prob_t", "iptw")])
 
+}
+\references{
+Lee BK, Lessler J, Stuart EA (2011). Weight trimming and
+propensity score weighting. \emph{PLoS ONE}, 6(3), e18174.
+\doi{10.1371/journal.pone.0018174}
 }
 \seealso{
 \code{\link[=ps_match]{ps_match()}}, \code{\link[=sample_ps_data]{sample_ps_data()}},

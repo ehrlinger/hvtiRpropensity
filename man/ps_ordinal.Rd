@@ -40,8 +40,9 @@ are named \verb{<prefix>_<level>} for each level of the treatment.
 Default \code{"prob"}.}
 
 \item{covariates}{Covariate columns for the balance table. \code{NULL}
-(default) uses every numeric column other than the treatment, score,
-identifier and strata columns.}
+(default) uses every numeric, logical, factor or character column that
+varies, other than the treatment, score, identifier and strata columns;
+types are routed as in \code{\link[=ps_logistic]{ps_logistic()}}.}
 
 \item{treatment_levels}{Complete treatment levels, lowest first. \code{NULL}
 (default) takes the levels of the treatment, which must then be an ordered

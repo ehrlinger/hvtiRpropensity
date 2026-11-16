@@ -2,7 +2,7 @@
 % Please edit documentation in R/lm-fit.R
 \name{.check_aliased}
 \alias{.check_aliased}
-\title{Stop when a fitted linear model has an aliased term}
+\title{Stop when a fitted linear or logistic model has an aliased term}
 \usage{
 .check_aliased(models)
 }
@@ -13,7 +13,10 @@
 Invisible \code{NULL}.
 }
 \description{
-\code{stats::lm()} returns \code{NA} for a term it cannot estimate, which would
-otherwise surface later as an anonymous non-finite coefficient.
+\code{stats::lm()} and \code{stats::glm()} return \code{NA} for a term they cannot
+estimate, which would otherwise surface later as an anonymous non-finite
+coefficient. Models from other engines are skipped: \code{\link[MASS:polr]{MASS::polr()}} drops an
+aliased column itself, and a \code{\link[nnet:multinom]{nnet::multinom()}} coefficient matrix carries
+no \code{NA}.
 }
 \keyword{internal}

@@ -44,8 +44,9 @@ by default).  Default \code{"prob"}.}
 \code{\link[nnet:multinom]{nnet::multinom()}} iteration messages.}
 
 \item{covariates}{Covariate columns for the balance table. \code{NULL}
-(default) uses every numeric column other than the treatment, score,
-identifier and strata columns.}
+(default) uses every numeric, logical, factor or character column that
+varies, other than the treatment, score, identifier and strata columns;
+types are routed as in \code{\link[=ps_logistic]{ps_logistic()}}.}
 
 \item{treatment_levels}{Complete nominal treatment levels. \code{NULL} preserves
 the levels inferred by the historical interface.}

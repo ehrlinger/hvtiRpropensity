@@ -78,6 +78,40 @@
 }
 
 
+#' Warn when a propensity score is numerically 0 or 1
+#'
+#' A finite, converged logistic fit can still give a patient with an extreme
+#' covariate value a probability within `10 * .Machine$double.eps` of 0 or 1,
+#' the threshold at which `glm.fit()` warns. [stats::glm()] caps the linear
+#' predictor there, so the logit is near +/-36 rather than infinite, but the
+#' value reflects the cap, not the model, and an inverse-probability weight on
+#' the wrong side of it is of order `1e15`. Name those patients when the score
+#' is made, rather than leave it to a later step.
+#'
+#' @param p Propensity scores.
+#' @param score_col,logit_col Column names, for the message.
+#' @param id Patient identifiers, or `NULL` for row numbers.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.warn_saturated_score <- function(p, score_col, logit_col, id = NULL) {
+  eps <- 10 * .Machine$double.eps
+  sat <- which(!is.na(p) & (p < eps | p > 1 - eps))
+  if (length(sat) == 0L) return(invisible(NULL))
+  who <- if (is.null(id)) sat else id[sat]
+  shown <- paste(utils::head(who, 10L), collapse = ", ")
+  if (length(who) > 10L) shown <- paste0(shown, ", ...")
+  rlang::warn(
+    sprintf(paste0("%d patient(s) have `%s` numerically 0 or 1 (%s). The model converged, so an extreme covariate ",
+                   "value is the usual cause. Their `%s` is the fitting routine's cap, not an estimate, and an ",
+                   "inverse-probability weight for them can be of order 1e15; consider trimming or checking ",
+                   "those values."),
+            length(sat), score_col, shown, logit_col),
+    class = "hvtiRpropensity_saturated_score"
+  )
+  invisible(NULL)
+}
+
+
 # ---------------------------------------------------------------------------
 # Internal: collision-free model prediction name
 # ---------------------------------------------------------------------------
@@ -177,8 +211,12 @@
 #' @param weight_col     Output column name for the Li-Greene matching
 #'   weight (ATM). Default `"mt_wt"`.
 #' @param covariates     Character vector of covariate column names for SMD
-#'   balance diagnostics, used as given.  If `NULL` (default), every numeric
-#'   column that varies is used, except `treatment_col`, `score_col`,
+#'   balance diagnostics, used as given.  A 0/1 or logical column takes the
+#'   binary standardized difference, a factor or character column the
+#'   categorical one of [ps_stddiff()] (one row per column), any other numeric
+#'   column the Gaussian one.  If `NULL` (default), every numeric, logical,
+#'   factor or character column that varies is used, except identifier-like
+#'   text columns (every value different), `treatment_col`, `score_col`,
 #'   `logit_col`, `weight_col`, `id_col` and the fixed columns this package
 #'   appends (`quintile`, `decile`, `iptw`, `match`, `pair_id` and the like).
 #'   A predictor named in `formula` is always kept.
@@ -305,7 +343,7 @@ ps_logistic <- function(formula,
     treatment_levels <- .treatment_indicator(data, treatment_col, treated_level, warn_na = FALSE)$labels
   }
   if (is.null(treatment_levels)) {
-    .check_binary(data, treatment_col, warn_na = FALSE)
+    .treatment_indicator(data, treatment_col, warn_na = FALSE)
     treatment_levels <- if (is.logical(data[[treatment_col]])) {
       c(FALSE, TRUE)
     } else {
@@ -313,6 +351,11 @@ ps_logistic <- function(formula,
     }
   }
   treatment_levels <- as.character(treatment_levels)
+  present <- unique(as.character(data[[treatment_col]][!is.na(data[[treatment_col]])]))
+  if (length(present) < 2L) {
+    rlang::abort(sprintf("Column `%s` must hold both treatment values; it holds %s.", treatment_col,
+                         if (length(present)) paste("only", present) else "none"), call. = FALSE)
+  }
   if (is.null(treated_level)) treated_level <- utils::tail(treatment_levels, 1L)
   treated_level <- as.character(treated_level)
 
@@ -350,6 +393,7 @@ ps_logistic <- function(formula,
   base_data[[score_col]]  <- probs
   base_data[[logit_col]]  <- log(probs / (1 - probs))
   base_data[[weight_col]] <- .matching_weight(probs, trt)
+  .warn_saturated_score(probs, score_col, logit_col, id = if (id_col %in% names(base_data)) base_data[[id_col]])
 
   # ---- Quintile / decile strata -------------------------------------------
   strata <- .assign_ps_strata(replace(probs, missing_trt, NA))
@@ -465,8 +509,9 @@ print.ps_logistic <- function(x, ...) {
 #'   are named `<prefix>_<level>` for each level of the treatment.
 #'   Default `"prob"`.
 #' @param covariates       Covariate columns for the balance table. `NULL`
-#'   (default) uses every numeric column other than the treatment, score,
-#'   identifier and strata columns.
+#'   (default) uses every numeric, logical, factor or character column that
+#'   varies, other than the treatment, score, identifier and strata columns;
+#'   types are routed as in [ps_logistic()].
 #' @param smd_pairs        Which pairs of treatment levels the balance table
 #'   compares. `"reference"` (default) compares each level with the first
 #'   level; `"adjacent"` compares each level with the one below it; `"all"`
@@ -712,8 +757,9 @@ print.ps_ordinal <- function(x, ...) {
 #' @param trace            Logical.  If `FALSE` (default), suppresses
 #'   [nnet::multinom()] iteration messages.
 #' @param covariates       Covariate columns for the balance table. `NULL`
-#'   (default) uses every numeric column other than the treatment, score,
-#'   identifier and strata columns.
+#'   (default) uses every numeric, logical, factor or character column that
+#'   varies, other than the treatment, score, identifier and strata columns;
+#'   types are routed as in [ps_logistic()].
 #' @param smd_pairs        Which pairs of treatment levels the balance table
 #'   compares. `"reference"` (default) compares each level with `ref_level`;
 #'   `"all"` compares every pair. The levels have no order, so there is no

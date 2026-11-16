@@ -142,10 +142,7 @@ ps_stddiff <- function(data,
 
   keep <- !is.na(data[[treatment_col]])
   base <- data[keep, , drop = FALSE]
-  grp <- .treatment_indicator(base, treatment_col, treated_level)$trt
-  if (!all(c(0L, 1L) %in% grp)) {
-    rlang::abort(sprintf("Column `%s` must contain both treatment groups.", treatment_col), call = NULL)
-  }
+  grp <- .treatment_indicator(base, treatment_col, treated_level)$trt  # refuses a column with one arm
   w <- if (is.null(weight_col)) rep(1, nrow(base)) else base[[weight_col]]
   if (!is.null(weight_col) && (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0))) {
     rlang::abort(sprintf("Column `%s` must hold positive, finite, non-missing weights.", weight_col), call = NULL)

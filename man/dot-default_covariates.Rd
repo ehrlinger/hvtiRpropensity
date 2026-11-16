@@ -19,17 +19,19 @@ constant rule, typically \code{all.vars()} of a formula's right-hand side.}
 A character vector of column names.
 }
 \description{
-Every numeric column except those in \code{reserved}, the fixed output columns
-this package appends (\code{prob_t}, \code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match},
-\code{pair_id}, \code{quintile}, \code{decile}, \code{bs}, \code{cluster}), and constant columns. A
-column is constant when its non-missing values take at most one value. A
-function that generates columns under other names, such as the
-\verb{prob_<level>} scores of \code{\link[=ps_nominal]{ps_nominal()}}, passes those exact names in
+Every numeric, logical, factor or character column except those in
+\code{reserved}, the fixed output columns this package appends (\code{prob_t},
+\code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile}, \code{decile}, \code{bs},
+\code{cluster}), and constant columns. A column is constant when its non-missing
+values take at most one value. A factor or character column whose
+non-missing values are all different is an identifier, not a covariate, and
+is left out too. A function that generates columns under other names, such
+as the \verb{prob_<level>} scores of \code{\link[=ps_nominal]{ps_nominal()}}, passes those exact names in
 \code{reserved}.
 }
 \details{
 Columns in \code{keep}, the predictors a model formula declares, are never
-dropped by the fixed output names or the constant rule; only \code{reserved} can
-drop them.
+dropped by the fixed output names, the constant rule or the identifier rule;
+only \code{reserved} can drop them.
 }
 \keyword{internal}

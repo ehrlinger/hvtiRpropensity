@@ -308,3 +308,19 @@ test_that("ps_support() records scale = 'probability' when the input records non
   d <- sample_ps_data(n = 200, seed = 3)[, c("id", "tavr", "age", "ef")]
   expect_identical(ps_support(ps_logistic(tavr ~ age + ef, d))$meta$scale, "probability")
 })
+
+test_that("tied match distances go to the smallest id, whatever the row order", {
+  d <- data.frame(id = c(1, 2, 3), tavr = c(1, 0, 0), prob_t = c(0.5, 0.4, 0.6), age = c(60, 70, 80))
+  m1 <- ps_match(d, covariates = "age", seed = 1)
+  m2 <- ps_match(d[c(1, 3, 2), ], covariates = "age", seed = 1)
+  expect_identical(m1$data$id[m1$data$match == 1L & m1$data$tavr == 0], 2)
+  expect_identical(m2$data$id[m2$data$match == 1L & m2$data$tavr == 0], 2)
+})
+
+test_that("the caliper is applied before the tie-break", {
+  # PR #122 review: A is within the tie tolerance of B but outside the caliper.
+  d <- data.frame(id = c(1, 2, 3), tavr = c(1, 0, 0), prob_t = c(0.5, 0.5 + 8e-13, 0.5))
+  m <- ps_match(d, caliper = 4e-13, covariates = character(0), seed = 1)
+  expect_identical(m$meta$n_matched, 1L)
+  expect_identical(m$data$id[m$data$match == 1L & m$data$tavr == 0], 3)
+})

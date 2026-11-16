@@ -333,8 +333,19 @@ test_that("stacked fitting names an imputation with an aliased term", {
       outcome_levels = c(0, 1),
       event_level = 1
     ),
-    "non-finite coefficient.*imputation 2"
+    "aliased in imputation 2: x_alias"
   )
+})
+
+test_that("a separated logistic fit stops and names the cause", {
+  d <- data.frame(id = 1:40, y = rep(0:1, each = 20), x = c(stats::runif(20, 0, 1), stats::runif(20, 2, 3)),
+                  z = stats::rnorm(40))
+  expect_error(
+    suppressWarnings(fit_logistic(y ~ x + z, d, outcome_levels = c(0, 1), event_level = 1)),
+    class = "hvtiRpropensity_separation"
+  )
+  d$tavr <- d$y
+  expect_error(suppressWarnings(ps_logistic(tavr ~ x + z, data = d)), "separates `tavr`")
 })
 
 test_that("fit_linear matches lm() on one dataset and reports R-squared", {
@@ -503,4 +514,17 @@ test_that("fit_logistic refuses a transformed outcome", {
 test_that("a dot that leaves no columns gets a clear error", {
   d <- mi_with_dropme()[1:60, c("id", "count")]
   expect_error(fit_linear(count ~ ., d), "leaves no columns")
+})
+
+test_that("an extreme but valid predictor value is not diagnosed as separation", {
+  # PR #122 review: one saturated prediction from a finite, converged fit.
+  withr::local_seed(3)
+  x <- c(stats::rnorm(500), 100)
+  y <- c(stats::rbinom(500, 1, stats::plogis(x[1:500])), 1)
+  d <- data.frame(id = seq_along(x), y = y, x = x)
+  fit <- fit_logistic(y ~ x, d, outcome_levels = c(0, 1), event_level = 1)
+  ref <- stats::glm(y ~ x, family = stats::binomial(), data = d)
+  expect_equal(fit$tables$estimates$estimate, unname(stats::coef(ref)), tolerance = 1e-6)
+  d$tavr <- d$y
+  expect_warning(ps_logistic(tavr ~ x, data = d), class = "hvtiRpropensity_saturated_score")
 })

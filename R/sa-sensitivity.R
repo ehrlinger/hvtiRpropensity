@@ -943,7 +943,9 @@ print.sa_overlap <- function(x, ...) {
 #'   score column and a binary treatment column.
 #' @param trim_seq    Numeric vector of trimming values to evaluate.  Each
 #'   value is the lower tail quantile; weights outside the
-#'   (`trim`, `1 - trim`) range are winsorised.  `0` means no trimming.
+#'   (`trim`, `1 - trim`) range are winsorised, within the reweighted arm as
+#'   [ps_weight()] does: the controls for the ATT, the treated for the ATC,
+#'   and both arms pooled for the ATE.  `0` means no trimming.
 #'   Default `seq(0, 0.10, by = 0.01)`.
 #' @param estimand    One of `"ATE"`, `"ATT"`, or `"ATC"` -- the causal
 #'   estimand used to compute IPTW weights.  Taken from `x$meta$estimand`
@@ -1077,9 +1079,9 @@ sa_trim_sweep <- function(x,
       sprintf(
         paste0(
           "%d patient(s) have a propensity score of exactly 0 or 1, producing ",
-          "infinite IPTW weights. Those weights cannot be trimmed and will ",
-          "dominate all statistics. Consider excluding these patients or ",
-          "recalibrating the propensity model."
+          "infinite IPTW weights. At `trim` = 0, and at any trim smaller than their share of ",
+          "the trimmed weights, they stay infinite and dominate the statistics. Consider ",
+          "excluding these patients or recalibrating the propensity model."
         ),
         n_inf
       )
@@ -1100,10 +1102,8 @@ sa_trim_sweep <- function(x,
       w <- raw_w
       n_trimmed <- 0L
     } else {
-      q_lo <- stats::quantile(raw_w, tr,       na.rm = TRUE)
-      q_hi <- stats::quantile(raw_w, 1 - tr,   na.rm = TRUE)
-      w    <- pmin(pmax(raw_w, q_lo), q_hi)
-      n_trimmed <- sum(raw_w < q_lo | raw_w > q_hi, na.rm = TRUE)
+      w <- .trim_weights(raw_w, trt, estimand_use, tr)
+      n_trimmed <- sum(w != raw_w)
     }
 
     data.frame(

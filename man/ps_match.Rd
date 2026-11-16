@@ -41,8 +41,12 @@ caliper unless \code{caliper_sd} is given.  Give at most one of \code{caliper} a
 \code{caliper_sd}.}
 
 \item{covariates}{Character vector of covariate columns for SMD
-diagnostics, used as given.  If \code{NULL} (default), every numeric column
-that varies is used, except \code{treatment_col}, \code{score_col}, \code{id_col},
+diagnostics, used as given.  A 0/1 or logical column takes the binary
+standardized difference, a factor or character column the categorical
+one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric column the
+Gaussian one.  If \code{NULL} (default), every numeric, logical, factor or
+character column that varies is used, except identifier-like text columns
+(every value different), \code{treatment_col}, \code{score_col}, \code{id_col},
 \code{match_col} and the fixed columns this package appends (\code{prob_t},
 \code{logit_t}, \code{mt_wt}, \code{iptw}, \code{pair_id}, \code{quintile}, \code{decile}, \code{bs},
 \code{cluster}).}
@@ -117,11 +121,17 @@ patients who could be matched, in practice those inside common support.
 \verb{$meta$n_unmatched} counts them; when it is not zero, say which population
 the estimate describes.
 
+\strong{Ties.} Treated patients are visited in a random order set by \code{seed}.
+When two or more remaining controls are equally close to a treated patient
+(within \code{1e-12} on the score scale), the one with the smallest \code{id_col}
+value is taken, so the match does not depend on the row order of \code{data}.
+Only controls within the caliper are candidates, so a tie is broken among
+eligible controls.
+
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. \code{hvtiPlotR::hv_mirror_hist()}
-reads \verb{$data} directly. \code{hvtiPlotR::hv_balance()} needs the two SMD tables
-stacked into long form with \code{variable}, \code{group} and \code{std_diff} (in percent);
-the vignette shows the reshape.
+reads \verb{$data} directly, and \code{hvtiPlotR::hv_balance()} reads the object
+itself (hvtiPlotR 2.8.22 or later).
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in \verb{$data} with \code{match_col} set to \code{0}, are left out of the
