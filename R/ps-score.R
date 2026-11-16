@@ -317,6 +317,11 @@ ps_logistic <- function(formula,
     }
   }
   treatment_levels <- as.character(treatment_levels)
+  present <- unique(as.character(data[[treatment_col]][!is.na(data[[treatment_col]])]))
+  if (length(present) < 2L) {
+    rlang::abort(sprintf("Column `%s` must hold both treatment values; it holds %s.", treatment_col,
+                         if (length(present)) paste("only", present) else "none"), call. = FALSE)
+  }
   if (is.null(treated_level)) treated_level <- utils::tail(treatment_levels, 1L)
   treated_level <- as.character(treated_level)
 

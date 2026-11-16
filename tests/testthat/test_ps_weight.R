@@ -210,7 +210,7 @@ test_that("ATT trimming leaves every treated weight at exactly 1", {
   # About 10% treated: pooled quantiles put the treated weights of 1 in the
   # trimmed tail, which the arm-specific rule must not touch.
   d <- sample_ps_data(n = 400, seed = 11)
-  set.seed(2)
+  withr::local_seed(2)
   d$tavr <- as.integer(seq_len(nrow(d)) %in% sample(nrow(d), 40))
   d$prob_t <- stats::plogis(-2.2 + 0.03 * (d$age - 70) + stats::rnorm(nrow(d), 0, 0.5))
   obj <- ps_weight(d, estimand = "ATT", trim = 0.1)
@@ -257,4 +257,5 @@ test_that("a one-arm treatment column is refused", {
   expect_error(ps_weight(d), "both treatment values")
   expect_error(ps_match(d), "both treatment values")
   expect_error(ps_logistic(tavr ~ age + ef, data = d), "both treatment values")
+  expect_error(ps_logistic(tavr ~ age + ef, data = d, treatment_levels = c(0, 1)), "both treatment values")
 })

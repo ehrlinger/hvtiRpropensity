@@ -10,7 +10,8 @@
   covariates = NULL,
   weight_col = NULL,
   reserved = character(),
-  keep = character()
+  keep = character(),
+  types = NULL
 )
 }
 \arguments{
@@ -28,6 +29,12 @@ excluding \code{treatment}, \code{weight_col} and \code{reserved}.}
 
 \item{keep}{Model predictors protected in the default set; see
 \code{.default_covariates()}.}
+
+\item{types}{Named character vector from \code{.covariate_types()}. A caller
+that builds two tables from different rows, such as before and after a
+match, types the covariates once on the larger set and passes the result
+to both, so a column is never Gaussian in one table and binary in the
+other. \code{NULL} types them on \code{data}.}
 }
 \value{
 A data frame with columns \code{variable} and \code{smd}, rounded to 4 places,

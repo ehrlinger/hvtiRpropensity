@@ -176,7 +176,7 @@
 #' `reserved`, the fixed output columns this package appends (`prob_t`,
 #' `logit_t`, `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile`, `bs`,
 #' `cluster`), and constant columns. A column is constant when its non-missing
-#' values take at most one value. A logical, factor or character column whose
+#' values take at most one value. A factor or character column whose
 #' non-missing values are all different is an identifier, not a covariate, and
 #' is left out too. A function that generates columns under other names, such
 #' as the `prob_<level>` scores of [ps_nominal()], passes those exact names in
@@ -201,7 +201,7 @@
   informative <- vapply(cols, function(col) {
     x <- stats::na.omit(data[[col]])
     n_values <- length(unique(x))
-    n_values > 1L && (is.numeric(x) || n_values < length(x))
+    n_values > 1L && (is.numeric(x) || is.logical(x) || n_values < length(x))
   }, logical(1L))
   cols[cols %in% keep | (informative & !cols %in% outputs)]
 }
@@ -228,28 +228,21 @@
 #' @param reserved   Further columns never used as default covariates.
 #' @param keep       Model predictors protected in the default set; see
 #'   `.default_covariates()`.
+#' @param types      Named character vector from `.covariate_types()`. A caller
+#'   that builds two tables from different rows, such as before and after a
+#'   match, types the covariates once on the larger set and passes the result
+#'   to both, so a column is never Gaussian in one table and binary in the
+#'   other. `NULL` types them on `data`.
 #' @return A data frame with columns `variable` and `smd`, rounded to 4 places,
 #'   one row per covariate.
 #' @keywords internal
 .smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL, reserved = character(),
-                       keep = character()) {
+                       keep = character(), types = NULL) {
   if (is.null(covariates)) {
     covariates <- .default_covariates(data, c(treatment, weight_col, reserved), keep)
   }
   .check_cols(data, covariates)
-  type <- vapply(covariates, function(v) {
-    x <- data[[v]]
-    if (is.logical(x) || (is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)))) {
-      "binary"
-    } else if (is.numeric(x)) {
-      "gaussian"
-    } else if (is.factor(x) || is.character(x)) {
-      "categorical"
-    } else {
-      rlang::abort(sprintf(paste0("Covariate `%s` must be numeric, logical, factor or character to enter a ",
-                                  "balance table; it is %s."), v, class(x)[1L]), call. = FALSE)
-    }
-  }, character(1L))
+  type <- if (is.null(types)) .covariate_types(data, covariates) else unname(types[covariates])
   grp <- data[[treatment]]
   smds <- if (length(covariates) == 0L || !all(c(0, 1) %in% grp)) {
     rep(NA_real_, length(covariates))
@@ -265,6 +258,33 @@
     smd      = round(unname(smds), 4L),
     stringsAsFactors = FALSE
   )
+}
+
+
+#' Standardized-difference type of each covariate
+#'
+#' A logical column, or a numeric column whose non-missing values are all 0 or
+#' 1, is `"binary"`; any other numeric column is `"gaussian"`; a factor or
+#' character column is `"categorical"`. Any other type aborts.
+#'
+#' @param data A data frame.
+#' @param covariates Covariate column names.
+#' @return A character vector named by `covariates`.
+#' @keywords internal
+.covariate_types <- function(data, covariates) {
+  vapply(covariates, function(v) {
+    x <- data[[v]]
+    if (is.logical(x) || (is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)))) {
+      "binary"
+    } else if (is.numeric(x)) {
+      "gaussian"
+    } else if (is.factor(x) || is.character(x)) {
+      "categorical"
+    } else {
+      rlang::abort(sprintf(paste0("Covariate `%s` must be numeric, logical, factor or character to enter a ",
+                                  "balance table; it is %s."), v, class(x)[1L]), call. = FALSE)
+    }
+  }, character(1L))
 }
 
 
@@ -341,13 +361,14 @@
     covariates <- .default_covariates(data, c(treatment, reserved), keep)
   }
   pairs <- .smd_level_pairs(levels, scheme)
+  types <- .covariate_types(data, covariates)
   group <- as.character(data[[treatment]])
   tables <- lapply(seq_len(nrow(pairs)), function(i) {
     rows <- !is.na(group) & group %in% c(pairs$level[[i]], pairs$versus[[i]])
     pair_data <- data[rows, covariates, drop = FALSE]
     flag <- .temporary_prediction_prefix(pair_data)
     pair_data[[flag]] <- as.integer(group[rows] == pairs$level[[i]])
-    smd <- .smd_table(pair_data, flag, covariates)
+    smd <- .smd_table(pair_data, flag, covariates, types = types)
     data.frame(variable = smd$variable, level = rep(pairs$level[[i]], nrow(smd)),
                versus = rep(pairs$versus[[i]], nrow(smd)), smd = smd$smd, stringsAsFactors = FALSE)
   })

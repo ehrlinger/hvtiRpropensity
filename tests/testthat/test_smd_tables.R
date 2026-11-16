@@ -65,3 +65,15 @@ test_that("ps_weight() stops clearly when a score of 0 or 1 gives an infinite we
   # Winsorising clips the infinite weight, so trim is the documented way through.
   expect_s3_class(ps_weight(dta, trim = 0.05), "ps_weight")
 })
+
+test_that("a covariate takes the same formula before and after a match", {
+  # 0/1/2 in the full data, only 0/1 in the subset: the subset table keeps the
+  # Gaussian formula the full data chose.
+  d <- data.frame(tavr = rep(0:1, each = 6), x = c(0, 1, 2, 0, 1, 1, 1, 0, 1, 1, 0, 1))
+  types <- .covariate_types(d, "x")
+  expect_identical(unname(types), "gaussian")
+  sub <- d[d$x != 2, ]
+  ref <- ps_stddiff(sub, treatment_col = "tavr", gaussian = "x")$tables$stddiff$stddiff
+  expect_equal(.smd_table(sub, "tavr", "x", types = types)$smd, round(ref, 4))
+  expect_false(isTRUE(all.equal(.smd_table(sub, "tavr", "x")$smd, round(ref, 4))))
+})

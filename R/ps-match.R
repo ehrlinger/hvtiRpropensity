@@ -284,10 +284,12 @@ ps_match <- function(data,
     covariates <- .default_covariates(data, c(treatment_col, score_col, id_col, match_col))
   }
 
-  smd_before <- .smd_table(data[!excluded, , drop = FALSE], treatment_col, covariates)
+  # Type each covariate once, so smd_before and smd_after use the same formula.
+  types <- .covariate_types(data[!excluded, , drop = FALSE], covariates)
+  smd_before <- .smd_table(data[!excluded, , drop = FALSE], treatment_col, covariates, types = types)
 
   matched_rows <- out[[match_col]] == 1L
-  smd_after    <- .smd_table(out[matched_rows, ], treatment_col, covariates)
+  smd_after    <- .smd_table(out[matched_rows, ], treatment_col, covariates, types = types)
 
   n_matched_t <- length(pair_t)
   n_matched_c <- length(pair_c)

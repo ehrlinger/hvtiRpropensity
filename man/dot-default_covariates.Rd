@@ -23,7 +23,7 @@ Every numeric, logical, factor or character column except those in
 \code{reserved}, the fixed output columns this package appends (\code{prob_t},
 \code{logit_t}, \code{mt_wt}, \code{iptw}, \code{match}, \code{pair_id}, \code{quintile}, \code{decile}, \code{bs},
 \code{cluster}), and constant columns. A column is constant when its non-missing
-values take at most one value. A logical, factor or character column whose
+values take at most one value. A factor or character column whose
 non-missing values are all different is an identifier, not a covariate, and
 is left out too. A function that generates columns under other names, such
 as the \verb{prob_<level>} scores of \code{\link[=ps_nominal]{ps_nominal()}}, passes those exact names in

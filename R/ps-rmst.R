@@ -252,8 +252,9 @@ ps_rmst <- function(x, time_col, event_col, tau,
     n_failed <- sum(is.na(draws))
     if (n_boot > 0L && n_failed > 0.05 * n_boot) {
       rlang::warn(sprintf(paste0("%d of %d bootstrap replicates (%.0f%%) failed for estimator \"%s\": the fit ",
-                                 "errored, or the resampled follow-up of an arm ended before `tau` = %g. The ",
-                                 "interval rests on the rest; consider a smaller `tau`."),
+                                 "errored, an arm was empty, or the resampled follow-up of an arm ended before ",
+                                 "`tau` = %g. The interval rests on the rest. Check that the subset holds both ",
+                                 "arms, and consider a smaller `tau`."),
                           n_failed, n_boot, 100 * n_failed / n_boot, label, tau),
                   class = "hvtiRpropensity_bootstrap_failures")
     }
