@@ -62,7 +62,7 @@
 #'   exactly 1; `"ATC"` is the mirror image. For `"ATE"` both arms are
 #'   reweighted, so the quantiles are taken over all weights pooled across both
 #'   arms (Lee, Lessler and Stuart, 2011). Default `NULL` (no trimming).
-#' @param covariates     Character vector of covariate columns for SMD
+#' @param covariate_cols Character vector of covariate columns for SMD
 #'   diagnostics, used as given.  A 0/1 or logical column takes the binary
 #'   standardized difference, a factor or character column the categorical
 #'   one of [ps_stddiff()] (one row per column), any other numeric column the
@@ -81,6 +81,8 @@
 #'   values.
 #' @param id_col The patient identifier column, left out of the default
 #'   covariates. Default `"id"`; it need not exist in `data`.
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_weight", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame with `weight_col` appended.}
@@ -125,10 +127,15 @@ ps_weight <- function(data,
                       estimand      = c("ATE", "ATT", "ATC"),
                       stabilise     = TRUE,
                       trim          = NULL,
-                      covariates    = NULL,
+                      covariate_cols = NULL,
                       weight_col    = "iptw",
                       treated_level = NULL,
-                      id_col        = "id") {
+                      id_col        = "id",
+                      covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_weight", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
   if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_weight")
 
   # ---- Input validation ---------------------------------------------------

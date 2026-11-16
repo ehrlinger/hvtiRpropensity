@@ -13,9 +13,10 @@ ps_logistic(
   score_col = "prob_t",
   logit_col = "logit_t",
   weight_col = "mt_wt",
-  covariates = NULL,
+  covariate_cols = NULL,
   treatment_levels = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  covariates
 )
 }
 \arguments{
@@ -46,7 +47,7 @@ score, \code{log(p / (1 - p))}.  Default \code{"logit_t"}.}
 \item{weight_col}{Output column name for the Li-Greene matching
 weight (ATM). Default \code{"mt_wt"}.}
 
-\item{covariates}{Character vector of covariate column names for SMD
+\item{covariate_cols}{Character vector of covariate column names for SMD
 balance diagnostics, used as given.  A 0/1 or logical column takes the
 binary standardized difference, a factor or character column the
 categorical one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric
@@ -65,6 +66,9 @@ otherwise 0/1 or \code{FALSE}/\code{TRUE}.}
 \code{treatment_levels} is supplied and this is \code{NULL}, its last value is used.
 Given alone, the treatment may hold any two values (a factor such as
 \code{"TAVR"}/\code{"SAVR"}, for example) and this names the treated one.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_logistic", "ps_data")} with:

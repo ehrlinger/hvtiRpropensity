@@ -14,7 +14,7 @@ test_that("ps_match() smd_before uses the SAS denominator when groups are unequa
   # The sample-size-weighted pool this replaced gave -3 / sqrt(22/5) = -1.4302.
   d <- data.frame(id = 1:7, tavr = c(1, 1, 1, 0, 0, 0, 0), age = c(1, 2, 3, 2, 4, 6, 8),
                   prob_t = c(.6, .5, .4, .55, .45, .35, .3))
-  obj <- ps_match(d, covariates = "age", seed = 1)
+  obj <- ps_match(d, covariate_cols = "age", seed = 1)
   expect_equal(obj$tables$smd_before$smd, round(-3 / sqrt(23 / 6), 4L))
 })
 
@@ -24,15 +24,15 @@ test_that("ps_logistic() smd matches ps_stddiff(), binary columns taking the bin
   # sample_ps_data() splits the arms evenly, where the two denominators agree;
   # dropping treated patients makes them differ.
   dta <- dta[!(dta$tavr == 1 & seq_len(nrow(dta)) %% 3 != 0), ]
-  obj <- ps_logistic(tavr ~ age + female + ef, data = dta, covariates = c("age", "female", "ef"))
-  ref <- ps_stddiff(dta, treatment_col = "tavr", gaussian = c("age", "ef"), binary = "female")$tables$stddiff
+  obj <- ps_logistic(tavr ~ age + female + ef, data = dta, covariate_cols = c("age", "female", "ef"))
+  ref <- ps_stddiff(dta, treatment_col = "tavr", gaussian_cols = c("age", "ef"), binary_cols = "female")$tables$stddiff
   expect_equal(obj$tables$smd$smd, round(ref$stddiff[match(c("age", "female", "ef"), ref$variable)], 4L))
 })
 
 test_that("ps_weight() weighted smd uses the PROC MEANS n - 1 weighted variance", {
   dta <- sample_ps_data(n = 150, seed = 4)
-  obj <- ps_weight(dta, covariates = c("age", "ef"))
-  ref <- ps_stddiff(obj$data, treatment_col = "tavr", gaussian = c("age", "ef"),
+  obj <- ps_weight(dta, covariate_cols = c("age", "ef"))
+  ref <- ps_stddiff(obj$data, treatment_col = "tavr", gaussian_cols = c("age", "ef"),
                     weight_col = "iptw")$tables$stddiff
   expect_equal(obj$tables$smd_weighted$smd, round(ref$stddiff, 4L))
 })
@@ -48,13 +48,13 @@ test_that("a match with no pairs still reports an all-NA smd_after", {
 test_that("an unsupported covariate type stops even when a match finds no pairs", {
   dta <- sample_ps_data(n = 100, seed = 42)
   dta$op_date <- as.Date("2020-01-01") + seq_len(nrow(dta))
-  expect_error(ps_match(dta, covariates = c("age", "op_date"), caliper = 1e-12), "op_date")
+  expect_error(ps_match(dta, covariate_cols = c("age", "op_date"), caliper = 1e-12), "op_date")
 })
 
 test_that("a character covariate gets a balance row even when a match finds no pairs", {
   dta <- sample_ps_data(n = 100, seed = 42)
   dta$site <- rep(c("a", "b"), length.out = nrow(dta))
-  obj <- ps_match(dta, covariates = c("age", "site"), caliper = 1e-12)
+  obj <- ps_match(dta, covariate_cols = c("age", "site"), caliper = 1e-12)
   expect_identical(obj$tables$smd_after$variable, c("age", "site"))
 })
 
@@ -73,7 +73,7 @@ test_that("a covariate takes the same formula before and after a match", {
   types <- .covariate_types(d, "x")
   expect_identical(unname(types), "gaussian")
   sub <- d[d$x != 2, ]
-  ref <- ps_stddiff(sub, treatment_col = "tavr", gaussian = "x")$tables$stddiff$stddiff
+  ref <- ps_stddiff(sub, treatment_col = "tavr", gaussian_cols = "x")$tables$stddiff$stddiff
   expect_equal(.smd_table(sub, "tavr", "x", types = types)$smd, round(ref, 4))
   expect_false(isTRUE(all.equal(.smd_table(sub, "tavr", "x")$smd, round(ref, 4))))
 })

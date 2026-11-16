@@ -191,7 +191,7 @@ test_that("default balance covariates leave out identifiers and package outputs"
 
 test_that("explicit covariates are used as given", {
   d <- sample_ps_data(300, seed = 1)
-  obj <- ps_weight(d, covariates = c("id", "age"))
+  obj <- ps_weight(d, covariate_cols = c("id", "age"))
   expect_identical(obj$tables$smd_weighted$variable, c("id", "age"))
 })
 
@@ -244,7 +244,7 @@ test_that("factor, character and logical covariates enter the default balance ta
   expect_true(all(c("site", "nyha", "smoker") %in% obj$tables$smd_unweighted$variable))
   expect_false("name" %in% obj$tables$smd_unweighted$variable)
   expect_identical(obj$tables$smd_weighted$variable, obj$tables$smd_unweighted$variable)
-  ref <- ps_stddiff(d, treatment_col = "tavr", categorical = "site", binary = "female")$tables$stddiff
+  ref <- ps_stddiff(d, treatment_col = "tavr", categorical_cols = "site", binary_cols = "female")$tables$stddiff
   smd <- obj$tables$smd_unweighted
   expect_equal(smd$smd[smd$variable == "site"], round(ref$stddiff[ref$variable == "site"], 4))
   expect_equal(smd$smd[smd$variable == "female"], round(ref$stddiff[ref$variable == "female"], 4))

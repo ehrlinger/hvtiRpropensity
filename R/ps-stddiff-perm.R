@@ -84,22 +84,43 @@
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 42)
-#' obj <- ps_stddiff_perm(dta, treatment_col = "tavr", gaussian = c("age", "ef"),
-#'                        binary = "female", n_perm = 200, seed = 1)
+#' obj <- ps_stddiff_perm(dta, treatment_col = "tavr", gaussian_cols = c("age", "ef"),
+#'                        binary_cols = "female", n_perm = 200, seed = 1)
 #' obj$tables$stddiff_perm
 #'
 #' @export
 ps_stddiff_perm <- function(data,
                             treatment_col,
-                            gaussian      = NULL,
-                            nong_ord      = NULL,
-                            binary        = NULL,
-                            categorical   = NULL,
+                            gaussian_cols = NULL,
+                            nong_ord_cols = NULL,
+                            binary_cols   = NULL,
+                            categorical_cols = NULL,
                             weight_col    = NULL,
                             reweight      = NULL,
                             n_perm        = 1000L,
                             seed          = NULL,
-                            treated_level = NULL) {
+                            treated_level = NULL,
+                            gaussian,
+                            nong_ord,
+                            binary,
+                            categorical) {
+  if (!missing(gaussian)) {
+    gaussian_cols <- .renamed_arg("ps_stddiff_perm", "gaussian", "gaussian_cols", gaussian, !missing(gaussian_cols))
+  }
+  gaussian <- gaussian_cols
+  if (!missing(nong_ord)) {
+    nong_ord_cols <- .renamed_arg("ps_stddiff_perm", "nong_ord", "nong_ord_cols", nong_ord, !missing(nong_ord_cols))
+  }
+  nong_ord <- nong_ord_cols
+  if (!missing(binary)) {
+    binary_cols <- .renamed_arg("ps_stddiff_perm", "binary", "binary_cols", binary, !missing(binary_cols))
+  }
+  binary <- binary_cols
+  if (!missing(categorical)) {
+    categorical_cols <- .renamed_arg("ps_stddiff_perm", "categorical", "categorical_cols", categorical,
+                                     !missing(categorical_cols))
+  }
+  categorical <- categorical_cols
   if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_stddiff_perm")
   .check_df(data)
   if (!is.numeric(n_perm) || length(n_perm) != 1L || !is.finite(n_perm) ||
@@ -142,8 +163,8 @@ ps_stddiff_perm <- function(data,
       d[[weight_col]] <- w
     }
     withCallingHandlers(
-      ps_stddiff(d, treatment_col = treatment_col, gaussian = gaussian, nong_ord = nong_ord,
-                 binary = binary, categorical = categorical, weight_col = weight_col,
+      ps_stddiff(d, treatment_col = treatment_col, gaussian_cols = gaussian, nong_ord_cols = nong_ord,
+                 binary_cols = binary, categorical_cols = categorical, weight_col = weight_col,
                  treated_level = treated_level)$tables$stddiff,
       # A permutation can leave a categorical variable with no shared levels.
       # Its NA is dropped from the percentiles, so that one warning would only

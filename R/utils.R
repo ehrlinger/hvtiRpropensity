@@ -253,8 +253,9 @@
   smds <- if (length(covariates) == 0L || !all(c(0, 1) %in% grp)) {
     rep(NA_real_, length(covariates))
   } else {
-    tbl <- ps_stddiff(data, treatment_col = treatment, gaussian = covariates[type == "gaussian"],
-                      binary = covariates[type == "binary"], categorical = covariates[type == "categorical"],
+    tbl <- ps_stddiff(data, treatment_col = treatment, gaussian_cols = covariates[type == "gaussian"],
+                      binary_cols = covariates[type == "binary"],
+                      categorical_cols = covariates[type == "categorical"],
                       weight_col = weight_col)$tables$stddiff
     tbl$stddiff[match(covariates, tbl$variable)]
   }

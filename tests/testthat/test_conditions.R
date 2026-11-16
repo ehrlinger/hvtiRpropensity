@@ -57,9 +57,9 @@ test_that("an omitted treatment_col warns once per session and means \"tavr\"", 
   expect_no_warning(sa_overlap(ps_weight(dta, treatment_col = "tavr")))
   expect_warning(m <- ps_match(dta, seed = 1), "treatment_col")
   expect_identical(m$meta$treatment_col, "tavr")
-  expect_warning(ps_stddiff(dta, gaussian = "age"), "treatment_col")
-  expect_warning(ps_stddiff_perm(dta, gaussian = "age", n_perm = 3, seed = 1), "treatment_col")
-  expect_warning(ps_mw_var(dta, outcomes = "age", weight_col = "prob_t", n_boot = 3, seed = 1), "treatment_col")
+  expect_warning(ps_stddiff(dta, gaussian_cols = "age"), "treatment_col")
+  expect_warning(ps_stddiff_perm(dta, gaussian_cols = "age", n_perm = 3, seed = 1), "treatment_col")
+  expect_warning(ps_mw_var(dta, outcome_cols = "age", weight_col = "prob_t", n_boot = 3, seed = 1), "treatment_col")
   expect_warning(sa_trim_sweep(dta), "treatment_col")
 })
 
@@ -76,15 +76,25 @@ test_that("a ps_data object without a recorded treatment column is refused by na
 
 test_that("renamed arguments keep working for one release", {
   reset_deprecations()
-  expect_warning(old <- ps_mw_var(dta, treatment_col = "tavr", outcomes = "age", weight_col = "prob_t",
+  expect_warning(old <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = "age", weight_col = "prob_t",
                                   n_rep = 5, seed = 1), "`n_rep` is renamed `n_boot`")
-  new <- ps_mw_var(dta, treatment_col = "tavr", outcomes = "age", weight_col = "prob_t", n_boot = 5, seed = 1)
+  new <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = "age", weight_col = "prob_t", n_boot = 5, seed = 1)
   expect_identical(old$tables, new$tables)
-  expect_error(ps_mw_var(dta, treatment_col = "tavr", outcomes = "age", weight_col = "prob_t", n_rep = 5,
+  expect_error(ps_mw_var(dta, treatment_col = "tavr", outcome_cols = "age", weight_col = "prob_t", n_rep = 5,
                          n_boot = 5), "give `n_boot` only")
 
   expect_warning(old <- sample_ps_data_count(n = 30, seed = 1, n_imputations = 2), "renamed `m`")
   expect_identical(old, sample_ps_data_count(n = 30, seed = 1, m = 2))
+
+  expect_warning(expect_warning(old <- ps_stddiff(dta, treatment_col = "tavr", gaussian = "age", binary = "female"),
+                                "`gaussian` is renamed `gaussian_cols`"), "`binary` is renamed `binary_cols`")
+  expect_identical(old$tables, ps_stddiff(dta, treatment_col = "tavr", gaussian_cols = "age",
+                                          binary_cols = "female")$tables)
+  expect_warning(old <- ps_match(dta, treatment_col = "tavr", covariates = "age", seed = 1),
+                 "`covariates` is renamed `covariate_cols`")
+  expect_identical(old$tables, ps_match(dta, treatment_col = "tavr", covariate_cols = "age", seed = 1)$tables)
+  expect_warning(ps_mw_var(dta, treatment_col = "tavr", outcomes = "age", weight_col = "prob_t", n_boot = 3,
+                           seed = 1), "`outcomes` is renamed `outcome_cols`")
 
   w <- ps_weight(dta, treatment_col = "tavr")
   expect_warning(old <- sa_overlap(x = w), "`x` is renamed `data`")
@@ -138,8 +148,8 @@ test_that("every fit and random function records provenance", {
     fit_logistic(tavr ~ age + ef, dta, outcome_levels = c(0, 1), event_level = 1),
     fit_linear(ef ~ age + female, dta),
     m,
-    ps_stddiff_perm(dta, treatment_col = "tavr", gaussian = "age", n_perm = 5, seed = 1),
-    ps_mw_var(dta, treatment_col = "tavr", outcomes = "age", weight_col = "prob_t", n_boot = 5, seed = 1)
+    ps_stddiff_perm(dta, treatment_col = "tavr", gaussian_cols = "age", n_perm = 5, seed = 1),
+    ps_mw_var(dta, treatment_col = "tavr", outcome_cols = "age", weight_col = "prob_t", n_boot = 5, seed = 1)
   )
   for (o in objs) conforms(o$meta$provenance)
   expect_identical(m$meta$provenance$seed, 3L)

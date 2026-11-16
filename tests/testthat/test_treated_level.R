@@ -44,20 +44,20 @@ test_that("treated_level can name 0 as the treated value", {
 
 test_that("ps_stddiff(), ps_stddiff_perm() and ps_mw_var() give the 0/1 result", {
   expect_equal(
-    ps_stddiff(labelled, gaussian = c("age", "ef"), binary = "female", treated_level = lvl)$tables$stddiff,
-    ps_stddiff(binary, gaussian = c("age", "ef"), binary = "female")$tables$stddiff
+    ps_stddiff(labelled, gaussian_cols = c("age", "ef"), binary_cols = "female", treated_level = lvl)$tables$stddiff,
+    ps_stddiff(binary, gaussian_cols = c("age", "ef"), binary_cols = "female")$tables$stddiff
   )
   expect_equal(
-    ps_stddiff_perm(labelled, gaussian = "age", n_perm = 20, seed = 5, treated_level = lvl)$tables,
-    ps_stddiff_perm(binary, gaussian = "age", n_perm = 20, seed = 5)$tables
+    ps_stddiff_perm(labelled, gaussian_cols = "age", n_perm = 20, seed = 5, treated_level = lvl)$tables,
+    ps_stddiff_perm(binary, gaussian_cols = "age", n_perm = 20, seed = 5)$tables
   )
   weighted <- ps_weight(binary)$data
   weighted_labelled <- weighted
   weighted_labelled$tavr <- labelled$tavr
   expect_equal(
-    ps_mw_var(weighted_labelled, outcomes = "ef", weight_col = "iptw", n_boot = 20, seed = 5,
+    ps_mw_var(weighted_labelled, outcome_cols = "ef", weight_col = "iptw", n_boot = 20, seed = 5,
               treated_level = lvl)$tables,
-    ps_mw_var(weighted, outcomes = "ef", weight_col = "iptw", n_boot = 20, seed = 5)$tables
+    ps_mw_var(weighted, outcome_cols = "ef", weight_col = "iptw", n_boot = 20, seed = 5)$tables
   )
 })
 
@@ -106,7 +106,7 @@ test_that("a labelled column without treated_level is refused, not coerced", {
   expect_error(ps_weight(labelled), "binary")
   expect_error(sa_overlap(labelled), "binary")
   expect_error(sa_trim_sweep(labelled), "binary")
-  expect_error(ps_stddiff(labelled, gaussian = "age"), "binary")
+  expect_error(ps_stddiff(labelled, gaussian_cols = "age"), "binary")
 })
 
 test_that("treated_level is validated", {

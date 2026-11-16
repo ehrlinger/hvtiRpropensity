@@ -23,6 +23,13 @@
   `sample_ps_data_count(n_imputations =)` is `m`. The first argument of
   `ps_rmst()`, `ps_support()`, `sa_rosenbaum()`, `sa_overlap()` and
   `sa_trim_sweep()` is `data`, not `x`.
+* Arguments that take one or more column names end in `_cols`, the old names
+  working for this release with a warning: `covariates` is `covariate_cols` in
+  `ps_match()`, `ps_weight()`, `ps_logistic()`, `ps_nominal()`, `ps_ordinal()`,
+  `bs_continuous()` and `bs_count()`; `ps_mw_var(outcomes =)` is
+  `outcome_cols`; and `ps_stddiff()` and `ps_stddiff_perm()` take
+  `gaussian_cols`, `nong_ord_cols`, `binary_cols` and `categorical_cols`.
+  The `$meta` field names are unchanged.
 * Every function that fits a model or draws random numbers records the family
   provenance record in `$meta$provenance`: `package`, `version`, `sha`,
   `method`, `seed`, `rng_kind` and `time`.

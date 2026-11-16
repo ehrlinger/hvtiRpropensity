@@ -535,8 +535,8 @@ answer. The result is a proportion of a standard deviation, not a percent.
 ```{r}
 #| label: stddiff
 sd_mw <- ps_stddiff(obj_ps$data, treatment_col = "tavr",
-                    gaussian   = c("age", "ef"),
-                    binary     = c("female", "diabetes", "hypertension"),
+                    gaussian_cols   = c("age", "ef"),
+                    binary_cols     = c("female", "diabetes", "hypertension"),
                     weight_col = "mt_wt")
 sd_mw$tables$stddiff
 ```
@@ -552,8 +552,8 @@ the weights for each permutation, so this example is unweighted.
 ```{r}
 #| label: stddiff-perm
 perm <- ps_stddiff_perm(obj_ps$data, treatment_col = "tavr",
-                        gaussian = c("age", "ef"),
-                        binary   = "female",
+                        gaussian_cols = c("age", "ef"),
+                        binary_cols   = "female",
                         n_perm   = 200,
                         seed     = 1)
 perm$tables$stddiff_perm
@@ -569,7 +569,7 @@ uncertainty in estimating the score. Here `ef` stands in for an outcome.
 ```{r}
 #| label: mw-var
 mw <- ps_mw_var(obj_ps$data, treatment_col = "tavr",
-                outcomes   = "ef",
+                outcome_cols   = "ef",
                 weight_col = "mt_wt",
                 n_boot     = 200,
                 seed       = 1)
@@ -599,7 +599,7 @@ m_s <- ps_match(dta_s, treatment_col = "tavr",
                 score_col  = "logit_t",
                 scale      = "logit",
                 caliper_sd = 0.2,
-                covariates = c("age", "female", "ef", "diabetes", "hypertension"),
+                covariate_cols = c("age", "female", "ef", "diabetes", "hypertension"),
                 seed       = 42)
 rm_match <- ps_rmst(m_s, time_col = "t", event_col = "e", tau = 4,
                     n_boot = 100, seed = 1)

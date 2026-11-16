@@ -61,7 +61,7 @@
 #'   own scale, for a match to be accepted.  `NULL` (default) imposes no
 #'   caliper unless `caliper_sd` is given.  Give at most one of `caliper` and
 #'   `caliper_sd`.
-#' @param covariates     Character vector of covariate columns for SMD
+#' @param covariate_cols Character vector of covariate columns for SMD
 #'   diagnostics, used as given.  A 0/1 or logical column takes the binary
 #'   standardized difference, a factor or character column the categorical
 #'   one of [ps_stddiff()] (one row per column), any other numeric column the
@@ -102,6 +102,8 @@
 #'   matching when estimating differences in means and differences in
 #'   proportions in observational studies. *Pharmaceutical Statistics*,
 #'   10(2), 150--161.  \doi{10.1002/pst.433}
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_match", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The full input data frame with `match_col` and `pair_id`
@@ -157,13 +159,18 @@ ps_match <- function(data,
                      score_col     = "prob_t",
                      id_col        = "id",
                      caliper       = NULL,
-                     covariates    = NULL,
+                     covariate_cols = NULL,
                      match_col     = "match",
                      ratio         = 1L,
                      seed          = NULL,
                      treated_level = NULL,
                      scale         = c("probability", "logit"),
-                     caliper_sd    = NULL) {
+                     caliper_sd    = NULL,
+                     covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_match", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
   if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_match")
 
   # ---- Input validation ---------------------------------------------------

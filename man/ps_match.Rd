@@ -10,13 +10,14 @@ ps_match(
   score_col = "prob_t",
   id_col = "id",
   caliper = NULL,
-  covariates = NULL,
+  covariate_cols = NULL,
   match_col = "match",
   ratio = 1L,
   seed = NULL,
   treated_level = NULL,
   scale = c("probability", "logit"),
-  caliper_sd = NULL
+  caliper_sd = NULL,
+  covariates
 )
 }
 \arguments{
@@ -42,7 +43,7 @@ own scale, for a match to be accepted.  \code{NULL} (default) imposes no
 caliper unless \code{caliper_sd} is given.  Give at most one of \code{caliper} and
 \code{caliper_sd}.}
 
-\item{covariates}{Character vector of covariate columns for SMD
+\item{covariate_cols}{Character vector of covariate columns for SMD
 diagnostics, used as given.  A 0/1 or logical column takes the binary
 standardized difference, a factor or character column the categorical
 one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric column the
@@ -84,6 +85,9 @@ where \code{var_t} and \code{var_c} are the variances of \code{score_col} among 
 and control patients (missing values dropped).  \code{NULL} (default) uses
 \code{caliper} instead.  \verb{scale = "logit", caliper_sd = 0.2}
 is the Austin (2011) recommendation.}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_match", "ps_data")} with:

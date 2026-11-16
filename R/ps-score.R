@@ -179,7 +179,7 @@
 #'   score, `log(p / (1 - p))`.  Default `"logit_t"`.
 #' @param weight_col     Output column name for the Li-Greene matching
 #'   weight (ATM). Default `"mt_wt"`.
-#' @param covariates     Character vector of covariate column names for SMD
+#' @param covariate_cols Character vector of covariate column names for SMD
 #'   balance diagnostics, used as given.  A 0/1 or logical column takes the
 #'   binary standardized difference, a factor or character column the
 #'   categorical one of [ps_stddiff()] (one row per column), any other numeric
@@ -197,6 +197,8 @@
 #'   Given alone, the treatment may hold any two values (a factor such as
 #'   `"TAVR"`/`"SAVR"`, for example) and this names the treated one.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_logistic", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -294,9 +296,14 @@ ps_logistic <- function(formula,
                         score_col      = "prob_t",
                         logit_col      = "logit_t",
                         weight_col     = "mt_wt",
-                        covariates     = NULL,
+                        covariate_cols = NULL,
                         treatment_levels = NULL,
-                        treated_level = NULL) {
+                        treated_level = NULL,
+                        covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_logistic", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
@@ -487,7 +494,7 @@ print.ps_logistic <- function(x, ...) {
 #' @param score_col_prefix Prefix for the per-level output columns.  Columns
 #'   are named `<prefix>_<level>` for each level of the treatment.
 #'   Default `"prob"`.
-#' @param covariates       Covariate columns for the balance table. `NULL`
+#' @param covariate_cols   Covariate columns for the balance table. `NULL`
 #'   (default) uses every numeric, logical, factor or character column that
 #'   varies, other than the treatment, score, identifier and strata columns;
 #'   types are routed as in [ps_logistic()].
@@ -500,6 +507,8 @@ print.ps_logistic <- function(x, ...) {
 #'   (default) takes the levels of the treatment, which must then be an ordered
 #'   factor.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_ordinal", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -566,9 +575,14 @@ ps_ordinal <- function(formula,
                        id_col           = "id",
                        imputation_col   = NULL,
                        score_col_prefix = "prob",
-                       covariates       = NULL,
+                       covariate_cols   = NULL,
                        treatment_levels = NULL,
-                       smd_pairs        = "reference") {
+                       smd_pairs        = "reference",
+                       covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_ordinal", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   if (!requireNamespace("MASS", quietly = TRUE)) {
     stop(
@@ -738,7 +752,7 @@ print.ps_ordinal <- function(x, ...) {
 #'   by default).  Default `"prob"`.
 #' @param trace            Logical.  If `FALSE` (default), suppresses
 #'   [nnet::multinom()] iteration messages.
-#' @param covariates       Covariate columns for the balance table. `NULL`
+#' @param covariate_cols   Covariate columns for the balance table. `NULL`
 #'   (default) uses every numeric, logical, factor or character column that
 #'   varies, other than the treatment, score, identifier and strata columns;
 #'   types are routed as in [ps_logistic()].
@@ -749,6 +763,8 @@ print.ps_ordinal <- function(x, ...) {
 #' @param treatment_levels Complete nominal treatment levels. `NULL` preserves
 #'   the levels inferred by the historical interface.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_nominal", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -819,9 +835,14 @@ ps_nominal <- function(formula,
                        ref_level        = NULL,
                        score_col_prefix = "prob",
                        trace            = FALSE,
-                       covariates       = NULL,
+                       covariate_cols   = NULL,
                        treatment_levels = NULL,
-                       smd_pairs        = "reference") {
+                       smd_pairs        = "reference",
+                       covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("ps_nominal", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
     stop(

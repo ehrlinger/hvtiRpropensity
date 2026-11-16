@@ -60,7 +60,7 @@
 #'   both groups present. Required: it has no default, because a study's
 #'   column name never is one. Omitting it is deprecated, warns once per
 #'   session and still means `"tavr"`, for one release.
-#' @param outcomes Character vector of numeric outcome columns.
+#' @param outcome_cols Character vector of numeric outcome columns.
 #' @param weight_col Name of the column of matching weights, which must be
 #'   positive and finite.
 #' @param n_boot Number of bootstrap replicates. Default `1000`, the macro's
@@ -78,10 +78,12 @@
 #'   values.
 #' @param n_rep Deprecated: the old name of `n_boot`. It still works, and warns
 #'   once per session, for one release.
+#' @param outcomes Deprecated: the old name of `outcome_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("ps_mw_var", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
-#'   \item{`$meta`}{Named list: `treatment_col`, `weight_col`, `outcomes`,
+#'   \item{`$meta`}{Named list: `treatment_col`, `weight_col`, `outcome_cols`,
 #'     `method`, `n_boot`, `seed`, `n_total`, `n_dropped`.}
 #'   \item{`$tables`}{Named list with `mw_var`, one row per outcome:
 #'     `outcome`, `label`, `sumwgt_0`, `mean_0`, `sd_0`, `sumwgt_1`,
@@ -99,19 +101,24 @@
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #' dta$mt_wt <- pmin(dta$prob_t, 1 - dta$prob_t) /
 #'   ifelse(dta$tavr == 1, dta$prob_t, 1 - dta$prob_t)
-#' obj <- ps_mw_var(dta, treatment_col = "tavr", outcomes = c("age", "ef"),
+#' obj <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = c("age", "ef"),
 #'                  weight_col = "mt_wt", n_boot = 200, seed = 1)
 #' obj$tables$mw_var
 #'
 #' @export
 ps_mw_var <- function(data,
                       treatment_col,
-                      outcomes,
+                      outcome_cols,
                       weight_col,
                       n_boot        = 1000L,
                       seed          = NULL,
                       treated_level = NULL,
-                      n_rep) {
+                      n_rep,
+                      outcomes) {
+  if (!missing(outcomes)) {
+    outcome_cols <- .renamed_arg("ps_mw_var", "outcomes", "outcome_cols", outcomes, !missing(outcome_cols))
+  }
+  outcomes <- outcome_cols
   if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_mw_var")
   .check_df(data)
   if (!missing(n_rep)) n_boot <- .renamed_arg("ps_mw_var", "n_rep", "n_boot", n_rep, !missing(n_boot))
@@ -125,7 +132,7 @@ ps_mw_var <- function(data,
   n_boot <- as.integer(n_boot)
   outcomes <- as.character(outcomes)
   if (length(outcomes) == 0L) stop(
-                                "ps_mw_var(): Name at least one column in `outcomes`.",
+                                "ps_mw_var(): Name at least one column in `outcome_cols`.",
                                 call. = FALSE
                               )
   .check_cols(data, c(treatment_col, outcomes, weight_col))

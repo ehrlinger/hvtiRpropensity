@@ -32,13 +32,13 @@
 #' inferred: an ordinal NYHA class stored as an integer would otherwise be
 #' treated as Gaussian.
 #'
-#' * `gaussian`: difference in means over `sqrt((var1 + var0) / 2)`. The
+#' * `gaussian_cols`: difference in means over `sqrt((var1 + var0) / 2)`. The
 #'   denominator averages the two variances; it does not pool them by sample
 #'   size, so it differs from a Cohen's d when the groups are unequal.
-#' * `nong_ord`: the same formula on ranks of the pooled sample, ties
+#' * `nong_ord_cols`: the same formula on ranks of the pooled sample, ties
 #'   averaged, as `PROC RANK` does by default. Ranks are unweighted; only
 #'   their means and variances use `weight_col`.
-#' * `binary` and `categorical` are routed by the number of levels observed,
+#' * `binary_cols` and `categorical_cols` are routed by the number of levels observed,
 #'   as the macro routes its `BINARY=` and `CATG=` lists: one level gives 0,
 #'   two use the binary formula on the proportion at the last level in sort
 #'   order (`1` for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
@@ -58,7 +58,7 @@
 #' give the same differences. It equals the `%stddiff` macro's output when the
 #' weights already average 1 in each group, and otherwise does not: the
 #' macro's Gaussian and rank differences change with the scale of the weights.
-#' Proportions, for `binary` and `categorical`, are `sum(w x) / sum(w)` within
+#' Proportions, for `binary_cols` and `categorical_cols`, are `sum(w x) / sum(w)` within
 #' a group and never depended on that scale. Weights must be positive.
 #'
 #' **Missing values.** Rows with a missing group are dropped. Otherwise a
@@ -74,10 +74,10 @@
 #'   both groups present. Required: it has no default, because a study's
 #'   column name never is one. Omitting it is deprecated, warns once per
 #'   session and still means `"tavr"`, for one release.
-#' @param gaussian,nong_ord,binary,categorical Character vectors of column
+#' @param gaussian_cols,nong_ord_cols,binary_cols,categorical_cols Character vectors of column
 #'   names, by type. See Details. At least one variable is required, and a
-#'   variable may appear under one type only. A `binary` column must be
-#'   coded 0/1 or logical; a `categorical` column may have any coding.
+#'   variable may appear under one type only. A `binary_cols` column must be
+#'   coded 0/1 or logical; a `categorical_cols` column may have any coding.
 #' @param weight_col Optional name of a column of positive weights, for
 #'   example the inverse-probability weights from [ps_weight()] or the
 #'   matching weight `mt_wt` from [ps_logistic()]. Weights must be finite.
@@ -86,6 +86,9 @@
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`. Give a
 #'   value, for example `"transcatheter"`, to use a column holding any two
 #'   values.
+#' @param gaussian,nong_ord,binary,categorical Deprecated: the old names of
+#'   `gaussian_cols`, `nong_ord_cols`, `binary_cols` and `categorical_cols`.
+#'   They still work, and warn once per session, for one release.
 #' @return An object of class `c("ps_stddiff", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
@@ -106,18 +109,39 @@
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #' obj <- ps_stddiff(dta, treatment_col = "tavr",
-#'                   gaussian = c("age", "ef"), binary = c("female", "diabetes"))
+#'                   gaussian_cols = c("age", "ef"), binary_cols = c("female", "diabetes"))
 #' obj$tables$stddiff
 #'
 #' @export
 ps_stddiff <- function(data,
                        treatment_col,
-                       gaussian      = NULL,
-                       nong_ord      = NULL,
-                       binary        = NULL,
-                       categorical   = NULL,
+                       gaussian_cols = NULL,
+                       nong_ord_cols = NULL,
+                       binary_cols   = NULL,
+                       categorical_cols = NULL,
                        weight_col    = NULL,
-                       treated_level = NULL) {
+                       treated_level = NULL,
+                       gaussian,
+                       nong_ord,
+                       binary,
+                       categorical) {
+  if (!missing(gaussian)) {
+    gaussian_cols <- .renamed_arg("ps_stddiff", "gaussian", "gaussian_cols", gaussian, !missing(gaussian_cols))
+  }
+  gaussian <- gaussian_cols
+  if (!missing(nong_ord)) {
+    nong_ord_cols <- .renamed_arg("ps_stddiff", "nong_ord", "nong_ord_cols", nong_ord, !missing(nong_ord_cols))
+  }
+  nong_ord <- nong_ord_cols
+  if (!missing(binary)) {
+    binary_cols <- .renamed_arg("ps_stddiff", "binary", "binary_cols", binary, !missing(binary_cols))
+  }
+  binary <- binary_cols
+  if (!missing(categorical)) {
+    categorical_cols <- .renamed_arg("ps_stddiff", "categorical", "categorical_cols", categorical,
+                                     !missing(categorical_cols))
+  }
+  categorical <- categorical_cols
   if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_stddiff")
   .check_df(data)
   vars <- list(gaussian = gaussian, nong_ord = nong_ord, binary = binary, categorical = categorical)
@@ -125,7 +149,8 @@ ps_stddiff <- function(data,
   all_vars <- unlist(vars, use.names = FALSE)
   if (length(all_vars) == 0L) {
     stop(
-      "ps_stddiff(): Name at least one variable in `gaussian`, `nong_ord`, `binary` or `categorical`.",
+      paste("ps_stddiff(): Name at least one variable in `gaussian_cols`, `nong_ord_cols`, `binary_cols` or",
+            "`categorical_cols`."),
       call. = FALSE
     )
   }

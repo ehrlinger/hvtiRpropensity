@@ -187,7 +187,7 @@ test_that("matching on logit_t leaves prob_t and identifiers out of the default 
     expect_false(any(c("prob_t", "logit_t", "id", "match", "pair_id") %in% tbl$variable))
   }
   explicit <- ps_match(d, score_col = "logit_t", scale = "logit", caliper_sd = 0.2, seed = 101,
-                       covariates = c("prob_t", "age"))
+                       covariate_cols = c("prob_t", "age"))
   expect_identical(explicit$tables$smd_before$variable, c("prob_t", "age"))
 })
 
@@ -311,8 +311,8 @@ test_that("ps_support() records scale = 'probability' when the input records non
 
 test_that("tied match distances go to the smallest id, whatever the row order", {
   d <- data.frame(id = c(1, 2, 3), tavr = c(1, 0, 0), prob_t = c(0.5, 0.4, 0.6), age = c(60, 70, 80))
-  m1 <- ps_match(d, covariates = "age", seed = 1)
-  m2 <- ps_match(d[c(1, 3, 2), ], covariates = "age", seed = 1)
+  m1 <- ps_match(d, covariate_cols = "age", seed = 1)
+  m2 <- ps_match(d[c(1, 3, 2), ], covariate_cols = "age", seed = 1)
   expect_identical(m1$data$id[m1$data$match == 1L & m1$data$tavr == 0], 2)
   expect_identical(m2$data$id[m2$data$match == 1L & m2$data$tavr == 0], 2)
 })

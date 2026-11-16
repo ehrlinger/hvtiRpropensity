@@ -7,12 +7,16 @@
 ps_stddiff(
   data,
   treatment_col,
-  gaussian = NULL,
-  nong_ord = NULL,
-  binary = NULL,
-  categorical = NULL,
+  gaussian_cols = NULL,
+  nong_ord_cols = NULL,
+  binary_cols = NULL,
+  categorical_cols = NULL,
   weight_col = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  gaussian,
+  nong_ord,
+  binary,
+  categorical
 )
 }
 \arguments{
@@ -23,10 +27,10 @@ both groups present. Required: it has no default, because a study's
 column name never is one. Omitting it is deprecated, warns once per
 session and still means \code{"tavr"}, for one release.}
 
-\item{gaussian, nong_ord, binary, categorical}{Character vectors of column
+\item{gaussian_cols, nong_ord_cols, binary_cols, categorical_cols}{Character vectors of column
 names, by type. See Details. At least one variable is required, and a
-variable may appear under one type only. A \code{binary} column must be
-coded 0/1 or logical; a \code{categorical} column may have any coding.}
+variable may appear under one type only. A \code{binary_cols} column must be
+coded 0/1 or logical; a \code{categorical_cols} column may have any coding.}
 
 \item{weight_col}{Optional name of a column of positive weights, for
 example the inverse-probability weights from \code{\link[=ps_weight]{ps_weight()}} or the
@@ -36,6 +40,10 @@ matching weight \code{mt_wt} from \code{\link[=ps_logistic]{ps_logistic()}}. Wei
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
 value, for example \code{"transcatheter"}, to use a column holding any two
 values.}
+
+\item{gaussian, nong_ord, binary, categorical}{Deprecated: the old names of
+\code{gaussian_cols}, \code{nong_ord_cols}, \code{binary_cols} and \code{categorical_cols}.
+They still work, and warn once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_stddiff", "ps_data")} with:
@@ -61,13 +69,13 @@ reproduce its \code{est.stddiff} output.
 inferred: an ordinal NYHA class stored as an integer would otherwise be
 treated as Gaussian.
 \itemize{
-\item \code{gaussian}: difference in means over \code{sqrt((var1 + var0) / 2)}. The
+\item \code{gaussian_cols}: difference in means over \code{sqrt((var1 + var0) / 2)}. The
 denominator averages the two variances; it does not pool them by sample
 size, so it differs from a Cohen's d when the groups are unequal.
-\item \code{nong_ord}: the same formula on ranks of the pooled sample, ties
+\item \code{nong_ord_cols}: the same formula on ranks of the pooled sample, ties
 averaged, as \verb{PROC RANK} does by default. Ranks are unweighted; only
 their means and variances use \code{weight_col}.
-\item \code{binary} and \code{categorical} are routed by the number of levels observed,
+\item \code{binary_cols} and \code{categorical_cols} are routed by the number of levels observed,
 as the macro routes its \verb{BINARY=} and \verb{CATG=} lists: one level gives 0,
 two use the binary formula on the proportion at the last level in sort
 order (\code{1} for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
@@ -88,7 +96,7 @@ one constant, so stabilised and unstabilised weights from \code{\link[=ps_weight
 give the same differences. It equals the \verb{\%stddiff} macro's output when the
 weights already average 1 in each group, and otherwise does not: the
 macro's Gaussian and rank differences change with the scale of the weights.
-Proportions, for \code{binary} and \code{categorical}, are \verb{sum(w x) / sum(w)} within
+Proportions, for \code{binary_cols} and \code{categorical_cols}, are \verb{sum(w x) / sum(w)} within
 a group and never depended on that scale. Weights must be positive.
 
 \strong{Missing values.} Rows with a missing group are dropped. Otherwise a
@@ -102,7 +110,7 @@ percent. The SAS output labels the column "(\%)" but does not multiply by
 \examples{
 dta <- sample_ps_data(n = 200, seed = 42)
 obj <- ps_stddiff(dta, treatment_col = "tavr",
-                  gaussian = c("age", "ef"), binary = c("female", "diabetes"))
+                  gaussian_cols = c("age", "ef"), binary_cols = c("female", "diabetes"))
 obj$tables$stddiff
 
 }

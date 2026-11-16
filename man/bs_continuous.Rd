@@ -14,7 +14,8 @@ bs_continuous(
   n_strata = 10L,
   strata_col = "cluster",
   create_binary_strata = TRUE,
-  covariates = NULL
+  covariate_cols = NULL,
+  covariates
 )
 }
 \arguments{
@@ -51,8 +52,11 @@ many binary indicator columns are created when
 \code{stra_1} through \verb{stra_<n_strata>} are appended, mirroring the \verb{\%grp}
 macro in the SAS template.}
 
-\item{covariates}{Covariate columns for diagnostics (not used in
+\item{covariate_cols}{Covariate columns for diagnostics (not used in
 computation; reserved for future balance-checking helpers).}
+
+\item{covariates}{Deprecated: the old name of \code{covariate_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("bs_continuous", "ps_data")} with:

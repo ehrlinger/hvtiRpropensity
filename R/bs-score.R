@@ -102,7 +102,7 @@
 #' @param create_binary_strata Logical.  If `TRUE` (default), binary columns
 #'   `stra_1` through `stra_<n_strata>` are appended, mirroring the `%grp`
 #'   macro in the SAS template.
-#' @param covariates          Covariate columns for diagnostics (not used in
+#' @param covariate_cols      Covariate columns for diagnostics (not used in
 #'   computation; reserved for future balance-checking helpers).
 #'
 #' @details
@@ -110,6 +110,8 @@
 #' is an error naming the imputation, rather than a score from a rank-deficient
 #' fit.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("bs_continuous", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{Base data frame with `score_col`, `"quintile"`,
@@ -152,7 +154,13 @@ bs_continuous <- function(formula,
                           n_strata             = 10L,
                           strata_col           = "cluster",
                           create_binary_strata = TRUE,
-                          covariates           = NULL) {
+                          covariate_cols       = NULL,
+                          covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("bs_continuous", "covariates", "covariate_cols", covariates,
+                                   !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
@@ -320,8 +328,10 @@ print.bs_continuous <- function(x, ...) {
 #'   `"cluster"`.
 #' @param create_binary_strata Logical.  If `TRUE` (default), binary
 #'   indicator columns `stra_1` through `stra_<n_strata>` are appended.
-#' @param covariates          Covariate columns for diagnostics.
+#' @param covariate_cols      Covariate columns for diagnostics.
 #'
+#' @param covariates Deprecated: the old name of `covariate_cols`. It still works, and
+#'   warns once per session, for one release.
 #' @return An object of class `c("bs_count", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{`data` (the lowest-numbered imputation when
@@ -397,7 +407,12 @@ bs_count <- function(formula,
                      n_strata             = 10L,
                      strata_col           = "cluster",
                      create_binary_strata = TRUE,
-                     covariates           = NULL) {
+                     covariate_cols       = NULL,
+                     covariates) {
+  if (!missing(covariates)) {
+    covariate_cols <- .renamed_arg("bs_count", "covariates", "covariate_cols", covariates, !missing(covariate_cols))
+  }
+  covariates <- covariate_cols
 
   dist <- match.arg(dist)
   model_engine <- if (identical(dist, "negbin")) "MASS" else "stats"

@@ -7,12 +7,13 @@
 ps_mw_var(
   data,
   treatment_col,
-  outcomes,
+  outcome_cols,
   weight_col,
   n_boot = 1000L,
   seed = NULL,
   treated_level = NULL,
-  n_rep
+  n_rep,
+  outcomes
 )
 }
 \arguments{
@@ -23,7 +24,7 @@ both groups present. Required: it has no default, because a study's
 column name never is one. Omitting it is deprecated, warns once per
 session and still means \code{"tavr"}, for one release.}
 
-\item{outcomes}{Character vector of numeric outcome columns.}
+\item{outcome_cols}{Character vector of numeric outcome columns.}
 
 \item{weight_col}{Name of the column of matching weights, which must be
 positive and finite.}
@@ -45,12 +46,15 @@ values.}
 
 \item{n_rep}{Deprecated: the old name of \code{n_boot}. It still works, and warns
 once per session, for one release.}
+
+\item{outcomes}{Deprecated: the old name of \code{outcome_cols}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_mw_var", "ps_data")} with:
 \describe{
 \item{\verb{$data}}{The input data frame, unchanged.}
-\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{weight_col}, \code{outcomes},
+\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{weight_col}, \code{outcome_cols},
 \code{method}, \code{n_boot}, \code{seed}, \code{n_total}, \code{n_dropped}.}
 \item{\verb{$tables}}{Named list with \code{mw_var}, one row per outcome:
 \code{outcome}, \code{label}, \code{sumwgt_0}, \code{mean_0}, \code{sd_0}, \code{sumwgt_1},
@@ -100,7 +104,7 @@ caller's random number stream is restored afterwards.
 dta <- sample_ps_data(n = 200, seed = 42)
 dta$mt_wt <- pmin(dta$prob_t, 1 - dta$prob_t) /
   ifelse(dta$tavr == 1, dta$prob_t, 1 - dta$prob_t)
-obj <- ps_mw_var(dta, treatment_col = "tavr", outcomes = c("age", "ef"),
+obj <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = c("age", "ef"),
                  weight_col = "mt_wt", n_boot = 200, seed = 1)
 obj$tables$mw_var
 
