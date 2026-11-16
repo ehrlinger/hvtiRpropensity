@@ -29,8 +29,8 @@ session and still means \code{"tavr"}, for one release.}
 
 \item{gaussian_cols, nong_ord_cols, binary_cols, categorical_cols}{Character vectors of column
 names, by type. See Details. At least one variable is required, and a
-variable may appear under one type only. A \code{binary_cols} column must be
-coded 0/1 or logical; a \code{categorical_cols} column may have any coding.}
+variable may appear under one type only. A column named in \code{binary_cols}
+must be coded 0/1 or logical; one in \code{categorical_cols} may have any coding.}
 
 \item{weight_col}{Optional name of a column of positive weights, for
 example the inverse-probability weights from \code{\link[=ps_weight]{ps_weight()}} or the
@@ -75,7 +75,7 @@ size, so it differs from a Cohen's d when the groups are unequal.
 \item \code{nong_ord_cols}: the same formula on ranks of the pooled sample, ties
 averaged, as \verb{PROC RANK} does by default. Ranks are unweighted; only
 their means and variances use \code{weight_col}.
-\item \code{binary_cols} and \code{categorical_cols} are routed by the number of levels observed,
+\item \code{binary_cols} and \code{categorical_cols} columns are routed by the number of levels observed,
 as the macro routes its \verb{BINARY=} and \verb{CATG=} lists: one level gives 0,
 two use the binary formula on the proportion at the last level in sort
 order (\code{1} for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
@@ -96,7 +96,7 @@ one constant, so stabilised and unstabilised weights from \code{\link[=ps_weight
 give the same differences. It equals the \verb{\%stddiff} macro's output when the
 weights already average 1 in each group, and otherwise does not: the
 macro's Gaussian and rank differences change with the scale of the weights.
-Proportions, for \code{binary_cols} and \code{categorical_cols}, are \verb{sum(w x) / sum(w)} within
+Proportions, for \code{binary_cols} and \code{categorical_cols} columns, are \verb{sum(w x) / sum(w)} within
 a group and never depended on that scale. Weights must be positive.
 
 \strong{Missing values.} Rows with a missing group are dropped. Otherwise a

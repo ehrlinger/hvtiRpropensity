@@ -38,7 +38,7 @@
 #' * `nong_ord_cols`: the same formula on ranks of the pooled sample, ties
 #'   averaged, as `PROC RANK` does by default. Ranks are unweighted; only
 #'   their means and variances use `weight_col`.
-#' * `binary_cols` and `categorical_cols` are routed by the number of levels observed,
+#' * `binary_cols` and `categorical_cols` columns are routed by the number of levels observed,
 #'   as the macro routes its `BINARY=` and `CATG=` lists: one level gives 0,
 #'   two use the binary formula on the proportion at the last level in sort
 #'   order (`1` for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
@@ -58,7 +58,7 @@
 #' give the same differences. It equals the `%stddiff` macro's output when the
 #' weights already average 1 in each group, and otherwise does not: the
 #' macro's Gaussian and rank differences change with the scale of the weights.
-#' Proportions, for `binary_cols` and `categorical_cols`, are `sum(w x) / sum(w)` within
+#' Proportions, for `binary_cols` and `categorical_cols` columns, are `sum(w x) / sum(w)` within
 #' a group and never depended on that scale. Weights must be positive.
 #'
 #' **Missing values.** Rows with a missing group are dropped. Otherwise a
@@ -76,8 +76,8 @@
 #'   session and still means `"tavr"`, for one release.
 #' @param gaussian_cols,nong_ord_cols,binary_cols,categorical_cols Character vectors of column
 #'   names, by type. See Details. At least one variable is required, and a
-#'   variable may appear under one type only. A `binary_cols` column must be
-#'   coded 0/1 or logical; a `categorical_cols` column may have any coding.
+#'   variable may appear under one type only. A column named in `binary_cols`
+#'   must be coded 0/1 or logical; one in `categorical_cols` may have any coding.
 #' @param weight_col Optional name of a column of positive weights, for
 #'   example the inverse-probability weights from [ps_weight()] or the
 #'   matching weight `mt_wt` from [ps_logistic()]. Weights must be finite.
@@ -115,12 +115,12 @@
 #' @export
 ps_stddiff <- function(data,
                        treatment_col,
-                       gaussian_cols = NULL,
-                       nong_ord_cols = NULL,
-                       binary_cols   = NULL,
+                       gaussian_cols    = NULL,
+                       nong_ord_cols    = NULL,
+                       binary_cols      = NULL,
                        categorical_cols = NULL,
-                       weight_col    = NULL,
-                       treated_level = NULL,
+                       weight_col       = NULL,
+                       treated_level    = NULL,
                        gaussian,
                        nong_ord,
                        binary,

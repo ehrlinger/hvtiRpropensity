@@ -32,8 +32,8 @@ session and still means \code{"tavr"}, for one release.}
 
 \item{gaussian_cols, nong_ord_cols, binary_cols, categorical_cols}{Character vectors of column
 names, by type. See Details. At least one variable is required, and a
-variable may appear under one type only. A \code{binary_cols} column must be
-coded 0/1 or logical; a \code{categorical_cols} column may have any coding.}
+variable may appear under one type only. A column named in \code{binary_cols}
+must be coded 0/1 or logical; one in \code{categorical_cols} may have any coding.}
 
 \item{weight_col}{Optional name of the column \code{\link[=ps_stddiff]{ps_stddiff()}} weights by.
 Requires \code{reweight}, which supplies its values.}
