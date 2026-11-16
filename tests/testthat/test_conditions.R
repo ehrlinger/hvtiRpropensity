@@ -68,10 +68,19 @@ test_that("an error raised through lapply() still names the function", {
   expect_match(conditionMessage(e), "^ps_match\\(\\): ")
 })
 
-test_that("a ps_data object without a recorded treatment column is refused by name", {
+test_that("a ps_data object without a recorded treatment column takes the deprecated default", {
+  reset_deprecations()
   obj <- ps_weight(dta, treatment_col = "tavr")
   obj$meta$treatment_col <- NULL
-  expect_error(sa_overlap(obj), "records no `treatment_col`")
+  expect_warning(ov <- sa_overlap(obj), class = "hvtiRpropensity_deprecated")
+  expect_identical(ov$meta$treatment_col, "tavr")
+  expect_warning(sw <- sa_trim_sweep(obj, trim_seq = c(0, 0.05)), class = "hvtiRpropensity_deprecated")
+  expect_identical(sw$meta$treatment_col, "tavr")
+})
+
+test_that("sa_rosenbaum() names `data` in its argument errors", {
+  expect_error(sa_rosenbaum(1:3), "`data` must be a ps_match object")
+  expect_error(sa_rosenbaum(dta, outcome_col = "age"), "when `data` is a plain data frame")
 })
 
 test_that("renamed arguments keep working for one release", {

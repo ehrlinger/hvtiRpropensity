@@ -23,8 +23,9 @@ logit, and is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} 
 
 \item{treatment_col}{Name of the binary treatment column (0/1).  Taken from
 \code{data$meta$treatment_col} when \code{data} is a \code{ps_data} object, and
-required for a data frame; omitting it there is deprecated and still
-means \code{"tavr"}, for one release.}
+required for a data frame. Omitting it for a data frame, or for an
+object that records none, is deprecated and still means \code{"tavr"}, for
+one release.}
 
 \item{trim_threshold}{Numeric in (0, 0.5).  PS values below this threshold
 or above \code{1 - trim_threshold} are flagged as near-positivity violations.

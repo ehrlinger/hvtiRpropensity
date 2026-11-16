@@ -30,6 +30,15 @@
   `outcome_cols`; and `ps_stddiff()` and `ps_stddiff_perm()` take
   `gaussian_cols`, `nong_ord_cols`, `binary_cols` and `categorical_cols`.
   The `$meta` field names are unchanged.
+* An abbreviated argument name that used to reach a renamed argument by
+  partial matching can now match both the old and the new name, and R stops
+  with "argument matches multiple formal arguments". For example
+  `ps_mw_var(outcome = "age")` matched `outcomes` before and now matches both
+  `outcomes` and `outcome_cols`; `covariate =` and `cov =` do the same. Write
+  the new name in full.
+* `sa_overlap()` and `sa_trim_sweep()` given a `ps_data` object that records no
+  `treatment_col` still use `"tavr"` for this release, with the same
+  deprecation warning as a data frame.
 * Every function that fits a model or draws random numbers records the family
   provenance record in `$meta$provenance`: `package`, `version`, `sha`,
   `method`, `seed`, `rng_kind` and `time`.

@@ -179,14 +179,14 @@ sa_rosenbaum <- function(data,
   } else if (is.data.frame(x)) {
     if (is.null(treatment_col)) {
       stop(
-        "sa_rosenbaum(): `treatment_col` must be specified when `x` is a plain data frame.",
+        "sa_rosenbaum(): `treatment_col` must be specified when `data` is a plain data frame.",
         call. = FALSE
       )
     }
     dta <- x
   } else {
     stop(
-      "sa_rosenbaum(): `x` must be a ps_match object or a data frame.",
+      "sa_rosenbaum(): `data` must be a ps_match object or a data frame.",
       call. = FALSE
     )
   }
@@ -728,8 +728,9 @@ print.sa_evalue <- function(x, ...) {
 #'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column (0/1).  Taken from
 #'   `data$meta$treatment_col` when `data` is a `ps_data` object, and
-#'   required for a data frame; omitting it there is deprecated and still
-#'   means `"tavr"`, for one release.
+#'   required for a data frame. Omitting it for a data frame, or for an
+#'   object that records none, is deprecated and still means `"tavr"`, for
+#'   one release.
 #' @param trim_threshold Numeric in (0, 0.5).  PS values below this threshold
 #'   or above `1 - trim_threshold` are flagged as near-positivity violations.
 #'   Default `0.05`.
@@ -795,9 +796,9 @@ sa_overlap <- function(data,
     score_col     <- .resolve_meta_arg("score_col", score_col, !missing(score_col), x$meta$score_col)
     treatment_col <- .resolve_meta_arg("treatment_col", treatment_col, !missing(treatment_col),
                                        x$meta$treatment_col)
-    if (is.null(treatment_col)) {
-      stop("sa_overlap(): the object records no `treatment_col`; name the treatment column.", call. = FALSE)
-    }
+    # An object that records no treatment column took the old "tavr" default;
+    # keep it for one release, with the same deprecation as a data frame.
+    if (is.null(treatment_col)) treatment_col <- .default_treatment_col("sa_overlap")
     treated_level <- .resolve_meta_arg("treated_level", treated_level, !missing(treated_level),
                                        x$meta$treated_level)
     scale <- rlang::`%||%`(x$meta$scale, scale)
@@ -1006,8 +1007,9 @@ print.sa_overlap <- function(x, ...) {
 #'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column.  Taken from
 #'   `data$meta$treatment_col` when `data` is a `ps_data` object, and
-#'   required for a data frame; omitting it there is deprecated and still
-#'   means `"tavr"`, for one release.
+#'   required for a data frame. Omitting it for a data frame, or for an
+#'   object that records none, is deprecated and still means `"tavr"`, for
+#'   one release.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. Read
 #'   from the metadata of a `ps_data` object when it records one. `NULL`
@@ -1069,9 +1071,9 @@ sa_trim_sweep <- function(data,
     score_col     <- .resolve_meta_arg("score_col", score_col, !missing(score_col), x$meta$score_col)
     treatment_col <- .resolve_meta_arg("treatment_col", treatment_col, !missing(treatment_col),
                                        x$meta$treatment_col)
-    if (is.null(treatment_col)) {
-      stop("sa_trim_sweep(): the object records no `treatment_col`; name the treatment column.", call. = FALSE)
-    }
+    # An object that records no treatment column took the old "tavr" default;
+    # keep it for one release, with the same deprecation as a data frame.
+    if (is.null(treatment_col)) treatment_col <- .default_treatment_col("sa_trim_sweep")
     estimand_use  <- .resolve_meta_arg("estimand", estimand, estimand_supplied, x$meta$estimand)
     stabilise     <- .resolve_meta_arg("stabilise", stabilise, !missing(stabilise), x$meta$stabilised,
                                        meta_name = "stabilised")
