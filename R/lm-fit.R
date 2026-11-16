@@ -21,16 +21,16 @@
     absent <- setdiff(outcome_levels, observed)
     where <- if (is.null(label)) "" else sprintf(" in imputation %s", label)
     if (length(undeclared)) {
-      rlang::abort(
-        sprintf("The outcome contains undeclared level(s)%s: %s.",
-                where, paste(undeclared, collapse = ", ")),
+      stop(
+        paste0(.err_prefix(), sprintf("The outcome contains undeclared level(s)%s: %s.",
+                where, paste(undeclared, collapse = ", "))),
         call. = FALSE
       )
     }
     if (length(absent)) {
-      rlang::abort(
-        sprintf("The declared outcome level(s) %s are absent%s.",
-                paste(absent, collapse = ", "), where),
+      stop(
+        paste0(.err_prefix(), sprintf("The declared outcome level(s) %s are absent%s.",
+                paste(absent, collapse = ", "), where)),
         call. = FALSE
       )
     }
@@ -209,27 +209,36 @@ fit_logistic <- function(formula, data,
   family <- match.arg(family)
   .check_df(data)
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be a model formula.", call. = FALSE)
+    stop(
+      "fit_logistic(): `formula` must be a model formula.",
+      call. = FALSE
+    )
   }
   response_vars <- all.vars(formula[[2L]])
   if (!is.name(formula[[2L]])) {
-    rlang::abort("`formula` must contain one untransformed outcome column.",
-                 call. = FALSE)
+    stop(
+      "fit_logistic(): `formula` must contain one untransformed outcome column.",
+      call. = FALSE
+    )
   }
   formula_outcome <- response_vars[[1L]]
   if (is.null(outcome_col)) outcome_col <- formula_outcome
   if (!is.character(outcome_col) || length(outcome_col) != 1L ||
         !nzchar(outcome_col) || !identical(outcome_col, formula_outcome)) {
-    rlang::abort("`outcome_col` must name the outcome on the left side of `formula`.",
-                 call. = FALSE)
+    stop(
+      "fit_logistic(): `outcome_col` must name the outcome on the left side of `formula`.",
+      call. = FALSE
+    )
   }
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
   .check_cols(data, all.vars(formula))
   if (!is.character(prediction_prefix) || length(prediction_prefix) != 1L ||
         is.na(prediction_prefix) || !nzchar(prediction_prefix)) {
-    rlang::abort("`prediction_prefix` must be one non-empty string.",
-                 call. = FALSE)
+    stop(
+      "fit_logistic(): `prediction_prefix` must be one non-empty string.",
+      call. = FALSE
+    )
   }
   declared_levels <- as.character(outcome_levels)
   minimum_levels <- 2L
@@ -245,8 +254,8 @@ fit_logistic <- function(formula, data,
     } else {
       "at least two"
     }
-    rlang::abort(
-      sprintf("%s `outcome_levels` must contain %s unique non-missing values.",
+    stop(
+      sprintf("fit_logistic(): %s `outcome_levels` must contain %s unique non-missing values.",
               family, requirement),
       call. = FALSE
     )
@@ -257,8 +266,10 @@ fit_logistic <- function(formula, data,
     declared_event <- as.character(event_level)
     if (length(declared_event) != 1L || is.na(event_level) ||
           !declared_event %in% declared_levels) {
-      rlang::abort("`event_level` must be one of the declared `outcome_levels`.",
-                   call. = FALSE)
+      stop(
+        "fit_logistic(): `event_level` must be one of the declared `outcome_levels`.",
+        call. = FALSE
+      )
     }
     model_levels <- c(setdiff(declared_levels, declared_event), declared_event)
   } else if (identical(family, "ordinal")) {
@@ -267,8 +278,8 @@ fit_logistic <- function(formula, data,
     declared_reference <- as.character(reference_level)
     if (length(declared_reference) != 1L || is.na(reference_level) ||
           !declared_reference %in% declared_levels) {
-      rlang::abort(
-        "`reference_level` must be one of the declared `outcome_levels`.",
+      stop(
+        "fit_logistic(): `reference_level` must be one of the declared `outcome_levels`.",
         call. = FALSE
       )
     }
@@ -286,8 +297,8 @@ fit_logistic <- function(formula, data,
   existing_predictions <- intersect(prediction_names, names(data))
   if (length(existing_predictions)) {
     label <- if (length(existing_predictions) == 1L) "Column" else "Columns"
-    rlang::abort(
-      sprintf("%s %s already exist%s in `data`.",
+    stop(
+      sprintf("fit_logistic(): %s %s already exist%s in `data`.",
               label,
               paste0("`", existing_predictions, "`", collapse = ", "),
               if (length(existing_predictions) == 1L) "s" else ""),
@@ -450,11 +461,12 @@ fit_logistic <- function(formula, data,
     aliased <- names(stats::coef(models[[i]]))[is.na(stats::coef(models[[i]]))]
     if (length(aliased)) {
       label <- if (is.null(names(models))) i else names(models)[[i]]
-      rlang::abort(
-        sprintf("Term(s) aliased in imputation %s: %s. Remove them from the formula.",
-                label, paste(aliased, collapse = ", ")),
-        call. = FALSE
-      )
+      stop(errorCondition(
+        paste0(.err_prefix(), sprintf("Term(s) aliased in imputation %s: %s. Remove them from the formula.",
+                label, paste(aliased, collapse = ", "))),
+        class = "hvtiRpropensity_aliased",
+        call = NULL
+      ))
     }
   }
   invisible(NULL)
@@ -484,15 +496,16 @@ fit_logistic <- function(formula, data,
     n <- sum(p < eps | p > 1 - eps, na.rm = TRUE)
     if (n > 0L) {
       label <- if (is.null(names(models))) i else names(models)[[i]]
-      rlang::abort(
-        sprintf(paste0("The model separates `%s` (imputation %s): %d fitted probabilit%s numerically 0 or 1, ",
+      stop(errorCondition(
+        paste0(.err_prefix(), sprintf(paste0("The model separates `%s` (imputation %s): %d fitted ",
+                       "probabilit%s numerically 0 or 1, ",
                        "so the logits are infinite. Usually a predictor, or a combination of predictors, predicts ",
                        "the outcome perfectly (separation); an extreme covariate value can do it too. Remove ",
                        "or combine the predictor, merge sparse levels, or check the extreme values."),
-                outcome_col, label, n, if (n == 1L) "y is" else "ies are"),
+                outcome_col, label, n, if (n == 1L) "y is" else "ies are")),
         class = "hvtiRpropensity_separation",
-        call. = FALSE
-      )
+        call = NULL
+      ))
     }
   }
   invisible(NULL)
@@ -514,14 +527,17 @@ fit_logistic <- function(formula, data,
 .check_outcome_response <- function(formula, outcome_col = NULL) {
   response <- all.vars(formula[[2L]])
   if (length(response) != 1L) {
-    rlang::abort("The formula's response must name exactly one column.", call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "The formula's response must name exactly one column."),
+      call. = FALSE
+    )
   }
   if (is.null(outcome_col)) return(response)
   if (!is.character(outcome_col) || length(outcome_col) != 1L ||
         !identical(outcome_col, response)) {
-    rlang::abort(
-      sprintf("`outcome_col` (\"%s\") is not the formula's response (%s).",
-              paste(outcome_col, collapse = ", "), paste(response, collapse = ", ")),
+    stop(
+      paste0(.err_prefix(), sprintf("`outcome_col` (\"%s\") is not the formula's response (%s).",
+              paste(outcome_col, collapse = ", "), paste(response, collapse = ", "))),
       call. = FALSE
     )
   }
@@ -567,8 +583,11 @@ fit_logistic <- function(formula, data,
   .check_cols(data, setdiff(all.vars(formula), "."))
   keep <- setdiff(names(data), c(exclude, all.vars(formula[[2L]])))
   if (!length(keep)) {
-    rlang::abort("`.` in `formula` leaves no columns once the response, `id_col` and `imputation_col` are set aside.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "`.` in `formula` leaves no columns once the response, `id_col` and ",
+             "`imputation_col` are set aside."),
+      call. = FALSE
+    )
   }
   expanded <- stats::formula(stats::terms(formula, data = data[keep]))
   environment(expanded) <- environment(formula)
@@ -613,22 +632,33 @@ fit_logistic <- function(formula, data,
 fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
                        imputation_col = NULL, prediction_col = "fitted") {
   if (!inherits(formula, "formula") || length(formula) != 3L) {
-    rlang::abort("`formula` must be a two-sided R formula.", call. = FALSE)
+    stop(
+      "fit_linear(): `formula` must be a two-sided R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   outcome_col <- .check_outcome_response(formula, outcome_col)
   .check_cols(data, outcome_col)
   if (!is.numeric(data[[outcome_col]])) {
-    rlang::abort(sprintf("The outcome `%s` must be numeric for a linear model.", outcome_col),
-                 call. = FALSE)
+    stop(
+      sprintf("fit_linear(): The outcome `%s` must be numeric for a linear model.", outcome_col),
+      call. = FALSE
+    )
   }
 
   if (!is.character(prediction_col) || length(prediction_col) != 1L ||
         is.na(prediction_col) || !nzchar(prediction_col)) {
-    rlang::abort("`prediction_col` must be one non-empty string.", call. = FALSE)
+    stop(
+      "fit_linear(): `prediction_col` must be one non-empty string.",
+      call. = FALSE
+    )
   }
   if (prediction_col %in% names(data)) {
-    rlang::abort(sprintf("Column `%s` already exists in `data`.", prediction_col), call. = FALSE)
+    stop(
+      sprintf("fit_linear(): Column `%s` already exists in `data`.", prediction_col),
+      call. = FALSE
+    )
   }
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
   .check_cols(data, all.vars(formula))

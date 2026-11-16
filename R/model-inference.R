@@ -13,8 +13,10 @@
 .check_conf_level <- function(conf_level) {
   if (!is.numeric(conf_level) || length(conf_level) != 1L ||
         is.na(conf_level) || conf_level <= 0 || conf_level >= 1) {
-    rlang::abort("`conf_level` must be one number strictly between 0 and 1.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "`conf_level` must be one number strictly between 0 and 1."),
+      call. = FALSE
+    )
   }
   invisible(NULL)
 }
@@ -31,35 +33,35 @@
 .check_inference_input <- function(estimate, covariance, terms, imputation) {
   if (!is.numeric(estimate) || is.null(names(estimate)) ||
         !identical(names(estimate), terms)) {
-    rlang::abort(
-      sprintf("The coefficient names in imputation %s differ from imputation 1.",
-              imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("The coefficient names in imputation %s differ from imputation 1.",
+              imputation)),
       call. = FALSE
     )
   }
   if (any(!is.finite(estimate))) {
-    rlang::abort(
-      sprintf("A non-finite coefficient was found in imputation %s.", imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("A non-finite coefficient was found in imputation %s.", imputation)),
       call. = FALSE
     )
   }
   if (!is.matrix(covariance) || nrow(covariance) != ncol(covariance)) {
-    rlang::abort(
-      sprintf("The covariance matrix must be square in imputation %s.", imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("The covariance matrix must be square in imputation %s.", imputation)),
       call. = FALSE
     )
   }
   if (!identical(rownames(covariance), terms) ||
         !identical(colnames(covariance), terms)) {
-    rlang::abort(
-      sprintf("The covariance names in imputation %s differ from its coefficients.",
-              imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("The covariance names in imputation %s differ from its coefficients.",
+              imputation)),
       call. = FALSE
     )
   }
   if (any(!is.finite(covariance))) {
-    rlang::abort(
-      sprintf("A non-finite covariance was found in imputation %s.", imputation),
+    stop(
+      paste0(.err_prefix(), sprintf("A non-finite covariance was found in imputation %s.", imputation)),
       call. = FALSE
     )
   }
@@ -123,24 +125,27 @@
 .rubin_pool <- function(estimates, covariances, conf_level = 0.95, df_com = Inf) {
   .check_conf_level(conf_level)
   if (!is.numeric(df_com) || length(df_com) != 1L || is.na(df_com) || df_com <= 0) {
-    rlang::abort(
-      sprintf(paste("Pooling over imputations needs positive complete-data degrees of freedom",
+    stop(
+      paste0(.err_prefix(), sprintf(paste("Pooling over imputations needs positive complete-data degrees of freedom",
                     "(n - k); the model has %s. A saturated model leaves none."),
-              format(df_com)),
+              format(df_com))),
       call. = FALSE
     )
   }
   if (!is.list(estimates) || !is.list(covariances) ||
         length(estimates) < 2L || length(estimates) != length(covariances)) {
-    rlang::abort(
-      "Rubin pooling requires equal lists of estimates and covariances from at least 2 imputations.",
+    stop(
+      paste0(.err_prefix(), "Rubin pooling requires equal lists of estimates and covariances from at least ",
+             "2 imputations."),
       call. = FALSE
     )
   }
   terms <- names(estimates[[1L]])
   if (is.null(terms) || anyNA(terms) || any(!nzchar(terms))) {
-    rlang::abort("Coefficient names are required for Rubin pooling.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "Coefficient names are required for Rubin pooling."),
+      call. = FALSE
+    )
   }
   imputation_labels <- names(estimates)
   if (is.null(imputation_labels) || any(!nzchar(imputation_labels))) {
@@ -211,8 +216,10 @@
 #' @keywords internal
 .polr_expected_vcov <- function(fit) {
   if (!identical(fit$method, "logistic") || is.null(fit$model)) {
-    rlang::abort("Expected information needs a logistic polr() fit that kept its model frame.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "Expected information needs a logistic polr() fit that kept its model frame."),
+      call. = FALSE
+    )
   }
   frame <- fit$model
   x <- stats::model.matrix(stats::delete.response(fit$terms), frame)
@@ -220,7 +227,10 @@
   beta <- stats::coef(fit)
   # An intercept-only model has no columns and no coefficients.
   if (ncol(x) != length(beta) || !all(colnames(x) == names(beta))) {
-    rlang::abort("The polr() model matrix does not match its coefficients.", call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "The polr() model matrix does not match its coefficients."),
+      call. = FALSE
+    )
   }
   weights <- frame[["(weights)"]]
   if (is.null(weights)) weights <- rep.int(1, nrow(x))
@@ -293,14 +303,17 @@
     names(estimate) <- terms
     covariance <- stats::vcov(fit)
   } else {
-    rlang::abort(sprintf("Unsupported model family: %s", family), call. = FALSE)
+    stop(
+      paste0(.err_prefix(), sprintf("Unsupported model family: %s", family)),
+      call. = FALSE
+    )
   }
 
   if (!is.matrix(covariance) || nrow(covariance) != length(estimate) ||
         ncol(covariance) != length(estimate)) {
-    rlang::abort(
-      sprintf("The %s model returned a covariance matrix incompatible with its coefficients.",
-              family),
+    stop(
+      paste0(.err_prefix(), sprintf("The %s model returned a covariance matrix incompatible with its coefficients.",
+              family)),
       call. = FALSE
     )
   }
@@ -337,18 +350,21 @@
   .check_conf_level(conf_level)
   family <- match.arg(family, c("binary", "ordinal", "nominal", "count", "linear"))
   if (!is.list(models) || !length(models)) {
-    rlang::abort("`models` must be a non-empty list of fitted models.",
-                 call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "`models` must be a non-empty list of fitted models."),
+      call. = FALSE
+    )
   }
   convergence <- vapply(models, .model_converged, logical(1L))
   if (any(!convergence)) {
     failed <- names(models)[!convergence]
     if (is.null(failed) || any(!nzchar(failed))) failed <- which(!convergence)
-    rlang::abort(
-      sprintf("Model fitting failed to converge in imputation(s): %s.",
-              paste(failed, collapse = ", ")),
-      call. = FALSE
-    )
+    stop(errorCondition(
+      paste0(.err_prefix(), sprintf("Model fitting failed to converge in imputation(s): %s.",
+              paste(failed, collapse = ", "))),
+      class = "hvtiRpropensity_convergence",
+      call = NULL
+    ))
   }
 
   components <- lapply(models, .model_components, family = family)

@@ -121,22 +121,34 @@ ps_stddiff <- function(data,
   vars <- lapply(vars, function(v) if (is.null(v)) character(0) else as.character(v))
   all_vars <- unlist(vars, use.names = FALSE)
   if (length(all_vars) == 0L) {
-    rlang::abort("Name at least one variable in `gaussian`, `nong_ord`, `binary` or `categorical`.", call = NULL)
+    stop(
+      "ps_stddiff(): Name at least one variable in `gaussian`, `nong_ord`, `binary` or `categorical`.",
+      call. = FALSE
+    )
   }
   dup <- unique(all_vars[duplicated(all_vars)])
   if (length(dup) > 0L) {
-    rlang::abort(sprintf("Variable(s) named under more than one type: %s", paste(dup, collapse = ", ")), call = NULL)
+    stop(
+      sprintf("ps_stddiff(): Variable(s) named under more than one type: %s", paste(dup, collapse = ", ")),
+      call. = FALSE
+    )
   }
   .check_cols(data, c(treatment_col, all_vars, weight_col))
   for (v in c(vars$gaussian, vars$nong_ord)) {
     if (!is.numeric(data[[v]])) {
-      rlang::abort(sprintf("Column `%s` must be numeric to be summarised by mean or rank.", v), call = NULL)
+      stop(
+        sprintf("ps_stddiff(): Column `%s` must be numeric to be summarised by mean or rank.", v),
+        call. = FALSE
+      )
     }
   }
   for (v in vars$binary) {
     x <- data[[v]]
     if (!(is.logical(x) || (is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1))))) {
-      rlang::abort(sprintf("Column `%s` is named as binary and must be coded 0/1 or logical.", v), call = NULL)
+      stop(
+        sprintf("ps_stddiff(): Column `%s` is named as binary and must be coded 0/1 or logical.", v),
+        call. = FALSE
+      )
     }
   }
 
@@ -145,7 +157,10 @@ ps_stddiff <- function(data,
   grp <- .treatment_indicator(base, treatment_col, treated_level)$trt  # refuses a column with one arm
   w <- if (is.null(weight_col)) rep(1, nrow(base)) else base[[weight_col]]
   if (!is.null(weight_col) && (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0))) {
-    rlang::abort(sprintf("Column `%s` must hold positive, finite, non-missing weights.", weight_col), call = NULL)
+    stop(
+      sprintf("ps_stddiff(): Column `%s` must hold positive, finite, non-missing weights.", weight_col),
+      call. = FALSE
+    )
   }
 
   one <- function(v) {
@@ -176,8 +191,11 @@ ps_stddiff <- function(data,
           type <- "categorical"
           est  <- .stddiff_categorical(p1[-length(lv)], p0[-length(lv)])
           if (is.na(est)) {
-            rlang::warn(sprintf(
-              "`%s`: the groups share too few levels for a categorical standardized difference; returning NA.", v))
+            warning(
+              sprintf(paste0("ps_stddiff(): `%s`: the groups share too few levels for a categorical ",
+                             "standardized difference; returning NA."), v),
+              call. = FALSE
+            )
           }
         }
       }

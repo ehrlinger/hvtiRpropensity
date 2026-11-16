@@ -110,16 +110,25 @@ ps_mw_var <- function(data,
   .check_df(data)
   if (!is.numeric(n_rep) || length(n_rep) != 1L || !is.finite(n_rep) ||
       n_rep < 1 || n_rep > .Machine$integer.max || n_rep != round(n_rep)) {
-    rlang::abort("`n_rep` must be a positive whole number.", call = NULL)
+    stop(
+      "ps_mw_var(): `n_rep` must be a positive whole number.",
+      call. = FALSE
+    )
   }
   n_rep <- as.integer(n_rep)
   outcomes <- as.character(outcomes)
-  if (length(outcomes) == 0L) rlang::abort("Name at least one column in `outcomes`.", call = NULL)
+  if (length(outcomes) == 0L) stop(
+                                "ps_mw_var(): Name at least one column in `outcomes`.",
+                                call. = FALSE
+                              )
   .check_cols(data, c(treatment_col, outcomes, weight_col))
   seed <- .seed_value(seed)
   for (v in outcomes) {
     if (!is.numeric(data[[v]])) {
-      rlang::abort(sprintf("Outcome column `%s` must be numeric.", v), call = NULL)
+      stop(
+        sprintf("ps_mw_var(): Outcome column `%s` must be numeric.", v),
+        call. = FALSE
+      )
     }
   }
 
@@ -127,11 +136,17 @@ ps_mw_var <- function(data,
   base <- data[keep, , drop = FALSE]
   grp <- .treatment_indicator(base, treatment_col, treated_level)$trt
   if (!all(c(0L, 1L) %in% grp)) {
-    rlang::abort(sprintf("Column `%s` must contain both treatment groups.", treatment_col), call = NULL)
+    stop(
+      sprintf("ps_mw_var(): Column `%s` must contain both treatment groups.", treatment_col),
+      call. = FALSE
+    )
   }
   w <- base[[weight_col]]
   if (!is.numeric(w) || any(!is.finite(w)) || any(w <= 0)) {
-    rlang::abort(sprintf("Column `%s` must hold positive, finite, non-missing weights.", weight_col), call = NULL)
+    stop(
+      sprintf("ps_mw_var(): Column `%s` must hold positive, finite, non-missing weights.", weight_col),
+      call. = FALSE
+    )
   }
 
   # Weighted mean of y over rows r, NA when none of them has a value.

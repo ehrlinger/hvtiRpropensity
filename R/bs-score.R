@@ -156,14 +156,20 @@ bs_continuous <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "bs_continuous(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   outcome_col <- .check_outcome_response(formula, outcome_col)
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
-    rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
+    stop(
+      "bs_continuous(): `n_strata` must be an integer >= 2.",
+      call. = FALSE
+    )
   }
   n_strata <- as.integer(n_strata)
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))
@@ -396,9 +402,9 @@ bs_count <- function(formula,
   model_engine <- if (identical(dist, "negbin")) "MASS" else "stats"
 
   if (dist == "negbin" && !requireNamespace("MASS", quietly = TRUE)) {
-    rlang::abort(
+    stop(
       paste0(
-        "`bs_count(dist = 'negbin')` requires the MASS package.\n",
+        "bs_count(): `bs_count(dist = 'negbin')` requires the MASS package.\n",
         "Install it with: install.packages(\"MASS\"), ",
         "or use dist = 'poisson'."
       ),
@@ -408,18 +414,26 @@ bs_count <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "bs_count(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   outcome_col <- .check_outcome_response(formula, outcome_col)
   if (!is.name(formula[[2L]])) {
-    rlang::abort("The count response must be a column name, not a transformation such as `log(count)`.",
-                 call. = FALSE)
+    stop(
+      "bs_count(): The count response must be a column name, not a transformation such as `log(count)`.",
+      call. = FALSE
+    )
   }
   .check_cols(data, outcome_col)
   if (!is.null(imputation_col)) .check_cols(data, c(id_col, imputation_col))
   if (!is.numeric(n_strata) || length(n_strata) != 1L || n_strata < 2L) {
-    rlang::abort("`n_strata` must be an integer >= 2.", call. = FALSE)
+    stop(
+      "bs_count(): `n_strata` must be an integer >= 2.",
+      call. = FALSE
+    )
   }
   n_strata <- as.integer(n_strata)
   formula <- .expand_dot_formula(formula, data, c(id_col, imputation_col))

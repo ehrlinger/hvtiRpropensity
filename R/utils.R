@@ -16,19 +16,19 @@
 #'
 #' @param data      A data frame.
 #' @param cols      Character vector of required column names.
-#' @param call_env  Environment for the error call (use `rlang::caller_env()`).
 #' @return Invisible NULL.  Signals a classed error on failure.
 #' @keywords internal
-.check_cols <- function(data, cols, call_env = rlang::caller_env()) {
+.check_cols <- function(data, cols) {
   missing <- setdiff(cols, names(data))
   if (length(missing) > 0L) {
-    rlang::abort(
-      sprintf(
+    stop(errorCondition(
+      paste0(.err_prefix(), sprintf(
         "Required column(s) not found in `data`: %s",
         paste(missing, collapse = ", ")
-      ),
-      call = call_env
-    )
+      )),
+      class = "hvtiRpropensity_missing_column",
+      call = NULL
+    ))
   }
   invisible(NULL)
 }
@@ -41,15 +41,20 @@
 #' Assert that an object is a non-empty data frame
 #'
 #' @param data      Object to check.
-#' @param call_env  Environment for the error call.
 #' @return Invisible NULL.
 #' @keywords internal
-.check_df <- function(data, call_env = rlang::caller_env()) {
+.check_df <- function(data) {
   if (!is.data.frame(data)) {
-    rlang::abort("`data` must be a data frame.", call = call_env)
+    stop(
+      paste0(.err_prefix(), "`data` must be a data frame."),
+      call. = FALSE
+    )
   }
   if (nrow(data) == 0L) {
-    rlang::abort("`data` must contain at least one row.", call = call_env)
+    stop(
+      paste0(.err_prefix(), "`data` must contain at least one row."),
+      call. = FALSE
+    )
   }
   invisible(NULL)
 }
@@ -67,30 +72,30 @@
 #'
 #' @param data      A data frame.
 #' @param col       Name of the column to check.
-#' @param call_env  Environment for the error call.
 #' @param warn_na   Whether to warn about missing values. A caller that counts
 #'   missing treatment and missing score together, and states the total in one
 #'   warning, sets this to `FALSE`.
 #' @return Invisible NULL.
 #' @keywords internal
-.check_binary <- function(data, col, call_env = rlang::caller_env(), warn_na = TRUE) {
+.check_binary <- function(data, col, warn_na = TRUE) {
   x    <- data[[col]]
   vals <- x[!is.na(x)]
   ok   <- is.logical(x) ||
     (is.numeric(x) && all(vals %in% c(0, 1)))
   if (!ok) {
-    rlang::abort(
-      sprintf("Column `%s` must be binary (0/1 or logical).", col),
-      call = call_env
+    stop(
+      paste0(.err_prefix(), sprintf("Column `%s` must be binary (0/1 or logical).", col)),
+      call. = FALSE
     )
   }
   n_na <- sum(is.na(x))
   if (warn_na && n_na > 0L) {
-    rlang::warn(
-      sprintf(
+    warning(
+      paste0(.err_prefix(), sprintf(
         "Column `%s` contains %d NA value(s). Those patients will be silently excluded from analysis.",
         col, n_na
-      )
+      )),
+      call. = FALSE
     )
   }
   invisible(NULL)
@@ -108,8 +113,11 @@
 .warn_excluded <- function(excluded, treatment_col, score_col, what) {
   n <- sum(excluded)
   if (n > 0L) {
-    rlang::warn(sprintf("%d row(s) have a missing `%s` or `%s` and are excluded from %s.",
-                        n, treatment_col, score_col, what))
+    warning(
+      paste0(.err_prefix(), sprintf("%d row(s) have a missing `%s` or `%s` and are excluded from %s.",
+                        n, treatment_col, score_col, what)),
+      call. = FALSE
+    )
   }
   invisible(excluded)
 }
@@ -123,22 +131,21 @@
 #'
 #' @param data      A data frame.
 #' @param col       Name of the column to check.
-#' @param call_env  Environment for the error call.
 #' @param hint      Optional sentence appended to the range error.
 #' @return Invisible NULL.
 #' @keywords internal
-.check_probability <- function(data, col, call_env = rlang::caller_env(), hint = NULL) {
+.check_probability <- function(data, col, hint = NULL) {
   x <- data[[col]]
   if (!is.numeric(x)) {
-    rlang::abort(
-      sprintf("Column `%s` must be numeric.", col),
-      call = call_env
+    stop(
+      paste0(.err_prefix(), sprintf("Column `%s` must be numeric.", col)),
+      call. = FALSE
     )
   }
   if (any(!is.na(x) & (x < 0 | x > 1))) {
-    rlang::abort(
-      paste(c(sprintf("Column `%s` must contain values in [0, 1].", col), hint), collapse = " "),
-      call = call_env
+    stop(
+      paste0(.err_prefix(), paste(c(sprintf("Column `%s` must contain values in [0, 1].", col), hint), collapse = " ")),
+      call. = FALSE
     )
   }
   invisible(NULL)
@@ -154,14 +161,13 @@
 #'
 #' @param x         A `ps_data` object.
 #' @param score_col Name of the score column. Default `x$meta$score_col`.
-#' @param call_env  Environment for the error call.
 #' @return A numeric vector of probabilities, one per row of `x$data`.
 #' @keywords internal
-.probability_score <- function(x, score_col = x$meta$score_col, call_env = rlang::caller_env()) {
-  .check_cols(x$data, score_col, call_env)
+.probability_score <- function(x, score_col = x$meta$score_col) {
+  .check_cols(x$data, score_col)
   score <- x$data[[score_col]]
   if (identical(x$meta$scale, "logit")) score <- stats::plogis(score)
-  .check_probability(stats::setNames(list(score), score_col), score_col, call_env)
+  .check_probability(stats::setNames(list(score), score_col), score_col)
   score
 }
 
@@ -281,8 +287,11 @@
     } else if (is.factor(x) || is.character(x)) {
       "categorical"
     } else {
-      rlang::abort(sprintf(paste0("Covariate `%s` must be numeric, logical, factor or character to enter a ",
-                                  "balance table; it is %s."), v, class(x)[1L]), call. = FALSE)
+      stop(
+        paste0(.err_prefix(), sprintf(paste0("Covariate `%s` must be numeric, logical, factor or character to enter a ",
+                                  "balance table; it is %s."), v, class(x)[1L])),
+        call. = FALSE
+      )
     }
   }, character(1L))
 }
@@ -403,55 +412,85 @@
 #' @param data A data frame.
 #' @param col Name of the treatment column.
 #' @param treated_level The treated value, or `NULL`.
-#' @param call_env Environment for the error call.
 #' @param warn_na Whether to warn about missing treatment values; see
 #'   `.check_binary()`.
 #' @return A list: `trt`, an integer 0/1 vector (`NA` where the column is
 #'   missing), and `labels`, the reference then the treated value as character.
 #' @keywords internal
-.treatment_indicator <- function(data, col, treated_level = NULL, call_env = rlang::caller_env(),
+.treatment_indicator <- function(data, col, treated_level = NULL,
                                  warn_na = TRUE) {
   x <- data[[col]]
   if (is.null(treated_level)) {
-    .check_binary(data, col, call_env, warn_na)
+    .check_binary(data, col, warn_na = warn_na)
     values <- unique(as.integer(x[!is.na(x)]))
     if (length(values) < 2L) {
-      rlang::abort(
-        sprintf("Column `%s` must hold both treatment values; it holds %s.", col,
-                if (length(values)) sprintf("only %s", .binary_group_labels(x)[values + 1L]) else "none"),
-        call = call_env
-      )
+      stop(errorCondition(
+        paste0(.err_prefix(), sprintf("Column `%s` must hold both treatment values; it holds %s.", col,
+                if (length(values)) sprintf("only %s", .binary_group_labels(x)[values + 1L]) else "none")),
+        class = "hvtiRpropensity_one_arm",
+        call = NULL
+      ))
     }
     return(list(trt = as.integer(x), labels = .binary_group_labels(x)))
   }
   if (length(treated_level) != 1L || is.na(treated_level)) {
-    rlang::abort("`treated_level` must be a single non-missing value.", call = call_env)
+    stop(
+      paste0(.err_prefix(), "`treated_level` must be a single non-missing value."),
+      call. = FALSE
+    )
   }
   treated_level <- as.character(treated_level)
   values <- unique(as.character(x[!is.na(x)]))
   if (length(values) != 2L) {
-    rlang::abort(
-      sprintf("Column `%s` must hold two treatment values; it holds %d.", col, length(values)),
-      call = call_env
+    stop(
+      paste0(.err_prefix(), sprintf("Column `%s` must hold two treatment values; it holds %d.", col, length(values))),
+      call. = FALSE
     )
   }
   if (!treated_level %in% values) {
-    rlang::abort(
-      sprintf("`treated_level` (\"%s\") is not a value of column `%s`.", treated_level, col),
-      call = call_env
+    stop(
+      paste0(.err_prefix(), sprintf("`treated_level` (\"%s\") is not a value of column `%s`.", treated_level, col)),
+      call. = FALSE
     )
   }
   n_na <- sum(is.na(x))
   if (warn_na && n_na > 0L) {
-    rlang::warn(
-      sprintf(
+    warning(
+      paste0(.err_prefix(), sprintf(
         "Column `%s` contains %d NA value(s). Those patients will be silently excluded from analysis.",
         col, n_na
-      )
+      )),
+      call. = FALSE
     )
   }
   list(trt = as.integer(as.character(x) == treated_level),
        labels = c(setdiff(values, treated_level), treated_level))
+}
+
+
+# ---------------------------------------------------------------------------
+# Error prefix
+# ---------------------------------------------------------------------------
+
+#' Name the exported function a condition comes from
+#'
+#' Errors are raised with `stop(call. = FALSE)`, so the message carries the
+#' function name itself, as `fn(): `. An internal helper does not know which
+#' exported function called it, so it asks: this returns `"fn(): "` for the
+#' outermost function on the call stack that this package exports, the one
+#' the user called, or `""` when there is none (a helper called directly in a
+#' test).
+#'
+#' @return A character string.
+#' @keywords internal
+.err_prefix <- function() {
+  exports <- getNamespaceExports("hvtiRpropensity")
+  for (call in sys.calls()) {
+    fn <- call[[1L]]
+    if (is.call(fn) && length(fn) == 3L && as.character(fn[[1L]]) %in% c("::", ":::")) fn <- fn[[3L]]
+    if (is.name(fn) && as.character(fn) %in% exports) return(paste0(as.character(fn), "(): "))
+  }
+  ""
 }
 
 
@@ -467,14 +506,16 @@
 #' `seed = 5` and `seed = -5` give the same result.
 #'
 #' @param seed `NULL`, or one whole number.
-#' @param call_env Environment for the error call.
 #' @return `NULL`, or `abs(seed)` as an integer.
 #' @keywords internal
-.seed_value <- function(seed, call_env = rlang::caller_env()) {
+.seed_value <- function(seed) {
   if (is.null(seed)) return(NULL)
   if (!is.numeric(seed) || length(seed) != 1L || !is.finite(seed) || seed != round(seed) ||
         abs(seed) > .Machine$integer.max) {
-    rlang::abort("`seed` must be `NULL` or one whole number.", call = call_env)
+    stop(
+      paste0(.err_prefix(), "`seed` must be `NULL` or one whole number."),
+      call. = FALSE
+    )
   }
   as.integer(abs(seed))
 }

@@ -111,26 +111,40 @@ ps_rmst <- function(x, time_col, event_col, tau,
                     n_boot = 200L, refit = FALSE, seed = NULL,
                     time_unit_days = 365.2425, clip = 1e-3) {
   rlang::check_installed("survival", reason = "to fit Kaplan-Meier curves.")
-  if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
+  if (!is_ps_data(x)) stop(
+                        "ps_rmst(): `x` must be a ps_data object.",
+                        call. = FALSE
+                      )
   matched <- inherits(x, "ps_match")
   if (matched && missing(weights)) weights <- "unweighted"
   weights <- match.arg(weights, c("unweighted", "ato", "att", "ate"), several.ok = TRUE)
   if (matched && any(weights != "unweighted")) {
-    rlang::abort(paste0("A ps_match object is analysed unweighted on its matched pairs; ",
+    stop(
+      paste0("ps_rmst(): A ps_match object is analysed unweighted on its matched pairs; ",
                         "weighting the matched set by the score adjusts twice. Use `weights = \"unweighted\"`."),
-                 call. = FALSE)
+      call. = FALSE
+    )
   }
   .check_cols(x$data, c(time_col, event_col))
   seed <- .seed_value(seed)
   if (!is.numeric(tau) || length(tau) != 1L || !is.finite(tau) || tau <= 0) {
-    rlang::abort("`tau` must be one positive number.", call. = FALSE)
+    stop(
+      "ps_rmst(): `tau` must be one positive number.",
+      call. = FALSE
+    )
   }
   if (length(subsets) && (is.null(names(subsets)) || any(!nzchar(names(subsets))) ||
                           any(lengths(subsets) != nrow(x$data)))) {
-    rlang::abort("`subsets` must be a named list of logical vectors, one value per row.", call. = FALSE)
+    stop(
+      "ps_rmst(): `subsets` must be a named list of logical vectors, one value per row.",
+      call. = FALSE
+    )
   }
   if (refit && !inherits(x, c("ps_logistic", "ps_forest"))) {
-    rlang::abort("`refit = TRUE` needs a ps_logistic or ps_forest object.", call. = FALSE)
+    stop(
+      "ps_rmst(): `refit = TRUE` needs a ps_logistic or ps_forest object.",
+      call. = FALSE
+    )
   }
 
   d <- x$data
@@ -175,10 +189,13 @@ ps_rmst <- function(x, time_col, event_col, tau,
     for (g in c(TRUE, FALSE)) {
       tg <- time[idx][used & arm[idx] == g]
       if (length(tg) && tau > max(tg)) {
-        rlang::abort(sprintf(paste0("`tau` = %g is past the last observed time (%g) in the %s arm of ",
+        stop(errorCondition(
+          sprintf(paste0("ps_rmst(): `tau` = %g is past the last observed time (%g) in the %s arm of ",
                                     "estimator \"%s/%s\". Choose a `tau` within follow-up."),
                              tau, max(tg), if (g) "treated" else "control", grid$subset[i], grid$weighting[i]),
-                     call. = FALSE)
+          class = "hvtiRpropensity_tau",
+          call = NULL
+        ))
       }
     }
   }
@@ -251,12 +268,15 @@ ps_rmst <- function(x, time_col, event_col, tau,
     }
     n_failed <- sum(is.na(draws))
     if (n_boot > 0L && n_failed > 0.05 * n_boot) {
-      rlang::warn(sprintf(paste0("%d of %d bootstrap replicates (%.0f%%) failed for estimator \"%s\": the fit ",
+      warning(warningCondition(
+        sprintf(paste0("ps_rmst(): %d of %d bootstrap replicates (%.0f%%) failed for estimator \"%s\": the fit ",
                                  "errored, an arm was empty, or the resampled follow-up of an arm ended before ",
                                  "`tau` = %g. The interval rests on the rest. Check that the subset holds both ",
                                  "arms, and consider a smaller `tau`."),
                           n_failed, n_boot, 100 * n_failed / n_boot, label, tau),
-                  class = "hvtiRpropensity_bootstrap_failures")
+        class = "hvtiRpropensity_bootstrap_failures",
+        call = NULL
+      ))
     }
     ci <- if (all(is.na(draws))) {
       c(NA_real_, NA_real_)

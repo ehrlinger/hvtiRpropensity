@@ -47,7 +47,10 @@
 #' sup$tables$agreement
 #' @export
 ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
-  if (!is_ps_data(x)) rlang::abort("`x` must be a ps_data object.", call. = FALSE)
+  if (!is_ps_data(x)) stop(
+                        "ps_support(): `x` must be a ps_data object.",
+                        call. = FALSE
+                      )
   score <- .probability_score(x)
   trt <- as.integer(as.character(x$data[[x$meta$treatment_col]]) == as.character(x$meta$treated_level))
   n <- nrow(x$data)
@@ -65,26 +68,41 @@ ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
   if (!is.null(trim)) {
     if (!is.numeric(trim) || length(trim) != 2L || anyNA(trim) || trim[1L] >= trim[2L] ||
           trim[1L] < 0 || trim[2L] > 1) {
-      rlang::abort(sprintf("`trim` must be two increasing probabilities in [0, 1], not %s.",
-                           paste(deparse(trim), collapse = "")), call. = FALSE)
+      stop(
+        sprintf("ps_support(): `trim` must be two increasing probabilities in [0, 1], not %s.",
+                           paste(deparse(trim), collapse = "")),
+        call. = FALSE
+      )
     }
     rules$trim <- score < trim[1L] | score > trim[2L]
   }
   if (length(flags)) {
     if (is.null(names(flags)) || any(!nzchar(names(flags)))) {
-      rlang::abort("`flags` must be a named list.", call. = FALSE)
+      stop(
+        "ps_support(): `flags` must be a named list.",
+        call. = FALSE
+      )
     }
     clash <- intersect(names(flags), c("trim", "common"))
     if (length(clash)) {
-      rlang::abort(sprintf("`flags` cannot use the built-in rule name(s) %s; rename the flag.",
-                           paste0("\"", clash, "\"", collapse = ", ")), call. = FALSE)
+      stop(
+        sprintf("ps_support(): `flags` cannot use the built-in rule name(s) %s; rename the flag.",
+                           paste0("\"", clash, "\"", collapse = ", ")),
+        call. = FALSE
+      )
     }
     if (any(lengths(flags) != n)) {
-      rlang::abort("Every element of `flags` must have one value per row of `x$data`.", call. = FALSE)
+      stop(
+        "ps_support(): Every element of `flags` must have one value per row of `x$data`.",
+        call. = FALSE
+      )
     }
     rules <- c(rules, lapply(flags, as.logical))
   }
-  if (length(rules) < 1L) rlang::abort("No support rules requested.", call. = FALSE)
+  if (length(rules) < 1L) stop(
+                            "ps_support(): No support rules requested.",
+                            call. = FALSE
+                          )
   rules <- lapply(rules, function(flag) replace(flag, excluded, NA))
 
   out <- x$data

@@ -53,42 +53,58 @@
 validate_logistic <- function(model, data, outcome_col = NULL,
                               prediction_col = "predicted", groups = 10L) {
   if (!inherits(model, "lm_fit")) {
-    rlang::abort("`model` must be an `lm_fit` object.", call. = FALSE)
+    stop(
+      "validate_logistic(): `model` must be an `lm_fit` object.",
+      call. = FALSE
+    )
   }
   if (!identical(model$meta$bundle_version, 1L)) {
-    rlang::abort("The `model` bundle version must be 1.", call. = FALSE)
+    stop(
+      "validate_logistic(): The `model` bundle version must be 1.",
+      call. = FALSE
+    )
   }
   if (!identical(model$meta$model_family, "binary")) {
-    rlang::abort("`validate_logistic()` accepts only a binary model bundle.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): `validate_logistic()` accepts only a binary model bundle.",
+      call. = FALSE
+    )
   }
   .check_df(data)
   if (!is.numeric(groups) || length(groups) != 1L || is.na(groups) ||
         groups < 2 || groups != as.integer(groups)) {
-    rlang::abort("`groups` must be one integer greater than or equal to 2.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): `groups` must be one integer greater than or equal to 2.",
+      call. = FALSE
+    )
   }
   groups <- as.integer(groups)
   if (!is.character(prediction_col) || length(prediction_col) != 1L ||
         is.na(prediction_col) || !nzchar(prediction_col)) {
-    rlang::abort("`prediction_col` must be one non-empty string.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): `prediction_col` must be one non-empty string.",
+      call. = FALSE
+    )
   }
   if (prediction_col %in% names(data)) {
-    rlang::abort(sprintf("Column `%s` already exists in `data`.", prediction_col),
-                 call. = FALSE)
+    stop(
+      sprintf("validate_logistic(): Column `%s` already exists in `data`.", prediction_col),
+      call. = FALSE
+    )
   }
   if (is.null(outcome_col)) outcome_col <- model$meta$outcome_col
   if (!is.character(outcome_col) || length(outcome_col) != 1L ||
         is.na(outcome_col) || !nzchar(outcome_col)) {
-    rlang::abort("`outcome_col` must be one non-empty column name.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): `outcome_col` must be one non-empty column name.",
+      call. = FALSE
+    )
   }
   .check_cols(data, outcome_col)
   missing_predictors <- setdiff(model$meta$predictors, names(data))
   if (length(missing_predictors)) {
-    rlang::abort(
-      sprintf("Validation data is missing required predictor(s): %s.",
+    stop(
+      sprintf("validate_logistic(): Validation data is missing required predictor(s): %s.",
               paste(missing_predictors, collapse = ", ")),
       call. = FALSE
     )
@@ -97,24 +113,26 @@ validate_logistic <- function(model, data, outcome_col = NULL,
     data, outcome_col, model$meta$outcome_levels, imputation_col = NULL
   )
   if (!is.list(model$models) || !length(model$models)) {
-    rlang::abort("The model bundle does not contain fitted models.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): The model bundle does not contain fitted models.",
+      call. = FALSE
+    )
   }
 
   predictions <- lapply(seq_along(model$models), function(i) {
     out <- tryCatch(
       stats::predict(model$models[[i]], newdata = data, type = "response"),
       error = function(error) {
-        rlang::abort(
-          sprintf("Stored model %s could not score the validation data: %s",
+        stop(
+          sprintf("validate_logistic(): Stored model %s could not score the validation data: %s",
                   names(model$models)[[i]], conditionMessage(error)),
           call. = FALSE
         )
       }
     )
     if (!is.numeric(out) || length(out) != nrow(data)) {
-      rlang::abort(
-        sprintf("Stored model %s did not return one numeric prediction per row.",
+      stop(
+        sprintf("validate_logistic(): Stored model %s did not return one numeric prediction per row.",
                 names(model$models)[[i]]),
         call. = FALSE
       )
@@ -125,13 +143,17 @@ validate_logistic <- function(model, data, outcome_col = NULL,
   if (any(vapply(predictions[-1L], function(x) {
     !identical(is.na(x), missing_pattern)
   }, logical(1L)))) {
-    rlang::abort("Stored models disagree on which validation rows can be scored.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): Stored models disagree on which validation rows can be scored.",
+      call. = FALSE
+    )
   }
   predicted <- rowMeans(do.call(cbind, predictions))
   if (any(!is.na(predicted) & !is.finite(predicted))) {
-    rlang::abort("The stored models returned non-finite predictions.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): The stored models returned non-finite predictions.",
+      call. = FALSE
+    )
   }
 
   event <- model$meta$event_level
@@ -139,14 +161,18 @@ validate_logistic <- function(model, data, outcome_col = NULL,
   analyzed <- !is.na(observed) & !is.na(predicted)
   n_analyzed <- sum(analyzed)
   if (groups > n_analyzed) {
-    rlang::abort("`groups` cannot exceed the number of analyzed observations.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): `groups` cannot exceed the number of analyzed observations.",
+      call. = FALSE
+    )
   }
   y <- observed[analyzed]
   p <- predicted[analyzed]
   if (length(unique(y)) != 2L) {
-    rlang::abort("The analyzed validation cohort must contain both outcome levels.",
-                 call. = FALSE)
+    stop(
+      "validate_logistic(): The analyzed validation cohort must contain both outcome levels.",
+      call. = FALSE
+    )
   }
 
   analyzed_rows <- which(analyzed)

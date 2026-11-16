@@ -139,7 +139,10 @@ ps_weight <- function(data,
 
   if (!is.null(trim)) {
     if (!is.numeric(trim) || length(trim) != 1L || is.na(trim) || trim <= 0 || trim >= 0.5) {
-      rlang::abort("`trim` must be a number in (0, 0.5) or NULL.", call. = FALSE)
+      stop(
+        "ps_weight(): `trim` must be a number in (0, 0.5) or NULL.",
+        call. = FALSE
+      )
     }
   }
 
@@ -172,26 +175,29 @@ ps_weight <- function(data,
   # Only the reweighted arm is trimmed for the ATT and ATC; see .trim_weights().
   if (!is.null(trim)) w <- .trim_weights(w, trt, estimand, trim)
   if (any(is.infinite(w))) {
-    rlang::abort(
-      sprintf(paste0("%d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
+    stop(errorCondition(
+      sprintf(paste0("ps_weight(): %d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
                      "that divides by it. Set `trim` to winsorise them, or remove those patients."),
               sum(is.infinite(w)), score_col),
+      class = "hvtiRpropensity_weight",
       call = NULL
-    )
+    ))
   }
   zero <- which(kept & w == 0)
   if (length(zero) > 0L) {
     who <- if (id_col %in% names(data)) paste0("`", id_col, "` ", paste(utils::head(data[[id_col]][zero], 10L),
                                                                        collapse = ", "))
            else paste("row", paste(utils::head(zero, 10L), collapse = ", "))
-    rlang::abort(
-      sprintf(paste0("%d patient(s) get a weight of 0 because `%s` is exactly %s for a %s patient under the %s: %s%s. ",
+    stop(errorCondition(
+      sprintf(paste0("ps_weight(): %d patient(s) get a weight of 0 because `%s` is exactly %s for a %s ",
+                     "patient under the %s: %s%s. ",
                      "Set `trim` to winsorise them, or remove those patients."),
               length(zero), score_col, if (estimand == "ATT") "0" else "1",
               if (estimand == "ATT") "control" else "treated", estimand,
               who, if (length(zero) > 10L) ", ..." else ""),
+      class = "hvtiRpropensity_weight",
       call = NULL
-    )
+    ))
   }
 
   # ---- Build output data frame -------------------------------------------

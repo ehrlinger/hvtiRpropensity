@@ -103,15 +103,24 @@ ps_stddiff_perm <- function(data,
   .check_df(data)
   if (!is.numeric(n_perm) || length(n_perm) != 1L || !is.finite(n_perm) ||
       n_perm < 1 || n_perm > .Machine$integer.max || n_perm != round(n_perm)) {
-    rlang::abort("`n_perm` must be a positive whole number.", call = NULL)
+    stop(
+      "ps_stddiff_perm(): `n_perm` must be a positive whole number.",
+      call. = FALSE
+    )
   }
   n_perm <- as.integer(n_perm)
   if (!is.null(weight_col) && !is.function(reweight)) {
-    rlang::abort(paste0("`weight_col` needs `reweight`: weights that depend on the group must be recomputed ",
-                        "for each permutation."), call = NULL)
+    stop(
+      paste0("ps_stddiff_perm(): `weight_col` needs `reweight`: weights that depend on the group must be recomputed ",
+                        "for each permutation."),
+      call. = FALSE
+    )
   }
   if (is.null(weight_col) && !is.null(reweight)) {
-    rlang::abort("`reweight` was given without `weight_col` to write its weights to.", call = NULL)
+    stop(
+      "ps_stddiff_perm(): `reweight` was given without `weight_col` to write its weights to.",
+      call. = FALSE
+    )
   }
   .check_cols(data, treatment_col)
   seed <- .seed_value(seed)
@@ -124,7 +133,10 @@ ps_stddiff_perm <- function(data,
     if (!is.null(weight_col)) {
       w <- reweight(d)
       if (!is.numeric(w) || length(w) != nrow(d)) {
-        rlang::abort("`reweight` must return one weight per row of the data it is given.", call = NULL)
+        stop(
+          "ps_stddiff_perm(): `reweight` must return one weight per row of the data it is given.",
+          call. = FALSE
+        )
       }
       d[[weight_col]] <- w
     }

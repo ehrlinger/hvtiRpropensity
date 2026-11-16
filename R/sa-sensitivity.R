@@ -36,24 +36,24 @@
 #'   `!missing()`. A supplied `NULL` counts as not supplied.
 #' @param meta      The value recorded in the object's metadata, or `NULL`.
 #' @param meta_name The name of that metadata field. Default `name`.
-#' @param call_env  Environment for the error call.
 #' @return The resolved value.
 #' @keywords internal
-.resolve_meta_arg <- function(name, value, supplied, meta, meta_name = name, call_env = rlang::caller_env()) {
+.resolve_meta_arg <- function(name, value, supplied, meta, meta_name = name) {
   if (!supplied || is.null(value)) return(rlang::`%||%`(meta, value))
   if (is.null(meta)) return(value)
   if (!identical(as.character(value), as.character(meta))) {
     fmt <- function(v) {
       if (is.character(v)) paste0("\"", v, "\"", collapse = ", ") else paste(format(v), collapse = ", ")
     }
-    rlang::abort(
-      sprintf(
+    stop(errorCondition(
+      paste0(.err_prefix(), sprintf(
         paste0("`%s = %s` conflicts with the object's metadata, `$meta$%s = %s`. ",
                "Omit `%s` to use the object's value, or pass the data frame `x$data` instead."),
         name, fmt(value), meta_name, fmt(meta), name
-      ),
-      call = call_env
-    )
+      )),
+      class = "hvtiRpropensity_meta_conflict",
+      call = NULL
+    ))
   }
   value
 }
@@ -173,34 +173,46 @@ sa_rosenbaum <- function(x,
     dta <- x$data
   } else if (is.data.frame(x)) {
     if (is.null(treatment_col)) {
-      rlang::abort(
-        "`treatment_col` must be specified when `x` is a plain data frame.",
+      stop(
+        "sa_rosenbaum(): `treatment_col` must be specified when `x` is a plain data frame.",
         call. = FALSE
       )
     }
     dta <- x
   } else {
-    rlang::abort("`x` must be a ps_match object or a data frame.", call. = FALSE)
+    stop(
+      "sa_rosenbaum(): `x` must be a ps_match object or a data frame.",
+      call. = FALSE
+    )
   }
 
   # ---- Validate parameters -------------------------------------------------
   if (!is.numeric(gamma_max) || length(gamma_max) != 1L || gamma_max < 1) {
-    rlang::abort("`gamma_max` must be a single number >= 1.", call. = FALSE)
+    stop(
+      "sa_rosenbaum(): `gamma_max` must be a single number >= 1.",
+      call. = FALSE
+    )
   }
   if (!is.numeric(gamma_inc) || length(gamma_inc) != 1L || gamma_inc <= 0) {
-    rlang::abort("`gamma_inc` must be a single positive number.", call. = FALSE)
+    stop(
+      "sa_rosenbaum(): `gamma_inc` must be a single positive number.",
+      call. = FALSE
+    )
   }
   if (!is.numeric(alpha) || length(alpha) != 1L || alpha <= 0 || alpha >= 1) {
-    rlang::abort("`alpha` must be a single number in (0, 1).", call. = FALSE)
+    stop(
+      "sa_rosenbaum(): `alpha` must be a single number in (0, 1).",
+      call. = FALSE
+    )
   }
 
   # ---- Validate columns ----------------------------------------------------
   .check_cols(dta, c(outcome_col, treatment_col, pair_id_col))
 
   if (!is.numeric(dta[[outcome_col]])) {
-    rlang::abort(
+    stop(
       sprintf(
-        "`outcome_col` ('%s') must be numeric. Factors and characters produce wrong ranks.",
+        "sa_rosenbaum(): `outcome_col` ('%s') must be numeric. Factors and characters produce wrong ranks.",
         outcome_col
       ),
       call. = FALSE
@@ -211,8 +223,8 @@ sa_rosenbaum <- function(x,
   matched <- dta[!is.na(dta[[pair_id_col]]), , drop = FALSE]
 
   if (nrow(matched) == 0L) {
-    rlang::abort(
-      "No matched pairs found -- all `pair_id` values are NA.",
+    stop(
+      "sa_rosenbaum(): No matched pairs found -- all `pair_id` values are NA.",
       call. = FALSE
     )
   }
@@ -230,11 +242,12 @@ sa_rosenbaum <- function(x,
   complete  <- !is.na(trt_out) & !is.na(ctl_out)
   n_dropped <- sum(!complete)
   if (n_dropped > 0L) {
-    rlang::warn(
+    warning(
       sprintf(
-        "%d matched pair(s) dropped due to missing outcome values in '%s'.",
+        "sa_rosenbaum(): %d matched pair(s) dropped due to missing outcome values in '%s'.",
         n_dropped, outcome_col
-      )
+      ),
+      call. = FALSE
     )
   }
   pair_ids <- pair_ids[complete]
@@ -243,8 +256,8 @@ sa_rosenbaum <- function(x,
   n_pairs <- sum(complete)
 
   if (n_pairs < 2L) {
-    rlang::abort(
-      "At least 2 complete matched pairs are required.",
+    stop(
+      "sa_rosenbaum(): At least 2 complete matched pairs are required.",
       call. = FALSE
     )
   }
@@ -276,8 +289,8 @@ sa_rosenbaum <- function(x,
   n_nz <- length(d_nz)
 
   if (n_nz == 0L) {
-    rlang::abort(
-      "All matched-pair differences are zero; the signed-rank statistic is undefined.",
+    stop(
+      "sa_rosenbaum(): All matched-pair differences are zero; the signed-rank statistic is undefined.",
       call. = FALSE
     )
   }
@@ -292,14 +305,15 @@ sa_rosenbaum <- function(x,
   if (alternative == "auto") {
     direction <- if (stats::median(d_nz) < 0) "less" else "greater"
     if (direction == "less") {
-      rlang::warn(
+      warning(
         paste0(
-          "Median matched-pair difference (treated - control) is negative. ",
+          "sa_rosenbaum(): Median matched-pair difference (treated - control) is negative. ",
           "The test has been re-oriented to the lower tail. ",
           "p_upper and p_lower reflect the worst- and best-case p-values ",
           "for a *harmful* treatment effect. Set `alternative` to fix the ",
           "direction in advance."
-        )
+        ),
+        call. = FALSE
       )
     }
   }
@@ -487,33 +501,38 @@ sa_evalue <- function(estimate,
   type <- match.arg(type)
 
   if (!is.numeric(estimate) || length(estimate) != 1L || is.na(estimate)) {
-    rlang::abort("`estimate` must be a single, non-missing numeric value.",
-                 call. = FALSE)
+    stop(
+      "sa_evalue(): `estimate` must be a single, non-missing numeric value.",
+      call. = FALSE
+    )
   }
 
   if (type %in% c("RR", "OR", "HR", "IRR") && estimate <= 0) {
-    rlang::abort(
-      sprintf("`estimate` must be positive for type = '%s'.", type),
+    stop(
+      sprintf("sa_evalue(): `estimate` must be positive for type = '%s'.", type),
       call. = FALSE
     )
   }
 
   if (type == "RD" && is.null(p0)) {
-    rlang::abort(
-      "`p0` (baseline outcome probability) must be supplied when type = 'RD'.",
+    stop(
+      "sa_evalue(): `p0` (baseline outcome probability) must be supplied when type = 'RD'.",
       call. = FALSE
     )
   }
 
   if (!is.null(p0)) {
     if (!is.numeric(p0) || length(p0) != 1L || p0 <= 0 || p0 >= 1) {
-      rlang::abort("`p0` must be a single number in (0, 1).", call. = FALSE)
+      stop(
+        "sa_evalue(): `p0` must be a single number in (0, 1).",
+        call. = FALSE
+      )
     }
   }
 
   if (xor(is.null(ci_lo), is.null(ci_hi))) {
-    rlang::abort(
-      "Both `ci_lo` and `ci_hi` must be supplied together, or both omitted.",
+    stop(
+      "sa_evalue(): Both `ci_lo` and `ci_hi` must be supplied together, or both omitted.",
       call. = FALSE
     )
   }
@@ -523,9 +542,9 @@ sa_evalue <- function(estimate,
     bound_val <- get(bound_name)
     if (!is.null(bound_val) && type %in% c("RR", "OR", "HR", "IRR") &&
         bound_val <= 0) {
-      rlang::abort(
+      stop(
         sprintf(
-          "`%s` must be positive for type = '%s' (got %g).",
+          "sa_evalue(): `%s` must be positive for type = '%s' (got %g).",
           bound_name, type, bound_val
         ),
         call. = FALSE
@@ -534,9 +553,9 @@ sa_evalue <- function(estimate,
   }
 
   if (!is.null(ci_lo) && (ci_lo > estimate || estimate > ci_hi)) {
-    rlang::abort(
+    stop(
       sprintf(
-        "The CI must satisfy ci_lo <= estimate <= ci_hi (got ci_lo = %g, estimate = %g, ci_hi = %g).",
+        "sa_evalue(): The CI must satisfy ci_lo <= estimate <= ci_hi (got ci_lo = %g, estimate = %g, ci_hi = %g).",
         ci_lo, estimate, ci_hi
       ),
       call. = FALSE
@@ -547,14 +566,17 @@ sa_evalue <- function(estimate,
   # VanderWeele & Ding (2017): a rare outcome (prevalence <= ~15%) uses the OR
   # or HR as the RR; a common outcome needs a conversion.  No silent default.
   if (!is.null(rare) && (!is.logical(rare) || length(rare) != 1L || is.na(rare))) {
-    rlang::abort("`rare` must be TRUE, FALSE or NULL.", call. = FALSE)
+    stop(
+      "sa_evalue(): `rare` must be TRUE, FALSE or NULL.",
+      call. = FALSE
+    )
   }
   if (type %in% c("OR", "HR")) {
     if (is.null(rare)) {
-      rlang::abort(
+      stop(
         sprintf(
           paste0(
-            "For type = '%s', set `rare = TRUE` or `rare = FALSE`. Rarity refers to the outcome's ",
+            "sa_evalue(): For type = '%s', set `rare = TRUE` or `rare = FALSE`. Rarity refers to the outcome's ",
             "prevalence in the study population (under about 15%% at the end of follow-up; ",
             "VanderWeele & Ding 2017). It cannot be inferred from `p0`, which is used only for type = 'RD'."
           ),
@@ -577,18 +599,19 @@ sa_evalue <- function(estimate,
       RD  = {
         p1 <- val + p0           # implied outcome probability in exposed
         if (p1 <= 0) {
-          rlang::abort(
+          stop(
             sprintf(
-              "RD (%g) + p0 (%g) = %g <= 0: implied outcome probability in the exposed group is non-positive.",
+              paste0("sa_evalue(): RD (%g) + p0 (%g) = %g <= 0: implied outcome probability in the exposed ",
+                     "group is non-positive."),
               val, p0, p1
             ),
             call. = FALSE
           )
         }
         if (p1 > 1) {
-          rlang::abort(
+          stop(
             sprintf(
-              "RD (%g) + p0 (%g) = %g > 1: implied outcome probability in the exposed group exceeds 1.",
+              "sa_evalue(): RD (%g) + p0 (%g) = %g > 1: implied outcome probability in the exposed group exceeds 1.",
               val, p0, p1
             ),
             call. = FALSE
@@ -770,7 +793,10 @@ sa_overlap <- function(x,
     input <- x
     dta   <- x
   } else {
-    rlang::abort("`x` must be a ps_data object or a data frame.", call. = FALSE)
+    stop(
+      "sa_overlap(): `x` must be a ps_data object or a data frame.",
+      call. = FALSE
+    )
   }
 
   # ---- Validate inputs -----------------------------------------------------
@@ -779,8 +805,10 @@ sa_overlap <- function(x,
 
   if (!is.numeric(trim_threshold) || length(trim_threshold) != 1L ||
       trim_threshold <= 0 || trim_threshold >= 0.5) {
-    rlang::abort("`trim_threshold` must be a single number in (0, 0.5).",
-                 call. = FALSE)
+    stop(
+      "sa_overlap(): `trim_threshold` must be a single number in (0, 0.5).",
+      call. = FALSE
+    )
   }
 
   ps  <- dta[[score_col]]
@@ -793,11 +821,12 @@ sa_overlap <- function(x,
   # by .treatment_indicator(); a missing score is reported here.
   n_ps_na <- sum(is.na(ps))
   if (n_ps_na > 0L) {
-    rlang::warn(
+    warning(
       sprintf(
-        "%d patient(s) with missing '%s' values excluded from overlap diagnostics.",
+        "sa_overlap(): %d patient(s) with missing '%s' values excluded from overlap diagnostics.",
         n_ps_na, score_col
-      )
+      ),
+      call. = FALSE
     )
   }
   keep <- !is.na(ps) & !is.na(trt)
@@ -811,15 +840,16 @@ sa_overlap <- function(x,
 
   # Warn if either group is too small for reliable diagnostics
   if (n0 < 2L || n1 < 2L) {
-    rlang::warn(
+    warning(
       sprintf(
         paste0(
-          "One or both treatment groups have fewer than 2 patients after ",
+          "sa_overlap(): One or both treatment groups have fewer than 2 patients after ",
           "removing missing PS values (n_control=%d, n_treated=%d). ",
           "Overlap diagnostics may be unreliable."
         ),
         n0, n1
-      )
+      ),
+      call. = FALSE
     )
   }
 
@@ -847,16 +877,17 @@ sa_overlap <- function(x,
   overlap_hi <- min(max(ps0), max(ps1))
 
   if (overlap_lo > overlap_hi) {
-    rlang::warn(
+    warning(
       sprintf(
         paste0(
-          "No common support: PS distributions do not overlap ",
+          "sa_overlap(): No common support: PS distributions do not overlap ",
           "(control range [%.4f, %.4f]; treated range [%.4f, %.4f]). ",
           "All patients are outside the overlap region. ",
           "IPTW and matching results are not reliable for this data."
         ),
         min(ps0), max(ps0), min(ps1), max(ps1)
-      )
+      ),
+      call. = FALSE
     )
   }
 
@@ -1030,7 +1061,10 @@ sa_trim_sweep <- function(x,
     input <- x
     dta   <- x
   } else {
-    rlang::abort("`x` must be a ps_data object or a data frame.", call. = FALSE)
+    stop(
+      "sa_trim_sweep(): `x` must be a ps_data object or a data frame.",
+      call. = FALSE
+    )
   }
 
   estimand_use <- match.arg(estimand_use, c("ATE", "ATT", "ATC"))
@@ -1040,8 +1074,8 @@ sa_trim_sweep <- function(x,
   .check_probability(dta, score_col)
 
   if (!is.numeric(trim_seq) || any(trim_seq < 0) || any(trim_seq >= 0.5)) {
-    rlang::abort(
-      "`trim_seq` must be a numeric vector with all values in [0, 0.5).",
+    stop(
+      "sa_trim_sweep(): `trim_seq` must be a numeric vector with all values in [0, 0.5).",
       call. = FALSE
     )
   }
@@ -1055,8 +1089,10 @@ sa_trim_sweep <- function(x,
   # computed on the analysed rows.
   n_ps_na <- sum(is.na(ps))
   if (n_ps_na > 0L) {
-    rlang::warn(
-      sprintf("%d patient(s) with missing '%s' values excluded from the trim sweep.", n_ps_na, score_col)
+    warning(
+      sprintf("sa_trim_sweep(): %d patient(s) with missing '%s' values excluded from the trim sweep.",
+              n_ps_na, score_col),
+      call. = FALSE
     )
   }
   keep <- !is.na(trt) & !is.na(ps)
@@ -1075,16 +1111,17 @@ sa_trim_sweep <- function(x,
   # .check_probability() allows exact 0/1; flag those patients explicitly.
   n_inf <- sum(is.infinite(raw_w))
   if (n_inf > 0L) {
-    rlang::warn(
+    warning(
       sprintf(
         paste0(
-          "%d patient(s) have a propensity score of exactly 0 or 1, producing ",
+          "sa_trim_sweep(): %d patient(s) have a propensity score of exactly 0 or 1, producing ",
           "infinite IPTW weights. At `trim` = 0, and at any trim smaller than their share of ",
           "the trimmed weights, they stay infinite and dominate the statistics. Consider ",
           "excluding these patients or recalibrating the propensity model."
         ),
         n_inf
-      )
+      ),
+      call. = FALSE
     )
   }
 

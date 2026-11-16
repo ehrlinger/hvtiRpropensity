@@ -95,13 +95,16 @@
 
 .check_output_columns <- function(data, columns) {
   if (anyNA(columns) || any(!nzchar(columns)) || anyDuplicated(columns)) {
-    rlang::abort("Output column names must be unique non-empty strings.", call. = FALSE)
+    stop(
+      paste0(.err_prefix(), "Output column names must be unique non-empty strings."),
+      call. = FALSE
+    )
   }
   existing <- intersect(columns, names(data))
   if (length(existing)) {
-    rlang::abort(
-      sprintf("Output column(s) already exist in `data`: %s.",
-              paste(existing, collapse = ", ")),
+    stop(
+      paste0(.err_prefix(), sprintf("Output column(s) already exist in `data`: %s.",
+              paste(existing, collapse = ", "))),
       call. = FALSE
     )
   }
@@ -297,7 +300,10 @@ ps_logistic <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_logistic(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
 
@@ -319,8 +325,12 @@ ps_logistic <- function(formula,
   treatment_levels <- as.character(treatment_levels)
   present <- unique(as.character(data[[treatment_col]][!is.na(data[[treatment_col]])]))
   if (length(present) < 2L) {
-    rlang::abort(sprintf("Column `%s` must hold both treatment values; it holds %s.", treatment_col,
-                         if (length(present)) paste("only", present) else "none"), call. = FALSE)
+    stop(errorCondition(
+      sprintf("ps_logistic(): Column `%s` must hold both treatment values; it holds %s.", treatment_col,
+                         if (length(present)) paste("only", present) else "none"),
+      class = "hvtiRpropensity_one_arm",
+      call = NULL
+    ))
   }
   if (is.null(treated_level)) treated_level <- utils::tail(treatment_levels, 1L)
   treated_level <- as.character(treated_level)
@@ -350,10 +360,13 @@ ps_logistic <- function(formula,
   trt <- as.integer(as.character(base_data[[treatment_col]]) == treated_level)
   missing_trt <- is.na(trt)
   if (any(missing_trt)) {
-    rlang::warn(sprintf(paste(
-      "Column `%s` is missing for %d patient(s). They are left out of the model fit, the strata,",
+    warning(
+      sprintf(paste(
+      "ps_logistic(): Column `%s` is missing for %d patient(s). They are left out of the model fit, the strata,",
       "the balance tables and the group counts; they keep a predicted `%s`."
-    ), treatment_col, sum(missing_trt), score_col))
+    ), treatment_col, sum(missing_trt), score_col),
+      call. = FALSE
+    )
   }
 
   base_data[[score_col]]  <- probs
@@ -557,8 +570,8 @@ ps_ordinal <- function(formula,
                        smd_pairs        = "reference") {
 
   if (!requireNamespace("MASS", quietly = TRUE)) {
-    rlang::abort(
-      paste0("`ps_ordinal()` requires the MASS package.\n",
+    stop(
+      paste0("ps_ordinal(): `ps_ordinal()` requires the MASS package.\n",
              "Install it with: install.packages(\"MASS\")"),
       call. = FALSE
     )
@@ -566,7 +579,10 @@ ps_ordinal <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_ordinal(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
 
@@ -577,12 +593,11 @@ ps_ordinal <- function(formula,
   smd_pairs <- match.arg(smd_pairs, c("reference", "adjacent", "all"), several.ok = TRUE)
   if (is.null(treatment_levels)) {
     if (!is.ordered(data[[treatment_col]])) {
-      rlang::abort(
-        c(
-          sprintf("Column `%s` must be an ordered factor, or the level order must be given.", treatment_col),
-          i = sprintf("Convert it with `ordered(%s, levels = c(...))`, lowest level first.", treatment_col),
-          i = "Or pass `treatment_levels`, lowest level first."
-        ),
+      stop(
+        paste("ps_ordinal():",
+              sprintf("Column `%s` must be an ordered factor, or the level order must be given.", treatment_col),
+              sprintf("Convert it with `ordered(%s, levels = c(...))`, lowest level first.", treatment_col),
+              "Or pass `treatment_levels`, lowest level first."),
         call. = FALSE
       )
     }
@@ -807,8 +822,8 @@ ps_nominal <- function(formula,
                        smd_pairs        = "reference") {
 
   if (!requireNamespace("nnet", quietly = TRUE)) {
-    rlang::abort(
-      paste0("`ps_nominal()` requires the nnet package.\n",
+    stop(
+      paste0("ps_nominal(): `ps_nominal()` requires the nnet package.\n",
              "Install it with: install.packages(\"nnet\")"),
       call. = FALSE
     )
@@ -816,7 +831,10 @@ ps_nominal <- function(formula,
 
   # ---- Input validation ---------------------------------------------------
   if (!inherits(formula, "formula")) {
-    rlang::abort("`formula` must be an R formula.", call. = FALSE)
+    stop(
+      "ps_nominal(): `formula` must be an R formula.",
+      call. = FALSE
+    )
   }
   .check_df(data)
 
