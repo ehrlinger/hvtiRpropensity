@@ -62,8 +62,10 @@ ps_ordinal(
 - covariates:
 
   Covariate columns for the balance table. `NULL` (default) uses every
-  numeric column other than the treatment, score, identifier and strata
-  columns.
+  numeric, logical, factor or character column that varies, other than
+  the treatment, score, identifier and strata columns; types are routed
+  as in
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md).
 
 - treatment_levels:
 

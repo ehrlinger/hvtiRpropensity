@@ -349,14 +349,14 @@ obj_rf <- ps_forest(
 options(op)
 summary(obj_rf$data$prob_t)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>  0.0010  0.3023  0.4940  0.5005  0.7028  0.9990
+#>  0.0010  0.2921  0.4861  0.5000  0.7048  0.9990
 obj_rf$tables$smd
-#>                  variable     smd
-#> age                   age -0.7559
-#> female             female  0.1582
-#> ef                     ef  0.5509
-#> diabetes         diabetes -0.1257
-#> hypertension hypertension -0.0696
+#>       variable     smd
+#> 1          age -0.7559
+#> 2       female  0.1584
+#> 3           ef  0.5509
+#> 4     diabetes -0.1258
+#> 5 hypertension -0.0697
 ```
 
 ### 4.4 Ordinal treatment: `ps_ordinal()`
@@ -570,20 +570,20 @@ summary(m)
 #> Summary of <ps_match>
 #> 
 #> Smd before:
-#>                  variable     smd
-#> age                   age -0.7191
-#> female             female  0.1005
-#> ef                     ef  0.6085
-#> diabetes         diabetes -0.1054
-#> hypertension hypertension -0.0615
+#>       variable     smd
+#> 1          age -0.7191
+#> 2       female  0.1006
+#> 3           ef  0.6085
+#> 4     diabetes -0.1055
+#> 5 hypertension -0.0615
 #> 
 #> Smd after:
-#>                  variable     smd
-#> age                   age -0.7191
-#> female             female  0.1005
-#> ef                     ef  0.6085
-#> diabetes         diabetes -0.1054
-#> hypertension hypertension -0.0615
+#>       variable     smd
+#> 1          age -0.7191
+#> 2       female  0.1006
+#> 3           ef  0.6085
+#> 4     diabetes -0.1055
+#> 5 hypertension -0.0615
 #> 
 #> Group counts before:
 #>   group treated   n
@@ -601,19 +601,19 @@ The `$tables` slot is a named list you can access directly:
 ``` r
 
 m$tables$smd_before
-#>                  variable     smd
-#> age                   age -0.7191
-#> female             female  0.1005
-#> ef                     ef  0.6085
-#> diabetes         diabetes -0.1054
-#> hypertension hypertension -0.0615
+#>       variable     smd
+#> 1          age -0.7191
+#> 2       female  0.1006
+#> 3           ef  0.6085
+#> 4     diabetes -0.1055
+#> 5 hypertension -0.0615
 m$tables$smd_after
-#>                  variable     smd
-#> age                   age -0.7191
-#> female             female  0.1005
-#> ef                     ef  0.6085
-#> diabetes         diabetes -0.1054
-#> hypertension hypertension -0.0615
+#>       variable     smd
+#> 1          age -0.7191
+#> 2       female  0.1006
+#> 3           ef  0.6085
+#> 4     diabetes -0.1055
+#> 5 hypertension -0.0615
 ```
 
 ### 6.3 Extract the matched dataset
@@ -686,12 +686,12 @@ m_logit$meta[c("scale", "caliper_sd", "caliper", "n_matched", "n_unmatched")]
 #> $n_unmatched
 #> [1] 178
 m_logit$tables$smd_after
-#>                  variable     smd
-#> age                   age -0.0345
-#> female             female -0.0750
-#> ef                     ef -0.0207
-#> diabetes         diabetes -0.0343
-#> hypertension hypertension  0.0000
+#>       variable     smd
+#> 1          age -0.0345
+#> 2       female -0.0751
+#> 3           ef -0.0207
+#> 4     diabetes -0.0343
+#> 5 hypertension  0.0000
 ```
 
 The object records `scale = "logit"`, and the functions that read it
@@ -731,20 +731,20 @@ summary(w_ate)
 #> Summary of <ps_weight>
 #> 
 #> Smd unweighted:
-#>                  variable     smd
-#> age                   age -0.7191
-#> female             female  0.1005
-#> ef                     ef  0.6085
-#> diabetes         diabetes -0.1054
-#> hypertension hypertension -0.0615
+#>       variable     smd
+#> 1          age -0.7191
+#> 2       female  0.1006
+#> 3           ef  0.6085
+#> 4     diabetes -0.1055
+#> 5 hypertension -0.0615
 #> 
 #> Smd weighted:
-#>                  variable     smd
-#> age                   age -0.0168
-#> female             female -0.0151
-#> ef                     ef  0.0473
-#> diabetes         diabetes  0.0023
-#> hypertension hypertension  0.0100
+#>       variable     smd
+#> 1          age -0.0168
+#> 2       female -0.0151
+#> 3           ef  0.0473
+#> 4     diabetes  0.0023
+#> 5 hypertension  0.0100
 #> 
 #> Group counts:
 #>   group treated   n
@@ -1121,7 +1121,6 @@ mh <- hvtiPlotR::hv_mirror_hist(m_logit$data,
                                 score_col = "prob_t",
                                 group_col = "tavr",
                                 match_col = "match")
-#> mirror_histogram diagnostics: n=1000  dropped=0  [see $tables$diagnostics]
 plot(mh)
 ```
 
@@ -1136,7 +1135,6 @@ mh_wt <- hvtiPlotR::hv_mirror_hist(w_ate$data,
                                    score_col  = "prob_t",
                                    group_col  = "tavr",
                                    weight_col = "iptw")
-#> mirror_histogram diagnostics: n=800  dropped=0  [see $tables$diagnostics]
 plot(mh_wt)
 ```
 
@@ -1144,48 +1142,29 @@ plot(mh_wt)
 
 ### 10.2 Covariate balance plot
 
-`hv_balance()` does **not** read `$tables` as they come. It wants one
-long data frame, one row per covariate and comparison, with columns
-`variable`, `group` and `std_diff`, and the difference in **percent**
-(its reference lines sit at plus and minus 10). The SMD tables here are
-proportions of a standard deviation, one table per comparison, so stack
-them and multiply by 100. Here is the logit-scale match from earlier.
-
-``` r
-
-balance_long <- rbind(
-  data.frame(variable = m_logit$tables$smd_before$variable,
-             group    = "Before match",
-             std_diff = 100 * m_logit$tables$smd_before$smd),
-  data.frame(variable = m_logit$tables$smd_after$variable,
-             group    = "After match",
-             std_diff = 100 * m_logit$tables$smd_after$smd)
-)
-balance_long
-#>        variable        group std_diff
-#> 1           age Before match   -75.59
-#> 2        female Before match    15.82
-#> 3            ef Before match    55.09
-#> 4      diabetes Before match   -12.57
-#> 5  hypertension Before match    -6.96
-#> 6           age  After match    -3.45
-#> 7        female  After match    -7.50
-#> 8            ef  After match    -2.07
-#> 9      diabetes  After match    -3.43
-#> 10 hypertension  After match     0.00
-```
-
-For a
+`hv_balance()` (hvtiPlotR 2.8.22 or later) reads a
+[`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
+or
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
-object the two tables are `smd_unweighted` and `smd_weighted`.
+object itself. It takes the two SMD tables, `smd_before` and `smd_after`
+for a match or `smd_unweighted` and `smd_weighted` for a weighting, and
+plots the difference in **percent**, with reference lines at plus and
+minus 10. Here is the logit-scale match from earlier.
 
 ``` r
 
-cb <- hvtiPlotR::hv_balance(balance_long)
+cb <- hvtiPlotR::hv_balance(m_logit, group_labels = c("Before match", "After match"))
 plot(cb)
 ```
 
 ![](hvtiRpropensity_files/figure-html/balance-plot-1.png)
+
+A
+[`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+or
+[`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+object carries one table, `$tables$smd`, with no before-and-after pair,
+so `hv_balance()` stops on it. Match or weight first, then plot.
 
 ------------------------------------------------------------------------
 
@@ -1196,11 +1175,11 @@ plot(cb)
 sessionInfo()
 #> R version 4.6.2 (2026-10-29)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.5 LTS
+#> Running under: Ubuntu 26.04.1 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
 #> 
 #> locale:
 #>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
@@ -1218,25 +1197,25 @@ sessionInfo()
 #> [1] hvtiRpropensity_0.2.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] gtable_0.3.6            xfun_0.62               ggplot2_4.0.3          
-#>  [4] hvtiPlotR_2.8.20        htmlwidgets_1.6.4       visNetwork_2.1.4       
+#>  [1] gtable_0.3.6            xfun_0.62               ggplot2_4.0.4          
+#>  [4] hvtiPlotR_2.8.22        htmlwidgets_1.6.4       visNetwork_2.1.4       
 #>  [7] lattice_0.23-1          vctrs_0.7.3             tools_4.6.2            
 #> [10] generics_0.1.4          parallel_4.6.2          tibble_3.3.1           
 #> [13] pkgconfig_2.0.3         Matrix_1.7-6            RColorBrewer_1.1-3     
-#> [16] S7_0.2.2                rvg_0.4.2               randomForestSRC_3.9.0  
+#> [16] S7_0.2.2                rvg_0.4.2               randomForestSRC_3.10.0 
 #> [19] uuid_1.2-2              ggupset_0.4.1           lifecycle_1.0.5        
 #> [22] compiler_4.6.2          farver_2.1.2            textshaping_1.0.5      
 #> [25] data.tree_1.2.0         fontquiver_0.2.1        fontLiberation_0.1.0   
 #> [28] htmltools_0.5.9         yaml_2.3.12             pillar_1.11.1          
-#> [31] tidyr_1.3.2             MASS_7.3-66             openssl_2.4.2          
+#> [31] tidyr_1.3.2             MASS_7.3-66             openssl_2.5.0          
 #> [34] fontBitstreamVera_0.1.1 tidyselect_1.2.1        zip_3.0.2              
 #> [37] digest_0.6.39           stringi_1.8.9           dplyr_1.2.1            
 #> [40] purrr_1.2.2             labeling_0.4.3          splines_4.6.2          
 #> [43] fastmap_1.2.0           grid_4.6.2              cli_3.6.6              
 #> [46] magrittr_2.0.5          DiagrammeR_1.0.12       patchwork_1.3.2        
-#> [49] survival_3.8-12         withr_3.0.3             gdtools_0.5.2          
+#> [49] survival_3.8-12         withr_3.0.3             gdtools_0.6.0          
 #> [52] scales_1.4.0            consort_1.2.4           rmarkdown_2.32         
-#> [55] officer_0.7.7           otel_0.2.0              nnet_7.3-21            
+#> [55] officer_0.7.8           otel_0.3.0              nnet_7.3-21            
 #> [58] askpass_1.2.1           ragg_1.5.2              ggalluvial_0.12.6      
 #> [61] evaluate_1.0.5          knitr_1.52              rlang_1.3.0            
 #> [64] Rcpp_1.1.2              glue_1.8.1              xml2_1.6.0             

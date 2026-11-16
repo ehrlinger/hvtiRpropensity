@@ -1,11 +1,13 @@
 # Default covariates for a balance table
 
-Every numeric column except those in `reserved`, the fixed output
-columns this package appends (`prob_t`, `logit_t`, `mt_wt`, `iptw`,
-`match`, `pair_id`, `quintile`, `decile`, `bs`, `cluster`), and constant
-columns. A column is constant when its non-missing values take at most
-one value. A function that generates columns under other names, such as
-the `prob_<level>` scores of
+Every numeric, logical, factor or character column except those in
+`reserved`, the fixed output columns this package appends (`prob_t`,
+`logit_t`, `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile`,
+`bs`, `cluster`), and constant columns. A column is constant when its
+non-missing values take at most one value. A factor or character column
+whose non-missing values are all different is an identifier, not a
+covariate, and is left out too. A function that generates columns under
+other names, such as the `prob_<level>` scores of
 [`ps_nominal()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_nominal.md),
 passes those exact names in `reserved`.
 
@@ -39,5 +41,5 @@ A character vector of column names.
 ## Details
 
 Columns in `keep`, the predictors a model formula declares, are never
-dropped by the fixed output names or the constant rule; only `reserved`
-can drop them.
+dropped by the fixed output names, the constant rule or the identifier
+rule; only `reserved` can drop them.

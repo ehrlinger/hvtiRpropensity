@@ -148,12 +148,16 @@ row keeps its stored weight.
 last observed time in an arm, counting only the rows that enter the
 curve (time and event present, weight above zero), so a `tau` beyond it
 stops with an error rather than carrying the last survival value
-forward. A bootstrap draw can still end short of `tau`, and its curve is
-then carried flat to `tau`.
+forward. A bootstrap draw whose resampled follow-up in either arm ends
+before `tau` is held to the same rule: it fails rather than being
+carried flat to `tau`.
 
-**Failures.** A bootstrap draw that errors, or that leaves an arm empty,
-gives `NA`; the interval is taken over the other draws and the number of
-`NA` draws is reported as `n_failed`.
+**Failures.** A bootstrap draw that errors, that leaves an arm empty, or
+whose follow-up in an arm ends before `tau` gives `NA`; the interval is
+taken over the other draws and the number of `NA` draws is reported as
+`n_failed`. When more than 5% of the draws for an estimator fail, a
+warning of class `hvtiRpropensity_bootstrap_failures` says so, the
+family rule for every hvtiR bootstrap.
 
 ## Examples
 

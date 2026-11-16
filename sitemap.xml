@@ -24,7 +24,9 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_outcome_levels.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_outcome_response.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_probability.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-check_separation.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-complete_df.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-covariate_types.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_covariates.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-effective_n.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-expand_dot_formula.html</loc></url>
@@ -47,7 +49,9 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-smd_table_levels.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-temporary_prediction_prefix.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-treatment_indicator.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-trim_weights.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-warn_excluded.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-warn_saturated_score.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/fit_linear.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/fit_logistic.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/hvtiRpropensity-package.html</loc></url>

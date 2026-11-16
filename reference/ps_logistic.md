@@ -69,11 +69,17 @@ ps_logistic(
 - covariates:
 
   Character vector of covariate column names for SMD balance
-  diagnostics, used as given. If `NULL` (default), every numeric column
-  that varies is used, except `treatment_col`, `score_col`, `logit_col`,
-  `weight_col`, `id_col` and the fixed columns this package appends
-  (`quintile`, `decile`, `iptw`, `match`, `pair_id` and the like). A
-  predictor named in `formula` is always kept.
+  diagnostics, used as given. A 0/1 or logical column takes the binary
+  standardized difference, a factor or character column the categorical
+  one of
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+  (one row per column), any other numeric column the Gaussian one. If
+  `NULL` (default), every numeric, logical, factor or character column
+  that varies is used, except identifier-like text columns (every value
+  different), `treatment_col`, `score_col`, `logit_col`, `weight_col`,
+  `id_col` and the fixed columns this package appends (`quintile`,
+  `decile`, `iptw`, `match`, `pair_id` and the like). A predictor named
+  in `formula` is always kept.
 
 - treatment_levels:
 
@@ -220,12 +226,12 @@ summary(obj)
 #> Summary of <ps_logistic>
 #> 
 #> Smd:
-#>                  variable     smd
-#> age                   age -0.7994
-#> female             female  0.3989
-#> ef                     ef  0.6139
-#> diabetes         diabetes -0.0554
-#> hypertension hypertension -0.0310
+#>       variable     smd
+#> 1          age -0.7994
+#> 2       female  0.3999
+#> 3           ef  0.6139
+#> 4     diabetes -0.0556
+#> 5 hypertension -0.0310
 #> 
 #> Group counts:
 #>   group treated   n

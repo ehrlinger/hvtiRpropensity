@@ -12,9 +12,9 @@ instead. Returns a `ps_weight` object whose `$tables` slot contains SMD
 tables (unweighted and weighted) and effective-N diagnostics. Its
 `$data` feeds
 [`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html)
-in weighted mode;
+in weighted mode, and
 [`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
-needs the SMD tables stacked into long form (see the vignette).
+reads the object itself (hvtiPlotR 2.8.22 or later).
 
 ## Usage
 
@@ -74,15 +74,25 @@ ps_weight(
 - trim:
 
   Optional numeric in (0, 0.5). If supplied, weights outside the
-  (`trim`, `1 - trim`) quantile range are winsorised. Default `NULL` (no
+  (`trim`, `1 - trim`) quantile range are winsorised, within the arm
+  that is reweighted. For `"ATT"` only the control weights are trimmed,
+  at quantiles of the control weights, and every treated weight stays
+  exactly 1; `"ATC"` is the mirror image. For `"ATE"` both arms are
+  reweighted, so the quantiles are taken over all weights pooled across
+  both arms (Lee, Lessler and Stuart, 2011). Default `NULL` (no
   trimming).
 
 - covariates:
 
   Character vector of covariate columns for SMD diagnostics, used as
-  given. If `NULL` (default), every numeric column that varies is used,
-  except `treatment_col`, `score_col`, `weight_col`, `id_col` and the
-  fixed columns this package appends (`prob_t`, `logit_t`, `mt_wt`,
+  given. A 0/1 or logical column takes the binary standardized
+  difference, a factor or character column the categorical one of
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+  (one row per column), any other numeric column the Gaussian one. If
+  `NULL` (default), every numeric, logical, factor or character column
+  that varies is used, except identifier-like text columns (every value
+  different), `treatment_col`, `score_col`, `weight_col`, `id_col` and
+  the fixed columns this package appends (`prob_t`, `logit_t`, `mt_wt`,
   `iptw`, `match`, `pair_id`, `quintile`, `decile`, `bs`, `cluster`).
 
 - weight_col:
@@ -133,6 +143,12 @@ left out of the stabilising treatment proportion, the SMD tables, the
 group counts and the effective sample sizes, and one warning states how
 many there are. `$meta$n_excluded` keeps the count.
 
+## References
+
+Lee BK, Lessler J, Stuart EA (2011). Weight trimming and propensity
+score weighting. *PLoS ONE*, 6(3), e18174.
+[doi:10.1371/journal.pone.0018174](https://doi.org/10.1371/journal.pone.0018174)
+
 ## See also
 
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md),
@@ -158,20 +174,20 @@ summary(obj)
 #> Summary of <ps_weight>
 #> 
 #> Smd unweighted:
-#>                  variable     smd
-#> age                   age -0.7994
-#> female             female  0.3989
-#> ef                     ef  0.6139
-#> diabetes         diabetes -0.0554
-#> hypertension hypertension -0.0310
+#>       variable     smd
+#> 1          age -0.7994
+#> 2       female  0.3999
+#> 3           ef  0.6139
+#> 4     diabetes -0.0556
+#> 5 hypertension -0.0310
 #> 
 #> Smd weighted:
-#>                  variable     smd
-#> age                   age  0.1143
-#> female             female -0.0953
-#> ef                     ef -0.0298
-#> diabetes         diabetes -0.0281
-#> hypertension hypertension -0.0985
+#>       variable     smd
+#> 1          age  0.1143
+#> 2       female -0.0956
+#> 3           ef -0.0298
+#> 4     diabetes -0.0281
+#> 5 hypertension -0.0987
 #> 
 #> Group counts:
 #>   group treated   n
@@ -190,20 +206,20 @@ summary(obj_att)
 #> Summary of <ps_weight>
 #> 
 #> Smd unweighted:
-#>                  variable     smd
-#> age                   age -0.7994
-#> female             female  0.3989
-#> ef                     ef  0.6139
-#> diabetes         diabetes -0.0554
-#> hypertension hypertension -0.0310
+#>       variable     smd
+#> 1          age -0.7994
+#> 2       female  0.3999
+#> 3           ef  0.6139
+#> 4     diabetes -0.0556
+#> 5 hypertension -0.0310
 #> 
 #> Smd weighted:
-#>                  variable     smd
-#> age                   age  0.0734
-#> female             female -0.0984
-#> ef                     ef  0.0305
-#> diabetes         diabetes -0.1243
-#> hypertension hypertension -0.2256
+#>       variable     smd
+#> 1          age  0.0734
+#> 2       female -0.0987
+#> 3           ef  0.0305
+#> 4     diabetes -0.1246
+#> 5 hypertension -0.2262
 #> 
 #> Group counts:
 #>   group treated   n

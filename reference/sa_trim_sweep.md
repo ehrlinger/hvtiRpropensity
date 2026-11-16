@@ -33,7 +33,11 @@ sa_trim_sweep(
 
   Numeric vector of trimming values to evaluate. Each value is the lower
   tail quantile; weights outside the (`trim`, `1 - trim`) range are
-  winsorised. `0` means no trimming. Default `seq(0, 0.10, by = 0.01)`.
+  winsorised, within the reweighted arm as
+  [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
+  does: the controls for the ATT, the treated for the ATC, and both arms
+  pooled for the ATE. `0` means no trimming. Default
+  `seq(0, 0.10, by = 0.01)`.
 
 - estimand:
 

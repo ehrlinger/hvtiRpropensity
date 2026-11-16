@@ -56,9 +56,14 @@ ps_match(
 - covariates:
 
   Character vector of covariate columns for SMD diagnostics, used as
-  given. If `NULL` (default), every numeric column that varies is used,
-  except `treatment_col`, `score_col`, `id_col`, `match_col` and the
-  fixed columns this package appends (`prob_t`, `logit_t`, `mt_wt`,
+  given. A 0/1 or logical column takes the binary standardized
+  difference, a factor or character column the categorical one of
+  [`ps_stddiff()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_stddiff.md)
+  (one row per column), any other numeric column the Gaussian one. If
+  `NULL` (default), every numeric, logical, factor or character column
+  that varies is used, except identifier-like text columns (every value
+  different), `treatment_col`, `score_col`, `id_col`, `match_col` and
+  the fixed columns this package appends (`prob_t`, `logit_t`, `mt_wt`,
   `iptw`, `pair_id`, `quintile`, `decile`, `bs`, `cluster`).
 
 - match_col:
@@ -144,13 +149,19 @@ treated patients who could be matched, in practice those inside common
 support. `$meta$n_unmatched` counts them; when it is not zero, say which
 population the estimate describes.
 
+**Ties.** Treated patients are visited in a random order set by `seed`.
+When two or more remaining controls are equally close to a treated
+patient (within `1e-12` on the score scale), the one with the smallest
+`id_col` value is taken, so the match does not depend on the row order
+of `data`. Only controls within the caliper are candidates, so a tie is
+broken among eligible controls.
+
 The `$tables` slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts.
 [`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html)
-reads `$data` directly.
+reads `$data` directly, and
 [`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
-needs the two SMD tables stacked into long form with `variable`, `group`
-and `std_diff` (in percent); the vignette shows the reshape.
+reads the object itself (hvtiPlotR 2.8.22 or later).
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in `$data` with `match_col` set to `0`, are left out of
@@ -192,20 +203,20 @@ summary(obj)
 #> Summary of <ps_match>
 #> 
 #> Smd before:
-#>                  variable     smd
-#> age                   age -0.7994
-#> female             female  0.3989
-#> ef                     ef  0.6139
-#> diabetes         diabetes -0.0554
-#> hypertension hypertension -0.0310
+#>       variable     smd
+#> 1          age -0.7994
+#> 2       female  0.3999
+#> 3           ef  0.6139
+#> 4     diabetes -0.0556
+#> 5 hypertension -0.0310
 #> 
 #> Smd after:
-#>                  variable     smd
-#> age                   age -0.7994
-#> female             female  0.3989
-#> ef                     ef  0.6139
-#> diabetes         diabetes -0.0554
-#> hypertension hypertension -0.0310
+#>       variable     smd
+#> 1          age -0.7994
+#> 2       female  0.3999
+#> 3           ef  0.6139
+#> 4     diabetes -0.0556
+#> 5 hypertension -0.0310
 #> 
 #> Group counts before:
 #>   group treated   n

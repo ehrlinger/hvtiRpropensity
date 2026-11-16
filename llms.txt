@@ -227,7 +227,7 @@ with `$data`, `$meta` and `$tables`.
 The [Get
 started](https://ehrlinger.github.io/hvtiRpropensity/articles/hvtiRpropensity.html)
 vignette walks the workflow from score to sensitivity analysis,
-including a worked example that reshapes the balance tables for
+including a worked example that passes a match to
 [`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html).
 
 The SAS programs this package ports ship with it:
@@ -240,8 +240,13 @@ The SAS programs this package ports ship with it:
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
   or
   [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
-  object directly. `hv_balance()` needs the SMD tables reshaped to long
-  form in percent; the vignette shows how.
+  object directly, and `hv_balance()` (2.8.22 or later) reads the object
+  itself. A
+  [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
+  or
+  [`ps_forest()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_forest.md)
+  object has a single `smd` table and no before-and-after pair, so
+  `hv_balance()` stops on it.
 - **hvtiRutilities**: data wrangling utilities for cardiac surgery
   datasets.
 

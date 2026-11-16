@@ -3,7 +3,7 @@
 With `treated_level = NULL` the column must be 0/1 or logical, and 1 or
 `TRUE` is the treated value. With a `treated_level`, the column may hold
 any two values and `treated_level` names the treated one. Both values
-must be present.
+must be present in either case: a column holding one arm aborts.
 
 ## Usage
 
