@@ -164,3 +164,29 @@ test_that("every fit and random function records provenance", {
   expect_identical(m$meta$provenance$seed, 3L)
   expect_identical(m$meta$provenance$package, "hvtiRpropensity")
 })
+
+test_that("ps_mw_var() keeps $meta$n_rep beside $meta$n_boot for one release", {
+  # PR #124 review: a reader of the old field must not get NULL.
+  reset_deprecations()
+  new <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = "age", weight_col = "prob_t", n_boot = 3, seed = 1)
+  expect_identical(new$meta$n_boot, 3L)
+  expect_identical(new$meta$n_rep, 3L)
+  expect_warning(old <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = "age", weight_col = "prob_t",
+                                  n_rep = 3, seed = 1), "`n_rep` is renamed `n_boot`")
+  expect_identical(old$meta$n_rep, 3L)
+})
+
+test_that("ps_mw_var() returns the $meta fields its help page documents", {
+  # PR #124 review: the help said `outcome_cols`; the object stores `outcomes`.
+  obj <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = c("age", "ef"), weight_col = "prob_t",
+                   n_boot = 3, seed = 1)
+  rd_file <- test_path("..", "..", "man", "ps_mw_var.Rd")
+  skip_if_not(file.exists(rd_file), "source man/ is not available")
+  rd <- paste(readLines(rd_file), collapse = " ")
+  meta_item <- regmatches(rd, regexpr("\\\\item\\{\\\\verb\\{\\$meta\\}\\}\\{Named list:[^.]*\\.", rd))
+  meta_item <- gsub("\\([^()]*\\)", "", meta_item)  # drop parenthetical notes such as "(the same value as ...)"
+  documented <- sub("^\\\\code\\{(.*)\\}$", "\\1",
+                    regmatches(meta_item, gregexpr("\\\\code\\{[a-z_]+\\}", meta_item))[[1]])
+  expect_setequal(documented, setdiff(names(obj$meta), "provenance"))
+  expect_identical(obj$meta$outcomes, c("age", "ef"))
+})

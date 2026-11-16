@@ -54,8 +54,10 @@ warns once per session, for one release.}
 An object of class \code{c("ps_mw_var", "ps_data")} with:
 \describe{
 \item{\verb{$data}}{The input data frame, unchanged.}
-\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{weight_col}, \code{outcome_cols},
-\code{method}, \code{n_boot}, \code{seed}, \code{n_total}, \code{n_dropped}.}
+\item{\verb{$meta}}{Named list: \code{treatment_col}, \code{weight_col}, \code{outcomes}
+(the \code{outcome_cols} given), \code{method}, \code{n_boot}, \code{n_rep} (the same
+value as \code{n_boot}, kept for one release so code reading the old field
+still works; read \code{n_boot}), \code{seed}, \code{n_total}, \code{n_dropped}.}
 \item{\verb{$tables}}{Named list with \code{mw_var}, one row per outcome:
 \code{outcome}, \code{label}, \code{sumwgt_0}, \code{mean_0}, \code{sd_0}, \code{sumwgt_1},
 \code{mean_1}, \code{sd_1}, \code{estimate}, \code{n_rep}, \code{sd}, \code{p2_5}, \code{p16}, \code{p50},

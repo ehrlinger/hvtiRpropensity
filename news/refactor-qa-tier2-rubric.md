@@ -18,8 +18,10 @@
   works for this release, and warns. The weight columns in `$data` keep their
   lower-case names, such as `w_ato`.
 * Renamed arguments, the old names working for this release with a warning:
-  `ps_mw_var(n_rep =)` is `n_boot`, and `$meta$n_rep` is `$meta$n_boot` (the
-  table column `n_rep`, the replicates that remained, is unchanged).
+  `ps_mw_var(n_rep =)` is `n_boot`, and the count is recorded as
+  `$meta$n_boot`. `$meta$n_rep` holds the same value for this release, so
+  code that reads it keeps working; read `$meta$n_boot` instead (the table
+  column `n_rep`, the replicates that remained, is unchanged).
   `sample_ps_data_count(n_imputations =)` is `m`. The first argument of
   `ps_rmst()`, `ps_support()`, `sa_rosenbaum()`, `sa_overlap()` and
   `sa_trim_sweep()` is `data`, not `x`.

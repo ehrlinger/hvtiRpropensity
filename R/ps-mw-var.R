@@ -83,8 +83,10 @@
 #' @return An object of class `c("ps_mw_var", "ps_data")` with:
 #' \describe{
 #'   \item{`$data`}{The input data frame, unchanged.}
-#'   \item{`$meta`}{Named list: `treatment_col`, `weight_col`, `outcome_cols`,
-#'     `method`, `n_boot`, `seed`, `n_total`, `n_dropped`.}
+#'   \item{`$meta`}{Named list: `treatment_col`, `weight_col`, `outcomes`
+#'     (the `outcome_cols` given), `method`, `n_boot`, `n_rep` (the same
+#'     value as `n_boot`, kept for one release so code reading the old field
+#'     still works; read `n_boot`), `seed`, `n_total`, `n_dropped`.}
 #'   \item{`$tables`}{Named list with `mw_var`, one row per outcome:
 #'     `outcome`, `label`, `sumwgt_0`, `mean_0`, `sd_0`, `sumwgt_1`,
 #'     `mean_1`, `sd_1`, `estimate`, `n_rep`, `sd`, `p2_5`, `p16`, `p50`,
@@ -212,7 +214,10 @@ ps_mw_var <- function(data,
   new_ps_data(
     data   = data,
     meta   = list(treatment_col = treatment_col, weight_col = weight_col, outcomes = outcomes,
-                  method = "mw_var", n_boot = n_boot, seed = if (is.null(seed)) NA_integer_ else seed,
+                  # n_rep is n_boot under its old name, kept for one release so existing
+                  # readers of $meta$n_rep do not get NULL (#124 review).
+                  method = "mw_var", n_boot = n_boot, n_rep = n_boot,
+                  seed = if (is.null(seed)) NA_integer_ else seed,
                   n_total = nrow(data), n_dropped = sum(!keep)),
     tables = list(mw_var = tbl),
     subclass = "ps_mw_var",
