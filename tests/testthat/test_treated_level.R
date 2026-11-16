@@ -55,9 +55,9 @@ test_that("ps_stddiff(), ps_stddiff_perm() and ps_mw_var() give the 0/1 result",
   weighted_labelled <- weighted
   weighted_labelled$tavr <- labelled$tavr
   expect_equal(
-    ps_mw_var(weighted_labelled, outcomes = "ef", weight_col = "iptw", n_rep = 20, seed = 5,
+    ps_mw_var(weighted_labelled, outcomes = "ef", weight_col = "iptw", n_boot = 20, seed = 5,
               treated_level = lvl)$tables,
-    ps_mw_var(weighted, outcomes = "ef", weight_col = "iptw", n_rep = 20, seed = 5)$tables
+    ps_mw_var(weighted, outcomes = "ef", weight_col = "iptw", n_boot = 20, seed = 5)$tables
   )
 })
 

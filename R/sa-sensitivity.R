@@ -48,7 +48,7 @@
     stop(errorCondition(
       paste0(.err_prefix(), sprintf(
         paste0("`%s = %s` conflicts with the object's metadata, `$meta$%s = %s`. ",
-               "Omit `%s` to use the object's value, or pass the data frame `x$data` instead."),
+               "Omit `%s` to use the object's value, or pass the data frame `data$data` instead."),
         name, fmt(value), meta_name, fmt(meta), name
       )),
       class = "hvtiRpropensity_meta_conflict",
@@ -101,17 +101,17 @@
 #' metadata. A supplied `treatment_col`, `pair_id_col` or `treated_level`
 #' must agree with that metadata; a conflict aborts.
 #'
-#' @param x             A `ps_match` object (returned by [ps_match()]) **or** a
+#' @param data             A `ps_match` object (returned by [ps_match()]) **or** a
 #'   plain data frame whose rows are matched patients.
 #' @param outcome_col   Name of the numeric outcome column.  Required.
 #' @param gamma_max     Maximum Gamma to test.  Default `3`.
 #' @param gamma_inc     Increment between Gamma values.  Default `0.25`.
 #' @param alpha         Significance threshold.  Default `0.05`.
 #' @param treatment_col Name of the binary treatment column (0/1).  Taken from
-#'   `x$meta$treatment_col` when `x` is a `ps_match` object.  Required when
-#'   `x` is a plain data frame.
+#'   `data$meta$treatment_col` when `data` is a `ps_match` object.  Required when
+#'   `data` is a plain data frame.
 #' @param pair_id_col   Name of the pair-ID column created by [ps_match()].
-#'   Taken from `x$meta$pair_id_col` when recorded.  Default `"pair_id"`.
+#'   Taken from `data$meta$pair_id_col` when recorded.  Default `"pair_id"`.
 #' @param treated_level The value of `treatment_col` that is treated. Read
 #'   from the metadata of a `ps_data` object when it records one. `NULL`
 #'   (default) requires a 0/1 or logical column and takes 1 or `TRUE`.
@@ -119,9 +119,11 @@
 #'   the sign of the median difference, see Details), `"greater"` (treated
 #'   outcome above control) or `"less"`.
 #'
+#' @param x Deprecated: the old name of `data`. It still works, and warns
+#'   once per session, for one release.
 #' @return An object of class `c("sa_rosenbaum", "ps_data")`:
 #' \describe{
-#'   \item{`$data`}{The input data frame (`x$data` for a `ps_match` object).}
+#'   \item{`$data`}{The input data frame (`data$data` for a `ps_match` object).}
 #'   \item{`$meta`}{Column names, `treated_level`, the settings (`gamma`, the
 #'     grid tested, `gamma_max`, `gamma_inc`, `alpha`, `alternative`, the
 #'     direction tested, and `direction_from_data`), and the results:
@@ -143,14 +145,14 @@
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 300, seed = 1)
-#' m   <- ps_match(dta)
+#' m   <- ps_match(dta, treatment_col = "tavr")
 #' res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2, alternative = "greater")
 #' res
 #' res$tables$bounds
 #' res$meta$sensitivity_value
 #'
 #' @export
-sa_rosenbaum <- function(x,
+sa_rosenbaum <- function(data,
                          outcome_col,
                          gamma_max     = 3,
                          gamma_inc     = 0.25,
@@ -158,7 +160,10 @@ sa_rosenbaum <- function(x,
                          treatment_col = NULL,
                          pair_id_col   = "pair_id",
                          treated_level = NULL,
-                         alternative   = c("auto", "greater", "less")) {
+                         alternative   = c("auto", "greater", "less"),
+                         x) {
+  if (!missing(x)) data <- .renamed_arg("sa_rosenbaum", "x", "data", x, !missing(data))
+  x <- data
 
   alternative <- match.arg(alternative)
 
@@ -716,13 +721,15 @@ print.sa_evalue <- function(x, ...) {
 #' - The number and proportion of patients with PS below `trim_threshold` or
 #'   above `1 - trim_threshold` (near-positivity-violation flags).
 #'
-#' @param x             A `ps_data` object **or** a plain data frame.
+#' @param data             A `ps_data` object **or** a plain data frame.
 #' @param score_col     Name of the propensity score column.  Taken from
-#'   `x$meta$score_col` when `x` is a `ps_data` object.  Default `"prob_t"`.
+#'   `data$meta$score_col` when `data` is a `ps_data` object.  Default `"prob_t"`.
 #'   The score of a [ps_match()] object built with `scale = "logit"` is a
 #'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column (0/1).  Taken from
-#'   `x$meta$treatment_col` when `x` is a `ps_data` object.  Default `"tavr"`.
+#'   `data$meta$treatment_col` when `data` is a `ps_data` object, and
+#'   required for a data frame; omitting it there is deprecated and still
+#'   means `"tavr"`, for one release.
 #' @param trim_threshold Numeric in (0, 0.5).  PS values below this threshold
 #'   or above `1 - trim_threshold` are flagged as near-positivity violations.
 #'   Default `0.05`.
@@ -735,9 +742,11 @@ print.sa_evalue <- function(x, ...) {
 #'   `treated_level` must agree with the object's metadata; a conflict aborts.
 #'   Arguments not supplied are read from the metadata.
 #'
+#' @param x Deprecated: the old name of `data`. It still works, and warns
+#'   once per session, for one release.
 #' @return An object of class `c("sa_overlap", "ps_data")`:
 #' \describe{
-#'   \item{`$data`}{The input data frame (`x$data` for a `ps_data` object),
+#'   \item{`$data`}{The input data frame (`data$data` for a `ps_data` object),
 #'     unchanged.}
 #'   \item{`$meta`}{`score_col`, `treatment_col`, `treated_level`, `scale`,
 #'     `trim_threshold`, `n_total`, `n_score_missing`, `n_used` (patients
@@ -766,16 +775,19 @@ print.sa_evalue <- function(x, ...) {
 #' res$tables$positivity_flags
 #'
 #' # From a ps_match object
-#' m   <- ps_match(dta)
+#' m   <- ps_match(dta, treatment_col = "tavr")
 #' res <- sa_overlap(m)
 #' res$tables$outside_overlap
 #'
 #' @export
-sa_overlap <- function(x,
+sa_overlap <- function(data,
                        score_col     = "prob_t",
-                       treatment_col = "tavr",
+                       treatment_col = NULL,
                        trim_threshold = 0.05,
-                       treated_level = NULL) {
+                       treated_level = NULL,
+                       x) {
+  if (!missing(x)) data <- .renamed_arg("sa_overlap", "x", "data", x, !missing(data))
+  x <- data
 
   # ---- Extract data frame --------------------------------------------------
   scale <- "probability"
@@ -790,11 +802,12 @@ sa_overlap <- function(x,
     dta   <- input
     dta[[score_col]] <- .probability_score(x, score_col)
   } else if (is.data.frame(x)) {
+    if (is.null(treatment_col)) treatment_col <- .default_treatment_col("sa_overlap")
     input <- x
     dta   <- x
   } else {
     stop(
-      "sa_overlap(): `x` must be a ps_data object or a data frame.",
+      "sa_overlap(): `data` must be a ps_data object or a data frame.",
       call. = FALSE
     )
   }
@@ -969,7 +982,7 @@ print.sa_overlap <- function(x, ...) {
 #' adequately controls extreme weights without an unacceptable loss of effective
 #' sample size.
 #'
-#' @param x           A `ps_weight` object (returned by [ps_weight()]) **or**
+#' @param data           A `ps_weight` object (returned by [ps_weight()]) **or**
 #'   a `ps_match` object **or** a plain data frame that contains a propensity
 #'   score column and a binary treatment column.
 #' @param trim_seq    Numeric vector of trimming values to evaluate.  Each
@@ -979,18 +992,19 @@ print.sa_overlap <- function(x, ...) {
 #'   and both arms pooled for the ATE.  `0` means no trimming.
 #'   Default `seq(0, 0.10, by = 0.01)`.
 #' @param estimand    One of `"ATE"`, `"ATT"`, or `"ATC"` -- the causal
-#'   estimand used to compute IPTW weights.  Taken from `x$meta$estimand`
-#'   when `x` is a `ps_weight` object; defaults to `"ATE"` otherwise.
+#'   estimand used to compute IPTW weights.  Taken from `data$meta$estimand`
+#'   when `data` is a `ps_weight` object; defaults to `"ATE"` otherwise.
 #' @param stabilise   Logical.  Whether to stabilise weights.  Taken from
-#'   `x$meta$stabilised` when available; defaults to `TRUE`.  As in
+#'   `data$meta$stabilised` when available; defaults to `TRUE`.  As in
 #'   [ps_weight()], stabilisation applies to the ATE only.
 #' @param score_col   Name of the propensity score column.  Taken from
-#'   `x$meta$score_col` when `x` is a `ps_data` object.  Default `"prob_t"`.
+#'   `data$meta$score_col` when `data` is a `ps_data` object.  Default `"prob_t"`.
 #'   The score of a [ps_match()] object built with `scale = "logit"` is a
 #'   logit, and is back-transformed with [stats::plogis()] before use.
 #' @param treatment_col Name of the binary treatment column.  Taken from
-#'   `x$meta$treatment_col` when `x` is a `ps_data` object.  Default
-#'   `"tavr"`.
+#'   `data$meta$treatment_col` when `data` is a `ps_data` object, and
+#'   required for a data frame; omitting it there is deprecated and still
+#'   means `"tavr"`, for one release.
 #'
 #' @param treated_level The value of `treatment_col` that is treated. Read
 #'   from the metadata of a `ps_data` object when it records one. `NULL`
@@ -1000,9 +1014,11 @@ print.sa_overlap <- function(x, ...) {
 #'   object's metadata; a conflict aborts. Arguments not supplied are read
 #'   from the metadata, then take their defaults.
 #'
+#' @param x Deprecated: the old name of `data`. It still works, and warns
+#'   once per session, for one release.
 #' @return An object of class `c("sa_trim_sweep", "ps_data")`:
 #' \describe{
-#'   \item{`$data`}{The input data frame (`x$data` for a `ps_data` object),
+#'   \item{`$data`}{The input data frame (`data$data` for a `ps_data` object),
 #'     unchanged.}
 #'   \item{`$meta`}{`score_col`, `treatment_col`, `treated_level`, `scale`,
 #'     `estimand`, `stabilised` (whether stabilisation was applied, so `FALSE`
@@ -1021,7 +1037,7 @@ print.sa_overlap <- function(x, ...) {
 #'
 #' @examples
 #' dta    <- sample_ps_data(n = 400, seed = 3)
-#' w_obj  <- ps_weight(dta, estimand = "ATE")
+#' w_obj  <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 #' sweep  <- sa_trim_sweep(w_obj)
 #' head(sweep$tables$sweep)
 #'
@@ -1030,13 +1046,16 @@ print.sa_overlap <- function(x, ...) {
 #'                         estimand = "ATE")
 #'
 #' @export
-sa_trim_sweep <- function(x,
+sa_trim_sweep <- function(data,
                           trim_seq      = seq(0, 0.10, by = 0.01),
                           estimand      = c("ATE", "ATT", "ATC"),
                           stabilise     = TRUE,
                           score_col     = "prob_t",
-                          treatment_col = "tavr",
-                          treated_level = NULL) {
+                          treatment_col = NULL,
+                          treated_level = NULL,
+                          x) {
+  if (!missing(x)) data <- .renamed_arg("sa_trim_sweep", "x", "data", x, !missing(data))
+  x <- data
 
   estimand_supplied <- !missing(estimand)
   estimand <- match.arg(estimand)
@@ -1057,12 +1076,13 @@ sa_trim_sweep <- function(x,
     dta   <- input
     dta[[score_col]] <- .probability_score(x, score_col)
   } else if (is.data.frame(x)) {
+    if (is.null(treatment_col)) treatment_col <- .default_treatment_col("sa_trim_sweep")
     estimand_use <- estimand
     input <- x
     dta   <- x
   } else {
     stop(
-      "sa_trim_sweep(): `x` must be a ps_data object or a data frame.",
+      "sa_trim_sweep(): `data` must be a ps_data object or a data frame.",
       call. = FALSE
     )
   }

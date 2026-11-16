@@ -6,26 +6,29 @@
 \usage{
 ps_mw_var(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   outcomes,
   weight_col,
-  n_rep = 1000L,
+  n_boot = 1000L,
   seed = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  n_rep
 )
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{treatment_col}{Name of the group column, coded 0/1 or logical, with
-both groups present. Default \code{"tavr"}.}
+both groups present. Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
 \item{outcomes}{Character vector of numeric outcome columns.}
 
 \item{weight_col}{Name of the column of matching weights, which must be
 positive and finite.}
 
-\item{n_rep}{Number of bootstrap replicates. Default \code{1000}, the macro's
+\item{n_boot}{Number of bootstrap replicates. Default \code{1000}, the macro's
 \verb{RESAMPL=}.}
 
 \item{seed}{\code{NULL} (default) or one whole number. With a seed, the
@@ -39,13 +42,16 @@ advance it, and \verb{$meta$seed} is \code{NA}.}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}. Give a
 value, for example \code{"transcatheter"}, to use a column holding any two
 values.}
+
+\item{n_rep}{Deprecated: the old name of \code{n_boot}. It still works, and warns
+once per session, for one release.}
 }
 \value{
 An object of class \code{c("ps_mw_var", "ps_data")} with:
 \describe{
 \item{\verb{$data}}{The input data frame, unchanged.}
 \item{\verb{$meta}}{Named list: \code{treatment_col}, \code{weight_col}, \code{outcomes},
-\code{method}, \code{n_rep}, \code{seed}, \code{n_total}, \code{n_dropped}.}
+\code{method}, \code{n_boot}, \code{seed}, \code{n_total}, \code{n_dropped}.}
 \item{\verb{$tables}}{Named list with \code{mw_var}, one row per outcome:
 \code{outcome}, \code{label}, \code{sumwgt_0}, \code{mean_0}, \code{sd_0}, \code{sumwgt_1},
 \code{mean_1}, \code{sd_1}, \code{estimate}, \code{n_rep}, \code{sd}, \code{p2_5}, \code{p16}, \code{p50},
@@ -77,7 +83,7 @@ treatment group is the only stratum, as in the macro. \code{sd} is the standard
 deviation of the replicate differences, and the percentiles use
 \code{quantile(type = 4)}, which is SAS \code{PCTLDEF=1} as the macro sets it.
 Replicates where an outcome has no non-missing value in a group are left
-out for that outcome, and \code{n_rep} counts those that remain.
+out for that outcome, and the table's \code{n_rep} counts those that remain.
 
 \strong{The weights are held fixed.} Each resampled row keeps its original
 weight; the propensity model and the weights are not re-estimated. This
@@ -95,7 +101,7 @@ dta <- sample_ps_data(n = 200, seed = 42)
 dta$mt_wt <- pmin(dta$prob_t, 1 - dta$prob_t) /
   ifelse(dta$tavr == 1, dta$prob_t, 1 - dta$prob_t)
 obj <- ps_mw_var(dta, treatment_col = "tavr", outcomes = c("age", "ef"),
-                 weight_col = "mt_wt", n_rep = 200, seed = 1)
+                 weight_col = "mt_wt", n_boot = 200, seed = 1)
 obj$tables$mw_var
 
 }

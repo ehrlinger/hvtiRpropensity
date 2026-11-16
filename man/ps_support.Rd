@@ -4,16 +4,16 @@
 \alias{ps_support}
 \title{Compare support (overlap) rules}
 \usage{
-ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
+ps_support(data, flags = list(), trim = c(0.1, 0.9), common = TRUE, x)
 }
 \arguments{
-\item{x}{A \code{ps_data} object with a score and treatment column. The score of
+\item{data}{A \code{ps_data} object with a score and treatment column. The score of
 a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a logit, and is
 back-transformed with \code{\link[stats:plogis]{stats::plogis()}}, so \code{trim} and the common-support
 interval are on the probability scale.}
 
 \item{flags}{Optional named list of extra logical vectors, one element per
-row of \code{x$data}, \code{TRUE} meaning the rule would drop that patient. The
+row of \code{data$data}, \code{TRUE} meaning the rule would drop that patient. The
 names \code{"trim"} and \code{"common"} belong to the built-in rules and are refused.}
 
 \item{trim}{Length-2 numeric, or \code{NULL}. Adds the rule "score outside
@@ -22,9 +22,12 @@ Default \code{c(0.1, 0.9)}.}
 
 \item{common}{Logical; add the rule "score outside the range occupied by
 both groups" (common support).}
+
+\item{x}{Deprecated: the old name of \code{data}. It still works, and warns
+once per session, for one release.}
 }
 \value{
-A \code{ps_support} / \code{ps_data} object. \verb{$data} is \code{x$data} plus one
+A \code{ps_support} / \code{ps_data} object. \verb{$data} is \code{data$data} plus one
 logical column \verb{weak_<rule>} per rule. \verb{$tables$counts} gives the number
 flagged per rule (\code{n_weak}), the number of rows that rule judged (\code{n})
 and the number it did not (\code{n_excluded}): rows with a missing treatment
@@ -34,7 +37,7 @@ or score, plus any missing values in a rule supplied through \code{flags}.
 \code{n_both}, \code{n_neither}, \code{pct_agree}, Cohen \code{kappa} and \code{jaccard} (overlap
 of the two dropped sets). \verb{$meta$common_support} is the interval used,
 on the probability scale. \verb{$meta$scale} is the scale of \code{score_col},
-carried from \code{x} (\code{"probability"} when \code{x} records none).
+carried from \code{data} (\code{"probability"} when \code{data} records none).
 }
 \description{
 Flags patients with weak support under several rules and measures how well

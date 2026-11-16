@@ -249,7 +249,8 @@ bs_continuous <- function(formula,
       fit_status = fitted$status
     ),
     models = fitted$models,
-    subclass = "bs_continuous"
+    subclass = "bs_continuous",
+    provenance = .provenance("continuous balancing score")
   )
 }
 
@@ -531,7 +532,8 @@ bs_count <- function(formula,
       fit_status = fitted$status
     ),
     models = fitted$models,
-    subclass = "bs_count"
+    subclass = "bs_count",
+    provenance = .provenance("count balancing score")
   )
 }
 

@@ -20,13 +20,13 @@ test_that("the sample-data generators restore the caller's stream", {
   expect_rng_untouched(sample_ps_data_ordinal(n = 50, seed = 1))
   expect_rng_untouched(sample_ps_data_nominal(n = 50, seed = 1))
   expect_rng_untouched(sample_ps_data_count(n = 50, seed = 1))
-  expect_rng_untouched(sample_ps_data_count(n = 50, seed = 1, n_imputations = 2))
+  expect_rng_untouched(sample_ps_data_count(n = 50, seed = 1, m = 2))
 })
 
 test_that("a seed still makes the sample data reproducible", {
   expect_identical(sample_ps_data(n = 50, seed = 3), sample_ps_data(n = 50, seed = 3))
-  expect_identical(sample_ps_data_count(n = 50, seed = 3, n_imputations = 2),
-                   sample_ps_data_count(n = 50, seed = 3, n_imputations = 2))
+  expect_identical(sample_ps_data_count(n = 50, seed = 3, m = 2),
+                   sample_ps_data_count(n = 50, seed = 3, m = 2))
 })
 
 test_that("ps_match() with a seed restores the caller's stream", {
@@ -62,7 +62,7 @@ test_that("ps_rmst() without a seed draws from the caller's stream", {
 test_that("the sample-data generators accept seed = NULL and draw fresh data", {
   set.seed(12)
   expect_false(identical(sample_ps_data(n = 50, seed = NULL), sample_ps_data(n = 50, seed = NULL)))
-  count <- sample_ps_data_count(n = 50, seed = NULL, n_imputations = 2)
+  count <- sample_ps_data_count(n = 50, seed = NULL, m = 2)
   expect_equal(nrow(count), 100L)
   expect_false(identical(count$age[1:50], count$age[51:100]))
 })
@@ -72,7 +72,7 @@ test_that("seed = NULL draws from the caller's stream, so set.seed() reproduces 
     function() sample_ps_data(n = 50, seed = NULL),
     function() sample_ps_data_ordinal(n = 30, seed = NULL),
     function() sample_ps_data_nominal(n = 30, seed = NULL),
-    function() sample_ps_data_count(n = 50, seed = NULL, n_imputations = 2)
+    function() sample_ps_data_count(n = 50, seed = NULL, m = 2)
   )
   for (gen in gens) {
     set.seed(99)

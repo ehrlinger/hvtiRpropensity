@@ -16,12 +16,12 @@
 #' Those rows are left out of the common-support interval and every rule, get
 #' a missing `weak_<rule>` flag, and one warning states how many there are.
 #'
-#' @param x A `ps_data` object with a score and treatment column. The score of
+#' @param data A `ps_data` object with a score and treatment column. The score of
 #'   a [ps_match()] object built with `scale = "logit"` is a logit, and is
 #'   back-transformed with [stats::plogis()], so `trim` and the common-support
 #'   interval are on the probability scale.
 #' @param flags Optional named list of extra logical vectors, one element per
-#'   row of `x$data`, `TRUE` meaning the rule would drop that patient. The
+#'   row of `data$data`, `TRUE` meaning the rule would drop that patient. The
 #'   names `"trim"` and `"common"` belong to the built-in rules and are refused.
 #' @param trim Length-2 numeric, or `NULL`. Adds the rule "score outside
 #'   `[trim[1], trim[2]]`". Both values must lie in \[0, 1\], increasing.
@@ -29,7 +29,9 @@
 #' @param common Logical; add the rule "score outside the range occupied by
 #'   both groups" (common support).
 #'
-#' @return A `ps_support` / `ps_data` object. `$data` is `x$data` plus one
+#' @param x Deprecated: the old name of `data`. It still works, and warns
+#'   once per session, for one release.
+#' @return A `ps_support` / `ps_data` object. `$data` is `data$data` plus one
 #'   logical column `weak_<rule>` per rule. `$tables$counts` gives the number
 #'   flagged per rule (`n_weak`), the number of rows that rule judged (`n`)
 #'   and the number it did not (`n_excluded`): rows with a missing treatment
@@ -39,16 +41,18 @@
 #'   `n_both`, `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap
 #'   of the two dropped sets). `$meta$common_support` is the interval used,
 #'   on the probability scale. `$meta$scale` is the scale of `score_col`,
-#'   carried from `x` (`"probability"` when `x` records none).
+#'   carried from `data` (`"probability"` when `data` records none).
 #'
 #' @examples
 #' dta <- sample_ps_data(n = 200, seed = 3)[, c("id", "tavr", "age", "ef")]
 #' sup <- ps_support(ps_logistic(tavr ~ age + ef, dta))
 #' sup$tables$agreement
 #' @export
-ps_support <- function(x, flags = list(), trim = c(0.1, 0.9), common = TRUE) {
+ps_support <- function(data, flags = list(), trim = c(0.1, 0.9), common = TRUE, x) {
+  if (!missing(x)) data <- .renamed_arg("ps_support", "x", "data", x, !missing(data))
+  x <- data
   if (!is_ps_data(x)) stop(
-                        "ps_support(): `x` must be a ps_data object.",
+                        "ps_support(): `data` must be a ps_data object.",
                         call. = FALSE
                       )
   score <- .probability_score(x)

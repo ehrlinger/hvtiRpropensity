@@ -6,7 +6,7 @@
 \usage{
 ps_match(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   score_col = "prob_t",
   id_col = "id",
   caliper = NULL,
@@ -24,7 +24,9 @@ ps_match(
 \code{score_col}, and \code{id_col}.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1 or
-logical).  Default \code{"tavr"}.}
+logical).  Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
 \item{score_col}{Name of the numeric propensity score column, on the
 scale named by \code{scale}: probabilities in [0, 1] for
@@ -140,7 +142,7 @@ warning states how many there are. \verb{$meta$n_excluded} keeps the count.
 dta <- sample_ps_data(n = 200, seed = 42)
 
 # 1. Build the matched object
-obj <- ps_match(dta)
+obj <- ps_match(dta, treatment_col = "tavr")
 
 # 2. Inspect diagnostics
 print(obj)
@@ -156,7 +158,7 @@ nrow(matched)
 
 # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
 dta$logit_t <- stats::qlogis(dta$prob_t)
-obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
 obj_logit$meta$caliper
 
 }

@@ -6,7 +6,7 @@
 \usage{
 ps_weight(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   score_col = "prob_t",
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
@@ -22,7 +22,9 @@ ps_weight(
 \code{score_col}.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1 or logical).
-Default \code{"tavr"}.}
+Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
 \item{score_col}{Name of the numeric propensity score column (values
 in [0, 1]).  Default \code{"prob_t"}.}
@@ -112,12 +114,12 @@ effective sample sizes, and one warning states how many there are.
 dta <- sample_ps_data(n = 200, seed = 42)
 
 # 1. ATE weights (default)
-obj <- ps_weight(dta)
+obj <- ps_weight(dta, treatment_col = "tavr")
 print(obj)
 summary(obj)
 
 # 2. ATT weights: treated patients keep a weight of 1
-obj_att <- ps_weight(dta, estimand = "ATT")
+obj_att <- ps_weight(dta, treatment_col = "tavr", estimand = "ATT")
 summary(obj_att)
 
 # 3. Extract data with weights appended

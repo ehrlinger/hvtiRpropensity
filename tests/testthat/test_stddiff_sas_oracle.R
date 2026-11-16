@@ -181,7 +181,7 @@ test_that("ps_mw_var() matches %mw_var on the observed difference and group summ
   skip_without_oracle("mw-summary.csv")
   sas <- read_oracle("mw-summary.csv")
   r <- ps_mw_var(fixture, treatment_col = "grp", outcomes = c("y_cont", "y_bin"), weight_col = "w",
-                 n_rep = 10, seed = 1)$tables$mw_var
+                 n_boot = 10, seed = 1)$tables$mw_var
   for (v in c("y_cont", "y_bin")) {
     s <- sas[tolower(sas$`_outcome`) == v, ]
     rr <- r[r$outcome == v, ]
@@ -213,7 +213,7 @@ test_that("ps_mw_var()'s bootstrap SD is within Monte Carlo error of %mw_var's (
   sas <- read_oracle("mw-summary.csv")
   n_rep <- 2000L
   r <- ps_mw_var(fixture, treatment_col = "grp", outcomes = c("y_cont", "y_bin"), weight_col = "w",
-                 n_rep = n_rep, seed = 20260930)$tables$mw_var
+                 n_boot = n_rep, seed = 20260930)$tables$mw_var
   for (v in c("y_cont", "y_bin")) {
     s <- sas[tolower(sas$`_outcome`) == v, ]
     # A bootstrap SD from B replicates has relative standard error about

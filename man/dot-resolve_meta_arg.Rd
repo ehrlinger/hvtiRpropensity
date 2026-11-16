@@ -4,14 +4,7 @@
 \alias{.resolve_meta_arg}
 \title{Resolve an argument against the metadata of a ps_data object}
 \usage{
-.resolve_meta_arg(
-  name,
-  value,
-  supplied,
-  meta,
-  meta_name = name,
-  call_env = rlang::caller_env()
-)
+.resolve_meta_arg(name, value, supplied, meta, meta_name = name)
 }
 \arguments{
 \item{name}{The argument name, for the error message.}
@@ -24,8 +17,6 @@
 \item{meta}{The value recorded in the object's metadata, or \code{NULL}.}
 
 \item{meta_name}{The name of that metadata field. Default \code{name}.}
-
-\item{call_env}{Environment for the error call.}
 }
 \value{
 The resolved value.

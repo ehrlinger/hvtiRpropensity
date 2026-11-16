@@ -207,7 +207,7 @@ test_that("bs_count() with dist='negbin' returns correct method string", {
 # ---------------------------------------------------------------------------
 
 test_that("bs_count() works with stacked MI data", {
-  dta_mi <- sample_ps_data_count(n = 80, seed = 60, n_imputations = 3)
+  dta_mi <- sample_ps_data_count(n = 80, seed = 60, m = 3)
   obj <- bs_count(
     rbc_tot ~ age + female + diabetes,
     data           = dta_mi,
@@ -273,7 +273,7 @@ test_that("sample_ps_data_count() returns expected structure (single)", {
 })
 
 test_that("sample_ps_data_count() returns stacked MI format", {
-  dta <- sample_ps_data_count(n = 100, seed = 1, n_imputations = 4)
+  dta <- sample_ps_data_count(n = 100, seed = 1, m = 4)
   expect_equal(nrow(dta), 400L)
   expect_true("_IMPUTATION_" %in% names(dta))
   expect_equal(sort(unique(dta[["_IMPUTATION_"]])), 1:4)

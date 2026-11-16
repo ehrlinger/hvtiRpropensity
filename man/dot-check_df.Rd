@@ -4,12 +4,10 @@
 \alias{.check_df}
 \title{Assert that an object is a non-empty data frame}
 \usage{
-.check_df(data, call_env = rlang::caller_env())
+.check_df(data)
 }
 \arguments{
 \item{data}{Object to check.}
-
-\item{call_env}{Environment for the error call.}
 }
 \value{
 Invisible NULL.

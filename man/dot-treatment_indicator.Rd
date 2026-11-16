@@ -4,13 +4,7 @@
 \alias{.treatment_indicator}
 \title{Recode a two-valued treatment column to a 0/1 indicator}
 \usage{
-.treatment_indicator(
-  data,
-  col,
-  treated_level = NULL,
-  call_env = rlang::caller_env(),
-  warn_na = TRUE
-)
+.treatment_indicator(data, col, treated_level = NULL, warn_na = TRUE)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -18,8 +12,6 @@
 \item{col}{Name of the treatment column.}
 
 \item{treated_level}{The treated value, or \code{NULL}.}
-
-\item{call_env}{Environment for the error call.}
 
 \item{warn_na}{Whether to warn about missing treatment values; see
 \code{.check_binary()}.}

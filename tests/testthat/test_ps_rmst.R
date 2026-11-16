@@ -67,16 +67,16 @@ test_that("the pair bootstrap keeps both members of every drawn pair", {
 
 test_that("a ps_match input refuses score weighting", {
   m <- ps_match(rmst_data, seed = 1, caliper = 0.05)
-  expect_error(ps_rmst(m, "t", "e", tau = 4, weights = "ato", n_boot = 2), "unweighted")
-  expect_error(ps_rmst(m, "t", "e", tau = 4, weights = c("unweighted", "att"), n_boot = 2), "unweighted")
+  expect_error(ps_rmst(m, "t", "e", tau = 4, weights = "ATO", n_boot = 2), "unweighted")
+  expect_error(ps_rmst(m, "t", "e", tau = 4, weights = c("unweighted", "ATT"), n_boot = 2), "unweighted")
 })
 
 test_that("a ps_weight input uses its stored weight column", {
   w <- ps_weight(rmst_data, estimand = "ATT", trim = 0.05)
-  r <- ps_rmst(w, "t", "e", tau = 4, weights = c("unweighted", "att"), n_boot = 5, seed = 1)
-  expect_identical(r$meta$stored_weighting, "att")
+  r <- ps_rmst(w, "t", "e", tau = 4, weights = c("unweighted", "ATT"), n_boot = 5, seed = 1)
+  expect_identical(r$meta$stored_weighting, "ATT")
   expect_equal(r$data$w_att, w$data$iptw)
-  est <- r$tables$estimates[r$tables$estimates$weighting == "att", ]
+  est <- r$tables$estimates[r$tables$estimates$weighting == "ATT", ]
   a <- rmst_data$tavr == 1
   expect_equal(est$rmst_treated, manual_rmst(rmst_data$t[a], rmst_data$e[a], w$data$iptw[a], 4))
   expect_equal(est$rmst_control, manual_rmst(rmst_data$t[!a], rmst_data$e[!a], w$data$iptw[!a], 4))
@@ -84,7 +84,7 @@ test_that("a ps_weight input uses its stored weight column", {
   expect_equal(est$ess_control, sum(wc)^2 / sum(wc^2))
 
   # A scheme that does not match the estimand is still computed from the score.
-  r_ato <- ps_rmst(w, "t", "e", tau = 4, weights = "ato", n_boot = 2, seed = 1)
+  r_ato <- ps_rmst(w, "t", "e", tau = 4, weights = "ATO", n_boot = 2, seed = 1)
   expect_true(is.na(r_ato$meta$stored_weighting))
   expect_equal(r_ato$data$w_ato, ifelse(a, 1 - rmst_data$prob_t, rmst_data$prob_t))
 })
@@ -101,9 +101,9 @@ test_that("tau past the follow-up of either arm stops", {
 test_that("stored ps_weight weights survive a weight_col named like an output column", {
   base <- ps_weight(rmst_data, estimand = "ATE")
   clash <- ps_weight(rmst_data, estimand = "ATE", weight_col = "w_unweighted")
-  r_base <- ps_rmst(base, "t", "e", tau = 4, weights = c("unweighted", "ate"), n_boot = 2, seed = 1)
-  r_clash <- ps_rmst(clash, "t", "e", tau = 4, weights = c("unweighted", "ate"), n_boot = 2, seed = 1)
-  ate <- function(r) r$tables$estimates[r$tables$estimates$weighting == "ate", ]
+  r_base <- ps_rmst(base, "t", "e", tau = 4, weights = c("unweighted", "ATE"), n_boot = 2, seed = 1)
+  r_clash <- ps_rmst(clash, "t", "e", tau = 4, weights = c("unweighted", "ATE"), n_boot = 2, seed = 1)
+  ate <- function(r) r$tables$estimates[r$tables$estimates$weighting == "ATE", ]
   expect_equal(ate(r_clash)$diff, ate(r_base)$diff)
   expect_false(isTRUE(all.equal(ate(r_clash)$diff, 0)))
   expect_equal(r_clash$data$w_ate, base$data$iptw)
@@ -126,7 +126,7 @@ test_that("the horizon guard ignores a zero-weight row past follow-up", {
   d$prob_t <- 0.5
   w <- ps_weight(d, estimand = "ATT", stabilise = FALSE)
   w$data$iptw[nrow(d)] <- 0
-  expect_error(ps_rmst(w, "t", "e", tau = 6, weights = "att", n_boot = 2), "control arm")
+  expect_error(ps_rmst(w, "t", "e", tau = 6, weights = "ATT", n_boot = 2), "control arm")
   expect_no_error(ps_rmst(w, "t", "e", tau = 6, weights = "unweighted", n_boot = 2))
 })
 

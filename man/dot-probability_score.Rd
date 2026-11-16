@@ -4,18 +4,12 @@
 \alias{.probability_score}
 \title{The propensity score of a ps_data object on the probability scale}
 \usage{
-.probability_score(
-  x,
-  score_col = x$meta$score_col,
-  call_env = rlang::caller_env()
-)
+.probability_score(x, score_col = x$meta$score_col)
 }
 \arguments{
 \item{x}{A \code{ps_data} object.}
 
 \item{score_col}{Name of the score column. Default \code{x$meta$score_col}.}
-
-\item{call_env}{Environment for the error call.}
 }
 \value{
 A numeric vector of probabilities, one per row of \code{x$data}.

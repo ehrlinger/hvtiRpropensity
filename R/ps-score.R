@@ -258,7 +258,7 @@
 #'                   "quintile", "decile")])
 #'
 #' # Pass the scored data to ps_match() for downstream matching
-#' matched <- ps_match(obj$data, score_col = obj$meta$score_col, seed = 42)
+#' matched <- ps_match(obj$data, treatment_col = "tavr", score_col = obj$meta$score_col, seed = 42)
 #' nrow(matched$data[matched$data$match == 1L, ])
 #'
 #' # --- Multiply-imputed data (mirrors tp.lm.logistic_propensity_score.sas)
@@ -421,7 +421,8 @@ ps_logistic <- function(formula,
       model$tables
     ),
     models = model$models,
-    subclass = "ps_logistic"
+    subclass = "ps_logistic",
+    provenance = .provenance("logistic")
   )
 }
 
@@ -671,7 +672,8 @@ ps_ordinal <- function(formula,
     ),
     tables   = c(list(smd = smd_tbl, group_counts = group_counts), model$tables),
     models = model$models,
-    subclass = "ps_ordinal"
+    subclass = "ps_ordinal",
+    provenance = .provenance("nominal logistic")
   )
 }
 
@@ -914,7 +916,8 @@ ps_nominal <- function(formula,
     ),
     tables   = c(list(smd = smd_tbl, group_counts = group_counts), model$tables),
     models = model$models,
-    subclass = "ps_nominal"
+    subclass = "ps_nominal",
+    provenance = .provenance("ordinal logistic")
   )
 }
 

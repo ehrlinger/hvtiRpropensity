@@ -4,7 +4,7 @@
 \alias{sample_ps_data_count}
 \title{Generate sample data with a count outcome for bs_count() examples}
 \usage{
-sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
+sample_ps_data_count(n = 500L, seed = 42L, m = 1L, n_imputations)
 }
 \arguments{
 \item{n}{Number of patients.  Default \code{500L}.}
@@ -14,19 +14,22 @@ same demo dataset on every call. \code{NULL} draws from the caller's random-numb
 \code{\link[=ps_match]{ps_match()}} does: the data differ from call to call, and \code{set.seed()} before the call
 reproduces them. A negative seed gives the same data as its absolute value.}
 
-\item{n_imputations}{If \verb{> 1}, returns \code{n_imputations} datasets stacked in
+\item{m}{Number of imputations. If \verb{> 1}, returns \code{m} datasets stacked in
 the long format, with an \verb{_IMPUTATION_} index column. Each is an
 independent draw of \code{n} patients, covariates and outcome alike, that
 reuses the \code{id} values \code{1} to \code{n}. They exercise the stacked format; they
 do not resemble real imputations, in which one patient's observed values
 and outcome agree across datasets. Default \code{1L} (single complete
 dataset).}
+
+\item{n_imputations}{Deprecated: the old name of \code{m}. It still works, and
+warns once per session, for one release.}
 }
 \value{
 A data frame with columns: \code{id}, \code{rbc_tot} (count), \code{age},
 \code{female}, \code{diabetes}, \code{hypertension}, \code{hct_pr} (pre-op haematocrit),
 \code{cpb_time} (cardiopulmonary bypass time, minutes), and optionally
-\verb{_IMPUTATION_} when \code{n_imputations > 1}.
+\verb{_IMPUTATION_} when \code{m > 1}.
 }
 \description{
 Produces a synthetic data frame with a Poisson-distributed count outcome
@@ -39,7 +42,7 @@ dta <- sample_ps_data_count(n = 200, seed = 7)
 hist(dta$rbc_tot, main = "RBC units distribution")
 
 # Stacked multiply-imputed version (3 imputations)
-dta_mi <- sample_ps_data_count(n = 200, seed = 7, n_imputations = 3)
+dta_mi <- sample_ps_data_count(n = 200, seed = 7, m = 3)
 table(dta_mi[["_IMPUTATION_"]])
 
 }

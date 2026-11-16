@@ -440,7 +440,8 @@ fit_logistic <- function(formula, data,
     by_imputation = inference$by_imputation,
     fit_status = status
   )
-  new_ps_data(scored, meta, tables, fitted$models, subclass = "lm_fit")
+  new_ps_data(scored, meta, tables, fitted$models, subclass = "lm_fit",
+              provenance = .provenance(paste0("logistic-", family)))
 }
 
 
@@ -712,5 +713,6 @@ fit_linear <- function(formula, data, outcome_col = NULL, id_col = "id",
     fit_status = fitted$status,
     fit_quality = fit_quality
   )
-  new_ps_data(scored, meta, tables, fitted$models, subclass = "rm_fit")
+  new_ps_data(scored, meta, tables, fitted$models, subclass = "rm_fit",
+              provenance = .provenance("linear"))
 }

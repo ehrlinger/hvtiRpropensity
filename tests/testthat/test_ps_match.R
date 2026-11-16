@@ -277,7 +277,7 @@ test_that("ps_rmst() gives the same matched-pair analysis from a logit-scale ps_
   expect_equal(r_logit$tables, r_prob$tables)
   # Score weights on a matched set are refused on either scale; ps_support() output, which is not a match,
   # carries the score-weight comparison in the next test.
-  expect_error(ps_rmst(mp$logit, "t", "e", tau = 4, weights = "ate", n_boot = 2), "unweighted")
+  expect_error(ps_rmst(mp$logit, "t", "e", tau = 4, weights = "ATE", n_boot = 2), "unweighted")
 })
 
 test_that("ps_support() and ps_rmst() carry the score scale forward when chained", {
@@ -293,8 +293,8 @@ test_that("ps_support() and ps_rmst() carry the score scale forward when chained
   expect_identical(s_prob$meta$scale, "probability")
   expect_identical(ps_support(ps_support(mp$logit))$meta$scale, "logit")
 
-  r_logit <- ps_rmst(s_logit, "t", "e", tau = 4, weights = c("ato", "ate"), n_boot = 2, seed = 1)
-  r_prob  <- ps_rmst(s_prob, "t", "e", tau = 4, weights = c("ato", "ate"), n_boot = 2, seed = 1)
+  r_logit <- ps_rmst(s_logit, "t", "e", tau = 4, weights = c("ATO", "ATE"), n_boot = 2, seed = 1)
+  r_prob  <- ps_rmst(s_prob, "t", "e", tau = 4, weights = c("ATO", "ATE"), n_boot = 2, seed = 1)
   expect_identical(r_logit$meta$scale, "logit")
   expect_equal(r_logit$tables, r_prob$tables)
   expect_equal(r_logit$data$w_ate, r_prob$data$w_ate)

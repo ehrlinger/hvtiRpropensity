@@ -5,23 +5,26 @@
 \title{Propensity Score Overlap and Positivity Diagnostics}
 \usage{
 sa_overlap(
-  x,
+  data,
   score_col = "prob_t",
-  treatment_col = "tavr",
+  treatment_col = NULL,
   trim_threshold = 0.05,
-  treated_level = NULL
+  treated_level = NULL,
+  x
 )
 }
 \arguments{
-\item{x}{A \code{ps_data} object \strong{or} a plain data frame.}
+\item{data}{A \code{ps_data} object \strong{or} a plain data frame.}
 
 \item{score_col}{Name of the propensity score column.  Taken from
-\code{x$meta$score_col} when \code{x} is a \code{ps_data} object.  Default \code{"prob_t"}.
+\code{data$meta$score_col} when \code{data} is a \code{ps_data} object.  Default \code{"prob_t"}.
 The score of a \code{\link[=ps_match]{ps_match()}} object built with \code{scale = "logit"} is a
 logit, and is back-transformed with \code{\link[stats:plogis]{stats::plogis()}} before use.}
 
 \item{treatment_col}{Name of the binary treatment column (0/1).  Taken from
-\code{x$meta$treatment_col} when \code{x} is a \code{ps_data} object.  Default \code{"tavr"}.}
+\code{data$meta$treatment_col} when \code{data} is a \code{ps_data} object, and
+required for a data frame; omitting it there is deprecated and still
+means \code{"tavr"}, for one release.}
 
 \item{trim_threshold}{Numeric in (0, 0.5).  PS values below this threshold
 or above \code{1 - trim_threshold} are flagged as near-positivity violations.
@@ -30,11 +33,14 @@ Default \code{0.05}.}
 \item{treated_level}{The value of \code{treatment_col} that is treated. Read
 from the metadata of a \code{ps_data} object when it records one. \code{NULL}
 (default) requires a 0/1 or logical column and takes 1 or \code{TRUE}.}
+
+\item{x}{Deprecated: the old name of \code{data}. It still works, and warns
+once per session, for one release.}
 }
 \value{
 An object of class \code{c("sa_overlap", "ps_data")}:
 \describe{
-\item{\verb{$data}}{The input data frame (\code{x$data} for a \code{ps_data} object),
+\item{\verb{$data}}{The input data frame (\code{data$data} for a \code{ps_data} object),
 unchanged.}
 \item{\verb{$meta}}{\code{score_col}, \code{treatment_col}, \code{treated_level}, \code{scale},
 \code{trim_threshold}, \code{n_total}, \code{n_score_missing}, \code{n_used} (patients
@@ -80,7 +86,7 @@ res$meta$overlap_region
 res$tables$positivity_flags
 
 # From a ps_match object
-m   <- ps_match(dta)
+m   <- ps_match(dta, treatment_col = "tavr")
 res <- sa_overlap(m)
 res$tables$outside_overlap
 

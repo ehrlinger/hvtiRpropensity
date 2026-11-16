@@ -159,7 +159,7 @@ head(obj$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
                   "quintile", "decile")])
 
 # Pass the scored data to ps_match() for downstream matching
-matched <- ps_match(obj$data, score_col = obj$meta$score_col, seed = 42)
+matched <- ps_match(obj$data, treatment_col = "tavr", score_col = obj$meta$score_col, seed = 42)
 nrow(matched$data[matched$data$match == 1L, ])
 
 # --- Multiply-imputed data (mirrors tp.lm.logistic_propensity_score.sas)

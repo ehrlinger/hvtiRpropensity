@@ -6,7 +6,7 @@
 \usage{
 ps_stddiff(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   gaussian = NULL,
   nong_ord = NULL,
   binary = NULL,
@@ -19,7 +19,9 @@ ps_stddiff(
 \item{data}{A data frame.}
 
 \item{treatment_col}{Name of the group column, coded 0/1 or logical, with
-both groups present. Default \code{"tavr"}.}
+both groups present. Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means \code{"tavr"}, for one release.}
 
 \item{gaussian, nong_ord, binary, categorical}{Character vectors of column
 names, by type. See Details. At least one variable is required, and a

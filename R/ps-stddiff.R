@@ -71,7 +71,9 @@
 #'
 #' @param data A data frame.
 #' @param treatment_col Name of the group column, coded 0/1 or logical, with
-#'   both groups present. Default `"tavr"`.
+#'   both groups present. Required: it has no default, because a study's
+#'   column name never is one. Omitting it is deprecated, warns once per
+#'   session and still means `"tavr"`, for one release.
 #' @param gaussian,nong_ord,binary,categorical Character vectors of column
 #'   names, by type. See Details. At least one variable is required, and a
 #'   variable may appear under one type only. A `binary` column must be
@@ -109,13 +111,14 @@
 #'
 #' @export
 ps_stddiff <- function(data,
-                       treatment_col = "tavr",
+                       treatment_col,
                        gaussian      = NULL,
                        nong_ord      = NULL,
                        binary        = NULL,
                        categorical   = NULL,
                        weight_col    = NULL,
                        treated_level = NULL) {
+  if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_stddiff")
   .check_df(data)
   vars <- list(gaussian = gaussian, nong_ord = nong_ord, binary = binary, categorical = categorical)
   vars <- lapply(vars, function(v) if (is.null(v)) character(0) else as.character(v))

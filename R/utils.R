@@ -495,6 +495,74 @@
 
 
 # ---------------------------------------------------------------------------
+# Deprecations
+# ---------------------------------------------------------------------------
+
+# Deprecations already announced this session, keyed "fn:what".
+.deprecation_seen <- new.env(parent = emptyenv())
+
+#' Warn once per session about a deprecated usage
+#'
+#' The hvtiR family deprecates a renamed argument, or a removed default, for one
+#' release: the old usage keeps working and warns once per session, with class
+#' `hvtiRpropensity_deprecated`, then becomes an error in the next release.
+#'
+#' @param fn The exported function, for the message.
+#' @param what A short key for the deprecated usage, such as `"n_rep"`.
+#' @param message What changed and what to do instead.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.deprecate <- function(fn, what, message) {
+  key <- paste(fn, what, sep = ":")
+  if (!isTRUE(.deprecation_seen[[key]])) {
+    assign(key, TRUE, envir = .deprecation_seen)
+    warning(warningCondition(
+      paste0(fn, "(): ", message, " This will be an error in the next release."),
+      class = c("hvtiRpropensity_deprecated", "deprecatedWarning"),
+      call = NULL
+    ))
+  }
+  invisible(NULL)
+}
+
+
+#' The study default `treatment_col` used to have, with a deprecation warning
+#'
+#' `treatment_col` defaulted to `"tavr"`, a study's column name. A
+#' study-specific value is never a default in the hvtiR family, so the argument
+#' is now required; for one release an omitted `treatment_col` still means
+#' `"tavr"`, and warns.
+#'
+#' @param fn The exported function, for the message.
+#' @return `"tavr"`.
+#' @keywords internal
+.default_treatment_col <- function(fn) {
+  .deprecate(fn, "treatment_col", paste(
+    "`treatment_col` has no default now; `\"tavr\"` was one study's column name.",
+    "Name the treatment column, for example `treatment_col = \"tavr\"`."
+  ))
+  "tavr"
+}
+
+
+#' Accept a renamed argument for one release
+#'
+#' @param fn The exported function, for the message.
+#' @param old,new The old and new argument names.
+#' @param value The value passed under the old name.
+#' @param new_supplied Whether the new name was supplied too; both abort.
+#' @return `value`.
+#' @keywords internal
+.renamed_arg <- function(fn, old, new, value, new_supplied) {
+  if (new_supplied) {
+    stop(sprintf("%s(): give `%s` only; `%s` is its old name.", fn, new, old), call. = FALSE)
+  }
+  .deprecate(fn, old, sprintf("`%s` is renamed `%s`.", old, new))
+  value
+}
+
+
+# ---------------------------------------------------------------------------
 # Seeds
 # ---------------------------------------------------------------------------
 

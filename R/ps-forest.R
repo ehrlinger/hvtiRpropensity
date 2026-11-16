@@ -165,7 +165,8 @@ ps_forest <- function(formula,
                                 n = c(sum(trt == 0L), sum(trt == 1L)))
     ),
     models = list(forest = fit),
-    subclass = "ps_forest"
+    subclass = "ps_forest",
+    provenance = .provenance("random forest", seed)
   )
 }
 

@@ -47,7 +47,9 @@
 #' @param data           A data frame.  Must contain `treatment_col`,
 #'   `score_col`, and `id_col`.
 #' @param treatment_col  Name of the binary treatment column (0/1 or
-#'   logical).  Default `"tavr"`.
+#'   logical).  Required: it has no default, because a study's
+#'   column name never is one. Omitting it is deprecated, warns once per
+#'   session and still means `"tavr"`, for one release.
 #' @param score_col      Name of the numeric propensity score column, on the
 #'   scale named by `scale`: probabilities in \[0, 1\] for
 #'   `scale = "probability"`, or logits (any finite value, such as the
@@ -129,7 +131,7 @@
 #' dta <- sample_ps_data(n = 200, seed = 42)
 #'
 #' # 1. Build the matched object
-#' obj <- ps_match(dta)
+#' obj <- ps_match(dta, treatment_col = "tavr")
 #'
 #' # 2. Inspect diagnostics
 #' print(obj)
@@ -145,12 +147,12 @@
 #'
 #' # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
 #' dta$logit_t <- stats::qlogis(dta$prob_t)
-#' obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+#' obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
 #' obj_logit$meta$caliper
 #'
 #' @export
 ps_match <- function(data,
-                     treatment_col = "tavr",
+                     treatment_col,
                      score_col     = "prob_t",
                      id_col        = "id",
                      caliper       = NULL,
@@ -161,6 +163,7 @@ ps_match <- function(data,
                      treated_level = NULL,
                      scale         = c("probability", "logit"),
                      caliper_sd    = NULL) {
+  if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_match")
 
   # ---- Input validation ---------------------------------------------------
   .check_df(data)
@@ -351,6 +354,7 @@ ps_match <- function(data,
       group_counts_before  = group_counts_before,
       group_counts_after   = group_counts_after
     ),
-    subclass = "ps_match"
+    subclass = "ps_match",
+    provenance = .provenance("nearest-neighbour matching", seed)
   )
 }

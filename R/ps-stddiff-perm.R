@@ -90,7 +90,7 @@
 #'
 #' @export
 ps_stddiff_perm <- function(data,
-                            treatment_col = "tavr",
+                            treatment_col,
                             gaussian      = NULL,
                             nong_ord      = NULL,
                             binary        = NULL,
@@ -100,6 +100,7 @@ ps_stddiff_perm <- function(data,
                             n_perm        = 1000L,
                             seed          = NULL,
                             treated_level = NULL) {
+  if (missing(treatment_col)) treatment_col <- .default_treatment_col("ps_stddiff_perm")
   .check_df(data)
   if (!is.numeric(n_perm) || length(n_perm) != 1L || !is.finite(n_perm) ||
       n_perm < 1 || n_perm > .Machine$integer.max || n_perm != round(n_perm)) {
@@ -175,7 +176,8 @@ ps_stddiff_perm <- function(data,
                   method = "stddiff_perm", n_perm = n_perm, seed = if (is.null(seed)) NA_integer_ else seed,
                   n_total = nrow(data)),
     tables = list(stddiff_perm = tbl),
-    subclass = "ps_stddiff_perm"
+    subclass = "ps_stddiff_perm",
+    provenance = .provenance("stddiff permutation", seed)
   )
 }
 
