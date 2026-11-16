@@ -8,13 +8,7 @@ must be present in either case: a column holding one arm aborts.
 ## Usage
 
 ``` r
-.treatment_indicator(
-  data,
-  col,
-  treated_level = NULL,
-  call_env = rlang::caller_env(),
-  warn_na = TRUE
-)
+.treatment_indicator(data, col, treated_level = NULL, warn_na = TRUE)
 ```
 
 ## Arguments
@@ -30,10 +24,6 @@ must be present in either case: a column holding one arm aborts.
 - treated_level:
 
   The treated value, or `NULL`.
-
-- call_env:
-
-  Environment for the error call.
 
 - warn_na:
 

@@ -334,7 +334,7 @@
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m_from_ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>,</span>
+<code class="sourceCode R"><span><span class="va">m_from_ps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
 <span>                      score_col <span class="op">=</span> <span class="va">obj_ps</span><span class="op">$</span><span class="va">meta</span><span class="op">$</span><span class="va">score_col</span>,</span>
 <span>                      seed      <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m_from_ps</span><span class="op">)</span></span>
@@ -560,7 +560,7 @@
 <p>Treated patients are matched in a shuffled order, so the pairs depend on the random-number stream. Give <code>seed</code> on every call and the match is reproducible whatever ran earlier in the session.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_match&gt;</span></span>
 <span><span class="co">#&gt;   N total     : 800</span></span>
@@ -642,7 +642,7 @@
 <p>A caliper restricts matches to pairs whose propensity scores differ by no more than the supplied threshold, reducing the number of matched pairs in exchange for tighter balance.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m_cal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, caliper <span class="op">=</span> <span class="fl">0.05</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">m_cal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, caliper <span class="op">=</span> <span class="fl">0.05</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">m_cal</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_match&gt;</span></span>
 <span><span class="co">#&gt;   N total     : 800</span></span>
@@ -657,7 +657,7 @@
 <p>A caliper of 0.05 on the probability scale means different things near 0.5 and near the tails. Austin (2011) recommends matching on the <strong>logit</strong> of the propensity score with a caliper of 0.2 pooled standard deviations of that logit. Pass the <code>logit_t</code> column that <code><a href="../reference/ps_logistic.html">ps_logistic()</a></code> appends, set <code>scale = "logit"</code>, and give the caliper as <code>caliper_sd</code>. <code><a href="../reference/ps_match.html">ps_match()</a></code> turns it into an absolute caliper, <code>caliper_sd * sqrt((var_t + var_c) / 2)</code>, and records that value in <code>$meta$caliper</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">m_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>,</span>
+<code class="sourceCode R"><span><span class="va">m_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
 <span>                    score_col  <span class="op">=</span> <span class="st">"logit_t"</span>,</span>
 <span>                    scale      <span class="op">=</span> <span class="st">"logit"</span>,</span>
 <span>                    caliper_sd <span class="op">=</span> <span class="fl">0.2</span>,</span>
@@ -695,7 +695,7 @@
 <p><code><a href="../reference/ps_weight.html">ps_weight()</a></code> computes IPTW weights and appends them to <code>$data</code>. The default estimand is the <strong>average treatment effect</strong> (ATE).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">w_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">w_ate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">w_ate</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;ps_weight&gt;</span></span>
 <span><span class="co">#&gt;   N total     : 800</span></span>
@@ -756,7 +756,7 @@
 <p>For the <strong>average treatment effect on the treated</strong> (ATT), treated patients receive weight <code>1</code> and controls receive <code>ps / (1 - ps)</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">w_att</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">w_att</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_att</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. </span></span>
 <span><span class="co">#&gt;  0.02588  0.64471  1.00000  1.00386  1.00000 10.90944</span></span></code></pre></div>
@@ -764,7 +764,7 @@
 <p>For the <strong>average treatment effect on the controls</strong> (ATC), the roles are reversed.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">w_atc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATC"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">w_atc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATC"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_atc</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
 <span><span class="co">#&gt; 0.01808 0.62767 1.00000 0.98627 1.00000 6.73401</span></span></code></pre></div>
@@ -775,7 +775,7 @@
 <p>Extreme weights can destabilise estimates. Supplying <code>trim</code> winsorises weights to the (<code>trim</code>, <code>1 - trim</code>) quantile range.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">w_trim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>, trim <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">w_trim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>, trim <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">w_trim</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">iptw</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
 <span><span class="co">#&gt;  0.5691  0.6687  0.8189  0.9613  1.1024  2.0304</span></span></code></pre></div>
@@ -791,9 +791,9 @@
 <p><code><a href="../reference/ps_stddiff.html">ps_stddiff()</a></code> reproduces <code>%stddiff</code>. You say which formula each variable gets (Gaussian, non-Gaussian ordinal, binary, categorical) instead of letting the storage type decide. With <code>weight_col</code>, each group’s weights are first scaled to average 1, so stabilised and unstabilised weights give the same answer. The result is a proportion of a standard deviation, not a percent.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sd_mw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_stddiff.html">ps_stddiff</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>,</span>
-<span>                    gaussian   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ef"</span><span class="op">)</span>,</span>
-<span>                    binary     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"female"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">sd_mw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_stddiff.html">ps_stddiff</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
+<span>                    gaussian_cols   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ef"</span><span class="op">)</span>,</span>
+<span>                    binary_cols     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"female"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span><span class="op">)</span>,</span>
 <span>                    weight_col <span class="op">=</span> <span class="st">"mt_wt"</span><span class="op">)</span></span>
 <span><span class="va">sd_mw</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">stddiff</span></span>
 <span><span class="co">#&gt;       variable label     type      stddiff</span></span>
@@ -810,9 +810,9 @@
 <p><code><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm()</a></code> reproduces <code>%stddiffci</code>. It shuffles the group labels and reports where the observed difference falls among the shuffled ones. The percentiles are not a confidence interval; they show what label shuffling alone produces. A weighted run needs a <code>reweight</code> function that recomputes the weights for each permutation, so this example is unweighted.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>,</span>
-<span>                        gaussian <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ef"</span><span class="op">)</span>,</span>
-<span>                        binary   <span class="op">=</span> <span class="st">"female"</span>,</span>
+<code class="sourceCode R"><span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_stddiff_perm.html">ps_stddiff_perm</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
+<span>                        gaussian_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ef"</span><span class="op">)</span>,</span>
+<span>                        binary_cols   <span class="op">=</span> <span class="st">"female"</span>,</span>
 <span>                        n_perm   <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>                        seed     <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">perm</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">stddiff_perm</span></span>
@@ -832,10 +832,10 @@
 <p><code><a href="../reference/ps_mw_var.html">ps_mw_var()</a></code> reproduces <code>%mw_var</code>: the weighted difference in means between groups, with a bootstrap standard deviation and percentiles. The weights are held fixed in the bootstrap, as in the macro, so the SD ignores the uncertainty in estimating the score. Here <code>ef</code> stands in for an outcome.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_mw_var.html">ps_mw_var</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>,</span>
-<span>                outcomes   <span class="op">=</span> <span class="st">"ef"</span>,</span>
+<code class="sourceCode R"><span><span class="va">mw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_mw_var.html">ps_mw_var</a></span><span class="op">(</span><span class="va">obj_ps</span><span class="op">$</span><span class="va">data</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
+<span>                outcome_cols   <span class="op">=</span> <span class="st">"ef"</span>,</span>
 <span>                weight_col <span class="op">=</span> <span class="st">"mt_wt"</span>,</span>
-<span>                n_rep      <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>                n_boot     <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>                seed       <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">mw</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">mw_var</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"outcome"</span>, <span class="st">"mean_0"</span>, <span class="st">"mean_1"</span>, <span class="st">"estimate"</span>, <span class="st">"sd"</span>,</span>
 <span>                     <span class="st">"p2_5"</span>, <span class="st">"p97_5"</span><span class="op">)</span><span class="op">]</span></span>
@@ -855,11 +855,11 @@
 <span><span class="va">dta_s</span><span class="op">$</span><span class="va">e</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">dta_s</span><span class="op">$</span><span class="va">t</span> <span class="op">&lt;</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">dta_s</span><span class="op">$</span><span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="va">dta_s</span><span class="op">$</span><span class="va">t</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">m_s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta_s</span>,</span>
+<span><span class="va">m_s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta_s</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
 <span>                score_col  <span class="op">=</span> <span class="st">"logit_t"</span>,</span>
 <span>                scale      <span class="op">=</span> <span class="st">"logit"</span>,</span>
 <span>                caliper_sd <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>                covariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"female"</span>, <span class="st">"ef"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span><span class="op">)</span>,</span>
+<span>                covariate_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"female"</span>, <span class="st">"ef"</span>, <span class="st">"diabetes"</span>, <span class="st">"hypertension"</span><span class="op">)</span>,</span>
 <span>                seed       <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">rm_match</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_rmst.html">ps_rmst</a></span><span class="op">(</span><span class="va">m_s</span>, time_col <span class="op">=</span> <span class="st">"t"</span>, event_col <span class="op">=</span> <span class="st">"e"</span>, tau <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>                    n_boot <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
@@ -877,8 +877,8 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dta</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">m</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">w</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">m</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">w</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <section class="level3" data-number="9.1"><h3 data-number="9.1" id="overlap-and-positivity-sa_overlap">
 <span class="header-section-number">9.1</span> Overlap and positivity: <code>sa_overlap()</code>
@@ -1010,6 +1010,10 @@
 <span>                                score_col <span class="op">=</span> <span class="st">"prob_t"</span>,</span>
 <span>                                group_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
 <span>                                match_col <span class="op">=</span> <span class="st">"match"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: hv_mirror_hist(): `group_labels` is study-specific and will have no</span></span>
+<span><span class="co">#&gt; default from hvtiPlotR 2.9.0. Pass it explicitly. Using the old default for</span></span>
+<span><span class="co">#&gt; now: group_labels = c("SAVR", "TF-TAVR"). This warning is shown once per</span></span>
+<span><span class="co">#&gt; session.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mh</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>

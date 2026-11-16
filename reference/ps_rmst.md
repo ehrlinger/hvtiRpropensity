@@ -9,23 +9,24 @@ Kaplan-Meier curves (weights from the propensity score) integrated to
 
 ``` r
 ps_rmst(
-  x,
+  data,
   time_col,
   event_col,
   tau,
-  weights = c("unweighted", "ato"),
+  weights = c("unweighted", "ATO"),
   subsets = list(),
   n_boot = 200L,
   refit = FALSE,
   seed = NULL,
   time_unit_days = 365.2425,
-  clip = 0.001
+  clip = 0.001,
+  x
 )
 ```
 
 ## Arguments
 
-- x:
+- data:
 
   A `ps_data` object with a score and treatment column. A
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
@@ -40,7 +41,7 @@ ps_rmst(
 
 - time_col, event_col:
 
-  Follow-up time and event indicator (0/1) columns of `x$data`.
+  Follow-up time and event indicator (0/1) columns of `data$data`.
 
 - tau:
 
@@ -50,8 +51,10 @@ ps_rmst(
 
 - weights:
 
-  Weighting schemes to run: any of `"unweighted"`, `"ato"` (overlap),
-  `"att"`, `"ate"`. For a
+  Weighting schemes to run: any of `"unweighted"`, `"ATO"` (overlap),
+  `"ATT"`, `"ATE"`, the family's upper-case estimand names. Lower-case
+  `"ato"`, `"att"` and `"ate"` are deprecated: they still work, and warn
+  once per session, for one release. For a
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
   input the default is `"unweighted"` alone, and no other scheme is
   accepted.
@@ -94,6 +97,11 @@ ps_rmst(
 
   Scores are clipped to `[clip, 1 - clip]` before weighting.
 
+- x:
+
+  Deprecated: the old name of `data`. It still works, and warns once per
+  session, for one release.
+
 ## Value
 
 A `ps_rmst` / `ps_data` object. `$tables$estimates` has one row per
@@ -104,21 +112,22 @@ subset-and-weighting estimator: `estimator`, `subset`, `weighting`, `n`
 `lo_days`, `hi_days` (2.5 and 97.5 percent bootstrap) and `n_failed`
 (bootstrap draws that gave no estimate). `$tables$curves` has the
 weighted Kaplan-Meier steps (`estimator`, `arm`, `time`, `surv`) for
-plotting; `$data` is `x$data` plus one weight column `w_<weighting>` per
-scheme. `$meta$seed` is the seed used (`NA` when none was given).
-`$meta$scale` is the scale of `score_col`, carried from `x`
-(`"probability"` when `x` records none). `$meta$resampling` is `"pair"`
-for a matched input and `"row"` (stratified by arm) otherwise, and
-`$meta$stored_weighting` names the scheme that used a
+plotting; `$data` is `data$data` plus one weight column `w_<weighting>`
+per scheme, its name in lower case (`w_ato`). `$meta$seed` is the seed
+used (`NA` when none was given). `$meta$scale` is the scale of
+`score_col`, carried from `data` (`"probability"` when `data` records
+none). `$meta$resampling` is `"pair"` for a matched input and `"row"`
+(stratified by arm) otherwise, and `$meta$stored_weighting` names the
+scheme that used a
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
 object's stored weights (`NA` when none did).
 
 ## Details
 
-**Weights.** `"unweighted"` gives every row weight 1. `"ato"` weights
+**Weights.** `"unweighted"` gives every row weight 1. `"ATO"` weights
 treated rows by `1 - p` and controls by `p`, targeting the overlap
-population; `"att"` weights controls by `p / (1 - p)`, targeting the
-treated; `"ate"` weights by `1 / p` and `1 / (1 - p)`, targeting the
+population; `"ATT"` weights controls by `p / (1 - p)`, targeting the
+treated; `"ATE"` weights by `1 / p` and `1 / (1 - p)`, targeting the
 whole cohort. Here `p` is the score clipped to `[clip, 1 - clip]`.
 
 **Matched input.** For a
@@ -135,14 +144,13 @@ contains, which is then resampled alone.
 
 **Weighted input.** For a
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
-object, the scheme that matches its estimand (`"ate"` for
-`estimand = "ATE"`, `"att"` for `"ATT"`) uses the stored column
-`x$meta$weight_col` instead of recomputing weights from the score, so
-any trimming is kept. Stabilisation multiplies each arm by a constant,
-which leaves each arm's Kaplan-Meier curve and effective sample size
-unchanged. The other schemes are computed from the score, and an
-`estimand = "ATC"` object has no matching scheme. In the bootstrap each
-row keeps its stored weight.
+object, the scheme that matches its estimand (`"ATE"` or `"ATT"`) uses
+the stored column `data$meta$weight_col` instead of recomputing weights
+from the score, so any trimming is kept. Stabilisation multiplies each
+arm by a constant, which leaves each arm's Kaplan-Meier curve and
+effective sample size unchanged. The other schemes are computed from the
+score, and an `estimand = "ATC"` object has no matching scheme. In the
+bootstrap each row keeps its stored weight.
 
 **Horizon.** The weighted Kaplan-Meier curve is not defined past the
 last observed time in an arm, counting only the rows that enter the
@@ -173,7 +181,7 @@ if (requireNamespace("survival", quietly = TRUE)) {
 }
 #>        estimator subset  weighting   n ess_treated ess_control rmst_treated
 #> 1 all/unweighted    all unweighted 400    200.0000    200.0000     2.728810
-#> 2        all/ato    all        ato 400    157.8078    155.2728     2.737144
+#> 2        all/ATO    all        ATO 400    157.8078    155.2728     2.737144
 #>   rmst_control        diff diff_days   lo_days  hi_days n_failed
 #> 1     2.828556 -0.09974563 -36.43134 -158.0537 51.11612        0
 #> 2     2.791022 -0.05387833 -19.67865 -109.9290 74.75615        0

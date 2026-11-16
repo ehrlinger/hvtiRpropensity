@@ -24,7 +24,8 @@ bs_count(
   n_strata = 10L,
   strata_col = "cluster",
   create_binary_strata = TRUE,
-  covariates = NULL
+  covariate_cols = NULL,
+  covariates
 )
 ```
 
@@ -83,9 +84,14 @@ bs_count(
   Logical. If `TRUE` (default), binary indicator columns `stra_1`
   through `stra_<n_strata>` are appended.
 
-- covariates:
+- covariate_cols:
 
   Covariate columns for diagnostics.
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 

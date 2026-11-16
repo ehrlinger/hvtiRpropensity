@@ -58,13 +58,17 @@ reproduce its <code>est.stddiff</code> output.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ps_stddiff</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
-<span>  treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
-<span>  gaussian <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  nong_ord <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  binary <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  categorical <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">treatment_col</span>,</span>
+<span>  gaussian_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  nong_ord_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  binary_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  categorical_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weight_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">gaussian</span>,</span>
+<span>  <span class="va">nong_ord</span>,</span>
+<span>  <span class="va">binary</span>,</span>
+<span>  <span class="va">categorical</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -78,14 +82,16 @@ reproduce its <code>est.stddiff</code> output.</p>
 
 <dt id="arg-treatment-col">treatment_col<a class="anchor" aria-label="anchor" href="#arg-treatment-col"></a></dt>
 <dd><p>Name of the group column, coded 0/1 or logical, with
-both groups present. Default <code>"tavr"</code>.</p></dd>
+both groups present. Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means <code>"tavr"</code>, for one release.</p></dd>
 
 
-<dt id="arg-gaussian-nong-ord-binary-categorical">gaussian, nong_ord, binary, categorical<a class="anchor" aria-label="anchor" href="#arg-gaussian-nong-ord-binary-categorical"></a></dt>
+<dt id="arg-gaussian-cols-nong-ord-cols-binary-cols-categorical-cols">gaussian_cols, nong_ord_cols, binary_cols, categorical_cols<a class="anchor" aria-label="anchor" href="#arg-gaussian-cols-nong-ord-cols-binary-cols-categorical-cols"></a></dt>
 <dd><p>Character vectors of column
 names, by type. See Details. At least one variable is required, and a
-variable may appear under one type only. A <code>binary</code> column must be
-coded 0/1 or logical; a <code>categorical</code> column may have any coding.</p></dd>
+variable may appear under one type only. A column named in <code>binary_cols</code>
+must be coded 0/1 or logical; one in <code>categorical_cols</code> may have any coding.</p></dd>
 
 
 <dt id="arg-weight-col">weight_col<a class="anchor" aria-label="anchor" href="#arg-weight-col"></a></dt>
@@ -99,6 +105,12 @@ matching weight <code>mt_wt</code> from <code><a href="ps_logistic.html">ps_logi
 (default) requires a 0/1 or logical column and takes 1 or <code>TRUE</code>. Give a
 value, for example <code>"transcatheter"</code>, to use a column holding any two
 values.</p></dd>
+
+
+<dt id="arg-gaussian-nong-ord-binary-categorical">gaussian, nong_ord, binary, categorical<a class="anchor" aria-label="anchor" href="#arg-gaussian-nong-ord-binary-categorical"></a></dt>
+<dd><p>Deprecated: the old names of
+<code>gaussian_cols</code>, <code>nong_ord_cols</code>, <code>binary_cols</code> and <code>categorical_cols</code>.
+They still work, and warn once per session, for one release.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -123,13 +135,13 @@ per variable in the order given: <code>variable</code>, <code>label</code> (the 
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Variable types.</strong> The type decides the formula, so it is given, not
 inferred: an ordinal NYHA class stored as an integer would otherwise be
-treated as Gaussian.</p><ul><li><p><code>gaussian</code>: difference in means over <code>sqrt((var1 + var0) / 2)</code>. The
+treated as Gaussian.</p><ul><li><p><code>gaussian_cols</code>: difference in means over <code>sqrt((var1 + var0) / 2)</code>. The
 denominator averages the two variances; it does not pool them by sample
 size, so it differs from a Cohen's d when the groups are unequal.</p></li>
-<li><p><code>nong_ord</code>: the same formula on ranks of the pooled sample, ties
+<li><p><code>nong_ord_cols</code>: the same formula on ranks of the pooled sample, ties
 averaged, as <code>PROC RANK</code> does by default. Ranks are unweighted; only
 their means and variances use <code>weight_col</code>.</p></li>
-<li><p><code>binary</code> and <code>categorical</code> are routed by the number of levels observed,
+<li><p><code>binary_cols</code> and <code>categorical_cols</code> columns are routed by the number of levels observed,
 as the macro routes its <code>BINARY=</code> and <code>CATG=</code> lists: one level gives 0,
 two use the binary formula on the proportion at the last level in sort
 order (<code>1</code> for a 0/1 variable, the last level for a factor), and more than two use the Mahalanobis
@@ -148,7 +160,7 @@ one constant, so stabilised and unstabilised weights from <code><a href="ps_weig
 give the same differences. It equals the <code>%stddiff</code> macro's output when the
 weights already average 1 in each group, and otherwise does not: the
 macro's Gaussian and rank differences change with the scale of the weights.
-Proportions, for <code>binary</code> and <code>categorical</code>, are <code>sum(w x) / sum(w)</code> within
+Proportions, for <code>binary_cols</code> and <code>categorical_cols</code> columns, are <code>sum(w x) / sum(w)</code> within
 a group and never depended on that scale. Weights must be positive.</p>
 <p><strong>Missing values.</strong> Rows with a missing group are dropped. Otherwise a
 missing value is dropped for that variable only, and a variable with no
@@ -171,7 +183,7 @@ size between two groups using SAS. SAS Global Forum 2012, paper 335-2012.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_stddiff</span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span></span>
-<span class="r-in"><span>                  gaussian <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ef"</span><span class="op">)</span>, binary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"female"</span>, <span class="st">"diabetes"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                  gaussian_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ef"</span><span class="op">)</span>, binary_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"female"</span>, <span class="st">"diabetes"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">obj</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">stddiff</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   variable label     type     stddiff</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      age  &lt;NA&gt; gaussian -0.79935800</span>

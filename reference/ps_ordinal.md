@@ -19,9 +19,10 @@ ps_ordinal(
   id_col = "id",
   imputation_col = NULL,
   score_col_prefix = "prob",
-  covariates = NULL,
+  covariate_cols = NULL,
   treatment_levels = NULL,
-  smd_pairs = "reference"
+  smd_pairs = "reference",
+  covariates
 )
 ```
 
@@ -59,7 +60,7 @@ ps_ordinal(
   Prefix for the per-level output columns. Columns are named
   `<prefix>_<level>` for each level of the treatment. Default `"prob"`.
 
-- covariates:
+- covariate_cols:
 
   Covariate columns for the balance table. `NULL` (default) uses every
   numeric, logical, factor or character column that varies, other than
@@ -79,6 +80,11 @@ ps_ordinal(
   `"adjacent"` compares each level with the one below it; `"all"`
   compares every pair. Give more than one to combine them, for example
   `c("reference", "adjacent")`.
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 

@@ -10,12 +10,14 @@ weights as described by Li and Greene (2013).
 ``` r
 ps_mw_var(
   data,
-  treatment_col = "tavr",
-  outcomes,
+  treatment_col,
+  outcome_cols,
   weight_col,
-  n_rep = 1000L,
+  n_boot = 1000L,
   seed = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  n_rep,
+  outcomes
 )
 ```
 
@@ -28,9 +30,11 @@ ps_mw_var(
 - treatment_col:
 
   Name of the group column, coded 0/1 or logical, with both groups
-  present. Default `"tavr"`.
+  present. Required: it has no default, because a study's column name
+  never is one. Omitting it is deprecated, warns once per session and
+  still means `"tavr"`, for one release.
 
-- outcomes:
+- outcome_cols:
 
   Character vector of numeric outcome columns.
 
@@ -39,7 +43,7 @@ ps_mw_var(
   Name of the column of matching weights, which must be positive and
   finite.
 
-- n_rep:
+- n_boot:
 
   Number of bootstrap replicates. Default `1000`, the macro's
   `RESAMPL=`.
@@ -59,6 +63,16 @@ ps_mw_var(
   requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
   for example `"transcatheter"`, to use a column holding any two values.
 
+- n_rep:
+
+  Deprecated: the old name of `n_boot`. It still works, and warns once
+  per session, for one release.
+
+- outcomes:
+
+  Deprecated: the old name of `outcome_cols`. It still works, and warns
+  once per session, for one release.
+
 ## Value
 
 An object of class `c("ps_mw_var", "ps_data")` with:
@@ -69,8 +83,10 @@ An object of class `c("ps_mw_var", "ps_data")` with:
 
 - `$meta`:
 
-  Named list: `treatment_col`, `weight_col`, `outcomes`, `method`,
-  `n_rep`, `seed`, `n_total`, `n_dropped`.
+  Named list: `treatment_col`, `weight_col`, `outcomes` (the
+  `outcome_cols` given), `method`, `n_boot`, `n_rep` (the same value as
+  `n_boot`, kept for one release so code reading the old field still
+  works; read `n_boot`), `seed`, `n_total`, `n_dropped`.
 
 - `$tables`:
 
@@ -102,7 +118,7 @@ treatment group is the only stratum, as in the macro. `sd` is the
 standard deviation of the replicate differences, and the percentiles use
 `quantile(type = 4)`, which is SAS `PCTLDEF=1` as the macro sets it.
 Replicates where an outcome has no non-missing value in a group are left
-out for that outcome, and `n_rep` counts those that remain.
+out for that outcome, and the table's `n_rep` counts those that remain.
 
 **The weights are held fixed.** Each resampled row keeps its original
 weight; the propensity model and the weights are not re-estimated. This
@@ -133,8 +149,8 @@ score analysis. The International Journal of Biostatistics.
 dta <- sample_ps_data(n = 200, seed = 42)
 dta$mt_wt <- pmin(dta$prob_t, 1 - dta$prob_t) /
   ifelse(dta$tavr == 1, dta$prob_t, 1 - dta$prob_t)
-obj <- ps_mw_var(dta, treatment_col = "tavr", outcomes = c("age", "ef"),
-                 weight_col = "mt_wt", n_rep = 200, seed = 1)
+obj <- ps_mw_var(dta, treatment_col = "tavr", outcome_cols = c("age", "ef"),
+                 weight_col = "mt_wt", n_boot = 200, seed = 1)
 obj$tables$mw_var
 #>   outcome label sumwgt_0   mean_0     sd_0 sumwgt_1   mean_1     sd_1
 #> 1     age  <NA> 116.0528 74.50040 5.446871 115.3951 74.37045 5.632652

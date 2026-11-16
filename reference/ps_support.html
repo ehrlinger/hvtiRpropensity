@@ -56,14 +56,14 @@ supplied as a logical vector.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ps_support</span><span class="op">(</span><span class="va">x</span>, flags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, trim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.9</span><span class="op">)</span>, common <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ps_support</span><span class="op">(</span><span class="va">data</span>, flags <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, trim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.9</span><span class="op">)</span>, common <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">x</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A <code>ps_data</code> object with a score and treatment column. The score of
 a <code><a href="ps_match.html">ps_match()</a></code> object built with <code>scale = "logit"</code> is a logit, and is
 back-transformed with <code><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">stats::plogis()</a></code>, so <code>trim</code> and the common-support
@@ -72,7 +72,7 @@ interval are on the probability scale.</p></dd>
 
 <dt id="arg-flags">flags<a class="anchor" aria-label="anchor" href="#arg-flags"></a></dt>
 <dd><p>Optional named list of extra logical vectors, one element per
-row of <code>x$data</code>, <code>TRUE</code> meaning the rule would drop that patient. The
+row of <code>data$data</code>, <code>TRUE</code> meaning the rule would drop that patient. The
 names <code>"trim"</code> and <code>"common"</code> belong to the built-in rules and are refused.</p></dd>
 
 
@@ -86,10 +86,15 @@ Default <code>c(0.1, 0.9)</code>.</p></dd>
 <dd><p>Logical; add the rule "score outside the range occupied by
 both groups" (common support).</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>Deprecated: the old name of <code>data</code>. It still works, and warns
+once per session, for one release.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>ps_support</code> / <code>ps_data</code> object. <code>$data</code> is <code>x$data</code> plus one
+    <p>A <code>ps_support</code> / <code>ps_data</code> object. <code>$data</code> is <code>data$data</code> plus one
 logical column <code>weak_&lt;rule&gt;</code> per rule. <code>$tables$counts</code> gives the number
 flagged per rule (<code>n_weak</code>), the number of rows that rule judged (<code>n</code>)
 and the number it did not (<code>n_excluded</code>): rows with a missing treatment
@@ -99,7 +104,7 @@ or score, plus any missing values in a rule supplied through <code>flags</code>.
 <code>n_both</code>, <code>n_neither</code>, <code>pct_agree</code>, Cohen <code>kappa</code> and <code>jaccard</code> (overlap
 of the two dropped sets). <code>$meta$common_support</code> is the interval used,
 on the probability scale. <code>$meta$scale</code> is the scale of <code>score_col</code>,
-carried from <code>x</code> (<code>"probability"</code> when <code>x</code> records none).</p>
+carried from <code>data</code> (<code>"probability"</code> when <code>data</code> records none).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

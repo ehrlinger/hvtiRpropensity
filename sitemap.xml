@@ -28,7 +28,10 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-complete_df.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-covariate_types.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_covariates.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-default_treatment_col.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-deprecate.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-effective_n.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-err_prefix.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-expand_dot_formula.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-fit_imputations.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-inference_table.html</loc></url>
@@ -39,6 +42,8 @@
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-model_nobs.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-polr_expected_vcov.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-probability_score.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-provenance.html</loc></url>
+<url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-renamed_arg.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-resolve_meta_arg.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-retained_predictors.html</loc></url>
 <url><loc>https://ehrlinger.github.io/hvtiRpropensity/reference/dot-rubin_pool.html</loc></url>

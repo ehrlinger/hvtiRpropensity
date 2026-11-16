@@ -11,7 +11,7 @@ Wilcoxon signed-rank test.
 
 ``` r
 sa_rosenbaum(
-  x,
+  data,
   outcome_col,
   gamma_max = 3,
   gamma_inc = 0.25,
@@ -19,13 +19,14 @@ sa_rosenbaum(
   treatment_col = NULL,
   pair_id_col = "pair_id",
   treated_level = NULL,
-  alternative = c("auto", "greater", "less")
+  alternative = c("auto", "greater", "less"),
+  x
 )
 ```
 
 ## Arguments
 
-- x:
+- data:
 
   A `ps_match` object (returned by
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md))
@@ -50,14 +51,14 @@ sa_rosenbaum(
 - treatment_col:
 
   Name of the binary treatment column (0/1). Taken from
-  `x$meta$treatment_col` when `x` is a `ps_match` object. Required when
-  `x` is a plain data frame.
+  `data$meta$treatment_col` when `data` is a `ps_match` object. Required
+  when `data` is a plain data frame.
 
 - pair_id_col:
 
   Name of the pair-ID column created by
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md).
-  Taken from `x$meta$pair_id_col` when recorded. Default `"pair_id"`.
+  Taken from `data$meta$pair_id_col` when recorded. Default `"pair_id"`.
 
 - treated_level:
 
@@ -71,13 +72,18 @@ sa_rosenbaum(
   median difference, see Details), `"greater"` (treated outcome above
   control) or `"less"`.
 
+- x:
+
+  Deprecated: the old name of `data`. It still works, and warns once per
+  session, for one release.
+
 ## Value
 
 An object of class `c("sa_rosenbaum", "ps_data")`:
 
 - `$data`:
 
-  The input data frame (`x$data` for a `ps_match` object).
+  The input data frame (`data$data` for a `ps_match` object).
 
 - `$meta`:
 
@@ -152,7 +158,7 @@ Rosenbaum, P. R. (2002). *Observational Studies* (2nd ed.). Springer.
 
 ``` r
 dta <- sample_ps_data(n = 300, seed = 1)
-m   <- ps_match(dta)
+m   <- ps_match(dta, treatment_col = "tavr")
 res <- sa_rosenbaum(m, outcome_col = "ef", gamma_max = 2, alternative = "greater")
 res
 #> <sa_rosenbaum>

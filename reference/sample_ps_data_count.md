@@ -8,7 +8,7 @@ Mirrors the dataset used in `tp.pm.count.balncing_score.sas`.
 ## Usage
 
 ``` r
-sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
+sample_ps_data_count(n = 500L, seed = 42L, m = 1L, n_imputations)
 ```
 
 ## Arguments
@@ -28,21 +28,27 @@ sample_ps_data_count(n = 500L, seed = 42L, n_imputations = 1L)
   reproduces them. A negative seed gives the same data as its absolute
   value.
 
+- m:
+
+  Number of imputations. If `> 1`, returns `m` datasets stacked in the
+  long format, with an `_IMPUTATION_` index column. Each is an
+  independent draw of `n` patients, covariates and outcome alike, that
+  reuses the `id` values `1` to `n`. They exercise the stacked format;
+  they do not resemble real imputations, in which one patient's observed
+  values and outcome agree across datasets. Default `1L` (single
+  complete dataset).
+
 - n_imputations:
 
-  If `> 1`, returns `n_imputations` datasets stacked in the long format,
-  with an `_IMPUTATION_` index column. Each is an independent draw of
-  `n` patients, covariates and outcome alike, that reuses the `id`
-  values `1` to `n`. They exercise the stacked format; they do not
-  resemble real imputations, in which one patient's observed values and
-  outcome agree across datasets. Default `1L` (single complete dataset).
+  Deprecated: the old name of `m`. It still works, and warns once per
+  session, for one release.
 
 ## Value
 
 A data frame with columns: `id`, `rbc_tot` (count), `age`, `female`,
 `diabetes`, `hypertension`, `hct_pr` (pre-op haematocrit), `cpb_time`
 (cardiopulmonary bypass time, minutes), and optionally `_IMPUTATION_`
-when `n_imputations > 1`.
+when `m > 1`.
 
 ## See also
 
@@ -57,7 +63,7 @@ hist(dta$rbc_tot, main = "RBC units distribution")
 
 
 # Stacked multiply-imputed version (3 imputations)
-dta_mi <- sample_ps_data_count(n = 200, seed = 7, n_imputations = 3)
+dta_mi <- sample_ps_data_count(n = 200, seed = 7, m = 3)
 table(dta_mi[["_IMPUTATION_"]])
 #> 
 #>   1   2   3 

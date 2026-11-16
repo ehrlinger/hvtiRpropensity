@@ -18,9 +18,10 @@ ps_nominal(
   ref_level = NULL,
   score_col_prefix = "prob",
   trace = FALSE,
-  covariates = NULL,
+  covariate_cols = NULL,
   treatment_levels = NULL,
-  smd_pairs = "reference"
+  smd_pairs = "reference",
+  covariates
 )
 ```
 
@@ -66,7 +67,7 @@ ps_nominal(
   [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
   iteration messages.
 
-- covariates:
+- covariate_cols:
 
   Covariate columns for the balance table. `NULL` (default) uses every
   numeric, logical, factor or character column that varies, other than
@@ -85,6 +86,11 @@ ps_nominal(
   `"reference"` (default) compares each level with `ref_level`; `"all"`
   compares every pair. The levels have no order, so there is no
   `"adjacent"` choice.
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 

@@ -10,17 +10,18 @@ to `1` for matched pairs and `0` for unmatched patients.
 ``` r
 ps_match(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   score_col = "prob_t",
   id_col = "id",
   caliper = NULL,
-  covariates = NULL,
+  covariate_cols = NULL,
   match_col = "match",
   ratio = 1L,
   seed = NULL,
   treated_level = NULL,
   scale = c("probability", "logit"),
-  caliper_sd = NULL
+  caliper_sd = NULL,
+  covariates
 )
 ```
 
@@ -32,8 +33,10 @@ ps_match(
 
 - treatment_col:
 
-  Name of the binary treatment column (0/1 or logical). Default
-  `"tavr"`.
+  Name of the binary treatment column (0/1 or logical). Required: it has
+  no default, because a study's column name never is one. Omitting it is
+  deprecated, warns once per session and still means `"tavr"`, for one
+  release.
 
 - score_col:
 
@@ -53,7 +56,7 @@ ps_match(
   match to be accepted. `NULL` (default) imposes no caliper unless
   `caliper_sd` is given. Give at most one of `caliper` and `caliper_sd`.
 
-- covariates:
+- covariate_cols:
 
   Character vector of covariate columns for SMD diagnostics, used as
   given. A 0/1 or logical column takes the binary standardized
@@ -107,6 +110,11 @@ ps_match(
   patients (missing values dropped). `NULL` (default) uses `caliper`
   instead. `scale = "logit", caliper_sd = 0.2` is the Austin (2011)
   recommendation.
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 
@@ -189,7 +197,7 @@ observational studies. *Pharmaceutical Statistics*, 10(2), 150–161.
 dta <- sample_ps_data(n = 200, seed = 42)
 
 # 1. Build the matched object
-obj <- ps_match(dta)
+obj <- ps_match(dta, treatment_col = "tavr")
 
 # 2. Inspect diagnostics
 print(obj)
@@ -257,7 +265,8 @@ nrow(matched)
 
 # 5. Match on the logit with a 0.2 SD caliper (Austin 2011)
 dta$logit_t <- stats::qlogis(dta$prob_t)
-obj_logit <- ps_match(dta, score_col = "logit_t", scale = "logit", caliper_sd = 0.2)
+obj_logit <- ps_match(dta, treatment_col = "tavr", score_col = "logit_t",
+                      scale = "logit", caliper_sd = 0.2)
 obj_logit$meta$caliper
 #> [1] 0.2170102
 ```

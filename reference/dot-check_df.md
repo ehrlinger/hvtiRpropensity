@@ -5,7 +5,7 @@ Assert that an object is a non-empty data frame
 ## Usage
 
 ``` r
-.check_df(data, call_env = rlang::caller_env())
+.check_df(data)
 ```
 
 ## Arguments
@@ -13,10 +13,6 @@ Assert that an object is a non-empty data frame
 - data:
 
   Object to check.
-
-- call_env:
-
-  Environment for the error call.
 
 ## Value
 

@@ -56,7 +56,7 @@ Mirrors the dataset used in <code>tp.pm.count.balncing_score.sas</code>.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sample_ps_data_count</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500L</span>, seed <span class="op">=</span> <span class="fl">42L</span>, n_imputations <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sample_ps_data_count</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500L</span>, seed <span class="op">=</span> <span class="fl">42L</span>, m <span class="op">=</span> <span class="fl">1L</span>, <span class="va">n_imputations</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,8 +74,8 @@ same demo dataset on every call. <code>NULL</code> draws from the caller's rando
 reproduces them. A negative seed gives the same data as its absolute value.</p></dd>
 
 
-<dt id="arg-n-imputations">n_imputations<a class="anchor" aria-label="anchor" href="#arg-n-imputations"></a></dt>
-<dd><p>If <code>&gt; 1</code>, returns <code>n_imputations</code> datasets stacked in
+<dt id="arg-m">m<a class="anchor" aria-label="anchor" href="#arg-m"></a></dt>
+<dd><p>Number of imputations. If <code>&gt; 1</code>, returns <code>m</code> datasets stacked in
 the long format, with an <code>_IMPUTATION_</code> index column. Each is an
 independent draw of <code>n</code> patients, covariates and outcome alike, that
 reuses the <code>id</code> values <code>1</code> to <code>n</code>. They exercise the stacked format; they
@@ -83,13 +83,18 @@ do not resemble real imputations, in which one patient's observed values
 and outcome agree across datasets. Default <code>1L</code> (single complete
 dataset).</p></dd>
 
+
+<dt id="arg-n-imputations">n_imputations<a class="anchor" aria-label="anchor" href="#arg-n-imputations"></a></dt>
+<dd><p>Deprecated: the old name of <code>m</code>. It still works, and
+warns once per session, for one release.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame with columns: <code>id</code>, <code>rbc_tot</code> (count), <code>age</code>,
 <code>female</code>, <code>diabetes</code>, <code>hypertension</code>, <code>hct_pr</code> (pre-op haematocrit),
 <code>cpb_time</code> (cardiopulmonary bypass time, minutes), and optionally
-<code>_IMPUTATION_</code> when <code>n_imputations &gt; 1</code>.</p>
+<code>_IMPUTATION_</code> when <code>m &gt; 1</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -103,7 +108,7 @@ dataset).</p></dd>
 <span class="r-plt img"><img src="sample_ps_data_count-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Stacked multiply-imputed version (3 imputations)</span></span></span>
-<span class="r-in"><span><span class="va">dta_mi</span> <span class="op">&lt;-</span> <span class="fu">sample_ps_data_count</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">7</span>, n_imputations <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dta_mi</span> <span class="op">&lt;-</span> <span class="fu">sample_ps_data_count</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">7</span>, m <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dta_mi</span><span class="op">[[</span><span class="st">"_IMPUTATION_"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1   2   3 </span>

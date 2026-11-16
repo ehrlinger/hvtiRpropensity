@@ -8,14 +8,7 @@ metadata value, then the function's default.
 ## Usage
 
 ``` r
-.resolve_meta_arg(
-  name,
-  value,
-  supplied,
-  meta,
-  meta_name = name,
-  call_env = rlang::caller_env()
-)
+.resolve_meta_arg(name, value, supplied, meta, meta_name = name)
 ```
 
 ## Arguments
@@ -40,10 +33,6 @@ metadata value, then the function's default.
 - meta_name:
 
   The name of that metadata field. Default `name`.
-
-- call_env:
-
-  Environment for the error call.
 
 ## Value
 

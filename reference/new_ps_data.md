@@ -7,7 +7,14 @@ return value. Enforces the four-slot contract (`$data`, `$meta`,
 ## Usage
 
 ``` r
-new_ps_data(data, meta, tables = list(), models = list(), subclass)
+new_ps_data(
+  data,
+  meta,
+  tables = list(),
+  models = list(),
+  subclass,
+  provenance = NULL
+)
 ```
 
 ## Arguments
@@ -36,6 +43,13 @@ new_ps_data(data, meta, tables = list(), models = list(), subclass)
 - subclass:
 
   A single string naming the specific subclass (e.g. `"ps_match"`).
+
+- provenance:
+
+  `NULL`, or the record from
+  [`.provenance()`](https://ehrlinger.github.io/hvtiRpropensity/reference/dot-provenance.md),
+  stored as `$meta$provenance`. Every function that fits a model or
+  draws random numbers passes one.
 
 ## Value
 

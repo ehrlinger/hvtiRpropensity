@@ -76,7 +76,8 @@ Mirrors <code>tp.pm.count.balncing_score.sas</code> (PROC GENMOD <code>dist=nb l
 <span>  n_strata <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  strata_col <span class="op">=</span> <span class="st">"cluster"</span>,</span>
 <span>  create_binary_strata <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  covariate_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">covariates</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -137,8 +138,13 @@ calls <code><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-l
 indicator columns <code>stra_1</code> through <code>stra_&lt;n_strata&gt;</code> are appended.</p></dd>
 
 
-<dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
+<dt id="arg-covariate-cols">covariate_cols<a class="anchor" aria-label="anchor" href="#arg-covariate-cols"></a></dt>
 <dd><p>Covariate columns for diagnostics.</p></dd>
+
+
+<dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
+<dd><p>Deprecated: the old name of <code>covariate_cols</code>. It still works, and
+warns once per session, for one release.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -5,7 +5,7 @@ Assert that a column contains valid probabilities (0 \<= x \<= 1)
 ## Usage
 
 ``` r
-.check_probability(data, col, call_env = rlang::caller_env(), hint = NULL)
+.check_probability(data, col, hint = NULL)
 ```
 
 ## Arguments
@@ -17,10 +17,6 @@ Assert that a column contains valid probabilities (0 \<= x \<= 1)
 - col:
 
   Name of the column to check.
-
-- call_env:
-
-  Environment for the error call.
 
 - hint:
 

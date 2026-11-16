@@ -8,12 +8,12 @@ flag) can be supplied as a logical vector.
 ## Usage
 
 ``` r
-ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
+ps_support(data, flags = list(), trim = c(0.1, 0.9), common = TRUE, x)
 ```
 
 ## Arguments
 
-- x:
+- data:
 
   A `ps_data` object with a score and treatment column. The score of a
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
@@ -25,8 +25,9 @@ ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
 - flags:
 
   Optional named list of extra logical vectors, one element per row of
-  `x$data`, `TRUE` meaning the rule would drop that patient. The names
-  `"trim"` and `"common"` belong to the built-in rules and are refused.
+  `data$data`, `TRUE` meaning the rule would drop that patient. The
+  names `"trim"` and `"common"` belong to the built-in rules and are
+  refused.
 
 - trim:
 
@@ -39,19 +40,24 @@ ps_support(x, flags = list(), trim = c(0.1, 0.9), common = TRUE)
   Logical; add the rule "score outside the range occupied by both
   groups" (common support).
 
+- x:
+
+  Deprecated: the old name of `data`. It still works, and warns once per
+  session, for one release.
+
 ## Value
 
-A `ps_support` / `ps_data` object. `$data` is `x$data` plus one logical
-column `weak_<rule>` per rule. `$tables$counts` gives the number flagged
-per rule (`n_weak`), the number of rows that rule judged (`n`) and the
-number it did not (`n_excluded`): rows with a missing treatment or
-score, plus any missing values in a rule supplied through `flags`.
+A `ps_support` / `ps_data` object. `$data` is `data$data` plus one
+logical column `weak_<rule>` per rule. `$tables$counts` gives the number
+flagged per rule (`n_weak`), the number of rows that rule judged (`n`)
+and the number it did not (`n_excluded`): rows with a missing treatment
+or score, plus any missing values in a rule supplied through `flags`.
 `$meta$n_excluded` counts the rows with a missing treatment or score;
 `$tables$agreement` gives, for every pair of rules, `n_both`,
 `n_neither`, `pct_agree`, Cohen `kappa` and `jaccard` (overlap of the
 two dropped sets). `$meta$common_support` is the interval used, on the
 probability scale. `$meta$scale` is the scale of `score_col`, carried
-from `x` (`"probability"` when `x` records none).
+from `data` (`"probability"` when `data` records none).
 
 ## Details
 

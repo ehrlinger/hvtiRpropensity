@@ -22,7 +22,7 @@ is_ps_data(x)
 
 ``` r
 dta <- sample_ps_data()
-obj <- ps_match(dta)
+obj <- ps_match(dta, treatment_col = "tavr")
 is_ps_data(obj)   # TRUE
 #> [1] TRUE
 is_ps_data(list()) # FALSE

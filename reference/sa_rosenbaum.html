@@ -60,7 +60,7 @@ the upper and lower bounds on the p-value of the Wilcoxon signed-rank test.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sa_rosenbaum</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">data</span>,</span>
 <span>  <span class="va">outcome_col</span>,</span>
 <span>  gamma_max <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  gamma_inc <span class="op">=</span> <span class="fl">0.25</span>,</span>
@@ -68,7 +68,8 @@ the upper and lower bounds on the p-value of the Wilcoxon signed-rank test.</p>
 <span>  treatment_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  pair_id_col <span class="op">=</span> <span class="st">"pair_id"</span>,</span>
 <span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  alternative <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"greater"</span>, <span class="st">"less"</span><span class="op">)</span></span>
+<span>  alternative <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"greater"</span>, <span class="st">"less"</span><span class="op">)</span>,</span>
+<span>  <span class="va">x</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -76,7 +77,7 @@ the upper and lower bounds on the p-value of the Wilcoxon signed-rank test.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A <code>ps_match</code> object (returned by <code><a href="ps_match.html">ps_match()</a></code>) <strong>or</strong> a
 plain data frame whose rows are matched patients.</p></dd>
 
@@ -99,13 +100,13 @@ plain data frame whose rows are matched patients.</p></dd>
 
 <dt id="arg-treatment-col">treatment_col<a class="anchor" aria-label="anchor" href="#arg-treatment-col"></a></dt>
 <dd><p>Name of the binary treatment column (0/1).  Taken from
-<code>x$meta$treatment_col</code> when <code>x</code> is a <code>ps_match</code> object.  Required when
-<code>x</code> is a plain data frame.</p></dd>
+<code>data$meta$treatment_col</code> when <code>data</code> is a <code>ps_match</code> object.  Required when
+<code>data</code> is a plain data frame.</p></dd>
 
 
 <dt id="arg-pair-id-col">pair_id_col<a class="anchor" aria-label="anchor" href="#arg-pair-id-col"></a></dt>
 <dd><p>Name of the pair-ID column created by <code><a href="ps_match.html">ps_match()</a></code>.
-Taken from <code>x$meta$pair_id_col</code> when recorded.  Default <code>"pair_id"</code>.</p></dd>
+Taken from <code>data$meta$pair_id_col</code> when recorded.  Default <code>"pair_id"</code>.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
@@ -119,11 +120,16 @@ from the metadata of a <code>ps_data</code> object when it records one. <code>NU
 the sign of the median difference, see Details), <code>"greater"</code> (treated
 outcome above control) or <code>"less"</code>.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>Deprecated: the old name of <code>data</code>. It still works, and warns
+once per session, for one release.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("sa_rosenbaum", "ps_data")</code>:</p><dl><dt><code>$data</code></dt>
-<dd><p>The input data frame (<code>x$data</code> for a <code>ps_match</code> object).</p></dd>
+<dd><p>The input data frame (<code>data$data</code> for a <code>ps_match</code> object).</p></dd>
 
 <dt><code>$meta</code></dt>
 <dd><p>Column names, <code>treated_level</code>, the settings (<code>gamma</code>, the
@@ -188,7 +194,7 @@ must agree with that metadata; a conflict aborts.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">m</span>   <span class="op">&lt;-</span> <span class="fu"><a href="ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">m</span>   <span class="op">&lt;-</span> <span class="fu"><a href="ps_match.html">ps_match</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">sa_rosenbaum</span><span class="op">(</span><span class="va">m</span>, outcome_col <span class="op">=</span> <span class="st">"ef"</span>, gamma_max <span class="op">=</span> <span class="fl">2</span>, alternative <span class="op">=</span> <span class="st">"greater"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;sa_rosenbaum&gt;</span>

@@ -7,7 +7,7 @@ and weighting steps.
 ## Usage
 
 ``` r
-.check_binary(data, col, call_env = rlang::caller_env(), warn_na = TRUE)
+.check_binary(data, col, warn_na = TRUE)
 ```
 
 ## Arguments
@@ -19,10 +19,6 @@ and weighting steps.
 - col:
 
   Name of the column to check.
-
-- call_env:
-
-  Environment for the error call.
 
 - warn_na:
 

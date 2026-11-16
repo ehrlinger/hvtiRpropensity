@@ -73,15 +73,16 @@ reads the object itself (hvtiPlotR 2.8.22 or later).</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ps_weight</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
-<span>  treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
+<span>  <span class="va">treatment_col</span>,</span>
 <span>  score_col <span class="op">=</span> <span class="st">"prob_t"</span>,</span>
 <span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ATE"</span>, <span class="st">"ATT"</span>, <span class="st">"ATC"</span><span class="op">)</span>,</span>
 <span>  stabilise <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  covariate_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weight_col <span class="op">=</span> <span class="st">"iptw"</span>,</span>
 <span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  id_col <span class="op">=</span> <span class="st">"id"</span></span>
+<span>  id_col <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  <span class="va">covariates</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,7 +97,9 @@ reads the object itself (hvtiPlotR 2.8.22 or later).</p>
 
 <dt id="arg-treatment-col">treatment_col<a class="anchor" aria-label="anchor" href="#arg-treatment-col"></a></dt>
 <dd><p>Name of the binary treatment column (0/1 or logical).
-Default <code>"tavr"</code>.</p></dd>
+Required: it has no default, because a study's
+column name never is one. Omitting it is deprecated, warns once per
+session and still means <code>"tavr"</code>, for one release.</p></dd>
 
 
 <dt id="arg-score-col">score_col<a class="anchor" aria-label="anchor" href="#arg-score-col"></a></dt>
@@ -133,7 +136,7 @@ reweighted, so the quantiles are taken over all weights pooled across both
 arms (Lee, Lessler and Stuart, 2011). Default <code>NULL</code> (no trimming).</p></dd>
 
 
-<dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
+<dt id="arg-covariate-cols">covariate_cols<a class="anchor" aria-label="anchor" href="#arg-covariate-cols"></a></dt>
 <dd><p>Character vector of covariate columns for SMD
 diagnostics, used as given.  A 0/1 or logical column takes the binary
 standardized difference, a factor or character column the categorical
@@ -161,6 +164,11 @@ values.</p></dd>
 <dt id="arg-id-col">id_col<a class="anchor" aria-label="anchor" href="#arg-id-col"></a></dt>
 <dd><p>The patient identifier column, left out of the default
 covariates. Default <code>"id"</code>; it need not exist in <code>data</code>.</p></dd>
+
+
+<dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
+<dd><p>Deprecated: the old name of <code>covariate_cols</code>. It still works, and
+warns once per session, for one release.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -209,7 +217,7 @@ propensity score weighting. <em>PLoS ONE</em>, 6(3), e18174.
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span> <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">200</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># 1. ATE weights (default)</span></span></span>
-<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_weight</span><span class="op">(</span><span class="va">dta</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">ps_weight</span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;ps_weight&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   N total     : 400</span>
@@ -248,7 +256,7 @@ propensity score weighting. <em>PLoS ONE</em>, 6(3), e18174.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># 2. ATT weights: treated patients keep a weight of 1</span></span></span>
-<span class="r-in"><span><span class="va">obj_att</span> <span class="op">&lt;-</span> <span class="fu">ps_weight</span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">obj_att</span> <span class="op">&lt;-</span> <span class="fu">ps_weight</span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">obj_att</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Summary of &lt;ps_weight&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

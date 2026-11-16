@@ -276,7 +276,7 @@ head(obj_ps$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
 
 ``` r
 
-m_from_ps <- ps_match(obj_ps$data,
+m_from_ps <- ps_match(obj_ps$data, treatment_col = "tavr",
                       score_col = obj_ps$meta$score_col,
                       seed      = 42)
 print(m_from_ps)
@@ -549,7 +549,7 @@ reproducible whatever ran earlier in the session.
 
 ``` r
 
-m <- ps_match(dta, seed = 42)
+m <- ps_match(dta, treatment_col = "tavr", seed = 42)
 print(m)
 #> <ps_match>
 #>   N total     : 800
@@ -640,7 +640,7 @@ pairs in exchange for tighter balance.
 
 ``` r
 
-m_cal <- ps_match(dta, caliper = 0.05, seed = 42)
+m_cal <- ps_match(dta, treatment_col = "tavr", caliper = 0.05, seed = 42)
 print(m_cal)
 #> <ps_match>
 #>   N total     : 800
@@ -665,7 +665,7 @@ turns it into an absolute caliper,
 
 ``` r
 
-m_logit <- ps_match(obj_ps$data,
+m_logit <- ps_match(obj_ps$data, treatment_col = "tavr",
                     score_col  = "logit_t",
                     scale      = "logit",
                     caliper_sd = 0.2,
@@ -715,7 +715,7 @@ is the **average treatment effect** (ATE).
 
 ``` r
 
-w_ate <- ps_weight(dta, estimand = "ATE")
+w_ate <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 print(w_ate)
 #> <ps_weight>
 #>   N total     : 800
@@ -781,7 +781,7 @@ patients receive weight `1` and controls receive `ps / (1 - ps)`.
 
 ``` r
 
-w_att <- ps_weight(dta, estimand = "ATT")
+w_att <- ps_weight(dta, treatment_col = "tavr", estimand = "ATT")
 summary(w_att$data$iptw)
 #>     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 #>  0.02588  0.64471  1.00000  1.00386  1.00000 10.90944
@@ -792,7 +792,7 @@ are reversed.
 
 ``` r
 
-w_atc <- ps_weight(dta, estimand = "ATC")
+w_atc <- ps_weight(dta, treatment_col = "tavr", estimand = "ATC")
 summary(w_atc$data$iptw)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 0.01808 0.62767 1.00000 0.98627 1.00000 6.73401
@@ -805,7 +805,7 @@ weights to the (`trim`, `1 - trim`) quantile range.
 
 ``` r
 
-w_trim <- ps_weight(dta, estimand = "ATE", trim = 0.05)
+w_trim <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE", trim = 0.05)
 summary(w_trim$data$iptw)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #>  0.5691  0.6687  0.8189  0.9613  1.1024  2.0304
@@ -831,9 +831,9 @@ a percent.
 
 ``` r
 
-sd_mw <- ps_stddiff(obj_ps$data,
-                    gaussian   = c("age", "ef"),
-                    binary     = c("female", "diabetes", "hypertension"),
+sd_mw <- ps_stddiff(obj_ps$data, treatment_col = "tavr",
+                    gaussian_cols   = c("age", "ef"),
+                    binary_cols     = c("female", "diabetes", "hypertension"),
                     weight_col = "mt_wt")
 sd_mw$tables$stddiff
 #>       variable label     type      stddiff
@@ -855,9 +855,9 @@ weights for each permutation, so this example is unweighted.
 
 ``` r
 
-perm <- ps_stddiff_perm(obj_ps$data,
-                        gaussian = c("age", "ef"),
-                        binary   = "female",
+perm <- ps_stddiff_perm(obj_ps$data, treatment_col = "tavr",
+                        gaussian_cols = c("age", "ef"),
+                        binary_cols   = "female",
                         n_perm   = 200,
                         seed     = 1)
 perm$tables$stddiff_perm
@@ -881,10 +881,10 @@ uncertainty in estimating the score. Here `ef` stands in for an outcome.
 
 ``` r
 
-mw <- ps_mw_var(obj_ps$data,
-                outcomes   = "ef",
+mw <- ps_mw_var(obj_ps$data, treatment_col = "tavr",
+                outcome_cols   = "ef",
                 weight_col = "mt_wt",
-                n_rep      = 200,
+                n_boot     = 200,
                 seed       = 1)
 mw$tables$mw_var[, c("outcome", "mean_0", "mean_1", "estimate", "sd",
                      "p2_5", "p97_5")]
@@ -912,11 +912,11 @@ dta_s$t <- withr::with_seed(7, stats::rexp(nrow(dta_s), 0.2))
 dta_s$e <- as.integer(dta_s$t < 5)
 dta_s$t <- pmin(dta_s$t, 5)
 
-m_s <- ps_match(dta_s,
+m_s <- ps_match(dta_s, treatment_col = "tavr",
                 score_col  = "logit_t",
                 scale      = "logit",
                 caliper_sd = 0.2,
-                covariates = c("age", "female", "ef", "diabetes", "hypertension"),
+                covariate_cols = c("age", "female", "ef", "diabetes", "hypertension"),
                 seed       = 42)
 rm_match <- ps_rmst(m_s, time_col = "t", event_col = "e", tau = 4,
                     n_boot = 100, seed = 1)
@@ -950,8 +950,8 @@ results in `$tables` and `$meta`.
 ``` r
 
 dta  <- sample_ps_data(n = 500, seed = 42)
-m    <- ps_match(dta, seed = 42)
-w    <- ps_weight(dta, estimand = "ATE")
+m    <- ps_match(dta, treatment_col = "tavr", seed = 42)
+w    <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 ```
 
 ### 9.1 Overlap and positivity: `sa_overlap()`
@@ -1121,6 +1121,10 @@ mh <- hvtiPlotR::hv_mirror_hist(m_logit$data,
                                 score_col = "prob_t",
                                 group_col = "tavr",
                                 match_col = "match")
+#> Warning: hv_mirror_hist(): `group_labels` is study-specific and will have no
+#> default from hvtiPlotR 2.9.0. Pass it explicitly. Using the old default for
+#> now: group_labels = c("SAVR", "TF-TAVR"). This warning is shown once per
+#> session.
 plot(mh)
 ```
 

@@ -9,24 +9,25 @@ region.
 
 ``` r
 sa_overlap(
-  x,
+  data,
   score_col = "prob_t",
-  treatment_col = "tavr",
+  treatment_col = NULL,
   trim_threshold = 0.05,
-  treated_level = NULL
+  treated_level = NULL,
+  x
 )
 ```
 
 ## Arguments
 
-- x:
+- data:
 
   A `ps_data` object **or** a plain data frame.
 
 - score_col:
 
-  Name of the propensity score column. Taken from `x$meta$score_col`
-  when `x` is a `ps_data` object. Default `"prob_t"`. The score of a
+  Name of the propensity score column. Taken from `data$meta$score_col`
+  when `data` is a `ps_data` object. Default `"prob_t"`. The score of a
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
   object built with `scale = "logit"` is a logit, and is
   back-transformed with
@@ -35,8 +36,10 @@ sa_overlap(
 - treatment_col:
 
   Name of the binary treatment column (0/1). Taken from
-  `x$meta$treatment_col` when `x` is a `ps_data` object. Default
-  `"tavr"`.
+  `data$meta$treatment_col` when `data` is a `ps_data` object, and
+  required for a data frame. Omitting it for a data frame, or for an
+  object that records none, is deprecated and still means `"tavr"`, for
+  one release.
 
 - trim_threshold:
 
@@ -50,13 +53,18 @@ sa_overlap(
   of a `ps_data` object when it records one. `NULL` (default) requires a
   0/1 or logical column and takes 1 or `TRUE`.
 
+- x:
+
+  Deprecated: the old name of `data`. It still works, and warns once per
+  session, for one release.
+
 ## Value
 
 An object of class `c("sa_overlap", "ps_data")`:
 
 - `$data`:
 
-  The input data frame (`x$data` for a `ps_data` object), unchanged.
+  The input data frame (`data$data` for a `ps_data` object), unchanged.
 
 - `$meta`:
 
@@ -127,7 +135,7 @@ res$tables$positivity_flags
 #> 2     1    TRUE           0          2           0.0          0.5
 
 # From a ps_match object
-m   <- ps_match(dta)
+m   <- ps_match(dta, treatment_col = "tavr")
 res <- sa_overlap(m)
 res$tables$outside_overlap
 #>   group treated n_outside pct_outside

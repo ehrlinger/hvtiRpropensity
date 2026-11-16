@@ -12,16 +12,20 @@ permutation distribution. A port of the CCF `%stddiffci` SAS macro
 ``` r
 ps_stddiff_perm(
   data,
-  treatment_col = "tavr",
-  gaussian = NULL,
-  nong_ord = NULL,
-  binary = NULL,
-  categorical = NULL,
+  treatment_col,
+  gaussian_cols = NULL,
+  nong_ord_cols = NULL,
+  binary_cols = NULL,
+  categorical_cols = NULL,
   weight_col = NULL,
   reweight = NULL,
   n_perm = 1000L,
   seed = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  gaussian,
+  nong_ord,
+  binary,
+  categorical
 )
 ```
 
@@ -34,14 +38,16 @@ ps_stddiff_perm(
 - treatment_col:
 
   Name of the group column, coded 0/1 or logical, with both groups
-  present. Default `"tavr"`.
+  present. Required: it has no default, because a study's column name
+  never is one. Omitting it is deprecated, warns once per session and
+  still means `"tavr"`, for one release.
 
-- gaussian, nong_ord, binary, categorical:
+- gaussian_cols, nong_ord_cols, binary_cols, categorical_cols:
 
   Character vectors of column names, by type. See Details. At least one
   variable is required, and a variable may appear under one type only. A
-  `binary` column must be coded 0/1 or logical; a `categorical` column
-  may have any coding.
+  column named in `binary_cols` must be coded 0/1 or logical; one in
+  `categorical_cols` may have any coding.
 
 - weight_col:
 
@@ -74,6 +80,12 @@ ps_stddiff_perm(
   The value of `treatment_col` that is treated. `NULL` (default)
   requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
   for example `"transcatheter"`, to use a column holding any two values.
+
+- gaussian, nong_ord, binary, categorical:
+
+  Deprecated: the old names of `gaussian_cols`, `nong_ord_cols`,
+  `binary_cols` and `categorical_cols`. They still work, and warn once
+  per session, for one release.
 
 ## Value
 
@@ -137,8 +149,8 @@ the current stream is used and advanced.
 
 ``` r
 dta <- sample_ps_data(n = 200, seed = 42)
-obj <- ps_stddiff_perm(dta, treatment_col = "tavr", gaussian = c("age", "ef"),
-                       binary = "female", n_perm = 200, seed = 1)
+obj <- ps_stddiff_perm(dta, treatment_col = "tavr", gaussian_cols = c("age", "ef"),
+                       binary_cols = "female", n_perm = 200, seed = 1)
 obj$tables$stddiff_perm
 #>   variable label     type   observed       p2_5         p16          p50
 #> 1      age  <NA> gaussian -0.7993580 -0.1920948 -0.10274954 -0.004489759

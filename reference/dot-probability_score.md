@@ -11,11 +11,7 @@ unchanged, then checks that every value lies in \[0, 1\].
 ## Usage
 
 ``` r
-.probability_score(
-  x,
-  score_col = x$meta$score_col,
-  call_env = rlang::caller_env()
-)
+.probability_score(x, score_col = x$meta$score_col)
 ```
 
 ## Arguments
@@ -27,10 +23,6 @@ unchanged, then checks that every value lies in \[0, 1\].
 - score_col:
 
   Name of the score column. Default `x$meta$score_col`.
-
-- call_env:
-
-  Environment for the error call.
 
 ## Value
 

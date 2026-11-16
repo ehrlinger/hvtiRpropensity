@@ -9,7 +9,7 @@ is given `-abs(seed)`, the sign it requires, so `seed = 5` and
 ## Usage
 
 ``` r
-.seed_value(seed, call_env = rlang::caller_env())
+.seed_value(seed)
 ```
 
 ## Arguments
@@ -17,10 +17,6 @@ is given `-abs(seed)`, the sign it requires, so `seed = 5` and
 - seed:
 
   `NULL`, or one whole number.
-
-- call_env:
-
-  Environment for the error call.
 
 ## Value
 

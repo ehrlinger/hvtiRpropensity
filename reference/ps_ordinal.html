@@ -69,9 +69,10 @@ describes under "Ordinal standard errors".</p>
 <span>  id_col <span class="op">=</span> <span class="st">"id"</span>,</span>
 <span>  imputation_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  score_col_prefix <span class="op">=</span> <span class="st">"prob"</span>,</span>
-<span>  covariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  covariate_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  treatment_levels <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  smd_pairs <span class="op">=</span> <span class="st">"reference"</span></span>
+<span>  smd_pairs <span class="op">=</span> <span class="st">"reference"</span>,</span>
+<span>  <span class="va">covariates</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -112,7 +113,7 @@ are named <code>&lt;prefix&gt;_&lt;level&gt;</code> for each level of the treatm
 Default <code>"prob"</code>.</p></dd>
 
 
-<dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
+<dt id="arg-covariate-cols">covariate_cols<a class="anchor" aria-label="anchor" href="#arg-covariate-cols"></a></dt>
 <dd><p>Covariate columns for the balance table. <code>NULL</code>
 (default) uses every numeric, logical, factor or character column that
 varies, other than the treatment, score, identifier and strata columns;
@@ -131,6 +132,11 @@ compares. <code>"reference"</code> (default) compares each level with the first
 level; <code>"adjacent"</code> compares each level with the one below it; <code>"all"</code>
 compares every pair. Give more than one to combine them, for example
 <code>c("reference", "adjacent")</code>.</p></dd>
+
+
+<dt id="arg-covariates">covariates<a class="anchor" aria-label="anchor" href="#arg-covariates"></a></dt>
+<dd><p>Deprecated: the old name of <code>covariate_cols</code>. It still works, and
+warns once per session, for one release.</p></dd>
 
 </dl></div>
     <div class="section level2">

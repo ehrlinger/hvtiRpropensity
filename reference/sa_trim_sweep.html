@@ -60,13 +60,14 @@ sample size.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sa_trim_sweep</span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">data</span>,</span>
 <span>  trim_seq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.1</span>, by <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>,</span>
 <span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ATE"</span>, <span class="st">"ATT"</span>, <span class="st">"ATC"</span><span class="op">)</span>,</span>
 <span>  stabilise <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  score_col <span class="op">=</span> <span class="st">"prob_t"</span>,</span>
-<span>  treatment_col <span class="op">=</span> <span class="st">"tavr"</span>,</span>
-<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  treatment_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  treated_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">x</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -74,7 +75,7 @@ sample size.</p>
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A <code>ps_weight</code> object (returned by <code><a href="ps_weight.html">ps_weight()</a></code>) <strong>or</strong>
 a <code>ps_match</code> object <strong>or</strong> a plain data frame that contains a propensity
 score column and a binary treatment column.</p></dd>
@@ -91,27 +92,29 @@ Default <code>seq(0, 0.10, by = 0.01)</code>.</p></dd>
 
 <dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
 <dd><p>One of <code>"ATE"</code>, <code>"ATT"</code>, or <code>"ATC"</code> – the causal
-estimand used to compute IPTW weights.  Taken from <code>x$meta$estimand</code>
-when <code>x</code> is a <code>ps_weight</code> object; defaults to <code>"ATE"</code> otherwise.</p></dd>
+estimand used to compute IPTW weights.  Taken from <code>data$meta$estimand</code>
+when <code>data</code> is a <code>ps_weight</code> object; defaults to <code>"ATE"</code> otherwise.</p></dd>
 
 
 <dt id="arg-stabilise">stabilise<a class="anchor" aria-label="anchor" href="#arg-stabilise"></a></dt>
 <dd><p>Logical.  Whether to stabilise weights.  Taken from
-<code>x$meta$stabilised</code> when available; defaults to <code>TRUE</code>.  As in
+<code>data$meta$stabilised</code> when available; defaults to <code>TRUE</code>.  As in
 <code><a href="ps_weight.html">ps_weight()</a></code>, stabilisation applies to the ATE only.</p></dd>
 
 
 <dt id="arg-score-col">score_col<a class="anchor" aria-label="anchor" href="#arg-score-col"></a></dt>
 <dd><p>Name of the propensity score column.  Taken from
-<code>x$meta$score_col</code> when <code>x</code> is a <code>ps_data</code> object.  Default <code>"prob_t"</code>.
+<code>data$meta$score_col</code> when <code>data</code> is a <code>ps_data</code> object.  Default <code>"prob_t"</code>.
 The score of a <code><a href="ps_match.html">ps_match()</a></code> object built with <code>scale = "logit"</code> is a
 logit, and is back-transformed with <code><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">stats::plogis()</a></code> before use.</p></dd>
 
 
 <dt id="arg-treatment-col">treatment_col<a class="anchor" aria-label="anchor" href="#arg-treatment-col"></a></dt>
 <dd><p>Name of the binary treatment column.  Taken from
-<code>x$meta$treatment_col</code> when <code>x</code> is a <code>ps_data</code> object.  Default
-<code>"tavr"</code>.</p></dd>
+<code>data$meta$treatment_col</code> when <code>data</code> is a <code>ps_data</code> object, and
+required for a data frame. Omitting it for a data frame, or for an
+object that records none, is deprecated and still means <code>"tavr"</code>, for
+one release.</p></dd>
 
 
 <dt id="arg-treated-level">treated_level<a class="anchor" aria-label="anchor" href="#arg-treated-level"></a></dt>
@@ -119,11 +122,16 @@ logit, and is back-transformed with <code><a href="https://rdrr.io/r/stats/Logis
 from the metadata of a <code>ps_data</code> object when it records one. <code>NULL</code>
 (default) requires a 0/1 or logical column and takes 1 or <code>TRUE</code>.</p></dd>
 
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>Deprecated: the old name of <code>data</code>. It still works, and warns
+once per session, for one release.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>c("sa_trim_sweep", "ps_data")</code>:</p><dl><dt><code>$data</code></dt>
-<dd><p>The input data frame (<code>x$data</code> for a <code>ps_data</code> object),
+<dd><p>The input data frame (<code>data$data</code> for a <code>ps_data</code> object),
 unchanged.</p></dd>
 
 <dt><code>$meta</code></dt>
@@ -160,7 +168,7 @@ from the metadata, then take their defaults.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dta</span>    <span class="op">&lt;-</span> <span class="fu"><a href="sample_ps_data.html">sample_ps_data</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">400</span>, seed <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">w_obj</span>  <span class="op">&lt;-</span> <span class="fu"><a href="ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">w_obj</span>  <span class="op">&lt;-</span> <span class="fu"><a href="ps_weight.html">ps_weight</a></span><span class="op">(</span><span class="va">dta</span>, treatment_col <span class="op">=</span> <span class="st">"tavr"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sweep</span>  <span class="op">&lt;-</span> <span class="fu">sa_trim_sweep</span><span class="op">(</span><span class="va">w_obj</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sweep</span><span class="op">$</span><span class="va">tables</span><span class="op">$</span><span class="va">sweep</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   trim ess_control ess_treated max_weight sd_weight pct_trimmed</span>

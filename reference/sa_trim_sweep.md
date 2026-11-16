@@ -10,19 +10,20 @@ effective sample size.
 
 ``` r
 sa_trim_sweep(
-  x,
+  data,
   trim_seq = seq(0, 0.1, by = 0.01),
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
   score_col = "prob_t",
-  treatment_col = "tavr",
-  treated_level = NULL
+  treatment_col = NULL,
+  treated_level = NULL,
+  x
 )
 ```
 
 ## Arguments
 
-- x:
+- data:
 
   A `ps_weight` object (returned by
   [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md))
@@ -42,20 +43,20 @@ sa_trim_sweep(
 - estimand:
 
   One of `"ATE"`, `"ATT"`, or `"ATC"` – the causal estimand used to
-  compute IPTW weights. Taken from `x$meta$estimand` when `x` is a
+  compute IPTW weights. Taken from `data$meta$estimand` when `data` is a
   `ps_weight` object; defaults to `"ATE"` otherwise.
 
 - stabilise:
 
-  Logical. Whether to stabilise weights. Taken from `x$meta$stabilised`
-  when available; defaults to `TRUE`. As in
+  Logical. Whether to stabilise weights. Taken from
+  `data$meta$stabilised` when available; defaults to `TRUE`. As in
   [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md),
   stabilisation applies to the ATE only.
 
 - score_col:
 
-  Name of the propensity score column. Taken from `x$meta$score_col`
-  when `x` is a `ps_data` object. Default `"prob_t"`. The score of a
+  Name of the propensity score column. Taken from `data$meta$score_col`
+  when `data` is a `ps_data` object. Default `"prob_t"`. The score of a
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
   object built with `scale = "logit"` is a logit, and is
   back-transformed with
@@ -63,8 +64,11 @@ sa_trim_sweep(
 
 - treatment_col:
 
-  Name of the binary treatment column. Taken from `x$meta$treatment_col`
-  when `x` is a `ps_data` object. Default `"tavr"`.
+  Name of the binary treatment column. Taken from
+  `data$meta$treatment_col` when `data` is a `ps_data` object, and
+  required for a data frame. Omitting it for a data frame, or for an
+  object that records none, is deprecated and still means `"tavr"`, for
+  one release.
 
 - treated_level:
 
@@ -72,13 +76,18 @@ sa_trim_sweep(
   of a `ps_data` object when it records one. `NULL` (default) requires a
   0/1 or logical column and takes 1 or `TRUE`.
 
+- x:
+
+  Deprecated: the old name of `data`. It still works, and warns once per
+  session, for one release.
+
 ## Value
 
 An object of class `c("sa_trim_sweep", "ps_data")`:
 
 - `$data`:
 
-  The input data frame (`x$data` for a `ps_data` object), unchanged.
+  The input data frame (`data$data` for a `ps_data` object), unchanged.
 
 - `$meta`:
 
@@ -117,7 +126,7 @@ metadata, then take their defaults.
 
 ``` r
 dta    <- sample_ps_data(n = 400, seed = 3)
-w_obj  <- ps_weight(dta, estimand = "ATE")
+w_obj  <- ps_weight(dta, treatment_col = "tavr", estimand = "ATE")
 sweep  <- sa_trim_sweep(w_obj)
 head(sweep$tables$sweep)
 #>   trim ess_control ess_treated max_weight sd_weight pct_trimmed

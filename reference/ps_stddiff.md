@@ -10,13 +10,17 @@ to reproduce its `est.stddiff` output.
 ``` r
 ps_stddiff(
   data,
-  treatment_col = "tavr",
-  gaussian = NULL,
-  nong_ord = NULL,
-  binary = NULL,
-  categorical = NULL,
+  treatment_col,
+  gaussian_cols = NULL,
+  nong_ord_cols = NULL,
+  binary_cols = NULL,
+  categorical_cols = NULL,
   weight_col = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  gaussian,
+  nong_ord,
+  binary,
+  categorical
 )
 ```
 
@@ -29,14 +33,16 @@ ps_stddiff(
 - treatment_col:
 
   Name of the group column, coded 0/1 or logical, with both groups
-  present. Default `"tavr"`.
+  present. Required: it has no default, because a study's column name
+  never is one. Omitting it is deprecated, warns once per session and
+  still means `"tavr"`, for one release.
 
-- gaussian, nong_ord, binary, categorical:
+- gaussian_cols, nong_ord_cols, binary_cols, categorical_cols:
 
   Character vectors of column names, by type. See Details. At least one
   variable is required, and a variable may appear under one type only. A
-  `binary` column must be coded 0/1 or logical; a `categorical` column
-  may have any coding.
+  column named in `binary_cols` must be coded 0/1 or logical; one in
+  `categorical_cols` may have any coding.
 
 - weight_col:
 
@@ -52,6 +58,12 @@ ps_stddiff(
   The value of `treatment_col` that is treated. `NULL` (default)
   requires a 0/1 or logical column and takes 1 or `TRUE`. Give a value,
   for example `"transcatheter"`, to use a column holding any two values.
+
+- gaussian, nong_ord, binary, categorical:
+
+  Deprecated: the old names of `gaussian_cols`, `nong_ord_cols`,
+  `binary_cols` and `categorical_cols`. They still work, and warn once
+  per session, for one release.
 
 ## Value
 
@@ -80,24 +92,25 @@ An object of class `c("ps_stddiff", "ps_data")` with:
 inferred: an ordinal NYHA class stored as an integer would otherwise be
 treated as Gaussian.
 
-- `gaussian`: difference in means over `sqrt((var1 + var0) / 2)`. The
-  denominator averages the two variances; it does not pool them by
+- `gaussian_cols`: difference in means over `sqrt((var1 + var0) / 2)`.
+  The denominator averages the two variances; it does not pool them by
   sample size, so it differs from a Cohen's d when the groups are
   unequal.
 
-- `nong_ord`: the same formula on ranks of the pooled sample, ties
+- `nong_ord_cols`: the same formula on ranks of the pooled sample, ties
   averaged, as `PROC RANK` does by default. Ranks are unweighted; only
   their means and variances use `weight_col`.
 
-- `binary` and `categorical` are routed by the number of levels
-  observed, as the macro routes its `BINARY=` and `CATG=` lists: one
-  level gives 0, two use the binary formula on the proportion at the
-  last level in sort order (`1` for a 0/1 variable, the last level for a
-  factor), and more than two use the Mahalanobis form of Yang and Dalton
-  (2012). For that form the last level in sort order is the one dropped,
-  and `S` has diagonal `(t_i (1 - t_i) + c_i (1 - c_i)) / 2` and
-  off-diagonal `-(t_i t_j + c_i c_j) / 2`. A categorical difference is
-  never negative. When `S` is singular, as when the two groups share no
+- `binary_cols` and `categorical_cols` columns are routed by the number
+  of levels observed, as the macro routes its `BINARY=` and `CATG=`
+  lists: one level gives 0, two use the binary formula on the proportion
+  at the last level in sort order (`1` for a 0/1 variable, the last
+  level for a factor), and more than two use the Mahalanobis form of
+  Yang and Dalton (2012). For that form the last level in sort order is
+  the one dropped, and `S` has diagonal
+  `(t_i (1 - t_i) + c_i (1 - c_i)) / 2` and off-diagonal
+  `-(t_i t_j + c_i c_j) / 2`. A categorical difference is never
+  negative. When `S` is singular, as when the two groups share no
   levels, the difference is `NA` with a warning naming the variable.
 
 **Weights.** Within each group, the weights are first divided by their
@@ -110,8 +123,8 @@ by one constant, so stabilised and unstabilised weights from
 give the same differences. It equals the `%stddiff` macro's output when
 the weights already average 1 in each group, and otherwise does not: the
 macro's Gaussian and rank differences change with the scale of the
-weights. Proportions, for `binary` and `categorical`, are
-`sum(w x) / sum(w)` within a group and never depended on that scale.
+weights. Proportions, for `binary_cols` and `categorical_cols` columns,
+are `sum(w x) / sum(w)` within a group and never depended on that scale.
 Weights must be positive.
 
 **Missing values.** Rows with a missing group are dropped. Otherwise a
@@ -137,7 +150,7 @@ between two groups using SAS. SAS Global Forum 2012, paper 335-2012.
 ``` r
 dta <- sample_ps_data(n = 200, seed = 42)
 obj <- ps_stddiff(dta, treatment_col = "tavr",
-                  gaussian = c("age", "ef"), binary = c("female", "diabetes"))
+                  gaussian_cols = c("age", "ef"), binary_cols = c("female", "diabetes"))
 obj$tables$stddiff
 #>   variable label     type     stddiff
 #> 1      age  <NA> gaussian -0.79935800

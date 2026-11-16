@@ -156,12 +156,12 @@ The SAS programs this package ports ship with it, in
     print(score)
 
     # Step 2a: match on the logit of the score, caliper 0.2 SD
-    m <- ps_match(score$data, score_col = "logit_t", scale = "logit",
+    m <- ps_match(score$data, treatment_col = "tavr", score_col = "logit_t", scale = "logit",
                   caliper_sd = 0.2, seed = 42)
     matched <- m$data[m$data$match == 1L, ]
 
     # Step 2b: or weight
-    w <- ps_weight(score$data, score_col = score$meta$score_col)
+    w <- ps_weight(score$data, treatment_col = "tavr", score_col = score$meta$score_col)
 
 ## References
 

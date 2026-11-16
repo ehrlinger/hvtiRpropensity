@@ -21,15 +21,16 @@ reads the object itself (hvtiPlotR 2.8.22 or later).
 ``` r
 ps_weight(
   data,
-  treatment_col = "tavr",
+  treatment_col,
   score_col = "prob_t",
   estimand = c("ATE", "ATT", "ATC"),
   stabilise = TRUE,
   trim = NULL,
-  covariates = NULL,
+  covariate_cols = NULL,
   weight_col = "iptw",
   treated_level = NULL,
-  id_col = "id"
+  id_col = "id",
+  covariates
 )
 ```
 
@@ -41,8 +42,10 @@ ps_weight(
 
 - treatment_col:
 
-  Name of the binary treatment column (0/1 or logical). Default
-  `"tavr"`.
+  Name of the binary treatment column (0/1 or logical). Required: it has
+  no default, because a study's column name never is one. Omitting it is
+  deprecated, warns once per session and still means `"tavr"`, for one
+  release.
 
 - score_col:
 
@@ -82,7 +85,7 @@ ps_weight(
   both arms (Lee, Lessler and Stuart, 2011). Default `NULL` (no
   trimming).
 
-- covariates:
+- covariate_cols:
 
   Character vector of covariate columns for SMD diagnostics, used as
   given. A 0/1 or logical column takes the binary standardized
@@ -110,6 +113,11 @@ ps_weight(
 
   The patient identifier column, left out of the default covariates.
   Default `"id"`; it need not exist in `data`.
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 
@@ -162,7 +170,7 @@ score weighting. *PLoS ONE*, 6(3), e18174.
 dta <- sample_ps_data(n = 200, seed = 42)
 
 # 1. ATE weights (default)
-obj <- ps_weight(dta)
+obj <- ps_weight(dta, treatment_col = "tavr")
 print(obj)
 #> <ps_weight>
 #>   N total     : 400
@@ -201,7 +209,7 @@ summary(obj)
 #> 
 
 # 2. ATT weights: treated patients keep a weight of 1
-obj_att <- ps_weight(dta, estimand = "ATT")
+obj_att <- ps_weight(dta, treatment_col = "tavr", estimand = "ATT")
 summary(obj_att)
 #> Summary of <ps_weight>
 #> 

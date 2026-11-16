@@ -93,14 +93,14 @@ dta$prob_t <- NULL
 obj <- ps_logistic(tavr ~ age + female + ef + diabetes + hypertension, data = dta)
 
 # --- 1:1 nearest-neighbour matching on the logit, caliper 0.2 SD ---
-m <- ps_match(obj$data, score_col = "logit_t", scale = "logit",
+m <- ps_match(obj$data, treatment_col = "tavr", score_col = "logit_t", scale = "logit",
               caliper_sd = 0.2, seed = 42)
 print(m)
 summary(m)
 matched <- m$data[m$data$match == 1L, ]
 
 # --- IPTW weighting (ATE) from the estimated score ---
-w <- ps_weight(obj$data, estimand = "ATE")
+w <- ps_weight(obj$data, treatment_col = "tavr", estimand = "ATE")
 print(w)
 summary(w)
 ```

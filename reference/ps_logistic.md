@@ -16,9 +16,10 @@ ps_logistic(
   score_col = "prob_t",
   logit_col = "logit_t",
   weight_col = "mt_wt",
-  covariates = NULL,
+  covariate_cols = NULL,
   treatment_levels = NULL,
-  treated_level = NULL
+  treated_level = NULL,
+  covariates
 )
 ```
 
@@ -66,7 +67,7 @@ ps_logistic(
   Output column name for the Li-Greene matching weight (ATM). Default
   `"mt_wt"`.
 
-- covariates:
+- covariate_cols:
 
   Character vector of covariate column names for SMD balance
   diagnostics, used as given. A 0/1 or logical column takes the binary
@@ -94,6 +95,11 @@ ps_logistic(
   used. Given alone, the treatment may hold any two values (a factor
   such as `"TAVR"`/`"SAVR"`, for example) and this names the treated
   one.
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 
@@ -301,7 +307,7 @@ head(obj$data[, c("id", "tavr", "prob_t", "logit_t", "mt_wt",
 #> 6  6    0 0.3148051 -0.7777498 0.4594387        2      3
 
 # Pass the scored data to ps_match() for downstream matching
-matched <- ps_match(obj$data, score_col = obj$meta$score_col, seed = 42)
+matched <- ps_match(obj$data, treatment_col = "tavr", score_col = obj$meta$score_col, seed = 42)
 nrow(matched$data[matched$data$match == 1L, ])
 #> [1] 400
 

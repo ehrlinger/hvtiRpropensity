@@ -20,7 +20,8 @@ bs_continuous(
   n_strata = 10L,
   strata_col = "cluster",
   create_binary_strata = TRUE,
-  covariates = NULL
+  covariate_cols = NULL,
+  covariates
 )
 ```
 
@@ -74,10 +75,15 @@ bs_continuous(
   `stra_<n_strata>` are appended, mirroring the `%grp` macro in the SAS
   template.
 
-- covariates:
+- covariate_cols:
 
   Covariate columns for diagnostics (not used in computation; reserved
   for future balance-checking helpers).
+
+- covariates:
+
+  Deprecated: the old name of `covariate_cols`. It still works, and
+  warns once per session, for one release.
 
 ## Value
 
