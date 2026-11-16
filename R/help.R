@@ -74,11 +74,13 @@
 #' sensitivity function's bounds and sweeps.
 #'
 #' `hvtiPlotR::hv_mirror_hist()` reads the `$data` of a [ps_match()] or
-#' [ps_weight()] object directly. `hvtiPlotR::hv_balance()` does not read
-#' `$tables` as they are: it needs one long data frame with `variable`,
-#' `group` and `std_diff` columns, the difference in percent, so the SMD
-#' tables are stacked and multiplied by 100 first. The vignette shows the
-#' reshape.
+#' [ps_weight()] object directly. `hvtiPlotR::hv_balance()` (hvtiPlotR 2.8.22
+#' or later) reads a [ps_match()] or [ps_weight()] object itself: it takes the
+#' `smd_before`/`smd_after` or `smd_unweighted`/`smd_weighted` tables, columns
+#' `variable` and `smd`, and plots the difference in percent. A
+#' [ps_logistic()] or [ps_forest()] object carries one table, `$tables$smd`,
+#' with no before-and-after pair, and `hv_balance()` stops on it; match or
+#' weight first.
 #'
 #' The SAS programs this package ports ship with it, in
 #' `system.file("sas-templates", package = "hvtiRpropensity")`.

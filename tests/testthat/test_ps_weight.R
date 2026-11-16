@@ -203,3 +203,58 @@ test_that("a covariate that only looks like a score column stays in the default 
   expect_identical(fit$tables$smd$variable[fit$tables$smd$variable == "prob_baseline_risk"], "prob_baseline_risk")
   expect_true("prob_baseline_risk" %in% ps_weight(fit$data)$tables$smd_weighted$variable)
 })
+
+# ---- Trimming the reweighted arm only (QA tier 2, 2026-11-16) --------------
+
+test_that("ATT trimming leaves every treated weight at exactly 1", {
+  # About 10% treated: pooled quantiles put the treated weights of 1 in the
+  # trimmed tail, which the arm-specific rule must not touch.
+  d <- sample_ps_data(n = 400, seed = 11)
+  set.seed(2)
+  d$tavr <- as.integer(seq_len(nrow(d)) %in% sample(nrow(d), 40))
+  d$prob_t <- stats::plogis(-2.2 + 0.03 * (d$age - 70) + stats::rnorm(nrow(d), 0, 0.5))
+  obj <- ps_weight(d, estimand = "ATT", trim = 0.1)
+  expect_identical(obj$data$iptw[d$tavr == 1L], rep(1, 40))
+  ctl <- d$prob_t[d$tavr == 0L] / (1 - d$prob_t[d$tavr == 0L])
+  q <- stats::quantile(ctl, c(0.1, 0.9), names = FALSE)
+  expect_equal(obj$data$iptw[d$tavr == 0L], pmin(pmax(ctl, q[1]), q[2]))
+})
+
+test_that("ATC trimming leaves every control weight at exactly 1", {
+  obj <- ps_weight(dta, estimand = "ATC", trim = 0.1)
+  expect_identical(obj$data$iptw[dta$tavr == 0L], rep(1, sum(dta$tavr == 0L)))
+})
+
+test_that("a zero ATT weight is reported by patient", {
+  d <- sample_ps_data(n = 60, seed = 2)
+  ctl <- which(d$tavr == 0L)[1:2]
+  d$prob_t[ctl] <- 0
+  expect_error(ps_weight(d, estimand = "ATT"), paste0("`id` ", d$id[ctl[1]], ", ", d$id[ctl[2]]))
+})
+
+# ---- Non-numeric covariates in the balance tables ---------------------------
+
+test_that("factor, character and logical covariates enter the default balance tables", {
+  d <- dta
+  d$site <- factor(rep(c("a", "b", "c"), length.out = nrow(d)))
+  d$nyha <- rep(c("I", "II"), length.out = nrow(d))
+  d$smoker <- rep(c(TRUE, FALSE, FALSE), length.out = nrow(d))
+  d$name <- paste0("pt", seq_len(nrow(d)))  # an identifier, never a covariate
+  obj <- ps_weight(d)
+  expect_true(all(c("site", "nyha", "smoker") %in% obj$tables$smd_unweighted$variable))
+  expect_false("name" %in% obj$tables$smd_unweighted$variable)
+  expect_identical(obj$tables$smd_weighted$variable, obj$tables$smd_unweighted$variable)
+  ref <- ps_stddiff(d, treatment_col = "tavr", categorical = "site", binary = "female")$tables$stddiff
+  smd <- obj$tables$smd_unweighted
+  expect_equal(smd$smd[smd$variable == "site"], round(ref$stddiff[ref$variable == "site"], 4))
+  expect_equal(smd$smd[smd$variable == "female"], round(ref$stddiff[ref$variable == "female"], 4))
+  expect_true(all(is.finite(smd$smd)))
+})
+
+test_that("a one-arm treatment column is refused", {
+  d <- dta
+  d$tavr <- 1L
+  expect_error(ps_weight(d), "both treatment values")
+  expect_error(ps_match(d), "both treatment values")
+  expect_error(ps_logistic(tavr ~ age + ef, data = d), "both treatment values")
+})

@@ -25,8 +25,8 @@
 #' `mt_wt` column from [ps_logistic()] or [ps_forest()] instead.
 #' Returns a `ps_weight` object whose `$tables` slot contains SMD tables
 #' (unweighted and weighted) and effective-N diagnostics. Its `$data` feeds
-#' `hvtiPlotR::hv_mirror_hist()` in weighted mode; `hvtiPlotR::hv_balance()`
-#' needs the SMD tables stacked into long form (see the vignette).
+#' `hvtiPlotR::hv_mirror_hist()` in weighted mode, and `hvtiPlotR::hv_balance()`
+#' reads the object itself (hvtiPlotR 2.8.22 or later).
 #'
 #' A patient with a missing treatment or a missing score cannot be weighted.
 #' Those rows stay in `$data` with a missing `weight_col`, are left out of the
@@ -54,11 +54,19 @@
 #'   keeps weights of exactly 1.  `$meta$stabilised` records whether it was
 #'   applied.
 #' @param trim           Optional numeric in (0, 0.5).  If supplied, weights
-#'   outside the (`trim`, `1 - trim`) quantile range are winsorised.
-#'   Default `NULL` (no trimming).
+#'   outside the (`trim`, `1 - trim`) quantile range are winsorised, within the
+#'   arm that is reweighted. For `"ATT"` only the control weights are trimmed,
+#'   at quantiles of the control weights, and every treated weight stays
+#'   exactly 1; `"ATC"` is the mirror image. For `"ATE"` both arms are
+#'   reweighted, so the quantiles are taken over all weights pooled across both
+#'   arms (Lee, Lessler and Stuart, 2011). Default `NULL` (no trimming).
 #' @param covariates     Character vector of covariate columns for SMD
-#'   diagnostics, used as given.  If `NULL` (default), every numeric column
-#'   that varies is used, except `treatment_col`, `score_col`, `weight_col`,
+#'   diagnostics, used as given.  A 0/1 or logical column takes the binary
+#'   standardized difference, a factor or character column the categorical
+#'   one of [ps_stddiff()] (one row per column), any other numeric column the
+#'   Gaussian one.  If `NULL` (default), every numeric, logical, factor or
+#'   character column that varies is used, except identifier-like text columns
+#'   (every value different), `treatment_col`, `score_col`, `weight_col`,
 #'   `id_col` and the fixed columns this package appends (`prob_t`,
 #'   `logit_t`, `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile`,
 #'   `bs`, `cluster`).
@@ -85,6 +93,10 @@
 #'     `treatment_col` (`0`/`1`, `FALSE`/`TRUE`, or the two values when
 #'     `treated_level` is given) and carry a logical `treated` column.}
 #' }
+#'
+#' @references Lee BK, Lessler J, Stuart EA (2011). Weight trimming and
+#'   propensity score weighting. *PLoS ONE*, 6(3), e18174.
+#'   \doi{10.1371/journal.pone.0018174}
 #'
 #' @seealso [ps_match()], [sample_ps_data()],
 #'   `hvtiPlotR::hv_mirror_hist()`, `hvtiPlotR::hv_balance()`
@@ -157,16 +169,27 @@ ps_weight <- function(data,
   }
 
   # ---- Winsorise (trim) ---------------------------------------------------
-  if (!is.null(trim)) {
-    q_lo <- stats::quantile(w, trim,       na.rm = TRUE)
-    q_hi <- stats::quantile(w, 1 - trim,   na.rm = TRUE)
-    w    <- pmin(pmax(w, q_lo), q_hi)
-  }
+  # Only the reweighted arm is trimmed for the ATT and ATC; see .trim_weights().
+  if (!is.null(trim)) w <- .trim_weights(w, trt, estimand, trim)
   if (any(is.infinite(w))) {
     rlang::abort(
       sprintf(paste0("%d weight(s) are infinite because `%s` is exactly 0 or 1 for a patient in the arm ",
                      "that divides by it. Set `trim` to winsorise them, or remove those patients."),
               sum(is.infinite(w)), score_col),
+      call = NULL
+    )
+  }
+  zero <- which(kept & w == 0)
+  if (length(zero) > 0L) {
+    who <- if (id_col %in% names(data)) paste0("`", id_col, "` ", paste(utils::head(data[[id_col]][zero], 10L),
+                                                                       collapse = ", "))
+           else paste("row", paste(utils::head(zero, 10L), collapse = ", "))
+    rlang::abort(
+      sprintf(paste0("%d patient(s) get a weight of 0 because `%s` is exactly %s for a %s patient under the %s: %s%s. ",
+                     "Set `trim` to winsorise them, or remove those patients."),
+              length(zero), score_col, if (estimand == "ATT") "0" else "1",
+              if (estimand == "ATT") "control" else "treated", estimand,
+              who, if (length(zero) > 10L) ", ..." else ""),
       call = NULL
     )
   }

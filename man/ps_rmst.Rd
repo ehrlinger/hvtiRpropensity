@@ -113,12 +113,16 @@ keeps its stored weight.
 \strong{Horizon.} The weighted Kaplan-Meier curve is not defined past the last
 observed time in an arm, counting only the rows that enter the curve (time
 and event present, weight above zero), so a \code{tau} beyond it stops with an error rather
-than carrying the last survival value forward. A bootstrap draw can still
-end short of \code{tau}, and its curve is then carried flat to \code{tau}.
+than carrying the last survival value forward. A bootstrap draw whose
+resampled follow-up in either arm ends before \code{tau} is held to the same
+rule: it fails rather than being carried flat to \code{tau}.
 
-\strong{Failures.} A bootstrap draw that errors, or that leaves an arm empty,
-gives \code{NA}; the interval is taken over the other draws and the number of
-\code{NA} draws is reported as \code{n_failed}.
+\strong{Failures.} A bootstrap draw that errors, that leaves an arm empty, or
+whose follow-up in an arm ends before \code{tau} gives \code{NA}; the interval is
+taken over the other draws and the number of \code{NA} draws is reported as
+\code{n_failed}. When more than 5\% of the draws for an estimator fail, a warning
+of class \code{hvtiRpropensity_bootstrap_failures} says so, the family rule for
+every hvtiR bootstrap.
 }
 \examples{
 if (requireNamespace("survival", quietly = TRUE)) {

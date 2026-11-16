@@ -372,6 +372,8 @@ fit_logistic <- function(formula, data,
     predict_fn = predict_fn,
     predictor_cols = .retained_predictors(formula)
   )
+  .check_aliased(fitted$models)
+  .check_separation(fitted$models, outcome_col)
   inference <- .model_inference(fitted$models, family)
   scored <- fitted$data
   if (identical(family, "binary")) {
@@ -431,22 +433,64 @@ fit_logistic <- function(formula, data,
 }
 
 
-#' Stop when a fitted linear model has an aliased term
+#' Stop when a fitted linear or logistic model has an aliased term
 #'
-#' `stats::lm()` returns `NA` for a term it cannot estimate, which would
-#' otherwise surface later as an anonymous non-finite coefficient.
+#' `stats::lm()` and `stats::glm()` return `NA` for a term they cannot
+#' estimate, which would otherwise surface later as an anonymous non-finite
+#' coefficient. Models from other engines are skipped: [MASS::polr()] drops an
+#' aliased column itself, and a [nnet::multinom()] coefficient matrix carries
+#' no `NA`.
 #'
 #' @param models Named list of fitted models.
 #' @return Invisible `NULL`.
 #' @keywords internal
 .check_aliased <- function(models) {
   for (i in seq_along(models)) {
+    if (!inherits(models[[i]], "lm")) next
     aliased <- names(stats::coef(models[[i]]))[is.na(stats::coef(models[[i]]))]
     if (length(aliased)) {
       label <- if (is.null(names(models))) i else names(models)[[i]]
       rlang::abort(
         sprintf("Term(s) aliased in imputation %s: %s. Remove them from the formula.",
                 label, paste(aliased, collapse = ", ")),
+        call. = FALSE
+      )
+    }
+  }
+  invisible(NULL)
+}
+
+
+#' Stop when a binary logistic fit predicts the outcome perfectly
+#'
+#' Complete or quasi-complete separation drives some fitted probabilities to 0
+#' or 1, so the logits are infinite and the coefficients and their standard
+#' errors are meaningless. [stats::glm()] only warns; a score of exactly 0 or
+#' 1 gives an infinite logit and weight, so it cannot be used for matching or
+#' weighting, and this stops. The threshold is the one `glm.fit()` warns at,
+#' `10 * .Machine$double.eps`. Only [stats::glm()] fits are checked: in an
+#' ordinal or nominal model one extreme covariate value can round a level's
+#' probability to 0 or 1 with finite, well-estimated coefficients.
+#'
+#' @param models Named list of fitted models.
+#' @param outcome_col The outcome column, for the message.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.check_separation <- function(models, outcome_col) {
+  eps <- 10 * .Machine$double.eps
+  for (i in seq_along(models)) {
+    if (!inherits(models[[i]], "glm")) next
+    p <- stats::fitted(models[[i]])
+    n <- sum(p < eps | p > 1 - eps, na.rm = TRUE)
+    if (n > 0L) {
+      label <- if (is.null(names(models))) i else names(models)[[i]]
+      rlang::abort(
+        sprintf(paste0("The model separates `%s` (imputation %s): %d fitted probabilit%s numerically 0 or 1, ",
+                       "so the logits are infinite. Usually a predictor, or a combination of predictors, predicts ",
+                       "the outcome perfectly (separation); an extreme covariate value can do it too. Remove ",
+                       "or combine the predictor, merge sparse levels, or check the extreme values."),
+                outcome_col, label, n, if (n == 1L) "y is" else "ies are"),
+        class = "hvtiRpropensity_separation",
         call. = FALSE
       )
     }

@@ -198,7 +198,7 @@ The four generators return plain data frames and `is_ps_data()` returns
 
 The [Get started](https://ehrlinger.github.io/hvtiRpropensity/articles/hvtiRpropensity.html)
 vignette walks the workflow from score to sensitivity analysis, including a
-worked example that reshapes the balance tables for `hvtiPlotR::hv_balance()`.
+worked example that passes a match to `hvtiPlotR::hv_balance()`.
 
 The SAS programs this package ports ship with it:
 `system.file("sas-templates", package = "hvtiRpropensity")`.
@@ -207,6 +207,7 @@ The SAS programs this package ports ship with it:
 
 - **hvtiPlotR**: mirror histograms, balance plots, survival and hazard curves.
   `hv_mirror_hist()` reads the `$data` of a `ps_match()` or `ps_weight()`
-  object directly. `hv_balance()` needs the SMD tables reshaped to long form
-  in percent; the vignette shows how.
+  object directly, and `hv_balance()` (2.8.22 or later) reads the object
+  itself. A `ps_logistic()` or `ps_forest()` object has a single `smd` table
+  and no before-and-after pair, so `hv_balance()` stops on it.
 - **hvtiRutilities**: data wrangling utilities for cardiac surgery datasets.

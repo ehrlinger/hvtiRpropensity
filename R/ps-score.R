@@ -177,8 +177,12 @@
 #' @param weight_col     Output column name for the Li-Greene matching
 #'   weight (ATM). Default `"mt_wt"`.
 #' @param covariates     Character vector of covariate column names for SMD
-#'   balance diagnostics, used as given.  If `NULL` (default), every numeric
-#'   column that varies is used, except `treatment_col`, `score_col`,
+#'   balance diagnostics, used as given.  A 0/1 or logical column takes the
+#'   binary standardized difference, a factor or character column the
+#'   categorical one of [ps_stddiff()] (one row per column), any other numeric
+#'   column the Gaussian one.  If `NULL` (default), every numeric, logical,
+#'   factor or character column that varies is used, except identifier-like
+#'   text columns (every value different), `treatment_col`, `score_col`,
 #'   `logit_col`, `weight_col`, `id_col` and the fixed columns this package
 #'   appends (`quintile`, `decile`, `iptw`, `match`, `pair_id` and the like).
 #'   A predictor named in `formula` is always kept.
@@ -305,7 +309,7 @@ ps_logistic <- function(formula,
     treatment_levels <- .treatment_indicator(data, treatment_col, treated_level, warn_na = FALSE)$labels
   }
   if (is.null(treatment_levels)) {
-    .check_binary(data, treatment_col, warn_na = FALSE)
+    .treatment_indicator(data, treatment_col, warn_na = FALSE)
     treatment_levels <- if (is.logical(data[[treatment_col]])) {
       c(FALSE, TRUE)
     } else {
@@ -465,8 +469,9 @@ print.ps_logistic <- function(x, ...) {
 #'   are named `<prefix>_<level>` for each level of the treatment.
 #'   Default `"prob"`.
 #' @param covariates       Covariate columns for the balance table. `NULL`
-#'   (default) uses every numeric column other than the treatment, score,
-#'   identifier and strata columns.
+#'   (default) uses every numeric, logical, factor or character column that
+#'   varies, other than the treatment, score, identifier and strata columns;
+#'   types are routed as in [ps_logistic()].
 #' @param smd_pairs        Which pairs of treatment levels the balance table
 #'   compares. `"reference"` (default) compares each level with the first
 #'   level; `"adjacent"` compares each level with the one below it; `"all"`
@@ -712,8 +717,9 @@ print.ps_ordinal <- function(x, ...) {
 #' @param trace            Logical.  If `FALSE` (default), suppresses
 #'   [nnet::multinom()] iteration messages.
 #' @param covariates       Covariate columns for the balance table. `NULL`
-#'   (default) uses every numeric column other than the treatment, score,
-#'   identifier and strata columns.
+#'   (default) uses every numeric, logical, factor or character column that
+#'   varies, other than the treatment, score, identifier and strata columns;
+#'   types are routed as in [ps_logistic()].
 #' @param smd_pairs        Which pairs of treatment levels the balance table
 #'   compares. `"reference"` (default) compares each level with `ref_level`;
 #'   `"all"` compares every pair. The levels have no order, so there is no

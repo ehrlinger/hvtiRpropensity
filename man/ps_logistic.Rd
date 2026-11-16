@@ -47,8 +47,12 @@ score, \code{log(p / (1 - p))}.  Default \code{"logit_t"}.}
 weight (ATM). Default \code{"mt_wt"}.}
 
 \item{covariates}{Character vector of covariate column names for SMD
-balance diagnostics, used as given.  If \code{NULL} (default), every numeric
-column that varies is used, except \code{treatment_col}, \code{score_col},
+balance diagnostics, used as given.  A 0/1 or logical column takes the
+binary standardized difference, a factor or character column the
+categorical one of \code{\link[=ps_stddiff]{ps_stddiff()}} (one row per column), any other numeric
+column the Gaussian one.  If \code{NULL} (default), every numeric, logical,
+factor or character column that varies is used, except identifier-like
+text columns (every value different), \code{treatment_col}, \code{score_col},
 \code{logit_col}, \code{weight_col}, \code{id_col} and the fixed columns this package
 appends (\code{quintile}, \code{decile}, \code{iptw}, \code{match}, \code{pair_id} and the like).
 A predictor named in \code{formula} is always kept.}

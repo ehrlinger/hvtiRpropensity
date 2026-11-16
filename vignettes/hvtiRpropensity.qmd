@@ -765,35 +765,22 @@ plot(mh_wt)
 
 ### Covariate balance plot
 
-`hv_balance()` does **not** read `$tables` as they come. It wants one long
-data frame, one row per covariate and comparison, with columns `variable`,
-`group` and `std_diff`, and the difference in **percent** (its reference
-lines sit at plus and minus 10). The SMD tables here are proportions of a
-standard deviation, one table per comparison, so stack them and multiply by
-100. Here is the logit-scale match from earlier.
-
-```{r}
-#| label: balance-reshape
-balance_long <- rbind(
-  data.frame(variable = m_logit$tables$smd_before$variable,
-             group    = "Before match",
-             std_diff = 100 * m_logit$tables$smd_before$smd),
-  data.frame(variable = m_logit$tables$smd_after$variable,
-             group    = "After match",
-             std_diff = 100 * m_logit$tables$smd_after$smd)
-)
-balance_long
-```
-
-For a `ps_weight()` object the two tables are `smd_unweighted` and
-`smd_weighted`.
+`hv_balance()` (hvtiPlotR 2.8.22 or later) reads a `ps_match()` or
+`ps_weight()` object itself. It takes the two SMD tables, `smd_before` and
+`smd_after` for a match or `smd_unweighted` and `smd_weighted` for a
+weighting, and plots the difference in **percent**, with reference lines at
+plus and minus 10. Here is the logit-scale match from earlier.
 
 ```{r}
 #| label: balance-plot
 #| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
-cb <- hvtiPlotR::hv_balance(balance_long)
+cb <- hvtiPlotR::hv_balance(m_logit, group_labels = c("Before match", "After match"))
 plot(cb)
 ```
+
+A `ps_logistic()` or `ps_forest()` object carries one table, `$tables$smd`,
+with no before-and-after pair, so `hv_balance()` stops on it. Match or weight
+first, then plot.
 
 ---
 

@@ -21,7 +21,9 @@ score column and a binary treatment column.}
 
 \item{trim_seq}{Numeric vector of trimming values to evaluate.  Each
 value is the lower tail quantile; weights outside the
-(\code{trim}, \code{1 - trim}) range are winsorised.  \code{0} means no trimming.
+(\code{trim}, \code{1 - trim}) range are winsorised, within the reweighted arm as
+\code{\link[=ps_weight]{ps_weight()}} does: the controls for the ATT, the treated for the ATC,
+and both arms pooled for the ATE.  \code{0} means no trimming.
 Default \code{seq(0, 0.10, by = 0.01)}.}
 
 \item{estimand}{One of \code{"ATE"}, \code{"ATT"}, or \code{"ATC"} -- the causal

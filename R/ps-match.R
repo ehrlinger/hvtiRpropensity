@@ -29,11 +29,15 @@
 #' `$meta$n_unmatched` counts them; when it is not zero, say which population
 #' the estimate describes.
 #'
+#' **Ties.** Treated patients are visited in a random order set by `seed`.
+#' When two or more remaining controls are equally close to a treated patient
+#' (within `1e-12` on the score scale), the one with the smallest `id_col`
+#' value is taken, so the match does not depend on the row order of `data`.
+#'
 #' The `$tables` slot contains standardised mean difference (SMD) tables
 #' before and after matching, and group counts. `hvtiPlotR::hv_mirror_hist()`
-#' reads `$data` directly. `hvtiPlotR::hv_balance()` needs the two SMD tables
-#' stacked into long form with `variable`, `group` and `std_diff` (in percent);
-#' the vignette shows the reshape.
+#' reads `$data` directly, and `hvtiPlotR::hv_balance()` reads the object
+#' itself (hvtiPlotR 2.8.22 or later).
 #'
 #' A patient with a missing treatment or a missing score cannot be matched.
 #' Those rows stay in `$data` with `match_col` set to `0`, are left out of the
@@ -56,8 +60,12 @@
 #'   caliper unless `caliper_sd` is given.  Give at most one of `caliper` and
 #'   `caliper_sd`.
 #' @param covariates     Character vector of covariate columns for SMD
-#'   diagnostics, used as given.  If `NULL` (default), every numeric column
-#'   that varies is used, except `treatment_col`, `score_col`, `id_col`,
+#'   diagnostics, used as given.  A 0/1 or logical column takes the binary
+#'   standardized difference, a factor or character column the categorical
+#'   one of [ps_stddiff()] (one row per column), any other numeric column the
+#'   Gaussian one.  If `NULL` (default), every numeric, logical, factor or
+#'   character column that varies is used, except identifier-like text columns
+#'   (every value different), `treatment_col`, `score_col`, `id_col`,
 #'   `match_col` and the fixed columns this package appends (`prob_t`,
 #'   `logit_t`, `mt_wt`, `iptw`, `pair_id`, `quintile`, `decile`, `bs`,
 #'   `cluster`).
@@ -213,6 +221,9 @@ ps_match <- function(data,
 
   ps_t <- ps[idx_t]
   ps_c <- ps[idx_c]
+  # Ties: controls equally close to a treated patient go to the smallest id_col
+  # value, so the match does not depend on row order.
+  id_rank_c <- rank(data[[id_col]][idx_c], ties.method = "first", na.last = TRUE)
 
   # ---- Nearest-neighbour matching (greedy, without replacement) ----------
   # Pre-allocate to maximum possible size to avoid O(n^2) vector growth.
@@ -232,8 +243,9 @@ ps_match <- function(data,
     if (length(remaining_idx) == 0L) break
 
     dists     <- abs(ps_t[i] - ps_c[remaining_idx])
-    best_pos  <- which.min(dists)           # position within remaining_idx
-    if (!length(best_pos)) next
+    if (!length(dists)) next
+    tied      <- which(dists <= min(dists) + 1e-12)
+    best_pos  <- tied[which.min(id_rank_c[remaining_idx[tied]])]  # position within remaining_idx
     best      <- remaining_idx[best_pos]    # index into idx_c
     best_dist <- dists[best_pos]
 

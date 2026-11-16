@@ -52,14 +52,14 @@ test_that("the pair bootstrap keeps both members of every drawn pair", {
   m <- ps_match(d, score_col = "s", seed = 1)
   expect_equal(m$meta$n_matched, k)
   expect_true(all(tapply(m$data$t, m$data$pair_id, function(v) length(unique(v)) == 1L)))
-  r <- ps_rmst(m, "t", "e", tau = 4, n_boot = 50, seed = 2)
+  r <- ps_rmst(m, "t", "e", tau = 3, n_boot = 50, seed = 2)
   est <- r$tables$estimates
   expect_equal(est$n, 2L * k)
   expect_equal(est$diff, 0)
   expect_equal(c(est$lo_days, est$hi_days), c(0, 0))
   expect_equal(est$n_failed, 0L)
 
-  row_boot <- ps_rmst(ps_logistic(tavr ~ s, d), "t", "e", tau = 4, weights = "unweighted", n_boot = 50,
+  row_boot <- ps_rmst(ps_logistic(tavr ~ s, d), "t", "e", tau = 3, weights = "unweighted", n_boot = 50,
                       seed = 2)
   expect_identical(row_boot$meta$resampling, "row")
   expect_gt(row_boot$tables$estimates$hi_days, row_boot$tables$estimates$lo_days)
@@ -135,4 +135,16 @@ test_that("the horizon guard ignores a row with a missing event past follow-up",
   d$e[nrow(d)] <- NA
   fit <- ps_logistic(tavr ~ x, d)
   expect_error(ps_rmst(fit, "t", "e", tau = 6, weights = "unweighted", n_boot = 2), "control arm")
+})
+
+test_that("resamples whose follow-up ends before tau fail, and more than 5% failing warns", {
+  d <- rmst_data
+  trt <- which(d$tavr == 1L)
+  d$t[trt] <- pmin(d$t[trt], 4.5)
+  d$t[trt[1]] <- 4.9  # one treated patient reaches tau; about a third of resamples miss them
+  fit <- ps_logistic(tavr ~ age + ef, d[setdiff(names(d), "prob_t")])
+  expect_warning(r <- ps_rmst(fit, "t", "e", tau = 4.9, weights = "unweighted", n_boot = 60, seed = 4),
+                 class = "hvtiRpropensity_bootstrap_failures")
+  expect_gt(r$tables$estimates$n_failed, 3L)
+  expect_no_warning(ps_rmst(fit, "t", "e", tau = 4, weights = "unweighted", n_boot = 20, seed = 4))
 })

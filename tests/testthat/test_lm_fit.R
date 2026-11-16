@@ -333,8 +333,19 @@ test_that("stacked fitting names an imputation with an aliased term", {
       outcome_levels = c(0, 1),
       event_level = 1
     ),
-    "non-finite coefficient.*imputation 2"
+    "aliased in imputation 2: x_alias"
   )
+})
+
+test_that("a separated logistic fit stops and names the cause", {
+  d <- data.frame(id = 1:40, y = rep(0:1, each = 20), x = c(stats::runif(20, 0, 1), stats::runif(20, 2, 3)),
+                  z = stats::rnorm(40))
+  expect_error(
+    suppressWarnings(fit_logistic(y ~ x + z, d, outcome_levels = c(0, 1), event_level = 1)),
+    class = "hvtiRpropensity_separation"
+  )
+  d$tavr <- d$y
+  expect_error(suppressWarnings(ps_logistic(tavr ~ x + z, data = d)), "separates `tavr`")
 })
 
 test_that("fit_linear matches lm() on one dataset and reports R-squared", {

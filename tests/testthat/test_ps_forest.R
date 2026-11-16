@@ -132,8 +132,9 @@ test_that("degenerate inputs give NA, not errors or NaN", {
 test_that("ps_rmst() reports NA intervals when a subset has only one arm", {
   x <- ps_logistic(tavr ~ age + ef, surv_dta)
   only_ctl <- surv_dta$tavr == 0
-  r <- expect_no_warning(ps_rmst(x, "t", "e", tau = 4, weights = "unweighted",
-                                 subsets = list(ctl = only_ctl), n_boot = 5))
+  expect_warning(r <- ps_rmst(x, "t", "e", tau = 4, weights = "unweighted",
+                              subsets = list(ctl = only_ctl), n_boot = 5),
+                 class = "hvtiRpropensity_bootstrap_failures")
   row <- r$tables$estimates[r$tables$estimates$estimator == "ctl/unweighted", ]
   expect_true(is.na(row$diff_days) && is.na(row$lo_days) && is.na(row$hi_days))
   expect_equal(row$n_failed, 5L)

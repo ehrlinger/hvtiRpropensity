@@ -172,17 +172,19 @@
 
 #' Default covariates for a balance table
 #'
-#' Every numeric column except those in `reserved`, the fixed output columns
-#' this package appends (`prob_t`, `logit_t`, `mt_wt`, `iptw`, `match`,
-#' `pair_id`, `quintile`, `decile`, `bs`, `cluster`), and constant columns. A
-#' column is constant when its non-missing values take at most one value. A
-#' function that generates columns under other names, such as the
-#' `prob_<level>` scores of [ps_nominal()], passes those exact names in
+#' Every numeric, logical, factor or character column except those in
+#' `reserved`, the fixed output columns this package appends (`prob_t`,
+#' `logit_t`, `mt_wt`, `iptw`, `match`, `pair_id`, `quintile`, `decile`, `bs`,
+#' `cluster`), and constant columns. A column is constant when its non-missing
+#' values take at most one value. A logical, factor or character column whose
+#' non-missing values are all different is an identifier, not a covariate, and
+#' is left out too. A function that generates columns under other names, such
+#' as the `prob_<level>` scores of [ps_nominal()], passes those exact names in
 #' `reserved`.
 #'
 #' Columns in `keep`, the predictors a model formula declares, are never
-#' dropped by the fixed output names or the constant rule; only `reserved` can
-#' drop them.
+#' dropped by the fixed output names, the constant rule or the identifier rule;
+#' only `reserved` can drop them.
 #'
 #' @param data     A data frame.
 #' @param reserved Columns never used as covariates, such as the treatment,
@@ -193,21 +195,29 @@
 #' @keywords internal
 .default_covariates <- function(data, reserved = character(), keep = character()) {
   outputs <- c("prob_t", "logit_t", "mt_wt", "iptw", "match", "pair_id", "quintile", "decile", "bs", "cluster")
-  cols <- setdiff(names(data)[vapply(data, is.numeric, logical(1L))], reserved)
-  varies <- vapply(cols, function(col) length(unique(stats::na.omit(data[[col]]))) > 1L, logical(1L))
-  cols[cols %in% keep | (varies & !cols %in% outputs)]
+  usable <- vapply(data, function(x) is.numeric(x) || is.logical(x) || is.factor(x) || is.character(x),
+                   logical(1L))
+  cols <- setdiff(names(data)[usable], reserved)
+  informative <- vapply(cols, function(col) {
+    x <- stats::na.omit(data[[col]])
+    n_values <- length(unique(x))
+    n_values > 1L && (is.numeric(x) || n_values < length(x))
+  }, logical(1L))
+  cols[cols %in% keep | (informative & !cols %in% outputs)]
 }
 
 
 #' Build a tidy SMD table across covariates, through ps_stddiff()
 #'
-#' Every covariate is treated as Gaussian, so the denominator is
-#' `sqrt((var1 + var0) / 2)`, and with `weight_col` the variances are the
-#' `PROC MEANS` weighted ones, divided by `n - 1`, after the weights are
-#' normalised to mean 1 within each group. This is the one formula the
-#' package uses; see [ps_stddiff()]. A subset with a group absent, such as the
-#' matched rows of a match that found no pairs, gets `NA` for every covariate
-#' rather than an error.
+#' Each covariate is routed to the [ps_stddiff()] formula for its type. A
+#' logical column, or a numeric column whose non-missing values are all 0 or
+#' 1, takes the binary formula. A factor or character column takes the
+#' categorical formula of Yang and Dalton (2012), one row per column, or the
+#' binary formula when it has two levels. Every other numeric column is
+#' Gaussian, with the denominator `sqrt((var1 + var0) / 2)`. With `weight_col`,
+#' proportions and variances are weighted as [ps_stddiff()] describes. A
+#' subset with a group absent, such as the matched rows of a match that found
+#' no pairs, gets `NA` for every covariate rather than an error.
 #'
 #' @param data       A data frame.
 #' @param treatment  Name of the binary treatment column.
@@ -218,26 +228,69 @@
 #' @param reserved   Further columns never used as default covariates.
 #' @param keep       Model predictors protected in the default set; see
 #'   `.default_covariates()`.
-#' @return A data frame with columns `variable` and `smd`, rounded to 4 places.
+#' @return A data frame with columns `variable` and `smd`, rounded to 4 places,
+#'   one row per covariate.
 #' @keywords internal
 .smd_table <- function(data, treatment, covariates = NULL, weight_col = NULL, reserved = character(),
                        keep = character()) {
   if (is.null(covariates)) {
     covariates <- .default_covariates(data, c(treatment, weight_col, reserved), keep)
   }
+  .check_cols(data, covariates)
+  type <- vapply(covariates, function(v) {
+    x <- data[[v]]
+    if (is.logical(x) || (is.numeric(x) && all(x[!is.na(x)] %in% c(0, 1)))) {
+      "binary"
+    } else if (is.numeric(x)) {
+      "gaussian"
+    } else if (is.factor(x) || is.character(x)) {
+      "categorical"
+    } else {
+      rlang::abort(sprintf(paste0("Covariate `%s` must be numeric, logical, factor or character to enter a ",
+                                  "balance table; it is %s."), v, class(x)[1L]), call. = FALSE)
+    }
+  }, character(1L))
   grp <- data[[treatment]]
   smds <- if (length(covariates) == 0L || !all(c(0, 1) %in% grp)) {
     rep(NA_real_, length(covariates))
   } else {
-    ps_stddiff(data, treatment_col = treatment, gaussian = covariates, weight_col = weight_col)$tables$stddiff$stddiff
+    tbl <- ps_stddiff(data, treatment_col = treatment, gaussian = covariates[type == "gaussian"],
+                      binary = covariates[type == "binary"], categorical = covariates[type == "categorical"],
+                      weight_col = weight_col)$tables$stddiff
+    tbl$stddiff[match(covariates, tbl$variable)]
   }
-  names(smds) <- covariates
 
   data.frame(
     variable = covariates,
-    smd      = round(smds, 4L),
+    smd      = round(unname(smds), 4L),
     stringsAsFactors = FALSE
   )
+}
+
+
+#' Winsorise IPTW weights within the arm or arms that are reweighted
+#'
+#' For the ATT, the treated arm is the reference and keeps weights of exactly
+#' 1, so only the control weights are winsorised, at the (`trim`, `1 - trim`)
+#' quantiles of the control weights. The ATC is the mirror image. For the ATE
+#' both arms are reweighted and neither is a reference, so the weights are
+#' winsorised at quantiles of all weights pooled across both arms, as Lee,
+#' Lessler and Stuart (2011) do.
+#'
+#' @param w Numeric weight vector; `NA` marks an excluded patient.
+#' @param trt Integer 0/1 treatment indicator, the same length as `w`.
+#' @param estimand One of `"ATE"`, `"ATT"`, `"ATC"`.
+#' @param trim A number in (0, 0.5).
+#' @return `w`, winsorised.
+#' @keywords internal
+.trim_weights <- function(w, trt, estimand, trim) {
+  arms <- switch(estimand, ATE = c(0L, 1L), ATT = 0L, ATC = 1L)
+  i <- !is.na(w) & trt %in% arms
+  if (any(i)) {
+    q <- stats::quantile(w[i], c(trim, 1 - trim), names = FALSE)
+    w[i] <- pmin(pmax(w[i], q[[1L]]), q[[2L]])
+  }
+  w
 }
 
 
@@ -324,7 +377,7 @@
 #' With `treated_level = NULL` the column must be 0/1 or logical, and 1 or
 #' `TRUE` is the treated value. With a `treated_level`, the column may hold any
 #' two values and `treated_level` names the treated one. Both values must be
-#' present.
+#' present in either case: a column holding one arm aborts.
 #'
 #' @param data A data frame.
 #' @param col Name of the treatment column.
@@ -340,6 +393,14 @@
   x <- data[[col]]
   if (is.null(treated_level)) {
     .check_binary(data, col, call_env, warn_na)
+    values <- unique(as.integer(x[!is.na(x)]))
+    if (length(values) < 2L) {
+      rlang::abort(
+        sprintf("Column `%s` must hold both treatment values; it holds %s.", col,
+                if (length(values)) sprintf("only %s", .binary_group_labels(x)[values + 1L]) else "none"),
+        call = call_env
+      )
+    }
     return(list(trt = as.integer(x), labels = .binary_group_labels(x)))
   }
   if (length(treated_level) != 1L || is.na(treated_level)) {

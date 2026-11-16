@@ -18,15 +18,15 @@ test_that("ps_match() smd_before uses the SAS denominator when groups are unequa
   expect_equal(obj$tables$smd_before$smd, round(-3 / sqrt(23 / 6), 4L))
 })
 
-test_that("ps_logistic() smd matches ps_stddiff() with every covariate gaussian", {
+test_that("ps_logistic() smd matches ps_stddiff(), binary columns taking the binary formula", {
   dta <- sample_ps_data(n = 150, seed = 3)
   dta$prob_t <- NULL
   # sample_ps_data() splits the arms evenly, where the two denominators agree;
   # dropping treated patients makes them differ.
   dta <- dta[!(dta$tavr == 1 & seq_len(nrow(dta)) %% 3 != 0), ]
   obj <- ps_logistic(tavr ~ age + female + ef, data = dta, covariates = c("age", "female", "ef"))
-  ref <- ps_stddiff(dta, treatment_col = "tavr", gaussian = c("age", "female", "ef"))$tables$stddiff
-  expect_equal(obj$tables$smd$smd, round(ref$stddiff, 4L))
+  ref <- ps_stddiff(dta, treatment_col = "tavr", gaussian = c("age", "ef"), binary = "female")$tables$stddiff
+  expect_equal(obj$tables$smd$smd, round(ref$stddiff[match(c("age", "female", "ef"), ref$variable)], 4L))
 })
 
 test_that("ps_weight() weighted smd uses the PROC MEANS n - 1 weighted variance", {
@@ -45,10 +45,17 @@ test_that("a match with no pairs still reports an all-NA smd_after", {
   expect_identical(obj$tables$smd_after$variable, obj$tables$smd_before$variable)
 })
 
-test_that("a non-numeric covariate stops even when a match finds no pairs", {
+test_that("an unsupported covariate type stops even when a match finds no pairs", {
+  dta <- sample_ps_data(n = 100, seed = 42)
+  dta$op_date <- as.Date("2020-01-01") + seq_len(nrow(dta))
+  expect_error(ps_match(dta, covariates = c("age", "op_date"), caliper = 1e-12), "op_date")
+})
+
+test_that("a character covariate gets a balance row even when a match finds no pairs", {
   dta <- sample_ps_data(n = 100, seed = 42)
   dta$site <- rep(c("a", "b"), length.out = nrow(dta))
-  expect_error(ps_match(dta, covariates = c("age", "site"), caliper = 1e-12), "numeric")
+  obj <- ps_match(dta, covariates = c("age", "site"), caliper = 1e-12)
+  expect_identical(obj$tables$smd_after$variable, c("age", "site"))
 })
 
 test_that("ps_weight() stops clearly when a score of 0 or 1 gives an infinite weight", {

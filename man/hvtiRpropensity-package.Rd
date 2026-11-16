@@ -83,11 +83,13 @@ diagnostics: SMD tables, group counts, effective sample sizes, or a
 sensitivity function's bounds and sweeps.
 
 \code{hvtiPlotR::hv_mirror_hist()} reads the \verb{$data} of a \code{\link[=ps_match]{ps_match()}} or
-\code{\link[=ps_weight]{ps_weight()}} object directly. \code{hvtiPlotR::hv_balance()} does not read
-\verb{$tables} as they are: it needs one long data frame with \code{variable},
-\code{group} and \code{std_diff} columns, the difference in percent, so the SMD
-tables are stacked and multiplied by 100 first. The vignette shows the
-reshape.
+\code{\link[=ps_weight]{ps_weight()}} object directly. \code{hvtiPlotR::hv_balance()} (hvtiPlotR 2.8.22
+or later) reads a \code{\link[=ps_match]{ps_match()}} or \code{\link[=ps_weight]{ps_weight()}} object itself: it takes the
+\code{smd_before}/\code{smd_after} or \code{smd_unweighted}/\code{smd_weighted} tables, columns
+\code{variable} and \code{smd}, and plots the difference in percent. A
+\code{\link[=ps_logistic]{ps_logistic()}} or \code{\link[=ps_forest]{ps_forest()}} object carries one table, \verb{$tables$smd},
+with no before-and-after pair, and \code{hv_balance()} stops on it; match or
+weight first.
 
 The SAS programs this package ports ship with it, in
 \code{system.file("sas-templates", package = "hvtiRpropensity")}.

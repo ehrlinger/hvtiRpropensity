@@ -727,3 +727,10 @@ test_that("sa_trim_sweep() excludes patients with a missing score, with a warnin
   expect_equal(res$meta$n_used, nrow(d) - 2L)
   expect_equal(sweep, sa_trim_sweep(d[-(1:2), ])$tables$sweep)
 })
+
+test_that("sa_trim_sweep() trims only the control weights for the ATT", {
+  d <- sample_ps_data(n = 300, seed = 5)
+  res <- sa_trim_sweep(d, estimand = "ATT", trim_seq = c(0, 0.1))$tables$sweep
+  # The treated weights are all 1, so their ESS is the treated count at every trim.
+  expect_identical(res$ess_treated, rep(round(sum(d$tavr == 1L), 1), 2))
+})

@@ -21,3 +21,4 @@ hvtiRpropensity.Rproj
 /Meta/
 .fuse_hidden*
 reports/
+tests/testthat/_problems/
