@@ -515,3 +515,16 @@ test_that("a dot that leaves no columns gets a clear error", {
   d <- mi_with_dropme()[1:60, c("id", "count")]
   expect_error(fit_linear(count ~ ., d), "leaves no columns")
 })
+
+test_that("an extreme but valid predictor value is not diagnosed as separation", {
+  # PR #122 review: one saturated prediction from a finite, converged fit.
+  withr::local_seed(3)
+  x <- c(stats::rnorm(500), 100)
+  y <- c(stats::rbinom(500, 1, stats::plogis(x[1:500])), 1)
+  d <- data.frame(id = seq_along(x), y = y, x = x)
+  fit <- fit_logistic(y ~ x, d, outcome_levels = c(0, 1), event_level = 1)
+  ref <- stats::glm(y ~ x, family = stats::binomial(), data = d)
+  expect_equal(fit$tables$estimates$estimate, unname(stats::coef(ref)), tolerance = 1e-6)
+  d$tavr <- d$y
+  expect_warning(ps_logistic(tavr ~ x, data = d), class = "hvtiRpropensity_saturated_score")
+})

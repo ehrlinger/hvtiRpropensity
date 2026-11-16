@@ -33,6 +33,8 @@
 #' When two or more remaining controls are equally close to a treated patient
 #' (within `1e-12` on the score scale), the one with the smallest `id_col`
 #' value is taken, so the match does not depend on the row order of `data`.
+#' Only controls within the caliper are candidates, so a tie is broken among
+#' eligible controls.
 #'
 #' The `$tables` slot contains standardised mean difference (SMD) tables
 #' before and after matching, and group counts. `hvtiPlotR::hv_mirror_hist()`
@@ -243,13 +245,16 @@ ps_match <- function(data,
     if (length(remaining_idx) == 0L) break
 
     dists     <- abs(ps_t[i] - ps_c[remaining_idx])
+    # The caliper goes first: a control within the tie tolerance of the nearest
+    # one but outside the caliper must not displace an eligible one (#122).
+    if (!is.null(caliper)) {
+      remaining_idx <- remaining_idx[dists <= caliper]
+      dists         <- dists[dists <= caliper]
+    }
     if (!length(dists)) next
     tied      <- which(dists <= min(dists) + 1e-12)
     best_pos  <- tied[which.min(id_rank_c[remaining_idx[tied]])]  # position within remaining_idx
     best      <- remaining_idx[best_pos]    # index into idx_c
-    best_dist <- dists[best_pos]
-
-    if (!is.null(caliper) && best_dist > caliper) next
 
     k              <- k + 1L
     matched_c[best] <- TRUE

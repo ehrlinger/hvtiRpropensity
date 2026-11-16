@@ -78,6 +78,40 @@
 }
 
 
+#' Warn when a propensity score is numerically 0 or 1
+#'
+#' A finite, converged logistic fit can still give a patient with an extreme
+#' covariate value a probability within `10 * .Machine$double.eps` of 0 or 1,
+#' the threshold at which `glm.fit()` warns. [stats::glm()] caps the linear
+#' predictor there, so the logit is near +/-36 rather than infinite, but the
+#' value reflects the cap, not the model, and an inverse-probability weight on
+#' the wrong side of it is of order `1e15`. Name those patients when the score
+#' is made, rather than leave it to a later step.
+#'
+#' @param p Propensity scores.
+#' @param score_col,logit_col Column names, for the message.
+#' @param id Patient identifiers, or `NULL` for row numbers.
+#' @return Invisible `NULL`.
+#' @keywords internal
+.warn_saturated_score <- function(p, score_col, logit_col, id = NULL) {
+  eps <- 10 * .Machine$double.eps
+  sat <- which(!is.na(p) & (p < eps | p > 1 - eps))
+  if (length(sat) == 0L) return(invisible(NULL))
+  who <- if (is.null(id)) sat else id[sat]
+  shown <- paste(utils::head(who, 10L), collapse = ", ")
+  if (length(who) > 10L) shown <- paste0(shown, ", ...")
+  rlang::warn(
+    sprintf(paste0("%d patient(s) have `%s` numerically 0 or 1 (%s). The model converged, so an extreme covariate ",
+                   "value is the usual cause. Their `%s` is the fitting routine's cap, not an estimate, and an ",
+                   "inverse-probability weight for them can be of order 1e15; consider trimming or checking ",
+                   "those values."),
+            length(sat), score_col, shown, logit_col),
+    class = "hvtiRpropensity_saturated_score"
+  )
+  invisible(NULL)
+}
+
+
 # ---------------------------------------------------------------------------
 # Internal: collision-free model prediction name
 # ---------------------------------------------------------------------------
@@ -359,6 +393,7 @@ ps_logistic <- function(formula,
   base_data[[score_col]]  <- probs
   base_data[[logit_col]]  <- log(probs / (1 - probs))
   base_data[[weight_col]] <- .matching_weight(probs, trt)
+  .warn_saturated_score(probs, score_col, logit_col, id = if (id_col %in% names(base_data)) base_data[[id_col]])
 
   # ---- Quintile / decile strata -------------------------------------------
   strata <- .assign_ps_strata(replace(probs, missing_trt, NA))
