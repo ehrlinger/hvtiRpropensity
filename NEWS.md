@@ -1,12 +1,15 @@
 # hvtiRpropensity 0.2.3
 
 0.2.3 ships the hvtiR family argument renames and the fixes of the family QA
-pass. Old argument names keep working for this release, with a warning. Two
-changes move published numbers; check them before upgrading a study:
+pass. Old argument names keep working for this release, with a warning. Four
+changes can move published numbers; check them before upgrading a study:
 
 * Trimmed ATT and ATC weights from `ps_weight(trim =)` and `sa_trim_sweep()`.
 * Standardized differences of 0/1 covariates in the balance tables, which now
   use the binary formula instead of the Gaussian one.
+* `ps_match()` pairs when control distances tie, now broken by `id_col`.
+* `ps_rmst()` bootstrap intervals, when a replicate's follow-up in an arm ends
+  before `tau`.
 
 * `ps_weight(trim =)` trims only the arm it reweights. For the ATT the control
   weights are winsorised at quantiles of the control weights, and every treated
