@@ -1146,7 +1146,7 @@ plot(mh_wt)
 
 ### 10.2 Covariate balance plot
 
-`hv_balance()` (hvtiPlotR 2.8.22 or later) reads a
+`hv_balance()` (hvtiPlotR 2.8.10 or later) reads a
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 or
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
@@ -1223,5 +1223,5 @@ sessionInfo()
 #> [58] askpass_1.2.1           ragg_1.5.2              ggalluvial_0.12.6      
 #> [61] evaluate_1.0.5          knitr_1.52              rlang_1.3.0            
 #> [64] Rcpp_1.1.2              glue_1.8.1              xml2_1.6.0             
-#> [67] jsonlite_2.0.0          R6_2.6.1                systemfonts_1.3.2
+#> [67] jsonlite_2.0.0          R6_2.6.1                systemfonts_1.3.3
 ```

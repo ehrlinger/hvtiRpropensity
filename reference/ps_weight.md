@@ -14,7 +14,7 @@ tables (unweighted and weighted) and effective-N diagnostics. Its
 [`hvtiPlotR::hv_mirror_hist()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_mirror_hist.html)
 in weighted mode, and
 [`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
-reads the object itself (hvtiPlotR 2.8.22 or later).
+reads the object itself (hvtiPlotR 2.8.10 or later).
 
 ## Usage
 

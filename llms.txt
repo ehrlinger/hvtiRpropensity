@@ -240,7 +240,7 @@ The SAS programs this package ports ship with it:
   [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
   or
   [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
-  object directly, and `hv_balance()` (2.8.22 or later) reads the object
+  object directly, and `hv_balance()` (2.8.10 or later) reads the object
   itself. A
   [`ps_logistic()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_logistic.md)
   or

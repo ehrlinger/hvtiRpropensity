@@ -126,7 +126,7 @@ or
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)
 object directly.
 [`hvtiPlotR::hv_balance()`](https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html)
-(hvtiPlotR 2.8.22 or later) reads a
+(hvtiPlotR 2.8.10 or later) reads a
 [`ps_match()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_match.md)
 or
 [`ps_weight()`](https://ehrlinger.github.io/hvtiRpropensity/reference/ps_weight.md)

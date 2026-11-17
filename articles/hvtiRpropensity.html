@@ -63,7 +63,7 @@
       <h1>Introduction to hvtiRpropensity</h1>
 
       <p class="author">John Ehrlinger</p>
-      <p class="date">2026-11-16</p>
+      <p class="date">2026-11-17</p>
 
       <small class="dont-index">Source: <a href="https://github.com/ehrlinger/hvtiRpropensity/blob/main/vignettes/hvtiRpropensity.qmd" class="external-link"><code>vignettes/hvtiRpropensity.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
@@ -1040,7 +1040,7 @@
 </section><section class="level3" data-number="10.2"><h3 data-number="10.2" id="covariate-balance-plot">
 <span class="header-section-number">10.2</span> Covariate balance plot<a class="anchor" aria-label="anchor" href="#covariate-balance-plot"></a>
 </h3>
-<p><code>hv_balance()</code> (hvtiPlotR 2.8.22 or later) reads a <code><a href="../reference/ps_match.html">ps_match()</a></code> or <code><a href="../reference/ps_weight.html">ps_weight()</a></code> object itself. It takes the two SMD tables, <code>smd_before</code> and <code>smd_after</code> for a match or <code>smd_unweighted</code> and <code>smd_weighted</code> for a weighting, and plots the difference in <strong>percent</strong>, with reference lines at plus and minus 10. Here is the logit-scale match from earlier.</p>
+<p><code>hv_balance()</code> (hvtiPlotR 2.8.10 or later) reads a <code><a href="../reference/ps_match.html">ps_match()</a></code> or <code><a href="../reference/ps_weight.html">ps_weight()</a></code> object itself. It takes the two SMD tables, <code>smd_before</code> and <code>smd_after</code> for a match or <code>smd_unweighted</code> and <code>smd_weighted</code> for a weighting, and plots the difference in <strong>percent</strong>, with reference lines at plus and minus 10. Here is the logit-scale match from earlier.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu">hvtiPlotR</span><span class="fu">::</span><span class="fu"><a href="https://ehrlinger.github.io/hvtiPlotR/reference/hv_balance.html" class="external-link">hv_balance</a></span><span class="op">(</span><span class="va">m_logit</span>, group_labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Before match"</span>, <span class="st">"After match"</span><span class="op">)</span><span class="op">)</span></span>
@@ -1105,7 +1105,7 @@
 <span><span class="co">#&gt; [58] askpass_1.2.1           ragg_1.5.2              ggalluvial_0.12.6      </span></span>
 <span><span class="co">#&gt; [61] evaluate_1.0.5          knitr_1.52              rlang_1.3.0            </span></span>
 <span><span class="co">#&gt; [64] Rcpp_1.1.2              glue_1.8.1              xml2_1.6.0             </span></span>
-<span><span class="co">#&gt; [67] jsonlite_2.0.0          R6_2.6.1                systemfonts_1.3.2</span></span></code></pre></div>
+<span><span class="co">#&gt; [67] jsonlite_2.0.0          R6_2.6.1                systemfonts_1.3.3</span></span></code></pre></div>
 </div>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
