@@ -44,7 +44,10 @@ changes can move published numbers; check them before upgrading a study:
 * A treatment column holding one arm is refused by every function that needs
   both, instead of failing later or returning empty tables.
 * `ps_match()` breaks tied distances by the smallest `id_col`, among the
-  controls within the caliper, so the match no longer depends on row order.
+  controls within the caliper, so which control a treated patient takes no
+  longer depends on the row order of the controls. The treated patients are
+  still visited in a random order drawn over their row positions, so reordering
+  the treated rows can change the pairs even with the same `seed`.
 * `ps_weight()` names the patients who get a weight of 0 (a score of exactly 0
   for an ATT control, or 1 for an ATC treated patient), instead of the
   `ps_stddiff()` error about non-positive weights.
