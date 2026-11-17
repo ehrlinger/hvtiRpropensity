@@ -32,7 +32,9 @@
 #' **Ties.** Treated patients are visited in a random order set by `seed`.
 #' When two or more remaining controls are equally close to a treated patient
 #' (within `1e-12` on the score scale), the one with the smallest `id_col`
-#' value is taken, so the match does not depend on the row order of `data`.
+#' value is taken, so the choice does not depend on the row order of the
+#' controls. The random visiting order is drawn over the treated rows as they
+#' stand, so reordering the treated rows can change the pairs for one `seed`.
 #' Only controls within the caliper are candidates, so a tie is broken among
 #' eligible controls.
 #'
@@ -253,7 +255,7 @@ ps_match <- function(data,
   ps_t <- ps[idx_t]
   ps_c <- ps[idx_c]
   # Ties: controls equally close to a treated patient go to the smallest id_col
-  # value, so the match does not depend on row order.
+  # value, so the choice does not depend on the controls' row order.
   id_rank_c <- rank(data[[id_col]][idx_c], ties.method = "first", na.last = TRUE)
 
   # ---- Nearest-neighbour matching (greedy, without replacement) ----------

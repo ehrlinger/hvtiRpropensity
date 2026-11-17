@@ -1,3 +1,114 @@
+# hvtiRpropensity 0.2.3
+
+0.2.3 ships the hvtiR family argument renames and the fixes of the family QA
+pass. Old argument names keep working for this release, with a warning. Four
+changes can move published numbers; check them before upgrading a study:
+
+* Trimmed ATT and ATC weights from `ps_weight(trim =)` and `sa_trim_sweep()`.
+* Standardized differences of 0/1 covariates in the balance tables, which now
+  use the binary formula instead of the Gaussian one.
+* `ps_match()` pairs when control distances tie, now broken by `id_col`.
+* `ps_rmst()` bootstrap intervals, when a replicate's follow-up in an arm ends
+  before `tau`.
+
+* `ps_weight(trim =)` trims only the arm it reweights. For the ATT the control
+  weights are winsorised at quantiles of the control weights, and every treated
+  weight stays exactly 1, as documented; the ATC is the mirror image. Before,
+  the quantiles were pooled across both arms, so with few treated patients the
+  treated weights of 1 were capped. The ATE still trims at pooled quantiles,
+  since both arms are reweighted. `sa_trim_sweep()` follows the same rule, and
+  its warning about infinite weights no longer says they cannot be trimmed.
+  This changes trimmed ATT and ATC weights; re-run a study that used them.
+* The balance tables of `ps_match()`, `ps_weight()`, `ps_logistic()`,
+  `ps_forest()`, `ps_nominal()` and `ps_ordinal()` route each covariate by type.
+  A 0/1 or logical column takes the binary standardized difference, a factor or
+  character column the categorical one of Yang and Dalton (one row per column),
+  and other numeric columns the Gaussian one. Factor, character and logical
+  columns were left out of the default tables before, and naming one stopped.
+  Binary columns move by a small amount, because they were treated as Gaussian.
+  A categorical difference is unsigned whatever number of levels the rows hold,
+  so a factor that loses a level after matching is not switched to the signed
+  binary formula. The tables keep their `variable` and `smd` columns.
+* `fit_logistic()` and `ps_logistic()` stop, with a condition of class
+  `hvtiRpropensity_separation`, when a binary fit is separated: its
+  coefficients keep growing under further Newton steps, so no maximum
+  likelihood estimate exists. A converged fit in which one extreme patient's
+  probability rounds to 0 or 1 is not separation; `ps_logistic()` fits it and
+  warns, with class `hvtiRpropensity_saturated_score`, naming the patients. A
+  term the model cannot estimate is named as aliased instead of reported as a
+  non-finite coefficient.
+* `ps_rmst()` warns, with class `hvtiRpropensity_bootstrap_failures`, when more
+  than 5% of an estimator's bootstrap replicates fail. A replicate whose
+  resampled follow-up in an arm ends before `tau` now fails instead of being
+  carried flat to `tau`.
+* A treatment column holding one arm is refused by every function that needs
+  both, instead of failing later or returning empty tables.
+* `ps_match()` breaks tied distances by the smallest `id_col`, among the
+  controls within the caliper, so which control a treated patient takes no
+  longer depends on the row order of the controls. The treated patients are
+  still visited in a random order drawn over their row positions, so reordering
+  the treated rows can change the pairs even with the same `seed`.
+* `ps_weight()` names the patients who get a weight of 0 (a score of exactly 0
+  for an ATT control, or 1 for an ATC treated patient), instead of the
+  `ps_stddiff()` error about non-positive weights.
+* The help, README and vignette no longer say `hvtiPlotR::hv_balance()` needs
+  reshaped tables: hvtiPlotR 2.8.10 reads a `ps_match()` or `ps_weight()`
+  object directly. A `ps_logistic()` or `ps_forest()` object has a single `smd`
+  table, and `hv_balance()` stops on it.
+
+* Errors follow the hvtiR family rubric. Every error is raised with base
+  `stop(call. = FALSE)` and starts with the name of the function you called,
+  as `ps_weight(): ...`, also when an internal check raises it. The `rlang`
+  conditions are gone. Errors a caller may want to catch carry a class:
+  `hvtiRpropensity_missing_column`, `hvtiRpropensity_one_arm`,
+  `hvtiRpropensity_meta_conflict`, `hvtiRpropensity_tau`,
+  `hvtiRpropensity_weight`, `hvtiRpropensity_aliased`,
+  `hvtiRpropensity_convergence` and `hvtiRpropensity_separation`. Warnings
+  follow the same pattern.
+* `treatment_col` has no default in `ps_weight()`, `ps_match()`,
+  `ps_mw_var()`, `ps_stddiff()` and `ps_stddiff_perm()`, nor in
+  `sa_overlap()` and `sa_trim_sweep()` for a data frame. `"tavr"` was one
+  study's column name. Omitting it still means `"tavr"` for this release, and
+  warns once per session.
+* `ps_rmst(weights =)` takes the family's upper-case estimand names, `"ATO"`,
+  `"ATT"` and `"ATE"`. The `weighting` column, the `estimator` labels (such as
+  `"all/ATO"`) and `$meta$stored_weighting` use them too. Lower case still
+  works for this release, and warns. The weight columns in `$data` keep their
+  lower-case names, such as `w_ato`.
+* Renamed arguments, the old names working for this release with a warning:
+  `ps_mw_var(n_rep =)` is `n_boot`, and the count is recorded as
+  `$meta$n_boot`. `$meta$n_rep` holds the same value for this release, so
+  code that reads it keeps working; read `$meta$n_boot` instead (the table
+  column `n_rep`, the replicates that remained, is unchanged).
+  `sample_ps_data_count(n_imputations =)` is `m`. The first argument of
+  `ps_rmst()`, `ps_support()`, `sa_rosenbaum()`, `sa_overlap()` and
+  `sa_trim_sweep()` is `data`, not `x`.
+* Arguments that take one or more column names end in `_cols`, the old names
+  working for this release with a warning: `covariates` is `covariate_cols` in
+  `ps_match()`, `ps_weight()`, `ps_logistic()`, `ps_nominal()`, `ps_ordinal()`,
+  `bs_continuous()` and `bs_count()`; `ps_mw_var(outcomes =)` is
+  `outcome_cols`; and `ps_stddiff()` and `ps_stddiff_perm()` take
+  `gaussian_cols`, `nong_ord_cols`, `binary_cols` and `categorical_cols`.
+  The `$meta` field names are unchanged.
+* An abbreviated argument name that used to reach a renamed argument by
+  partial matching can now match both the old and the new name, and R stops
+  with "argument matches multiple formal arguments". For example
+  `ps_mw_var(outcome = "age")` matched `outcomes` before and now matches both
+  `outcomes` and `outcome_cols`; `covariate =` and `cov =` do the same. Write
+  the new name in full.
+* `sa_overlap()` and `sa_trim_sweep()` given a `ps_data` object that records no
+  `treatment_col` still use `"tavr"` for this release, with the same
+  deprecation warning as a data frame.
+* Every function that fits a model or draws random numbers records the family
+  provenance record in `$meta$provenance`: `package`, `version`, `sha`,
+  `method`, `seed`, `rng_kind` and `time`.
+
+* The help, README and vignette give hvtiPlotR 2.8.10 as the first version
+  whose `hv_balance()` reads a `ps_match()` or `ps_weight()` object; they
+  said 2.8.22. The vignette's balance plot runs only with 2.8.10 or later.
+  With an older hvtiPlotR installed, `hv_balance()` rejected the call and the
+  vignette failed to build.
+
 # hvtiRpropensity 0.2.2
 
 * The README's Installation section now leads with `hvtiR::install()`, which

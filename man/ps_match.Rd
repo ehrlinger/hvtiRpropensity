@@ -130,7 +130,9 @@ the estimate describes.
 \strong{Ties.} Treated patients are visited in a random order set by \code{seed}.
 When two or more remaining controls are equally close to a treated patient
 (within \code{1e-12} on the score scale), the one with the smallest \code{id_col}
-value is taken, so the match does not depend on the row order of \code{data}.
+value is taken, so the choice does not depend on the row order of the
+controls. The random visiting order is drawn over the treated rows as they
+stand, so reordering the treated rows can change the pairs for one \code{seed}.
 Only controls within the caliper are candidates, so a tie is broken among
 eligible controls.
 
