@@ -36,6 +36,6 @@
   for an ATT control, or 1 for an ATC treated patient), instead of the
   `ps_stddiff()` error about non-positive weights.
 * The help, README and vignette no longer say `hvtiPlotR::hv_balance()` needs
-  reshaped tables: hvtiPlotR 2.8.22 reads a `ps_match()` or `ps_weight()`
+  reshaped tables: hvtiPlotR 2.8.10 reads a `ps_match()` or `ps_weight()`
   object directly. A `ps_logistic()` or `ps_forest()` object has a single `smd`
   table, and `hv_balance()` stops on it.

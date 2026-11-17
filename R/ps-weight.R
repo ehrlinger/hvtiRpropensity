@@ -26,7 +26,7 @@
 #' Returns a `ps_weight` object whose `$tables` slot contains SMD tables
 #' (unweighted and weighted) and effective-N diagnostics. Its `$data` feeds
 #' `hvtiPlotR::hv_mirror_hist()` in weighted mode, and `hvtiPlotR::hv_balance()`
-#' reads the object itself (hvtiPlotR 2.8.22 or later).
+#' reads the object itself (hvtiPlotR 2.8.10 or later).
 #'
 #' A patient with a missing treatment or a missing score cannot be weighted.
 #' Those rows stay in `$data` with a missing `weight_col`, are left out of the

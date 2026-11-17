@@ -74,7 +74,7 @@
 #' sensitivity function's bounds and sweeps.
 #'
 #' `hvtiPlotR::hv_mirror_hist()` reads the `$data` of a [ps_match()] or
-#' [ps_weight()] object directly. `hvtiPlotR::hv_balance()` (hvtiPlotR 2.8.22
+#' [ps_weight()] object directly. `hvtiPlotR::hv_balance()` (hvtiPlotR 2.8.10
 #' or later) reads a [ps_match()] or [ps_weight()] object itself: it takes the
 #' `smd_before`/`smd_after` or `smd_unweighted`/`smd_weighted` tables, columns
 #' `variable` and `smd`, and plots the difference in percent. A

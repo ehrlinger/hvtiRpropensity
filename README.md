@@ -207,7 +207,7 @@ The SAS programs this package ports ship with it:
 
 - **hvtiPlotR**: mirror histograms, balance plots, survival and hazard curves.
   `hv_mirror_hist()` reads the `$data` of a `ps_match()` or `ps_weight()`
-  object directly, and `hv_balance()` (2.8.22 or later) reads the object
+  object directly, and `hv_balance()` (2.8.10 or later) reads the object
   itself. A `ps_logistic()` or `ps_forest()` object has a single `smd` table
   and no before-and-after pair, so `hv_balance()` stops on it.
 - **hvtiRutilities**: data wrangling utilities for cardiac surgery datasets.

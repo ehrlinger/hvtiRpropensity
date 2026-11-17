@@ -137,7 +137,7 @@ eligible controls.
 The \verb{$tables} slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts. \code{hvtiPlotR::hv_mirror_hist()}
 reads \verb{$data} directly, and \code{hvtiPlotR::hv_balance()} reads the object
-itself (hvtiPlotR 2.8.22 or later).
+itself (hvtiPlotR 2.8.10 or later).
 
 A patient with a missing treatment or a missing score cannot be matched.
 Those rows stay in \verb{$data} with \code{match_col} set to \code{0}, are left out of the
