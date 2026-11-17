@@ -160,9 +160,11 @@ population the estimate describes.
 **Ties.** Treated patients are visited in a random order set by `seed`.
 When two or more remaining controls are equally close to a treated
 patient (within `1e-12` on the score scale), the one with the smallest
-`id_col` value is taken, so the match does not depend on the row order
-of `data`. Only controls within the caliper are candidates, so a tie is
-broken among eligible controls.
+`id_col` value is taken, so the choice does not depend on the row order
+of the controls. The random visiting order is drawn over the treated
+rows as they stand, so reordering the treated rows can change the pairs
+for one `seed`. Only controls within the caliper are candidates, so a
+tie is broken among eligible controls.
 
 The `$tables` slot contains standardised mean difference (SMD) tables
 before and after matching, and group counts.

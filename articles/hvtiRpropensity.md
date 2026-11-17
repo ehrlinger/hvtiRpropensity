@@ -1198,7 +1198,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] hvtiRpropensity_0.2.2
+#> [1] hvtiRpropensity_0.2.3
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6            xfun_0.62               ggplot2_4.0.4          
