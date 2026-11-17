@@ -105,7 +105,7 @@ treatment effect in the whole sample (ATE, the default), in the treated
 Returns a \code{ps_weight} object whose \verb{$tables} slot contains SMD tables
 (unweighted and weighted) and effective-N diagnostics. Its \verb{$data} feeds
 \code{hvtiPlotR::hv_mirror_hist()} in weighted mode, and \code{hvtiPlotR::hv_balance()}
-reads the object itself (hvtiPlotR 2.8.22 or later).
+reads the object itself (hvtiPlotR 2.8.10 or later).
 }
 \details{
 A patient with a missing treatment or a missing score cannot be weighted.

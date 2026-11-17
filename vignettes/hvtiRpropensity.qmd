@@ -765,7 +765,7 @@ plot(mh_wt)
 
 ### Covariate balance plot
 
-`hv_balance()` (hvtiPlotR 2.8.22 or later) reads a `ps_match()` or
+`hv_balance()` (hvtiPlotR 2.8.10 or later) reads a `ps_match()` or
 `ps_weight()` object itself. It takes the two SMD tables, `smd_before` and
 `smd_after` for a match or `smd_unweighted` and `smd_weighted` for a
 weighting, and plots the difference in **percent**, with reference lines at
@@ -773,7 +773,7 @@ plus and minus 10. Here is the logit-scale match from earlier.
 
 ```{r}
 #| label: balance-plot
-#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE) && packageVersion("hvtiPlotR") >= "2.8.22"
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE) && packageVersion("hvtiPlotR") >= "2.8.10"
 cb <- hvtiPlotR::hv_balance(m_logit, group_labels = c("Before match", "After match"))
 plot(cb)
 ```

@@ -83,7 +83,7 @@ diagnostics: SMD tables, group counts, effective sample sizes, or a
 sensitivity function's bounds and sweeps.
 
 \code{hvtiPlotR::hv_mirror_hist()} reads the \verb{$data} of a \code{\link[=ps_match]{ps_match()}} or
-\code{\link[=ps_weight]{ps_weight()}} object directly. \code{hvtiPlotR::hv_balance()} (hvtiPlotR 2.8.22
+\code{\link[=ps_weight]{ps_weight()}} object directly. \code{hvtiPlotR::hv_balance()} (hvtiPlotR 2.8.10
 or later) reads a \code{\link[=ps_match]{ps_match()}} or \code{\link[=ps_weight]{ps_weight()}} object itself: it takes the
 \code{smd_before}/\code{smd_after} or \code{smd_unweighted}/\code{smd_weighted} tables, columns
 \code{variable} and \code{smd}, and plots the difference in percent. A
