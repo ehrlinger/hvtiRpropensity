@@ -773,7 +773,7 @@ plus and minus 10. Here is the logit-scale match from earlier.
 
 ```{r}
 #| label: balance-plot
-#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE)
+#| eval: !expr requireNamespace("hvtiPlotR", quietly = TRUE) && packageVersion("hvtiPlotR") >= "2.8.22"
 cb <- hvtiPlotR::hv_balance(m_logit, group_labels = c("Before match", "After match"))
 plot(cb)
 ```
