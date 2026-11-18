@@ -1202,7 +1202,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6            xfun_0.62               ggplot2_4.0.4          
-#>  [4] hvtiPlotR_2.8.22        htmlwidgets_1.6.4       visNetwork_2.1.4       
+#>  [4] hvtiPlotR_2.8.23        htmlwidgets_1.6.4       visNetwork_2.1.4       
 #>  [7] lattice_0.23-1          vctrs_0.7.3             tools_4.6.2            
 #> [10] generics_0.1.4          parallel_4.6.2          tibble_3.3.1           
 #> [13] pkgconfig_2.0.3         Matrix_1.7-6            RColorBrewer_1.1-3     
@@ -1211,7 +1211,7 @@ sessionInfo()
 #> [22] compiler_4.6.2          farver_2.1.2            textshaping_1.0.5      
 #> [25] data.tree_1.2.0         fontquiver_0.2.1        fontLiberation_0.1.0   
 #> [28] htmltools_0.5.9         yaml_2.3.12             pillar_1.11.1          
-#> [31] tidyr_1.3.2             MASS_7.3-66             openssl_2.5.0          
+#> [31] tidyr_1.3.2             MASS_7.3-66             openssl_2.6.0          
 #> [34] fontBitstreamVera_0.1.1 tidyselect_1.2.1        zip_3.0.2              
 #> [37] digest_0.6.39           stringi_1.8.9           dplyr_1.2.1            
 #> [40] purrr_1.2.2             labeling_0.4.3          splines_4.6.2          
