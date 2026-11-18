@@ -36,11 +36,8 @@ Suggests:
     nnet,
     randomForestSRC,
     survival,
-    pkgdown (>= 2.0.0),
     testthat (>= 3.0.0),
-    devtools,
-    quarto,
-    pkgload
+    quarto
 VignetteBuilder: quarto
 SystemRequirements: Quarto command line tool
     (<https://github.com/quarto-dev/quarto-cli>)
