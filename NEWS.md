@@ -6,6 +6,10 @@ study on 0.2.3 needs no re-run.
 * `devtools`, `pkgload` and `pkgdown` are no longer in `Suggests`. They are
   development tools, and nothing in the package, its tests or its vignettes
   called them. The pkgdown workflow installs `pkgdown` itself.
+* `DESCRIPTION` names `https://ehrlinger.r-universe.dev` in
+  `Additional_repositories`, where `hvtiPlotR`, the one suggested package not on
+  CRAN, is published. `R CMD check --as-cran` now finds it there instead of
+  reporting a suggested package it cannot locate.
 
 # hvtiRpropensity 0.2.3
 

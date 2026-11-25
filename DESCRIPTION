@@ -38,6 +38,7 @@ Suggests:
     survival,
     testthat (>= 3.0.0),
     quarto
+Additional_repositories: https://ehrlinger.r-universe.dev
 VignetteBuilder: quarto
 SystemRequirements: Quarto command line tool
     (<https://github.com/quarto-dev/quarto-cli>)
