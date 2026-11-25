@@ -1,3 +1,12 @@
+# hvtiRpropensity 0.2.4
+
+0.2.4 is a housekeeping release. No function, argument or result changes, so a
+study on 0.2.3 needs no re-run.
+
+* `devtools`, `pkgload` and `pkgdown` are no longer in `Suggests`. They are
+  development tools, and nothing in the package, its tests or its vignettes
+  called them. The pkgdown workflow installs `pkgdown` itself.
+
 # hvtiRpropensity 0.2.3
 
 0.2.3 ships the hvtiR family argument renames and the fixes of the family QA
