@@ -1,3 +1,16 @@
+# hvtiRpropensity 0.2.4
+
+0.2.4 is a housekeeping release. No function, argument or result changes, so a
+study on 0.2.3 needs no re-run.
+
+* `devtools`, `pkgload` and `pkgdown` are no longer in `Suggests`. They are
+  development tools, and nothing in the package, its tests or its vignettes
+  called them. The pkgdown workflow installs `pkgdown` itself.
+* `DESCRIPTION` names `https://ehrlinger.r-universe.dev` in
+  `Additional_repositories`, where `hvtiPlotR`, the one suggested package not on
+  CRAN, is published. `R CMD check --as-cran` now finds it there instead of
+  reporting a suggested package it cannot locate.
+
 # hvtiRpropensity 0.2.3
 
 0.2.3 ships the hvtiR family argument renames and the fixes of the family QA
